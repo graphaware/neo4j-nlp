@@ -25,16 +25,17 @@ import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 public class ConceptNet5Client {
 
-    private final String hostname;
+    private final String conceptNet5EndPoint;
+    private final ClientConfig cfg;
 
-    public ConceptNet5Client(String hostname) {
-        this.hostname = hostname;
+    public ConceptNet5Client(String conceptNet5EndPoint) {
+        this.conceptNet5EndPoint = conceptNet5EndPoint;
+        this.cfg = new DefaultClientConfig();
+        cfg.getClasses().add(JacksonJsonProvider.class);
     }
 
     public ConceptNet5EdgeResult getValues(String concept, String lang) {
-        String url = hostname + "/c/" + lang + "/" + concept;
-        ClientConfig cfg = new DefaultClientConfig();
-        cfg.getClasses().add(JacksonJsonProvider.class);
+        String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept;
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
                 .accept(MediaType.APPLICATION_JSON)
@@ -45,9 +46,7 @@ public class ConceptNet5Client {
     }
 
     public ConceptNet5EdgeResult searchByStart(String concept, String lang) {
-        String url = hostname + "/search?rel=/r/IsA&start=/c/" + lang + "/" + concept + "/&limit=20";
-        ClientConfig cfg = new DefaultClientConfig();
-        cfg.getClasses().add(JacksonJsonProvider.class);
+        String url = conceptNet5EndPoint + "/search?rel=/r/IsA&start=/c/" + lang + "/" + concept + "/&limit=20";
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
                 .accept(MediaType.APPLICATION_JSON)

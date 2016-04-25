@@ -22,16 +22,20 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TextProcessor {
 
+    public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
     private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
     private final StanfordCoreNLP pipeline;
@@ -52,20 +56,64 @@ public class TextProcessor {
     public AnnotatedText annotateText(String text) {
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
-        AnnotatedText result = new AnnotatedText();
+        AnnotatedText result = new AnnotatedText(text);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-
+        final String background = backgroundSymbol;
         sentences.stream().map((sentence) -> {
             return sentence;
         }).forEach((sentence) -> {
-            Sentence newSentence = new Sentence();
-            sentence.get(CoreAnnotations.TokensAnnotation.class).stream()
-                    .map((token) -> getTag(token))
-                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
-                    .forEach((tag) -> {
-                        newSentence.addTag(tag);
-                    });
+            final Sentence newSentence = new Sentence(sentence.toString());
+            final AtomicReference<String> prevNe = new AtomicReference<>();
+            prevNe.set(background);
+            final AtomicReference<StringBuilder> sb = new AtomicReference<>();
+            sb.set(new StringBuilder());
+            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+            tokens.stream()
+                    .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
+                    .map((token) -> {
+                        //
+                        String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                        if (currentNe.equals(background) && prevNe.get().equals(background)) {
+                            Tag tag = getTag(token);
+                            if (tag != null) {
+                                newSentence.addTag(tag);
+                            }
+                        } else if (currentNe.equals(background) && !prevNe.get().equals(background)) {
+                            Tag newTag = new Tag(sb.get().toString());
+                            newTag.setNe(prevNe.get());
+                            newSentence.addTag(newTag);
+                            sb.set(new StringBuilder());
+                            Tag tag = getTag(token);
+                            if (tag != null) {
+                                newSentence.addTag(tag);
+                            }
+                        } else if (!currentNe.equals(prevNe.get()) && !prevNe.get().equals(background)) {
+                            Tag newTag = new Tag(sb.get().toString());
+                            newTag.setNe(prevNe.get());
+                            newSentence.addTag(newTag);
+                            sb.set(new StringBuilder());
+                            sb.get().append(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
+                        } else if (!currentNe.equals(background) && prevNe.get().equals(background)) {
+                            sb.get().append(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
+                        } else {
+                            String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
+                            String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
+                            sb.get().append(before);
+                            sb.get().append(currentText);
+                        }
+                        return currentNe;
+                    }).forEach((currentNe) -> {
+                prevNe.set(currentNe);
+            });
+
+            if (sb.get().length() > 0) {
+                Tag tag = new Tag(sb.get().toString());
+                tag.setNe(prevNe.get());
+                newSentence.addTag(tag);
+            }
+
             result.addSentence(newSentence);
+
         });
         return result;
     }
@@ -80,8 +128,9 @@ public class TextProcessor {
                     .map((token) -> getTag(token))
                     .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
                     .findFirst();
-            if (oTag.isPresent())
+            if (oTag.isPresent()) {
                 return oTag.get();
+            }
         }
         return null;
     }
@@ -91,13 +140,19 @@ public class TextProcessor {
         if (stopword.first()) {
             return null;
         }
-        String lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
-        Tag tag = new Tag(lemma);
         String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-        tag.setPos(pos);
         String ne = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
-        tag.setNe(ne);
+        String lemma;
 
+        if (ne.equals(backgroundSymbol)) {
+            lemma = token.get(CoreAnnotations.LemmaAnnotation.class);
+        } else {
+            lemma = token.get(CoreAnnotations.OriginalTextAnnotation.class);
+        }
+
+        Tag tag = new Tag(lemma);
+        tag.setPos(pos);
+        tag.setNe(ne);
         System.out.println("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
         return tag;
     }

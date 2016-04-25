@@ -5,23 +5,26 @@
  */
 package com.graphaware.nlp.domain;
 
+import static com.graphaware.nlp.domain.Labels.Tag;
+import static com.graphaware.nlp.domain.Relationships.IS_RELATED_TO;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.TreeSet;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 /**
  *
  * @author ale
  */
-public class Tag {
-    
+public class Tag implements Persistable {
+
     private int multiplicity;
     private final String lemma;
     private String pos;
     private String ne;
     private Collection<TagParentRelation> parents;
-    
+
     public Tag(String lemma) {
         this.lemma = lemma;
     }
@@ -55,8 +58,35 @@ public class Tag {
     }
 
     public void addParent(String rel, Tag storedTag) {
-        if (parents == null)
+        if (parents == null) {
             parents = new TreeSet<>();
+        }
         parents.add(new TagParentRelation(storedTag, rel));
+    }
+
+    @Override
+    public Node storeOnGraph(GraphDatabaseService database) {
+        Node tagNode = getOrCreate(database);
+        if (parents != null) {
+            parents.stream().forEach((tagRelationship) -> {
+                Node parentTagNode = tagRelationship.getParent().storeOnGraph(database);
+                Relationship isRelatedRel = tagNode.createRelationshipTo(parentTagNode, IS_RELATED_TO);
+                isRelatedRel.setProperty("type", tagRelationship.getRelation());
+            });
+        }
+        return tagNode;
+    }
+
+    private Node getOrCreate(GraphDatabaseService database) {
+        Node tagNode = database.findNode(Tag, "value", lemma);
+        if (tagNode != null) {
+            return tagNode;
+        }
+        tagNode = database.createNode(Tag);
+        tagNode.setProperty("value", lemma);
+        tagNode.setProperty("ne", ne);
+        if (pos != null)
+            tagNode.setProperty("pos", pos);
+        return tagNode;
     }
 }

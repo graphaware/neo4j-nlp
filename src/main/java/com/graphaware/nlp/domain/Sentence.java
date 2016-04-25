@@ -5,19 +5,27 @@
  */
 package com.graphaware.nlp.domain;
 
+import static com.graphaware.nlp.domain.Labels.Sentence;
+import static com.graphaware.nlp.domain.Relationships.HAS_TAG;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 /**
  *
  * @author ale
  */
-public class Sentence {
+public class Sentence implements Persistable {
     private final Map<String, Tag> tags;
-
-    public Sentence() {
-        tags = new HashMap<>();
+    private final String sentence;
+    
+    public Sentence(String sentence) {
+        this.tags = new HashMap<>();
+        this.sentence = sentence;
     }
 
     public Collection<Tag> getTags() {
@@ -29,5 +37,18 @@ public class Sentence {
             tags.get(tag.getLemma()).incMultiplicity();
         else 
             tags.put(tag.getLemma(), tag);
+    }
+
+    @Override
+    public Node storeOnGraph(GraphDatabaseService database) {
+        Node sentenceNode = database.createNode(Sentence);
+        sentenceNode.setProperty("hash", sentence.hashCode());
+        tags.values().stream().forEach((tag) -> {
+            Node tagNode = tag.storeOnGraph(database);
+            Relationship hasTagRel = sentenceNode.createRelationshipTo(tagNode, HAS_TAG);
+            hasTagRel.setProperty("tf", tag.getMultiplicity());
+        });
+        
+        return sentenceNode;
     }
 }

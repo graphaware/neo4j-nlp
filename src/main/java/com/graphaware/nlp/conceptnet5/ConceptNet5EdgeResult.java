@@ -39,7 +39,4 @@ public class ConceptNet5EdgeResult
   {
     this.numFound = numFound;
   }
-  
-  
-  
 }

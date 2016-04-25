@@ -6,16 +6,26 @@
 package com.graphaware.nlp.persistence;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.CypherStatement;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.QueryExecutionException;
+import org.neo4j.graphdb.Transaction;
 
-/**
- *
- * @author ale
- */
 public class LocalGraphDatabase implements GraphPersistence {
+
+    private final GraphDatabaseService database;
+
+    public LocalGraphDatabase(GraphDatabaseService database) {
+        this.database = database;
+    }
 
     @Override
     public void persistOnGraph(AnnotatedText text) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try (Transaction tx = database.beginTx()) {
+            text.storeOnGraph(database);
+            tx.success();
+        } catch (QueryExecutionException ex) {
+            throw new RuntimeException("Error while persisting", ex);
+        }
     }
-    
 }
