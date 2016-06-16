@@ -86,7 +86,7 @@ public class FeatureBasedProcessLogic {
             Map<String, Object> next = res.next();
             long id = (long) next.get("tagId");
             float tf = getFloatValue(next.get("tf"));
-            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
             result.put(id, tf*idf);
         }
         return result;
