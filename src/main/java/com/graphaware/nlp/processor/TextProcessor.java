@@ -54,9 +54,9 @@ public class TextProcessor {
     }
 
     public AnnotatedText annotateText(String text, Object id) {
+        AnnotatedText result = new AnnotatedText(text, id);
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
-        AnnotatedText result = new AnnotatedText(text, id);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final String background = backgroundSymbol;
         sentences.stream().map((sentence) -> {

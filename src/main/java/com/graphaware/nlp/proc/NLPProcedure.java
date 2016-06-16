@@ -25,8 +25,10 @@ import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -43,20 +45,20 @@ import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class NLPProcedure {
-
+    
     private final TextProcessor textProcessor;
     private final ConceptNet5Importer conceptnet5Importer;
     private final GraphDatabaseService database;
-
+    
     private static final String PARAMETER_NAME_INPUT = "input";
     private static final String PARAMETER_NAME_TEXT = "text";
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_ID = "id";
     private static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
-
+    
     private final FeatureBasedProcessLogic featureBusinessLogic;
-
+    
     public NLPProcedure(GraphDatabaseService database, FeatureBasedProcessLogic featureBusinessLogic) {
         this.database = database;
         this.textProcessor = new TextProcessor();
@@ -64,13 +66,13 @@ public class NLPProcedure {
                 .build();
         this.featureBusinessLogic = featureBusinessLogic;
     }
-
+    
     public CallableProcedure.BasicProcedure annotate() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("annotate"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
-
+            
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
@@ -84,7 +86,7 @@ public class NLPProcedure {
                 }
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
             }
-
+            
             private Node checkIfExist(Object id) {
                 if (id != null) {
                     ResourceIterator<Node> findNodes = database.findNodes(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
@@ -96,19 +98,19 @@ public class NLPProcedure {
             }
         };
     }
-
+    
     public CallableProcedure.BasicProcedure concept() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("concept"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
-
+            
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
-                int depth = ((Long)inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
+                int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
                 try (Transaction beginTx = database.beginTx()) {
                     ResourceIterator<Node> tags = getAnnotatedTextTags(annotatedNode);
                     while (tags.hasNext()) {
@@ -123,23 +125,23 @@ public class NLPProcedure {
                 }
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
             }
-
+            
             private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
-              Map<String, Object> params = new HashMap<>();
-              params.put("id", annotatedNode.getId());
-              Result queryRes = database.execute("MATCH (n:AnnotatedText)-[*..2]->(t:Tag) where id(n) = {id} return t", params);
-              ResourceIterator<Node> tags = queryRes.columnAs("t");
+                Map<String, Object> params = new HashMap<>();
+                params.put("id", annotatedNode.getId());
+                Result queryRes = database.execute("MATCH (n:AnnotatedText)-[*..2]->(t:Tag) where id(n) = {id} return t", params);
+                ResourceIterator<Node> tags = queryRes.columnAs("t");
                 return tags;
             }
         };
     }
-
+    
     public CallableProcedure.BasicProcedure computeAll() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("cosine", "compute"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTInteger).build()) {
-
+            
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 int processed = 0;
@@ -149,7 +151,31 @@ public class NLPProcedure {
             }
         };
     }
-
+    
+    public CallableProcedure.BasicProcedure search() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("search"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTString)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
+            
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                String text = (String) input[0];
+                AnnotatedText annotateText = textProcessor.annotateText(text, 0);
+                List<String> tokens = annotateText.getTokens();
+                Map<String, Object> params = new HashMap<>();
+                params.put("tokens", tokens);
+                Result queryResult = database.execute("MATCH (t:Tag)<-[:HAS_TAG|IS_RELATED_TO*..3]-(sentence:Sentence)<-[]-(at:AnnotatedText) \n"
+                        + "WHERE t.value IN {tokens}\n"
+                        + "RETURN DISTINCT at", params);
+                ResourceIterator<Node> annotatedText = queryResult.columnAs("at");
+                Set<Object[]> result = new HashSet<>();
+                annotatedText.stream().forEach((node) -> result.add(new Object[]{node}));
+                return Iterators.asRawIterator(result.iterator());
+            }
+        };
+    }
+    
     protected List<Long> getNodesFromInput(Object[] input) {
         List<Long> firstNodeIds = new ArrayList<>();
         if (input[0] == null) {
@@ -171,23 +197,23 @@ public class NLPProcedure {
             throw new RuntimeException("Invalid input parameters " + input[0]);
         }
     }
-
+    
     protected static ProcedureSignature.ProcedureName getProcedureName(String... procedureName) {
         String namespace[] = new String[2 + procedureName.length];
         int i = 0;
         namespace[i++] = "ga";
         namespace[i++] = "nlp";
-
+        
         for (String value : procedureName) {
             namespace[i++] = value;
         }
         return procedureName(namespace);
     }
-
+    
     protected void checkIsMap(Object object) throws RuntimeException {
         if (!(object instanceof Map)) {
             throw new RuntimeException("Input parameter is not a map");
         }
     }
-
+    
 }

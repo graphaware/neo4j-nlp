@@ -7,7 +7,6 @@ package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.AnnotatedText;
 import static com.graphaware.nlp.domain.Relationships.CONTAINS_SENTENCE;
-import static com.graphaware.nlp.util.HashFunctions.MD5;
 import java.util.ArrayList;
 import java.util.List;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -18,6 +17,7 @@ import org.neo4j.graphdb.Node;
  * @author ale
  */
 public class AnnotatedText implements Persistable {
+
     private final Object id;
     private final List<Sentence> sentences;
     private final String text;
@@ -32,7 +32,7 @@ public class AnnotatedText implements Persistable {
     public List<Sentence> getSentences() {
         return sentences;
     }
-    
+
     public void addSentence(Sentence sentence) {
         sentences.add(sentence);
     }
@@ -51,5 +51,14 @@ public class AnnotatedText implements Persistable {
     public Node getNode() {
         return node;
     }
-    
+
+    public List<String> getTokens() {
+        List<String> result = new ArrayList<>();
+        sentences.stream().forEach((sentence) -> {
+            sentence.getTags().stream().forEach((tag) -> { result.add(tag.getLemma());
+            });
+        });
+        return result;
+    }
+
 }
