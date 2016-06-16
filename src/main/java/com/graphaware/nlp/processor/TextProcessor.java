@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 public class TextProcessor {
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
-    private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
+    private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
     private final StanfordCoreNLP pipeline;
     private final Pattern patternCheck;
@@ -53,10 +53,10 @@ public class TextProcessor {
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
     }
 
-    public AnnotatedText annotateText(String text) {
+    public AnnotatedText annotateText(String text, Object id) {
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
-        AnnotatedText result = new AnnotatedText(text);
+        AnnotatedText result = new AnnotatedText(text, id);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final String background = backgroundSymbol;
         sentences.stream().map((sentence) -> {
@@ -111,7 +111,6 @@ public class TextProcessor {
                 tag.setNe(prevNe.get());
                 newSentence.addTag(tag);
             }
-
             result.addSentence(newSentence);
 
         });

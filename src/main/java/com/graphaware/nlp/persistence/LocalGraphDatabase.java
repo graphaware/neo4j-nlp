@@ -6,7 +6,6 @@
 package com.graphaware.nlp.persistence;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.CypherStatement;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Transaction;

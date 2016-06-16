@@ -21,9 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConceptNet5Importer {
-    
-    private static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
 
+    private static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
 
     private final ConceptNet5Client client;
     private final TextProcessor nlpProcessor;
@@ -48,18 +47,25 @@ public class ConceptNet5Importer {
         this.depthSearch = builder.depthSearch;
     }
 
+    public List<Tag> importHierarchy(Tag source, String lang, int depth) {
+        return importConceptHierarchy(source, lang, depth, DEFAULT_ADMITTED_RELATIONSHIP);
+    }
     public List<Tag> importHierarchy(Tag source, String lang) {
         return importConceptHierarchy(source, lang, depthSearch, DEFAULT_ADMITTED_RELATIONSHIP);
     }
 
     private List<Tag> importConceptHierarchy(Tag source, String lang, int depth, String... admittedRelations) {
-        String word = source.getLemma().toLowerCase();
-        ConceptNet5EdgeResult values = client.getValues(word, lang);
         List<Tag> res = new ArrayList<>();
+        if (source.getNe() != null && source.getNe().equalsIgnoreCase("PERSON")) {
+            return res;
+        }
+        String word = source.getLemma().toLowerCase().replace(" ", "_");
+        ConceptNet5EdgeResult values = client.getValues(word, lang);
         values.getEdges().stream().forEach((concept) -> {
             String conceptPrefix = "/c/" + lang + "/";
             String parentConcept = concept.getEnd().substring(conceptPrefix.length());
-            if (concept.getStart().equalsIgnoreCase(conceptPrefix + word)
+            if (parentConcept != null
+                    && concept.getStart().equalsIgnoreCase(conceptPrefix + word)
                     && checkAdmittedRelations(concept, admittedRelations)) {
                 Tag annotateTag = tryToAnnotate(parentConcept);
                 if (depth > 1) {
@@ -100,8 +106,9 @@ public class ConceptNet5Importer {
         private int depthSearch = 2;
 
         public Builder(String cnet5Host, TextProcessor nlpProcessor) {
-            this(new ConceptNet5Client(cnet5Host), nlpProcessor);            
+            this(new ConceptNet5Client(cnet5Host), nlpProcessor);
         }
+
         public Builder(ConceptNet5Client client, TextProcessor nlpProcessor) {
             this.client = client;
             this.nlpProcessor = nlpProcessor;
@@ -116,7 +123,7 @@ public class ConceptNet5Importer {
             this.depthSearch = depthSearch;
             return this;
         }
-        
+
         public ConceptNet5Importer build() {
             return new ConceptNet5Importer(this);
         }

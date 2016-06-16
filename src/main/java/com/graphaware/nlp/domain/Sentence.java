@@ -7,6 +7,7 @@ package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.Sentence;
 import static com.graphaware.nlp.domain.Relationships.HAS_TAG;
+import static com.graphaware.nlp.util.HashFunctions.MD5;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class Sentence implements Persistable {
     @Override
     public Node storeOnGraph(GraphDatabaseService database) {
         Node sentenceNode = database.createNode(Sentence);
-        sentenceNode.setProperty("hash", sentence.hashCode());
+        sentenceNode.setProperty("hash", MD5(sentence));
         tags.values().stream().forEach((tag) -> {
             Node tagNode = tag.storeOnGraph(database);
             Relationship hasTagRel = sentenceNode.createRelationshipTo(tagNode, HAS_TAG);
