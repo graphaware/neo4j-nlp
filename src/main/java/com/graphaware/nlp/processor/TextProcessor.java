@@ -20,9 +20,12 @@ import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
+import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -45,7 +48,7 @@ public class TextProcessor {
         Properties props = new Properties();
         //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
         //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner");
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, stopword");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, stopword, parse, sentiment");
         props.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
         props.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
         pipeline = new StanfordCoreNLP(props);
@@ -111,6 +114,10 @@ public class TextProcessor {
                 tag.setNe(prevNe.get());
                 newSentence.addTag(tag);
             }
+            Tree tree = sentence
+                    .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
+            int score = RNNCoreAnnotations.getPredictedClass(tree);
+            newSentence.setSentiment(score);
             result.addSentence(newSentence);
 
         });

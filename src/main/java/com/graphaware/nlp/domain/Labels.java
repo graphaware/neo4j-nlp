@@ -8,5 +8,10 @@ import org.neo4j.graphdb.Label;
 public enum Labels implements Label {
     AnnotatedText,
     Sentence,
-    Tag
+    Tag,
+    VeryNegative,
+    Negative,
+    Neutral,
+    Positive,
+    VeryPositive
 }

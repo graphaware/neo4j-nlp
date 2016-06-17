@@ -118,4 +118,31 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
             beginTx.success();
         }
     }
+
+    @Test
+    public void testSentiment() {
+        TextProcessor textProcessor = new TextProcessor();
+
+        AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", 1);
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(0, annotateText.getSentences().get(0).getSentiment());
+
+        annotateText = textProcessor.annotateText("It was really horrible to study at Stanford", 1);
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(1, annotateText.getSentences().get(0).getSentiment());
+
+        annotateText = textProcessor.annotateText("I studied at Stanford", 1);
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(2, annotateText.getSentences().get(0).getSentiment());
+
+        annotateText = textProcessor.annotateText("I liked to study at Stanford", 1);
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(3, annotateText.getSentences().get(0).getSentiment());
+
+        annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1);
+        assertEquals(1, annotateText.getSentences().size());
+        assertEquals(4, annotateText.getSentences().get(0).getSentiment());
+
+        
+    }
 }
