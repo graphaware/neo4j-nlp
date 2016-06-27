@@ -56,6 +56,7 @@ public class NLPProcedure {
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_ID = "id";
     private static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
+    private static final String PARAMETER_NAME_SCORE = "score";
     
     private final FeatureBasedProcessLogic featureBusinessLogic;
     
@@ -156,7 +157,8 @@ public class NLPProcedure {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("search"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTString)
-                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
+                .out(PARAMETER_NAME_SCORE, Neo4jTypes.NTFloat).build()) {
             
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
@@ -165,12 +167,22 @@ public class NLPProcedure {
                 List<String> tokens = annotateText.getTokens();
                 Map<String, Object> params = new HashMap<>();
                 params.put("tokens", tokens);
-                Result queryResult = database.execute("MATCH (t:Tag)<-[:HAS_TAG|IS_RELATED_TO*..3]-(sentence:Sentence)<-[]-(at:AnnotatedText) \n"
+                params.put("querySize", tokens.size());
+                Result queryResult = database.execute("MATCH (doc:AnnotatedText)\n"
+                        + "WITH count(doc) as documentsCount\n"
+                        + "MATCH (t:Tag)\n"
                         + "WHERE t.value IN {tokens}\n"
-                        + "RETURN DISTINCT at", params);
-                ResourceIterator<Node> annotatedText = queryResult.columnAs("at");
+                        + "WITH t, documentsCount, {querySize} as queryTagsCount\n"
+                        + "MATCH (t)<-[:HAS_TAG]-(:Sentence)<-[]-(document:AnnotatedText)\n"
+                        + "WITH t, count(distinct document) as documentsCountForTag, documentsCount, queryTagsCount\n"
+                        + "MATCH (t)<-[ht:HAS_TAG]-(sentence:Sentence)<-[]-(at:AnnotatedText)\n"
+                        + "WITH DISTINCT at, t.value as value, sum(ht.tf)*(1 + log((1.0f*documentsCount)/(documentsCountForTag + 1)))* (1.0f/at.numTerms^0.5f) as sum, queryTagsCount\n"
+                        + "RETURN at, (1.0f*size(collect(value))/queryTagsCount)*(sum(sum)) as score\n", params);
                 Set<Object[]> result = new HashSet<>();
-                annotatedText.stream().forEach((node) -> result.add(new Object[]{node}));
+                while (queryResult.hasNext()) {
+                    Map<String, Object> row = queryResult.next();
+                    result.add(new Object[]{row.get("at"), row.get("score")});
+                }
                 return Iterators.asRawIterator(result.iterator());
             }
         };

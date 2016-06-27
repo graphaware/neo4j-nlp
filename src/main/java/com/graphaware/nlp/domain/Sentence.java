@@ -68,16 +68,16 @@ public class Sentence implements Persistable {
                 sentenceNode.addLabel(VeryNegative);
                 break;
             case 1:
-                sentenceNode.addLabel(VeryNegative);
+                sentenceNode.addLabel(Negative);
                 break;
             case 2:
-                sentenceNode.addLabel(VeryNegative);
+                sentenceNode.addLabel(Neutral);
                 break;
             case 3:
-                sentenceNode.addLabel(VeryNegative);
+                sentenceNode.addLabel(Positive);
                 break;
             case 4:
-                sentenceNode.addLabel(VeryNegative);
+                sentenceNode.addLabel(VeryPositive);
                 break;
         }
     }

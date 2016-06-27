@@ -41,6 +41,7 @@ public class AnnotatedText implements Persistable {
     public Node storeOnGraph(GraphDatabaseService database) {
         Node annotatedTextNode = database.createNode(AnnotatedText);
         annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
+        annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
         sentences.stream().map((sentence) -> sentence.storeOnGraph(database)).forEach((sentenceNode) -> {
             annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
         });
@@ -60,5 +61,4 @@ public class AnnotatedText implements Persistable {
         });
         return result;
     }
-
 }

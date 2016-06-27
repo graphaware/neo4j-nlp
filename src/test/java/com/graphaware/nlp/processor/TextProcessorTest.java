@@ -142,7 +142,5 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(4, annotateText.getSentences().get(0).getSentiment());
-
-        
     }
 }

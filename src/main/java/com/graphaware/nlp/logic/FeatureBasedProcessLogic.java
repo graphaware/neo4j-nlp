@@ -80,7 +80,7 @@ public class FeatureBasedProcessLogic {
                 + "WHERE id(input) = {id}\n"
                 + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
                 + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount\n"
-                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, documentsCount/documentsCountForTag as idf", params);
+                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf", params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();

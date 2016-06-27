@@ -16,6 +16,7 @@ public final class Properties {
     public static final String PROCESS_TYPE = "processType";
     public static final String PROCESS_STATUS = "processStatus";
     public static final String HASH = "hash";
+    public static final String NUM_TERMS = "numTerms";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

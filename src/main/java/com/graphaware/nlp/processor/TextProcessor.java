@@ -48,7 +48,7 @@ public class TextProcessor {
         Properties props = new Properties();
         //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
         //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner");
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, stopword, parse, sentiment");
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, stopword, parse, sentiment, relation");
         props.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
         props.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
         pipeline = new StanfordCoreNLP(props);
