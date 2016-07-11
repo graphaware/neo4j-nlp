@@ -18,11 +18,12 @@ package com.graphaware.nlp.conceptnet5;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ConceptNet5Importer {
 
-    private static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
+    public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
 
     private final ConceptNet5Client client;
     private final TextProcessor nlpProcessor;
@@ -48,17 +49,21 @@ public class ConceptNet5Importer {
     }
 
     public List<Tag> importHierarchy(Tag source, String lang, int depth) {
-        return importConceptHierarchy(source, lang, depth, DEFAULT_ADMITTED_RELATIONSHIP);
+        return importHierarchy(source, lang, depth, DEFAULT_ADMITTED_RELATIONSHIP);
     }
     public List<Tag> importHierarchy(Tag source, String lang) {
-        return importConceptHierarchy(source, lang, depthSearch, DEFAULT_ADMITTED_RELATIONSHIP);
+        return importHierarchy(source, lang, depthSearch, DEFAULT_ADMITTED_RELATIONSHIP);
     }
 
-    private List<Tag> importConceptHierarchy(Tag source, String lang, int depth, String... admittedRelations) {
+    public List<Tag> importHierarchy(Tag source, String lang, int depth, String... admittedRelations) {
+        return importHierarchy(source, lang, depth, Arrays.asList(admittedRelations));
+    }
+    
+    public List<Tag> importHierarchy(Tag source, String lang, int depth, List<String> admittedRelations) {
         List<Tag> res = new ArrayList<>();
-        if (source.getNe() != null && source.getNe().equalsIgnoreCase("PERSON")) {
-            return res;
-        }
+//        if (source.getNe() != null && source.getNe().equalsIgnoreCase("PERSON")) {
+//            return res;
+//        }
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         ConceptNet5EdgeResult values = client.getValues(word, lang);
         values.getEdges().stream().forEach((concept) -> {
@@ -69,7 +74,7 @@ public class ConceptNet5Importer {
                     && checkAdmittedRelations(concept, admittedRelations)) {
                 Tag annotateTag = tryToAnnotate(parentConcept);
                 if (depth > 1) {
-                    importConceptHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+                    importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
                 }
                 source.addParent(concept.getRel(), annotateTag);
                 res.add(annotateTag);
@@ -86,14 +91,12 @@ public class ConceptNet5Importer {
         return annotateTag;
     }
 
-    private boolean checkAdmittedRelations(ConceptNet5Concept concept, String... admittedRelations) {
+    private boolean checkAdmittedRelations(ConceptNet5Concept concept, List<String> admittedRelations) {
         if (admittedRelations == null) {
             return true;
         }
-        for (String rel : admittedRelations) {
-            if (concept.getRel().contains(rel)) {
-                return true;
-            }
+        if (admittedRelations.stream().anyMatch((rel) -> (concept.getRel().contains(rel)))) {
+            return true;
         }
         return false;
     }

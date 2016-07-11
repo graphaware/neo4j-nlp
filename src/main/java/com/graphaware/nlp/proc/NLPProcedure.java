@@ -16,6 +16,7 @@
 package com.graphaware.nlp.proc;
 
 import com.graphaware.nlp.conceptnet5.ConceptNet5Importer;
+import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Labels;
 import com.graphaware.nlp.domain.Properties;
@@ -23,6 +24,7 @@ import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.logic.FeatureBasedProcessLogic;
 import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +45,7 @@ import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class NLPProcedure {
     
@@ -54,6 +57,8 @@ public class NLPProcedure {
     private static final String PARAMETER_NAME_TEXT = "text";
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
     private static final String PARAMETER_NAME_DEPTH = "depth";
+    private static final String PARAMETER_NAME_LANG = "lang";
+    private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
     private static final String PARAMETER_NAME_ID = "id";
     private static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
     private static final String PARAMETER_NAME_SCORE = "score";
@@ -112,11 +117,13 @@ public class NLPProcedure {
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
                 int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
+                String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, "en");
+                List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
                 try (Transaction beginTx = database.beginTx()) {
                     ResourceIterator<Node> tags = getAnnotatedTextTags(annotatedNode);
                     while (tags.hasNext()) {
                         final Tag tag = Tag.createTag(tags.next());
-                        List<Tag> conceptTags = conceptnet5Importer.importHierarchy(tag, "en", depth);
+                        List<Tag> conceptTags = conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships);
                         conceptTags.stream().forEach((newTag) -> {
                             newTag.storeOnGraph(database);
                         });

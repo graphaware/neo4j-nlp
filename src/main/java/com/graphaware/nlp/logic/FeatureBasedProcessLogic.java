@@ -1,15 +1,25 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2013-2016 GraphAware
+ *
+ * This file is part of the GraphAware Framework.
+ *
+ * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of
+ * the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 package com.graphaware.nlp.logic;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.graphaware.nlp.domain.AnnotatedText;
 import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
 import com.graphaware.nlp.domain.Labels;
+import com.graphaware.nlp.domain.Relationships;
 import com.graphaware.nlp.queue.SimilarityItemProcessEntry;
 import com.graphaware.nlp.queue.SimilarityItem;
 import com.graphaware.nlp.queue.SimilarityQueueProcessor;
@@ -33,10 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- *
- * @author alessandro@graphaware.com
- */
 @Component
 public class FeatureBasedProcessLogic {
 
@@ -131,7 +137,7 @@ public class FeatureBasedProcessLogic {
                         if (secondNode != firstNodeId) {
                             float similarity = getFeatureCosine(firstNodeId, secondNode);
                             if (similarity > 0) {
-                                kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, "SIMILARITY_COSINE"));
+                                kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
                                 countStored.incrementAndGet();
                             }
                             int processed = countProcessed.incrementAndGet();
