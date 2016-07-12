@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
@@ -49,7 +50,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                     + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
                     + "return result", params);
             ResourceIterator<Object> rowIterator = news.columnAs("result");
-            assertFalse(rowIterator.hasNext());
+            assertTrue(rowIterator.hasNext());
             Node resultNode = (Node) rowIterator.next();
             assertEquals(resultNode.getProperty("id"), "id1");
             tx.success();
