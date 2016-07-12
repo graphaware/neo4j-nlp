@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.proc;
+package com.graphaware.nlp.procedure;
 
 import com.graphaware.nlp.conceptnet5.ConceptNet5Importer;
 import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
@@ -44,7 +44,6 @@ import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class NLPProcedure {
