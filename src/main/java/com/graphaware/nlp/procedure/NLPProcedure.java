@@ -59,6 +59,7 @@ public class NLPProcedure {
     private static final String PARAMETER_NAME_LANG = "lang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
     private static final String PARAMETER_NAME_ID = "id";
+    private static final String PARAMETER_NAME_SENTIMENT = "sentiment";
     private static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
     private static final String PARAMETER_NAME_SCORE = "score";
     
@@ -84,9 +85,10 @@ public class NLPProcedure {
                 Map<String, Object> inputParams = (Map) input[0];
                 String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                 Object id = inputParams.get(PARAMETER_NAME_ID);
+                boolean sentiment = (Boolean)inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
                 Node annotatedText = checkIfExist(id);
                 if (annotatedText == null) {
-                    AnnotatedText annotateText = textProcessor.annotateText(text, id);
+                    AnnotatedText annotateText = textProcessor.annotateText(text, id, sentiment);
                     annotatedText = annotateText.storeOnGraph(database);
                 }
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
@@ -169,7 +171,7 @@ public class NLPProcedure {
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 String text = (String) input[0];
-                AnnotatedText annotateText = textProcessor.annotateText(text, 0);
+                AnnotatedText annotateText = textProcessor.annotateText(text, 0, false);
                 List<String> tokens = annotateText.getTokens();
                 Map<String, Object> params = new HashMap<>();
                 params.put("tokens", tokens);

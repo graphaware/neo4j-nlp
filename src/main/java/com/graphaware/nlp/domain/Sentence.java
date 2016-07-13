@@ -30,7 +30,7 @@ import org.neo4j.graphdb.Relationship;
 public class Sentence implements Persistable {
     private final Map<String, Tag> tags;
     private final String sentence;
-    private int sentiment;
+    private int sentiment = -1;
     
     public Sentence(String sentence) {
         this.tags = new HashMap<>();
@@ -86,6 +86,8 @@ public class Sentence implements Persistable {
                 break;
             case 4:
                 sentenceNode.addLabel(VeryPositive);
+                break;
+            default:
                 break;
         }
     }

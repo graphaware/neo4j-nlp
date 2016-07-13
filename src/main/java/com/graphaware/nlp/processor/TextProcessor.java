@@ -29,37 +29,75 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TextProcessor {
+    private static final Logger LOG = LoggerFactory.getLogger(TextProcessor.class);
+
+    public enum PIPELINE {
+        BASIC,
+        SENTIMENT,
+        COMPLETE
+    }
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
     private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
-    private final StanfordCoreNLP pipeline;
+    private final Map<PIPELINE, StanfordCoreNLP> pipelines = new HashMap<>();
     private final Pattern patternCheck;
 
     public TextProcessor() {
-        Properties props = new Properties();
-        //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
-        //props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner");
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, stopword, parse, sentiment, relation");
-        props.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
-        props.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
-        pipeline = new StanfordCoreNLP(props);
+        createBasicPipeline();
+        createSentimentPipeline();
+        createCompletePipeline();
+
         String pattern = "\\p{Punct}";
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
     }
 
-    public AnnotatedText annotateText(String text, Object id) {
+    private void createBasicPipeline() {
+        StanfordCoreNLP pipeline = new PipelineBuilder()
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .build();
+        pipelines.put(PIPELINE.BASIC, pipeline);
+    }
+
+    private void createSentimentPipeline() {
+        StanfordCoreNLP pipeline = new PipelineBuilder()
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .extractSentiment()
+                .build();
+        pipelines.put(PIPELINE.SENTIMENT, pipeline);
+    }
+
+    private void createCompletePipeline() {
+        StanfordCoreNLP pipeline = new PipelineBuilder()
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .extractSentiment()
+                .build();
+        pipelines.put(PIPELINE.COMPLETE, pipeline);
+    }
+
+    public AnnotatedText annotateText(String text, Object id, boolean sentiment) {
         AnnotatedText result = new AnnotatedText(text, id);
         Annotation document = new Annotation(text);
-        pipeline.annotate(document);
+        if (sentiment) {
+            pipelines.get(PIPELINE.COMPLETE).annotate(document);
+        } else {
+            pipelines.get(PIPELINE.BASIC).annotate(document);
+        }
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final String background = backgroundSymbol;
         sentences.stream().map((sentence) -> {
@@ -114,19 +152,27 @@ public class TextProcessor {
                 tag.setNe(prevNe.get());
                 newSentence.addTag(tag);
             }
-            Tree tree = sentence
-                    .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
-            int score = RNNCoreAnnotations.getPredictedClass(tree);
-            newSentence.setSentiment(score);
+            
+            if (sentiment) {
+                int score = extractSentiment(sentence);
+                newSentence.setSentiment(score);
+            }
             result.addSentence(newSentence);
 
         });
         return result;
     }
+    
+    private int extractSentiment(CoreMap sentence) {
+        Tree tree = sentence
+                .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
+        int score = RNNCoreAnnotations.getPredictedClass(tree);
+        return score;
+    }
 
     public Tag annotateTag(String text) {
         Annotation document = new Annotation(text);
-        pipeline.annotate(document);
+        pipelines.get(PIPELINE.BASIC).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {
@@ -159,7 +205,7 @@ public class TextProcessor {
         Tag tag = new Tag(lemma);
         tag.setPos(pos);
         tag.setNe(ne);
-        System.out.println("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
+        LOG.info("POS: " + pos + " ne: " + ne + " lemma: " + lemma);
         return tag;
     }
 
@@ -168,4 +214,54 @@ public class TextProcessor {
         return !match.find();
     }
 
+    static class PipelineBuilder {
+
+        private final Properties properties = new Properties();
+        private final StringBuilder annotattors = new StringBuilder(); //basics annotators
+
+        public PipelineBuilder tokenize() {
+            checkForExistingAnnotators();
+            annotattors.append("tokenize, ssplit, pos, lemma, ner");
+            return this;
+        }
+
+        private void checkForExistingAnnotators() {
+            if (annotattors.toString().length() > 0) {
+                annotattors.append(", ");
+            }
+        }
+
+        public PipelineBuilder extractSentiment() {
+            checkForExistingAnnotators();
+            annotattors.append("parse, sentiment");
+            return this;
+        }
+
+        public PipelineBuilder extractRelations() {
+            checkForExistingAnnotators();
+            annotattors.append("relation");
+            return this;
+        }
+
+        public PipelineBuilder defaultStopWordAnnotator() {
+            checkForExistingAnnotators();
+            annotattors.append("stopword");
+            properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
+            properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
+            return this;
+        }
+
+        public PipelineBuilder stopWordAnnotator(Properties properties) {
+            properties.entrySet().stream().forEach((entry) -> {
+                this.properties.setProperty((String) entry.getKey(), (String) entry.getValue());
+            });
+            return this;
+        }
+
+        public StanfordCoreNLP build() {
+            properties.setProperty("annotators", annotattors.toString());
+            StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
+            return pipeline;
+        }
+    }
 }
