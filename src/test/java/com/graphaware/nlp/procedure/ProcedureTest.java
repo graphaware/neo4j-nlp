@@ -194,13 +194,15 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 
             params.put("value", SHORT_TEXT_10);
             getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+            
+            getDatabase().execute("MERGE (n:Tweet {id:1})", params);
 
             Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
                     + "WITH collect(a) AS aa\n"
                     + "UNWIND aa AS a\n"
                     + "CALL ga.nlp.annotate({text:a.text, id: id(a)}) YIELD result WITH result as at "
                     + "MERGE (a)-[:HAS_ANNOTATED_TEXT]->(at) WITH at "
-                    + "MATCH (at)-[CONTAINS_SENTENCE]->(result) "
+                    + "MATCH (at)-[:CONTAINS_SENTENCE]->(result) "
                     + "RETURN result", params);
             ResourceIterator<Object> rowIterator = sentences.columnAs("result");
             assertTrue(rowIterator.hasNext());

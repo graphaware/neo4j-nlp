@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NLPProcedure {
-    private static final Logger LOG = LoggerFactory.getLogger(TextProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NLPProcedure.class);
 
     private final TextProcessor textProcessor;
     private final ConceptNet5Importer conceptnet5Importer;
@@ -92,6 +92,9 @@ public class NLPProcedure {
                     Map<String, Object> inputParams = (Map) input[0];
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                     LOG.warn("Text: " + text);
+                    if (text == null) {
+                        return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
+                    }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
                     boolean sentiment = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
