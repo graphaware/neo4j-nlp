@@ -61,8 +61,7 @@ public class ConceptNet5Importer {
         List<Tag> res = new ArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         ConceptNet5EdgeResult values = client.getValues(word, lang);
-        List<ConceptNet5Concept> edges = new ArrayList<>(values.getEdges());
-        edges.stream().forEach((concept) -> {
+        values.getEdges().stream().forEach((concept) -> {
             String conceptPrefix = "/c/" + lang + "/";
             String parentConcept = concept.getEnd().substring(conceptPrefix.length());
             if (parentConcept != null

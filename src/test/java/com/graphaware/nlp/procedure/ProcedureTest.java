@@ -235,7 +235,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             params.put("id", id);
             Result tags = getDatabase().execute(
                     "MATCH (a:AnnotatedText) "
-                    + "CALL ga.nlp.concept({node:a, depth: 1}) YIELD result\n"
+                    + "CALL ga.nlp.concept({node:a, depth: 2}) YIELD result\n"
                     + "return result;", params);
             rowIterator = tags.columnAs("result");
             assertTrue(rowIterator.hasNext());
