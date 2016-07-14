@@ -86,10 +86,12 @@ public class NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                
                 try {
                     checkIsMap(input[0]);
                     Map<String, Object> inputParams = (Map) input[0];
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
+                    LOG.warn("Text: " + text);
                     Object id = inputParams.get(PARAMETER_NAME_ID);
                     boolean sentiment = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
