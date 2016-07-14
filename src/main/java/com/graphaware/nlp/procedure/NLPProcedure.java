@@ -46,8 +46,11 @@ import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NLPProcedure {
+    private static final Logger LOG = LoggerFactory.getLogger(TextProcessor.class);
 
     private final TextProcessor textProcessor;
     private final ConceptNet5Importer conceptnet5Importer;
@@ -83,18 +86,24 @@ public class NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-                checkIsMap(input[0]);
-                Map<String, Object> inputParams = (Map) input[0];
-                String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
-                Object id = inputParams.get(PARAMETER_NAME_ID);
-                boolean sentiment = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
-                boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
-                Node annotatedText = checkIfExist(id);
-                if (annotatedText == null) {
-                    AnnotatedText annotateText = textProcessor.annotateText(text, id, sentiment, store);
-                    annotatedText = annotateText.storeOnGraph(database);
+                try {
+                    checkIsMap(input[0]);
+                    Map<String, Object> inputParams = (Map) input[0];
+                    String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
+                    Object id = inputParams.get(PARAMETER_NAME_ID);
+                    boolean sentiment = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
+                    boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
+                    Node annotatedText = checkIfExist(id);
+                    if (annotatedText == null) {
+                        AnnotatedText annotateText = textProcessor.annotateText(text, id, sentiment, store);
+                        annotatedText = annotateText.storeOnGraph(database);
+                    }
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
                 }
-                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
+                catch (Exception ex) {
+                    LOG.error("Error while annotating", ex);
+                    throw ex;
+                }                
             }
 
             private Node checkIfExist(Object id) {
