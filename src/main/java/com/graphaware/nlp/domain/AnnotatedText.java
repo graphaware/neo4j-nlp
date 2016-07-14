@@ -21,17 +21,17 @@ import java.util.ArrayList;
 import java.util.List;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.ResourceIterator;
 
 public class AnnotatedText implements Persistable {
 
     private final Object id;
     private final List<Sentence> sentences;
-    private final String text;
     private Node node;
 
-    public AnnotatedText(String text, Object id) {
+    public AnnotatedText(Object id) {
         sentences = new ArrayList<>();
-        this.text = text;
         this.id = id;
     }
 
@@ -45,14 +45,26 @@ public class AnnotatedText implements Persistable {
 
     @Override
     public Node storeOnGraph(GraphDatabaseService database) {
-        Node annotatedTextNode = database.createNode(AnnotatedText);
-        annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
-        annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
-        sentences.stream().map((sentence) -> sentence.storeOnGraph(database)).forEach((sentenceNode) -> {
-            annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
-        });
-        node = annotatedTextNode;
-        return annotatedTextNode;
+        Node tmpAnnotatedNode = checkIfExist(database, id);
+        if (tmpAnnotatedNode == null) {
+            final Node annotatedTextNode = database.createNode(AnnotatedText);
+            annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
+            annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
+            sentences.stream().map((sentence) -> sentence.storeOnGraph(database)).forEach((sentenceNode) -> {
+                annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
+            });
+            tmpAnnotatedNode = annotatedTextNode;
+        } else {
+            /*
+            * Currently only labels could change so if the AnnotatedText already exist 
+            * only the Sentence are updated 
+             */
+            sentences.stream().forEach((sentence) -> {
+                sentence.storeOnGraph(database);
+            });
+        }
+        node = tmpAnnotatedNode;
+        return tmpAnnotatedNode;
     }
 
     public Node getNode() {
@@ -62,9 +74,33 @@ public class AnnotatedText implements Persistable {
     public List<String> getTokens() {
         List<String> result = new ArrayList<>();
         sentences.stream().forEach((sentence) -> {
-            sentence.getTags().stream().forEach((tag) -> { result.add(tag.getLemma());
+            sentence.getTags().stream().forEach((tag) -> {
+                result.add(tag.getLemma());
             });
         });
         return result;
+    }
+
+    public static AnnotatedText load(Node node) {
+        Object id = node.getProperty(Properties.PROPERTY_ID);
+        AnnotatedText result = new AnnotatedText(id);
+        result.node = node;
+        Iterable<Relationship> relationships = node.getRelationships(CONTAINS_SENTENCE);
+        for (Relationship rel : relationships) {
+            Node sentenceNode = rel.getOtherNode(node);
+            Sentence sentence = Sentence.load(sentenceNode);
+            result.addSentence(sentence);
+        }
+        return result;
+    }
+
+    private Node checkIfExist(GraphDatabaseService database, Object id) {
+        if (id != null) {
+            ResourceIterator<Node> findNodes = database.findNodes(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
+            if (findNodes.hasNext()) {
+                return findNodes.next();
+            }
+        }
+        return null;
     }
 }

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TextProcessor {
+
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessor.class);
 
     public enum PIPELINE {
@@ -75,7 +77,6 @@ public class TextProcessor {
     private void createSentimentPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
-                .defaultStopWordAnnotator()
                 .extractSentiment()
                 .build();
         pipelines.put(PIPELINE.SENTIMENT, pipeline);
@@ -86,12 +87,13 @@ public class TextProcessor {
                 .tokenize()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
+                .threadNumber(6)
                 .build();
         pipelines.put(PIPELINE.COMPLETE, pipeline);
     }
 
-    public AnnotatedText annotateText(String text, Object id, boolean sentiment) {
-        AnnotatedText result = new AnnotatedText(text, id);
+    public AnnotatedText annotateText(String text, Object id, boolean sentiment, boolean store) {
+        AnnotatedText result = new AnnotatedText(id);
         Annotation document = new Annotation(text);
         if (sentiment) {
             pipelines.get(PIPELINE.COMPLETE).annotate(document);
@@ -100,10 +102,12 @@ public class TextProcessor {
         }
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final String background = backgroundSymbol;
+        final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.stream().map((sentence) -> {
             return sentence;
         }).forEach((sentence) -> {
-            final Sentence newSentence = new Sentence(sentence.toString());
+            String sentenceId = id + "_" + sentenceSequence.getAndIncrement();
+            final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId);
             final AtomicReference<String> prevNe = new AtomicReference<>();
             prevNe.set(background);
             final AtomicReference<StringBuilder> sb = new AtomicReference<>();
@@ -152,7 +156,7 @@ public class TextProcessor {
                 tag.setNe(prevNe.get());
                 newSentence.addTag(tag);
             }
-            
+
             if (sentiment) {
                 int score = extractSentiment(sentence);
                 newSentence.setSentiment(score);
@@ -162,12 +166,44 @@ public class TextProcessor {
         });
         return result;
     }
-    
+
+    public AnnotatedText sentiment(AnnotatedText annotated) {
+        StanfordCoreNLP pipeline = pipelines.get(PIPELINE.SENTIMENT);
+        annotated.getSentences().parallelStream().forEach((item) -> {
+            Annotation document = new Annotation(item.getSentence());
+            pipeline.annotate(document);
+            List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+            Optional<CoreMap> sentence = sentences.stream().findFirst();
+            if (sentence != null && sentence.isPresent()) {
+                int score = extractSentiment(sentence.get());
+                item.setSentiment(score);
+            }
+        });
+        return annotated;
+    }
+
     private int extractSentiment(CoreMap sentence) {
         Tree tree = sentence
                 .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
         int score = RNNCoreAnnotations.getPredictedClass(tree);
         return score;
+    }
+
+    public Tag annotateSentence(String text) {
+        Annotation document = new Annotation(text);
+        pipelines.get(PIPELINE.SENTIMENT).annotate(document);
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        Optional<CoreMap> sentence = sentences.stream().findFirst();
+        if (sentence.isPresent()) {
+            Optional<Tag> oTag = sentence.get().get(CoreAnnotations.TokensAnnotation.class).stream()
+                    .map((token) -> getTag(token))
+                    .filter((tag) -> (tag != null) && checkPuntuation(tag.getLemma()))
+                    .findFirst();
+            if (oTag.isPresent()) {
+                return oTag.get();
+            }
+        }
+        return null;
     }
 
     public Tag annotateTag(String text) {
@@ -218,6 +254,7 @@ public class TextProcessor {
 
         private final Properties properties = new Properties();
         private final StringBuilder annotattors = new StringBuilder(); //basics annotators
+        private int threadsNumber = 4;
 
         public PipelineBuilder tokenize() {
             checkForExistingAnnotators();
@@ -258,8 +295,14 @@ public class TextProcessor {
             return this;
         }
 
+        public PipelineBuilder threadNumber(int threads) {
+            this.threadsNumber = threads;
+            return this;
+        }
+
         public StanfordCoreNLP build() {
             properties.setProperty("annotators", annotattors.toString());
+            properties.setProperty("threads", String.valueOf(threadsNumber));
             StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
             return pipeline;
         }

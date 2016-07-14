@@ -102,4 +102,52 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
     
+    @Test
+    public void testAnnotatedTextAndSentiment() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT);
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, store: true}) YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Node resultNode = (Node) rowIterator.next();
+            assertEquals(resultNode.getProperty("id"), id);
+            params.clear();
+            params.put("id", id);
+            Result sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}}) WITH a "
+                    + "CALL ga.nlp.sentiment({node:a}) YIELD result "
+                    + "MATCH (result)-[:CONTAINS_SENTENCE]->(s:Sentence) "
+                    + "return labels(s) as labels", params);
+            rowIterator = sentences.columnAs("labels");
+            assertTrue(rowIterator.hasNext());
+            int i = 0;
+            while (rowIterator.hasNext()) {
+                List<Object> next = (List)rowIterator.next();
+                assertEquals(next.size(), 2);
+                i++;
+            }
+            assertEquals(4, i);
+            //Execute again for checking the number of senteces
+            sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}}) WITH a "
+                    + "CALL ga.nlp.sentiment({node:a}) YIELD result "
+                    + "MATCH (result)-[:CONTAINS_SENTENCE]->(s:Sentence) "
+                    + "return labels(s) as labels", params);
+            rowIterator = sentences.columnAs("labels");
+            assertTrue(rowIterator.hasNext());
+            i = 0;
+            while (rowIterator.hasNext()) {
+                List<Object> next = (List)rowIterator.next();
+                assertEquals(next.size(), 2);
+                i++;
+            }
+            assertEquals(4, i);
+            tx.success();
+        }
+    }
+    
 }

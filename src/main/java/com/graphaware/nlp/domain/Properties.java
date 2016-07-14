@@ -26,6 +26,7 @@ public final class Properties {
     public static final String PROCESS_TYPE = "processType";
     public static final String PROCESS_STATUS = "processStatus";
     public static final String HASH = "hash";
+    public static final String TEXT = "text";
     public static final String NUM_TERMS = "numTerms";
 
     /**

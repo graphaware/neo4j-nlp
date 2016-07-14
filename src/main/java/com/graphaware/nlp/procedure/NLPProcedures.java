@@ -49,6 +49,7 @@ public class NLPProcedures {
     public void init() throws ProcedureException, KernelException {
         NLPProcedure timeTreeProcedures = new NLPProcedure(database, featureBusinessLogic);
         procedures.register(timeTreeProcedures.annotate());
+        procedures.register(timeTreeProcedures.sentiment());
         procedures.register(timeTreeProcedures.concept());
         procedures.register(timeTreeProcedures.computeAll());
         procedures.register(timeTreeProcedures.search());

@@ -24,10 +24,10 @@ import java.util.List;
 public class ConceptNet5Importer {
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
+    public static final String DEFAULT_LANGUAGE = "en";
 
     private final ConceptNet5Client client;
     private final TextProcessor nlpProcessor;
-    private String[] admittedRelations;
     private int depthSearch = 2;
 
     public ConceptNet5Importer(String conceptNet5EndPoint, TextProcessor nlpProcessor, int depth, String... admittedRelations) {
@@ -37,14 +37,12 @@ public class ConceptNet5Importer {
     public ConceptNet5Importer(ConceptNet5Client client, TextProcessor nlpProcessor, int depth, String... admittedRelations) {
         this.client = client;
         this.nlpProcessor = nlpProcessor;
-        this.admittedRelations = admittedRelations;
         this.depthSearch = depth;
     }
 
     private ConceptNet5Importer(Builder builder) {
         this.client = builder.client;
         this.nlpProcessor = builder.nlpProcessor;
-        this.admittedRelations = builder.admittedRelations;
         this.depthSearch = builder.depthSearch;
     }
 
@@ -61,9 +59,6 @@ public class ConceptNet5Importer {
     
     public List<Tag> importHierarchy(Tag source, String lang, int depth, List<String> admittedRelations) {
         List<Tag> res = new ArrayList<>();
-//        if (source.getNe() != null && source.getNe().equalsIgnoreCase("PERSON")) {
-//            return res;
-//        }
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         ConceptNet5EdgeResult values = client.getValues(word, lang);
         values.getEdges().stream().forEach((concept) -> {
