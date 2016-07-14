@@ -194,7 +194,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
 
             params.put("value", SHORT_TEXT_10);
             getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
-            
+
             getDatabase().execute("MERGE (n:Tweet {id:1})", params);
 
             Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
@@ -216,4 +216,30 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
+    @Test
+    public void testConceptText() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT);
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}}) YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Node resultNode = (Node) rowIterator.next();
+            assertEquals(resultNode.getProperty("id"), id);
+            params.clear();
+            params.put("id", id);
+            Result tags = getDatabase().execute(
+                    "MATCH (a:AnnotatedText) "
+                    + "CALL ga.nlp.concept({node:a, depth: 1}) YIELD result\n"
+                    + "return result;", params);
+            rowIterator = tags.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            tx.success();
+        }
+    }
 }

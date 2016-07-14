@@ -50,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NLPProcedure {
+
     private static final Logger LOG = LoggerFactory.getLogger(NLPProcedure.class);
 
     private final TextProcessor textProcessor;
@@ -86,7 +87,7 @@ public class NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-                
+
                 try {
                     checkIsMap(input[0]);
                     Map<String, Object> inputParams = (Map) input[0];
@@ -104,11 +105,10 @@ public class NLPProcedure {
                         annotatedText = annotateText.storeOnGraph(database);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);
                     throw ex;
-                }                
+                }
             }
 
             private Node checkIfExist(Object id) {
@@ -157,15 +157,21 @@ public class NLPProcedure {
                 String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
                 List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
                 try (Transaction beginTx = database.beginTx()) {
-                    ResourceIterator<Node> tags = getAnnotatedTextTags(annotatedNode);
-                    while (tags.hasNext()) {
-                        final Tag tag = Tag.createTag(tags.next());
-                        List<Tag> conceptTags = conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships);
-                        conceptTags.stream().forEach((newTag) -> {
-                            newTag.storeOnGraph(database);
-                        });
-                        tag.storeOnGraph(database);
+                    ResourceIterator<Node> tagsIterator = getAnnotatedTextTags(annotatedNode);
+                    List<Tag> tags = new ArrayList<>();
+                    while (tagsIterator.hasNext()) {
+                        Tag tag = Tag.createTag(tagsIterator.next());
+                        tags.add(tag);
                     }
+                    List<Tag> conceptTags = new ArrayList<>();
+                    tags.parallelStream().forEach((tag) -> {
+                        conceptTags.addAll(conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships));
+                        conceptTags.add(tag);
+                    });              
+                    
+                    conceptTags.stream().forEach((newTag) -> {
+                        newTag.storeOnGraph(database);
+                    });
                     beginTx.success();
                 }
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
