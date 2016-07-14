@@ -40,7 +40,18 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             + "Vote is Unpredictable,”1 in which he claimed that the election "
             + "was too close to call. It was not, and despite his being in Pakistan, "
             + "the outcome of the election was exactly as we predicted.";
-    
+
+    private static final String SHORT_TEXT_1 = "You knew China's cities were growing. But the real numbers are stunning http://wef.ch/29IxY7w  #China";
+    private static final String SHORT_TEXT_2 = "Globalization for the 99%: can we make it work for all?";
+    private static final String SHORT_TEXT_3 = "This organisation increased productivity, happiness and trust with just one change http://wef.ch/29PeKxF ";
+    private static final String SHORT_TEXT_4 = "In pictures: The high-tech villages that live off the grid http://wef.ch/29xuRh8 ";
+    private static final String SHORT_TEXT_5 = "The 10 countries best prepared for the new digital economy http://wef.ch/2a8DNug ";
+    private static final String SHORT_TEXT_6 = "This is how to limit damage to the #euro after #Brexit, say economists http://wef.ch/29GGVzG ";
+    private static final String SHORT_TEXT_7 = "The office jobs that could see you earning nearly 50% less than some of your co-workers http://wef.ch/29P9biE ";
+    private static final String SHORT_TEXT_8 = "Which nationalities have the best quality of life? http://wef.ch/29uDfwV";
+    private static final String SHORT_TEXT_9 = "It’s 9,000km away, but #Brexit has hit #Japan hard http://wef.ch/29P92eQ  #economics";
+    private static final String SHORT_TEXT_10 = "Which is the world’s fastest-growing large economy? Clue: it’s not #China http://wef.ch/29xuXFd  #economics";
+
     @Test
     public void testAnnotatedText() {
         try (Transaction tx = getDatabase().beginTx()) {
@@ -61,19 +72,18 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             Result tags = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence)-[:HAS_TAG]->(result:Tag) RETURN result", params);
             rowIterator = tags.columnAs("result");
             assertTrue(rowIterator.hasNext());
-            
-            
+
             Result sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence) RETURN labels(s) as result", params);
             rowIterator = sentences.columnAs("result");
             assertTrue(rowIterator.hasNext());
             while (rowIterator.hasNext()) {
-                List<Object> next = (List)rowIterator.next();
+                List<Object> next = (List) rowIterator.next();
                 assertEquals(next.size(), 1);
             }
             tx.success();
         }
     }
-    
+
     @Test
     public void testAnnotatedTextWithSentiment() {
         try (Transaction tx = getDatabase().beginTx()) {
@@ -95,13 +105,13 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             rowIterator = sentences.columnAs("result");
             assertTrue(rowIterator.hasNext());
             while (rowIterator.hasNext()) {
-                List<Object> next = (List)rowIterator.next();
+                List<Object> next = (List) rowIterator.next();
                 assertEquals(next.size(), 2);
             }
             tx.success();
         }
     }
-    
+
     @Test
     public void testAnnotatedTextAndSentiment() {
         try (Transaction tx = getDatabase().beginTx()) {
@@ -127,7 +137,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
             int i = 0;
             while (rowIterator.hasNext()) {
-                List<Object> next = (List)rowIterator.next();
+                List<Object> next = (List) rowIterator.next();
                 assertEquals(next.size(), 2);
                 i++;
             }
@@ -141,7 +151,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
             i = 0;
             while (rowIterator.hasNext()) {
-                List<Object> next = (List)rowIterator.next();
+                List<Object> next = (List) rowIterator.next();
                 assertEquals(next.size(), 2);
                 i++;
             }
@@ -149,5 +159,59 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             tx.success();
         }
     }
-    
+
+    @Test
+    public void testAnnotatedTextOnMultiple() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", SHORT_TEXT_1);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_2);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_3);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_4);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_5);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_6);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_7);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_8);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_9);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            params.put("value", SHORT_TEXT_10);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
+
+            Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
+                    + "WITH collect(a) AS aa\n"
+                    + "UNWIND aa AS a\n"
+                    + "CALL ga.nlp.annotate({text:a.text, id: id(a)}) YIELD result WITH result as at "
+                    + "MERGE (a)-[:HAS_ANNOTATED_TEXT]->(at) WITH at "
+                    + "MATCH (at)-[CONTAINS_SENTENCE]->(result) "
+                    + "RETURN result", params);
+            ResourceIterator<Object> rowIterator = sentences.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            int i = 0;
+            while (rowIterator.hasNext()) {
+                rowIterator.next();
+                i++;
+            }
+            assertEquals(13, i);
+            tx.success();
+        }
+    }
+
 }
