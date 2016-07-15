@@ -41,7 +41,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             + "Vote is Unpredictable,”1 in which he claimed that the election "
             + "was too close to call. It was not, and despite his being in Pakistan, "
             + "the outcome of the election was exactly as we predicted.";
-    
+
     private static final String TEXT_IT = "Questo è un semplice testo in italiano";
     private static final String TEXT_FR = "Ceci est un texte simple en français";
 
@@ -200,7 +200,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
 
             getDatabase().execute("MERGE (n:Tweet {id:1})", params);
-            
+
             //Test for filter based on language
             params.put("value", TEXT_IT);
             getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
@@ -262,8 +262,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
             assertEquals("en", resultNode);
-            
-            
+
             params.put("value", TEXT_IT);
             result = getDatabase().execute("CALL ga.nlp.language({text:{value}}) YIELD result\n"
                     + "return result", params);
@@ -271,8 +270,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
             resultNode = (String) rowIterator.next();
             assertEquals("it", resultNode);
-            
-            
+
             params.put("value", TEXT_FR);
             result = getDatabase().execute("CALL ga.nlp.language({text:{value}}) YIELD result\n"
                     + "return result", params);
@@ -280,11 +278,11 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
             resultNode = (String) rowIterator.next();
             assertEquals("fr", resultNode);
-            
+
             tx.success();
         }
     }
-    
+
     @Test
     public void testSupportedLanguage() {
         try (Transaction tx = getDatabase().beginTx()) {
@@ -298,6 +296,44 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                     + "return result", params);
             ResourceIterator<Object> rowIterator = news.columnAs("result");
             assertFalse(rowIterator.hasNext());
+            tx.success();
+        }
+    }
+
+    @Test
+    public void testFilter() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT);
+            params.put("filter", "Owen Bennett Jones/PERSON");
+            Result news = getDatabase().execute("CALL ga.nlp.filter({text:{value}, filter: {filter}}) YIELD result\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Boolean resultNode = (Boolean) rowIterator.next();
+            assertEquals(true, resultNode);
+            
+            params.clear();
+            params.put("value", SHORT_TEXT_1);
+            params.put("filter", "China/PERSON");
+            news = getDatabase().execute("CALL ga.nlp.filter({text:{value}, filter: {filter}}) YIELD result\n"
+                    + "return result", params);
+            rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            resultNode = (Boolean) rowIterator.next();
+            assertEquals(false, resultNode);
+            
+            
+            params.clear();
+            params.put("value", TEXT);
+            params.put("filter", "Owen Bennett Jones/PERSON, BBC, Pakistan/LOCATION");
+            news = getDatabase().execute("CALL ga.nlp.filter({text:{value}, filter: {filter}}) YIELD result\n"
+                    + "return result", params);
+            rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            resultNode = (Boolean) rowIterator.next();
+            assertEquals(true, resultNode);
             tx.success();
         }
     }

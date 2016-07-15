@@ -18,7 +18,9 @@ package com.graphaware.nlp.domain;
 import static com.graphaware.nlp.domain.Labels.AnnotatedText;
 import static com.graphaware.nlp.domain.Relationships.CONTAINS_SENTENCE;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -80,6 +82,16 @@ public class AnnotatedText implements Persistable {
         });
         return result;
     }
+    
+    public List<Tag> getTags() {
+        List<Tag> result = new ArrayList<>();
+        sentences.stream().forEach((sentence) -> {
+            sentence.getTags().stream().forEach((tag) -> {
+                result.add(tag);
+            });
+        });
+        return result;
+    }
 
     public static AnnotatedText load(Node node) {
         Object id = node.getProperty(Properties.PROPERTY_ID);
@@ -103,4 +115,65 @@ public class AnnotatedText implements Persistable {
         }
         return null;
     }
+
+    public boolean filter(String filterQuery) {
+        Map<String, FilterQueryTerm> filterQueryTerm = getFilterQueryTerms(filterQuery);
+        List<Tag> tags = getTags();
+        for (Tag tag : tags) {
+            FilterQueryTerm query = filterQueryTerm.get(tag.getLemma());
+            if (query != null && query.evaluate(tag))
+                return true;
+        }
+        return false;        
+    }
+
+    //Query example "Nice/Location, attack"
+    private Map<String, FilterQueryTerm> getFilterQueryTerms(String query) {
+        Map<String, FilterQueryTerm> result = new HashMap<>();
+        if (query != null) {
+            String[] terms = query.split(",");
+            for (String term : terms) {
+                String[] termElement = term.split("/");
+                if (termElement.length == 2) {
+                    result.put(termElement[0], new FilterQueryTerm(termElement[0], termElement[1]));
+                } else {
+                    result.put(termElement[0], new FilterQueryTerm(termElement[0]));
+                }
+
+            }
+        }
+        return result;
+    }
+
+    private class FilterQueryTerm {
+
+        private final String value;
+        private String NE = null;
+
+        public FilterQueryTerm(String value, String NE) {
+            this.value = value;
+            this.NE = NE;
+        }
+
+        public FilterQueryTerm(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public String getNE() {
+            return NE;
+        }
+
+        private boolean evaluate(Tag tag) {
+            if (NE != null) {
+                return tag.getNe().equalsIgnoreCase(NE) && tag.getLemma().equalsIgnoreCase(value);
+            } else 
+                return tag.getLemma().equalsIgnoreCase(value);
+        }
+
+    }
+
 }

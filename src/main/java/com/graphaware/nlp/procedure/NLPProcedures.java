@@ -54,6 +54,7 @@ public class NLPProcedures {
         procedures.register(timeTreeProcedures.computeAll());
         procedures.register(timeTreeProcedures.search());
         procedures.register(timeTreeProcedures.language());
+        procedures.register(timeTreeProcedures.filter());
 
         Executors.newSingleThreadExecutor().execute(queueProcessor);
     }

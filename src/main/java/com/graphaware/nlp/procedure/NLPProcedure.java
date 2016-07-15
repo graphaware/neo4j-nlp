@@ -46,11 +46,8 @@ import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class NLPProcedure {
@@ -63,6 +60,7 @@ public class NLPProcedure {
 
     private static final String PARAMETER_NAME_INPUT = "input";
     private static final String PARAMETER_NAME_TEXT = "text";
+    private static final String PARAMETER_NAME_FILTER = "filter";
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_LANG = "lang";
@@ -144,7 +142,32 @@ public class NLPProcedure {
             }
         };
     }
-    
+
+    public CallableProcedure.BasicProcedure filter() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("filter"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTBoolean).build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+                String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
+                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(text)) {
+                    LOG.info("text is null or language not supported or unable to detect the language");
+                    return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
+                }
+                String filter = (String) inputParams.get(PARAMETER_NAME_FILTER);
+                if (filter == null) {
+                    throw new RuntimeException("A filter value needs to be provided");
+                }
+                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, false, false);
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
+            }
+        };
+    }
+
     public CallableProcedure.BasicProcedure sentiment() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("sentiment"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
@@ -189,8 +212,8 @@ public class NLPProcedure {
                     tags.parallelStream().forEach((tag) -> {
                         conceptTags.addAll(conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships));
                         conceptTags.add(tag);
-                    });              
-                    
+                    });
+
                     conceptTags.stream().forEach((newTag) -> {
                         newTag.storeOnGraph(database);
                     });
