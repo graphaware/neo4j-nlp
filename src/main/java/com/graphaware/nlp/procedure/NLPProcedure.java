@@ -22,6 +22,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Labels;
 import com.graphaware.nlp.domain.Properties;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.logic.FeatureBasedProcessLogic;
 import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
@@ -48,6 +49,9 @@ import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class NLPProcedure {
 
@@ -93,7 +97,8 @@ public class NLPProcedure {
                     Map<String, Object> inputParams = (Map) input[0];
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                     LOG.warn("Text: " + text);
-                    if (text == null) {
+                    if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(text)) {
+                        LOG.info("text is null or language not supported or unable to detect the language");
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
@@ -123,6 +128,23 @@ public class NLPProcedure {
         };
     }
 
+    public CallableProcedure.BasicProcedure language() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("language"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString).build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+                String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
+                String language = LanguageManager.getInstance().detectLanguage(text);
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{language}).iterator());
+            }
+        };
+    }
+    
     public CallableProcedure.BasicProcedure sentiment() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("sentiment"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)

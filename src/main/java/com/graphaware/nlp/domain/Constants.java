@@ -35,6 +35,10 @@ public final class Constants {
     public static final String PROCESS_STATUS_FAILED = "FAILED";
     //
     public static final String PARAMETER_DEPTH = "depth";
+    //    
+    public static final String LANGUAGE_NA = "n/a";
+    public static final String LANGUAGE_EN = "en";
+
     /**
      * Private constructor to prevent people from instantiating this class -
      * it's not meant to be instantiated.

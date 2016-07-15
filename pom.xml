@@ -85,6 +85,12 @@
     </dependency>
     
     <dependency>
+      <groupId>com.optimaize.languagedetector</groupId>
+      <artifactId>language-detector</artifactId>
+      <version>0.5</version>
+    </dependency>
+    
+    <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>runtime-api</artifactId>
       <scope>test</scope>

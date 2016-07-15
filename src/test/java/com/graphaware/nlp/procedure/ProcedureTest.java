@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
@@ -40,6 +41,9 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             + "Vote is Unpredictable,”1 in which he claimed that the election "
             + "was too close to call. It was not, and despite his being in Pakistan, "
             + "the outcome of the election was exactly as we predicted.";
+    
+    private static final String TEXT_IT = "Questo è un semplice testo in italiano";
+    private static final String TEXT_FR = "Ceci est un texte simple en français";
 
     private static final String SHORT_TEXT_1 = "You knew China's cities were growing. But the real numbers are stunning http://wef.ch/29IxY7w  #China";
     private static final String SHORT_TEXT_2 = "Globalization for the 99%: can we make it work for all?";
@@ -196,6 +200,10 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
 
             getDatabase().execute("MERGE (n:Tweet {id:1})", params);
+            
+            //Test for filter based on language
+            params.put("value", TEXT_IT);
+            getDatabase().execute("MERGE (n:Tweet {text: {value}})", params);
 
             Result sentences = getDatabase().execute("MATCH (a:Tweet) WITH a\n"
                     + "WITH collect(a) AS aa\n"
@@ -239,6 +247,57 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                     + "return result;", params);
             rowIterator = tags.columnAs("result");
             assertTrue(rowIterator.hasNext());
+            tx.success();
+        }
+    }
+
+    @Test
+    public void testLanguageDetection() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT);
+            Result result = getDatabase().execute("CALL ga.nlp.language({text:{value}}) YIELD result\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = result.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            String resultNode = (String) rowIterator.next();
+            assertEquals("en", resultNode);
+            
+            
+            params.put("value", TEXT_IT);
+            result = getDatabase().execute("CALL ga.nlp.language({text:{value}}) YIELD result\n"
+                    + "return result", params);
+            rowIterator = result.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            resultNode = (String) rowIterator.next();
+            assertEquals("it", resultNode);
+            
+            
+            params.put("value", TEXT_FR);
+            result = getDatabase().execute("CALL ga.nlp.language({text:{value}}) YIELD result\n"
+                    + "return result", params);
+            rowIterator = result.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            resultNode = (String) rowIterator.next();
+            assertEquals("fr", resultNode);
+            
+            tx.success();
+        }
+    }
+    
+    @Test
+    public void testSupportedLanguage() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT_IT);
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}}) YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertFalse(rowIterator.hasNext());
             tx.success();
         }
     }
