@@ -80,10 +80,23 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             Result sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence) RETURN labels(s) as result", params);
             rowIterator = sentences.columnAs("result");
             assertTrue(rowIterator.hasNext());
+            int countSentence = 0;
             while (rowIterator.hasNext()) {
                 List<Object> next = (List) rowIterator.next();
                 assertEquals(next.size(), 1);
+                countSentence++;
             }
+            
+            sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:FIRST_SENTENCE|NEXT_SENTENCE*..]->(s:Sentence) RETURN labels(s) as result", params);
+            rowIterator = sentences.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            int newCountSentence = 0;
+            while (rowIterator.hasNext()) {
+                List<Object> next = (List) rowIterator.next();
+                assertEquals(next.size(), 1);
+                newCountSentence++;
+            }
+            assertEquals(countSentence, newCountSentence);
             tx.success();
         }
     }

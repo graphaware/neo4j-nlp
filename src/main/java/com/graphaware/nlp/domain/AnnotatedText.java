@@ -17,10 +17,13 @@ package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.AnnotatedText;
 import static com.graphaware.nlp.domain.Relationships.CONTAINS_SENTENCE;
+import static com.graphaware.nlp.domain.Relationships.FIRST_SENTENCE;
+import static com.graphaware.nlp.domain.Relationships.NEXT_SENTENCE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -52,8 +55,17 @@ public class AnnotatedText implements Persistable {
             final Node annotatedTextNode = database.createNode(AnnotatedText);
             annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
             annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
+            final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
+
             sentences.stream().map((sentence) -> sentence.storeOnGraph(database)).forEach((sentenceNode) -> {
                 annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
+                Node previousSentence = previousSentenceReference.get();
+                if (previousSentence == null) {
+                    annotatedTextNode.createRelationshipTo(sentenceNode, FIRST_SENTENCE);
+                } else {
+                    previousSentence.createRelationshipTo(sentenceNode, NEXT_SENTENCE);
+                }
+                previousSentenceReference.set(sentenceNode);
             });
             tmpAnnotatedNode = annotatedTextNode;
         } else {
@@ -82,7 +94,7 @@ public class AnnotatedText implements Persistable {
         });
         return result;
     }
-    
+
     public List<Tag> getTags() {
         List<Tag> result = new ArrayList<>();
         sentences.stream().forEach((sentence) -> {
@@ -121,10 +133,11 @@ public class AnnotatedText implements Persistable {
         List<Tag> tags = getTags();
         for (Tag tag : tags) {
             FilterQueryTerm query = filterQueryTerm.get(tag.getLemma());
-            if (query != null && query.evaluate(tag))
+            if (query != null && query.evaluate(tag)) {
                 return true;
+            }
         }
-        return false;        
+        return false;
     }
 
     //Query example "Nice/Location, attack"
@@ -170,8 +183,9 @@ public class AnnotatedText implements Persistable {
         private boolean evaluate(Tag tag) {
             if (NE != null) {
                 return tag.getNe().equalsIgnoreCase(NE) && tag.getLemma().equalsIgnoreCase(value);
-            } else 
+            } else {
                 return tag.getLemma().equalsIgnoreCase(value);
+            }
         }
 
     }
