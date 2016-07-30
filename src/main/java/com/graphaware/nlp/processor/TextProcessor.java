@@ -101,70 +101,90 @@ public class TextProcessor {
             pipelines.get(PIPELINE.BASIC).annotate(document);
         }
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        final String background = backgroundSymbol;
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.stream().map((sentence) -> {
             return sentence;
         }).forEach((sentence) -> {
             String sentenceId = id + "_" + sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId);
-            final AtomicReference<String> prevNe = new AtomicReference<>();
-            prevNe.set(background);
-            final AtomicReference<StringBuilder> sb = new AtomicReference<>();
-            sb.set(new StringBuilder());
-            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
-            tokens.stream()
-                    .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
-                    .map((token) -> {
-                        //
-                        String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                        if (currentNe.equals(background) && prevNe.get().equals(background)) {
-                            Tag tag = getTag(token);
-                            if (tag != null) {
-                                newSentence.addTag(tag);
-                            }
-                        } else if (currentNe.equals(background) && !prevNe.get().equals(background)) {
-                            Tag newTag = new Tag(sb.get().toString());
-                            newTag.setNe(prevNe.get());
-                            newSentence.addTag(newTag);
-                            sb.set(new StringBuilder());
-                            Tag tag = getTag(token);
-                            if (tag != null) {
-                                newSentence.addTag(tag);
-                            }
-                        } else if (!currentNe.equals(prevNe.get()) && !prevNe.get().equals(background)) {
-                            Tag newTag = new Tag(sb.get().toString());
-                            newTag.setNe(prevNe.get());
-                            newSentence.addTag(newTag);
-                            sb.set(new StringBuilder());
-                            sb.get().append(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
-                        } else if (!currentNe.equals(background) && prevNe.get().equals(background)) {
-                            sb.get().append(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
-                        } else {
-                            String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
-                            String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
-                            sb.get().append(before);
-                            sb.get().append(currentText);
-                        }
-                        return currentNe;
-                    }).forEach((currentNe) -> {
-                prevNe.set(currentNe);
-            });
-
-            if (sb.get().length() > 0) {
-                Tag tag = new Tag(sb.get().toString());
-                tag.setNe(prevNe.get());
-                newSentence.addTag(tag);
-            }
-
+            extractTokens(sentence, newSentence);
             if (sentiment) {
-                int score = extractSentiment(sentence);
-                newSentence.setSentiment(score);
+                extractSentiment(sentence, newSentence);
             }
             result.addSentence(newSentence);
 
         });
         return result;
+    }
+
+    protected void extractSentiment(CoreMap sentence, final Sentence newSentence) {
+        int score = extractSentiment(sentence);
+        newSentence.setSentiment(score);
+    }
+
+    protected void extractTokens(CoreMap sentence, final Sentence newSentence) {
+        List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+        final String background = backgroundSymbol;
+//      final AtomicReference<String> prevNe = new AtomicReference<>();
+//      prevNe.set(background);
+//      final AtomicReference<StringBuilder> sb = new AtomicReference<>();
+//      sb.set(new StringBuilder());
+        TokenHolder currToken = new TokenHolder();
+        currToken.setNe(background);
+        tokens.stream()
+                .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
+                .map((token) -> {
+                    //
+                    String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
+                    if (currentNe.equals(background) && currToken.getNe().equals(background)) {
+                        Tag tag = getTag(token);
+                        if (tag != null) {
+                            newSentence.addTag(tag);
+                            newSentence.addOccurrence(token.beginPosition(), token.endPosition(), tag);
+                        }
+                    } else if (currentNe.equals(background) && !currToken.getNe().equals(background)) {
+                        Tag newTag = new Tag(currToken.getToken());
+                        newTag.setNe(currToken.getNe());
+                        newSentence.addTag(newTag);
+                        newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newTag);
+                        currToken.reset();
+                        Tag tag = getTag(token);
+                        if (tag != null) {
+                            newSentence.addTag(tag);
+                            newSentence.addOccurrence(token.beginPosition(), token.endPosition(), tag);
+                        }
+                    } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(background)) {
+                        Tag tag = new Tag(currToken.getToken());
+                        tag.setNe(currToken.getNe());
+                        newSentence.addTag(tag);
+                        newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+                        currToken.reset();
+                        currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
+                        currToken.setBeginPosition(token.beginPosition());
+                        currToken.setEndPosition(token.endPosition());
+                    } else if (!currentNe.equals(background) && currToken.getNe().equals(background)) {
+                        currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
+                        currToken.setBeginPosition(token.beginPosition());
+                        currToken.setEndPosition(token.endPosition());
+                    } else {
+                        String before = StringUtils.getNotNullString(token.get(CoreAnnotations.BeforeAnnotation.class));
+                        String currentText = StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class));
+                        currToken.updateToken(before);
+                        currToken.updateToken(currentText);
+                        currToken.setBeginPosition(token.beginPosition());
+                        currToken.setEndPosition(token.endPosition());
+                    }
+                    return currentNe;
+                }).forEach((currentNe) -> {
+            currToken.setNe(currentNe);
+        });
+
+        if (currToken.getToken().length() > 0) {
+            Tag tag = new Tag(currToken.getToken());
+            tag.setNe(currToken.getNe());
+            newSentence.addTag(tag);
+            newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+        }
     }
 
     public AnnotatedText sentiment(AnnotatedText annotated) {
@@ -175,8 +195,7 @@ public class TextProcessor {
             List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
             Optional<CoreMap> sentence = sentences.stream().findFirst();
             if (sentence != null && sentence.isPresent()) {
-                int score = extractSentiment(sentence.get());
-                item.setSentiment(score);
+                extractSentiment(sentence.get(), item);
             }
         });
         return annotated;
@@ -248,6 +267,61 @@ public class TextProcessor {
     public boolean checkPuntuation(String value) {
         Matcher match = patternCheck.matcher(value);
         return !match.find();
+    }
+
+    class TokenHolder {
+
+        private String ne;
+        private StringBuilder sb;
+        private int beginPosition;
+        private int endPosition;
+
+        public TokenHolder() {
+            reset();
+        }
+
+        public String getNe() {
+            return ne;
+        }
+
+        public String getToken() {
+            if (sb == null) {
+                return " - ";
+            }
+            return sb.toString();
+        }
+
+        public int getBeginPosition() {
+            return beginPosition;
+        }
+
+        public int getEndPosition() {
+            return endPosition;
+        }
+
+        public void setNe(String ne) {
+            this.ne = ne;
+        }
+
+        public void updateToken(String tknStr) {
+            this.sb.append(tknStr);
+        }
+
+        public void setBeginPosition(int beginPosition) {
+            if (this.beginPosition < 0) {
+                this.beginPosition = beginPosition;
+            }
+        }
+
+        public void setEndPosition(int endPosition) {
+            this.endPosition = endPosition;
+        }
+
+        public final void reset() {
+            sb = new StringBuilder();
+            beginPosition = -1;
+            endPosition = -1;
+        }
     }
 
     static class PipelineBuilder {

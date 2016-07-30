@@ -17,6 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.conceptnet5.ConceptNet5Importer;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
@@ -148,5 +150,38 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1, true, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(4, annotateText.getSentences().get(0).getSentiment());
+    }
+    
+    @Test
+    public void testAnnotatedTextWithPosition() {
+        TextProcessor textProcessor = new TextProcessor();
+        AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
+                + "one week before the Pakistani election, the third author, "
+                + "in his keynote address at the Sentiment Analysis Symposium, "
+                + "forecast the winner of the Pakistani election. The chart "
+                + "in Figure 1 shows varying sentiment on the candidates for "
+                + "prime minister of Pakistan in that election. The next day, "
+                + "the BBC’s Owen Bennett Jones, reporting from Islamabad, wrote "
+                + "an article titled “Pakistan Elections: Five Reasons Why the "
+                + "Vote is Unpredictable,”1 in which he claimed that the election "
+                + "was too close to call. It was not, and despite his being in Pakistan, "
+                + "the outcome of the election was exactly as we predicted.", 1, false, false);
+
+        assertEquals(4, annotateText.getSentences().size());
+        Sentence sentence1 = annotateText.getSentences().get(0);
+        assertEquals(15, sentence1.getTags().size());
+        
+        assertNull(sentence1.getTagOccurrence(0));
+        assertEquals("8 May 2013", sentence1.getTagOccurrence(3).getLemma());
+        assertEquals("one week", sentence1.getTagOccurrence(15).getLemma());
+        assertEquals("before", sentence1.getTagOccurrence(24).getLemma());
+        assertEquals("third", sentence1.getTagOccurrence(59).getLemma());
+        assertEquals("sentiment", sentence1.getTagOccurrence(103).getLemma());
+        assertEquals("forecast", sentence1.getTagOccurrence(133).getLemma());
+        assertNull(sentence1.getTagOccurrence(184));
+        
+        Sentence sentence2 = annotateText.getSentences().get(1);
+        assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
+        assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());
     }
 }

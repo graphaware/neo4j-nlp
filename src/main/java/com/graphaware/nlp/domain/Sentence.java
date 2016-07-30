@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.domain;
 
+import com.graphaware.common.util.Pair;
 import static com.graphaware.nlp.domain.SentimentLabels.*;
 import static com.graphaware.nlp.domain.Labels.Sentence;
 import static com.graphaware.nlp.domain.Properties.HASH;
@@ -33,6 +34,8 @@ import org.neo4j.graphdb.ResourceIterator;
 public class Sentence implements Persistable {
 
     private final Map<String, Tag> tags;
+    private Map<Integer, TagOccurrence> tagOccurrences;
+
     private final String sentence;
     private int sentiment = -1;
     private boolean store = false;
@@ -71,6 +74,30 @@ public class Sentence implements Persistable {
 
     public String getId() {
         return id;
+    }
+
+    public void addOccurrence(int begin, int end, Tag tag) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")" );
+        }
+        if (tagOccurrences == null) {
+            tagOccurrences = new HashMap<>();
+        }
+        //Will update end if already exist
+        tagOccurrences.put(begin, new TagOccurrence(tag, begin, end));
+    }
+
+    //Currently used only for testing purpose
+    public Tag getTagOccurrence(int begin) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative");
+        }
+        TagOccurrence occurrence = tagOccurrences.get(begin);
+        if (occurrence != null) {
+            return occurrence.getTag();
+        } else {
+          return null;  
+        }
     }
 
     @Override
@@ -137,5 +164,24 @@ public class Sentence implements Persistable {
             }
         }
         return null;
+    }
+
+    class TagOccurrence {
+
+        private final Tag tag;
+        private final Pair<Integer, Integer> span;
+
+        public TagOccurrence(Tag tag, int begin, int end) {
+            this.tag = tag;
+            this.span = new Pair<>(begin, end);
+        }
+
+        public Tag getTag() {
+            return tag;
+        }
+
+        public Pair<Integer, Integer> getSpan() {
+            return span;
+        }
     }
 }
