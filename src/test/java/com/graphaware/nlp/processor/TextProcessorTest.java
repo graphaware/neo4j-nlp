@@ -17,11 +17,13 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.conceptnet5.ConceptNet5Importer;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
@@ -155,6 +158,14 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testAnnotatedTextWithPosition() {
         TextProcessor textProcessor = new TextProcessor();
+        StanfordCoreNLP pipeline = new PipelineBuilder()
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .extractSentiment()
+                .extractCoref()
+                .extractRelations()
+                .threadNumber(6)
+                .build();
         AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
@@ -165,7 +176,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, false, false);
+                + "the outcome of the election was exactly as we predicted.", 1, pipeline, false);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);
@@ -179,9 +190,14 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals("sentiment", sentence1.getTagOccurrence(103).getLemma());
         assertEquals("forecast", sentence1.getTagOccurrence(133).getLemma());
         assertNull(sentence1.getTagOccurrence(184));
+        assertTrue(sentence1.getPhraseOccurrence(99).contains(new Phrase("the Sentiment Analysis Symposium")));
+        assertTrue(sentence1.getPhraseOccurrence(103).contains(new Phrase("Sentiment")));
+        assertTrue(sentence1.getPhraseOccurrence(113).contains(new Phrase("Analysis")));
         
         Sentence sentence2 = annotateText.getSentences().get(1);
         assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
         assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());
+        
+        
     }
 }

@@ -16,26 +16,30 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import static edu.stanford.nlp.sequences.SeqClassifierFlags.DEFAULT_BACKGROUND_SYMBOL;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -52,7 +56,6 @@ public class TextProcessor {
     }
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
-    private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
     private final Map<PIPELINE, StanfordCoreNLP> pipelines = new HashMap<>();
     private final Pattern patternCheck;
@@ -93,13 +96,19 @@ public class TextProcessor {
     }
 
     public AnnotatedText annotateText(String text, Object id, boolean sentiment, boolean store) {
-        AnnotatedText result = new AnnotatedText(id);
-        Annotation document = new Annotation(text);
+        StanfordCoreNLP pipeline;
         if (sentiment) {
-            pipelines.get(PIPELINE.COMPLETE).annotate(document);
+             pipeline = pipelines.get(PIPELINE.COMPLETE);
         } else {
-            pipelines.get(PIPELINE.BASIC).annotate(document);
+            pipeline = pipelines.get(PIPELINE.BASIC);
         }
+        return annotateText(text, id, pipeline, store);
+    }
+    
+    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store) {        
+        AnnotatedText result = new AnnotatedText(id);
+        Annotation document = new Annotation(text);        
+        pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
         sentences.stream().map((sentence) -> {
@@ -108,13 +117,21 @@ public class TextProcessor {
             String sentenceId = id + "_" + sentenceSequence.getAndIncrement();
             final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId);
             extractTokens(sentence, newSentence);
-            if (sentiment) {
-                extractSentiment(sentence, newSentence);
-            }
+            extractSentiment(sentence, newSentence);
+            extractPhrases(sentence, newSentence);
             result.addSentence(newSentence);
-
         });
         return result;
+    }
+
+    protected void extractPhrases(CoreMap sentence, Sentence newSentence) {
+        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        if (tree == null)
+            return;
+        Set<PhraseHolder> extractedPhrases = inspectSubTree(tree);
+        extractedPhrases.stream().forEach((holder) -> {
+            newSentence.addPhraseOccurrence(holder.getBeginPosition(), holder.getEndPosition(), new Phrase(holder.getPhrase()));
+        });
     }
 
     protected void extractSentiment(CoreMap sentence, final Sentence newSentence) {
@@ -124,45 +141,40 @@ public class TextProcessor {
 
     protected void extractTokens(CoreMap sentence, final Sentence newSentence) {
         List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
-        final String background = backgroundSymbol;
-//      final AtomicReference<String> prevNe = new AtomicReference<>();
-//      prevNe.set(background);
-//      final AtomicReference<StringBuilder> sb = new AtomicReference<>();
-//      sb.set(new StringBuilder());
         TokenHolder currToken = new TokenHolder();
-        currToken.setNe(background);
+        currToken.setNe(backgroundSymbol);
         tokens.stream()
                 .filter((token) -> (token != null) && checkPuntuation(token.get(CoreAnnotations.LemmaAnnotation.class)))
                 .map((token) -> {
                     //
                     String currentNe = StringUtils.getNotNullString(token.get(CoreAnnotations.NamedEntityTagAnnotation.class));
-                    if (currentNe.equals(background) && currToken.getNe().equals(background)) {
+                    if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = getTag(token);
                         if (tag != null) {
                             newSentence.addTag(tag);
-                            newSentence.addOccurrence(token.beginPosition(), token.endPosition(), tag);
+                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), tag);
                         }
-                    } else if (currentNe.equals(background) && !currToken.getNe().equals(background)) {
+                    } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag newTag = new Tag(currToken.getToken());
                         newTag.setNe(currToken.getNe());
                         newSentence.addTag(newTag);
-                        newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newTag);
+                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newTag);
                         currToken.reset();
                         Tag tag = getTag(token);
                         if (tag != null) {
                             newSentence.addTag(tag);
-                            newSentence.addOccurrence(token.beginPosition(), token.endPosition(), tag);
+                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), tag);
                         }
-                    } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(background)) {
+                    } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = new Tag(currToken.getToken());
                         tag.setNe(currToken.getNe());
                         newSentence.addTag(tag);
-                        newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
                         currToken.reset();
                         currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
-                    } else if (!currentNe.equals(background) && currToken.getNe().equals(background)) {
+                    } else if (!currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
                         currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
                         currToken.setBeginPosition(token.beginPosition());
                         currToken.setEndPosition(token.endPosition());
@@ -183,7 +195,7 @@ public class TextProcessor {
             Tag tag = new Tag(currToken.getToken());
             tag.setNe(currToken.getNe());
             newSentence.addTag(tag);
-            newSentence.addOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
         }
     }
 
@@ -204,6 +216,8 @@ public class TextProcessor {
     private int extractSentiment(CoreMap sentence) {
         Tree tree = sentence
                 .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
+        if (tree == null) 
+            return Sentence.NO_SENTIMENT;
         int score = RNNCoreAnnotations.getPredictedClass(tree);
         return score;
     }
@@ -269,6 +283,44 @@ public class TextProcessor {
         return !match.find();
     }
 
+    private Set<PhraseHolder> inspectSubTree(Tree subTree) {
+        Set<PhraseHolder> result = new TreeSet<>();
+        if (subTree.value().equalsIgnoreCase("NP") || subTree.value().equalsIgnoreCase("NP-TMP")) {// set your rule of defining Phrase here
+            PhraseHolder pHolder = new PhraseHolder();
+            List<Tree> leaves = subTree.getLeaves(); //leaves correspond to the tokens
+            leaves.stream().map((leaf) -> leaf.yieldWords()).map((words) -> {
+                pHolder.setBeginPosition(words.get(0).beginPosition());
+                pHolder.setEndPosition(words.get(words.size() - 1).endPosition());
+                return words;
+            }).forEach((words) -> {
+                words.stream().forEach((word) -> {
+                    pHolder.updatePhrase(word.word());
+                    pHolder.updatePhrase(" ");
+                });
+            });
+            result.add(pHolder);
+            subTree.getChildrenAsList().stream().filter((child) -> (!child.equals(subTree))).forEach((child) -> {
+                result.addAll(inspectSubTree(child));
+            });
+        } else if (subTree.isLeaf()) {
+            PhraseHolder pHolder = new PhraseHolder();
+            ArrayList<Word> words = subTree.yieldWords();
+            pHolder.setBeginPosition(words.get(0).beginPosition());
+            pHolder.setEndPosition(words.get(words.size() - 1).endPosition());
+            words.stream().forEach((word) -> {
+                pHolder.updatePhrase(word.word());
+                pHolder.updatePhrase(" ");
+            });
+            result.add(pHolder);
+        } else {
+            List<Tree> children = subTree.getChildrenAsList();
+            children.stream().forEach((child) -> {
+                result.addAll(inspectSubTree(child));
+            });
+        }
+        return result;
+    }
+
     class TokenHolder {
 
         private String ne;
@@ -324,61 +376,82 @@ public class TextProcessor {
         }
     }
 
-    static class PipelineBuilder {
+    class PhraseHolder implements Comparable<PhraseHolder> {
 
-        private final Properties properties = new Properties();
-        private final StringBuilder annotattors = new StringBuilder(); //basics annotators
-        private int threadsNumber = 4;
+        private StringBuilder sb;
+        private int beginPosition;
+        private int endPosition;
 
-        public PipelineBuilder tokenize() {
-            checkForExistingAnnotators();
-            annotattors.append("tokenize, ssplit, pos, lemma, ner");
-            return this;
+        public PhraseHolder() {
+            reset();
         }
 
-        private void checkForExistingAnnotators() {
-            if (annotattors.toString().length() > 0) {
-                annotattors.append(", ");
+        public String getPhrase() {
+            if (sb == null) {
+                return " - ";
+            }
+            return sb.toString();
+        }
+
+        public int getBeginPosition() {
+            return beginPosition;
+        }
+
+        public int getEndPosition() {
+            return endPosition;
+        }
+
+        public void updatePhrase(String tknStr) {
+            this.sb.append(tknStr);
+        }
+
+        public void setBeginPosition(int beginPosition) {
+            if (this.beginPosition < 0) {
+                this.beginPosition = beginPosition;
             }
         }
 
-        public PipelineBuilder extractSentiment() {
-            checkForExistingAnnotators();
-            annotattors.append("parse, sentiment");
-            return this;
+        public void setEndPosition(int endPosition) {
+            this.endPosition = endPosition;
         }
 
-        public PipelineBuilder extractRelations() {
-            checkForExistingAnnotators();
-            annotattors.append("relation");
-            return this;
+        public final void reset() {
+            sb = new StringBuilder();
+            beginPosition = -1;
+            endPosition = -1;
         }
 
-        public PipelineBuilder defaultStopWordAnnotator() {
-            checkForExistingAnnotators();
-            annotattors.append("stopword");
-            properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
-            properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
-            return this;
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof PhraseHolder)) {
+                return false;
+            }
+            PhraseHolder otherObject = (PhraseHolder) o;
+            if (this.sb != null
+                    && otherObject.sb != null
+                    && this.sb.toString().equals(otherObject.sb.toString())
+                    && this.beginPosition == otherObject.beginPosition
+                    && this.endPosition == otherObject.endPosition) {
+                return true;
+            }
+            return false;
         }
 
-        public PipelineBuilder stopWordAnnotator(Properties properties) {
-            properties.entrySet().stream().forEach((entry) -> {
-                this.properties.setProperty((String) entry.getKey(), (String) entry.getValue());
-            });
-            return this;
-        }
-
-        public PipelineBuilder threadNumber(int threads) {
-            this.threadsNumber = threads;
-            return this;
-        }
-
-        public StanfordCoreNLP build() {
-            properties.setProperty("annotators", annotattors.toString());
-            properties.setProperty("threads", String.valueOf(threadsNumber));
-            StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
-            return pipeline;
+        @Override
+        public int compareTo(PhraseHolder o) {
+            if (o == null) {
+                return 1;
+            }
+            if (this.equals(o)) {
+                return 0;
+            } else if (this.beginPosition > o.beginPosition) {
+                return 1;
+            } else if (this.beginPosition == o.beginPosition) {
+                if (this.endPosition > o.endPosition) {
+                    return 1;
+                }
+            }
+            return -1;
         }
     }
 }

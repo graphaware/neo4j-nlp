@@ -15,14 +15,22 @@
  */
 package com.graphaware.nlp.domain;
 
-import org.neo4j.graphdb.Label;
+public class Phrase {
+    private final String content;
 
-/**
- * All labels used in the project.
- */
-public enum Labels implements Label {
-    AnnotatedText,
-    Sentence,
-    Tag,
-    Phrase
+    public Phrase(String content) {
+        this.content = content.trim();
+    }    
+
+    public String getContent() {
+        return content;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Phrase))
+            return false;
+        return this.content.equalsIgnoreCase(((Phrase)o).content);
+    }
+    
 }

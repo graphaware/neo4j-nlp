@@ -15,34 +15,23 @@
  */
 package com.graphaware.nlp.domain;
 
-import java.util.Map;
+import com.graphaware.common.util.Pair;
 
-/**
- *
- * @author ale
- */
-public class CypherStatement {
-    private String query;
-    private Map<String, Object> params;
+class PartOfTextOccurrence<T> {
 
-    public CypherStatement(String query, Map<String, Object> params) {
-        this.query = query;
-        this.params = params;
+    private final T element;
+    private final Pair<Integer, Integer> span;
+
+    public PartOfTextOccurrence(T element, int begin, int end) {
+        this.element = element;
+        this.span = new Pair<>(begin, end);
     }
 
-    public String getQuery() {
-        return query;
+    public T getElement() {
+        return element;
     }
 
-    public void setQuery(String query) {
-        this.query = query;
+    public Pair<Integer, Integer> getSpan() {
+        return span;
     }
-
-    public Map<String, Object> getParams() {
-        return params;
-    }
-
-    public void setParams(Map<String, Object> params) {
-        this.params = params;
-    }    
 }

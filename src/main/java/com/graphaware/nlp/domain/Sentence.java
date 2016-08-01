@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.domain;
 
-import com.graphaware.common.util.Pair;
 import static com.graphaware.nlp.domain.SentimentLabels.*;
 import static com.graphaware.nlp.domain.Labels.Sentence;
 import static com.graphaware.nlp.domain.Properties.HASH;
@@ -23,8 +22,10 @@ import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
 import static com.graphaware.nlp.domain.Properties.TEXT;
 import static com.graphaware.nlp.domain.Relationships.HAS_TAG;
 import static com.graphaware.nlp.util.HashFunctions.MD5;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -33,11 +34,15 @@ import org.neo4j.graphdb.ResourceIterator;
 
 public class Sentence implements Persistable {
 
+    public static final int NO_SENTIMENT = -1;
+    
     private final Map<String, Tag> tags;
-    private Map<Integer, TagOccurrence> tagOccurrences;
+    private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences;
+    private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences;
 
     private final String sentence;
-    private int sentiment = -1;
+    private int sentiment = NO_SENTIMENT;
+    
     private boolean store = false;
     private String id;
 
@@ -76,7 +81,7 @@ public class Sentence implements Persistable {
         return id;
     }
 
-    public void addOccurrence(int begin, int end, Tag tag) {
+    public void addTagOccurrence(int begin, int end, Tag tag) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")" );
         }
@@ -84,7 +89,7 @@ public class Sentence implements Persistable {
             tagOccurrences = new HashMap<>();
         }
         //Will update end if already exist
-        tagOccurrences.put(begin, new TagOccurrence(tag, begin, end));
+        tagOccurrences.put(begin, new PartOfTextOccurrence<>(tag, begin, end));
     }
 
     //Currently used only for testing purpose
@@ -92,11 +97,43 @@ public class Sentence implements Persistable {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");
         }
-        TagOccurrence occurrence = tagOccurrences.get(begin);
+        PartOfTextOccurrence<Tag> occurrence = tagOccurrences.get(begin);
         if (occurrence != null) {
-            return occurrence.getTag();
+            return occurrence.getElement();
         } else {
           return null;  
+        }
+    }
+    
+    public void addPhraseOccurrence(int begin, int end, Phrase phrase) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent()+ ")" );
+        }
+        if (phraseOccurrences == null) {
+            phraseOccurrences = new HashMap<>();
+        }
+        if (!phraseOccurrences.containsKey(begin)) {
+            phraseOccurrences.put(begin, new HashMap<>());
+        }
+        //Will update end if already exist
+        phraseOccurrences.get(begin).put(end, new PartOfTextOccurrence<>(phrase, begin, end));
+    }
+
+    //Currently used only for testing purpose
+    public List<Phrase> getPhraseOccurrence(int begin) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative");
+        }
+        Map<Integer, PartOfTextOccurrence<Phrase>> occurrence = phraseOccurrences.get(begin);
+        
+        if (occurrence != null) {
+            List<Phrase> result = new ArrayList<>();
+            occurrence.values().stream().forEach((item) -> {
+                result.add(item.getElement());
+            });
+            return result;
+        } else {
+          return new ArrayList<>();  
         }
     }
 
@@ -164,24 +201,5 @@ public class Sentence implements Persistable {
             }
         }
         return null;
-    }
-
-    class TagOccurrence {
-
-        private final Tag tag;
-        private final Pair<Integer, Integer> span;
-
-        public TagOccurrence(Tag tag, int begin, int end) {
-            this.tag = tag;
-            this.span = new Pair<>(begin, end);
-        }
-
-        public Tag getTag() {
-            return tag;
-        }
-
-        public Pair<Integer, Integer> getSpan() {
-            return span;
-        }
     }
 }
