@@ -19,6 +19,8 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
+import edu.stanford.nlp.hcoref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Word;
@@ -98,16 +100,16 @@ public class TextProcessor {
     public AnnotatedText annotateText(String text, Object id, boolean sentiment, boolean store) {
         StanfordCoreNLP pipeline;
         if (sentiment) {
-             pipeline = pipelines.get(PIPELINE.COMPLETE);
+            pipeline = pipelines.get(PIPELINE.COMPLETE);
         } else {
             pipeline = pipelines.get(PIPELINE.BASIC);
         }
         return annotateText(text, id, pipeline, store);
     }
-    
-    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store) {        
+
+    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store) {
         AnnotatedText result = new AnnotatedText(id);
-        Annotation document = new Annotation(text);        
+        Annotation document = new Annotation(text);
         pipeline.annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         final AtomicInteger sentenceSequence = new AtomicInteger(0);
@@ -121,13 +123,15 @@ public class TextProcessor {
             extractPhrases(sentence, newSentence);
             result.addSentence(newSentence);
         });
+        extractRelationship(result, sentences, document);
         return result;
     }
 
     protected void extractPhrases(CoreMap sentence, Sentence newSentence) {
         Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        if (tree == null)
+        if (tree == null) {
             return;
+        }
         Set<PhraseHolder> extractedPhrases = inspectSubTree(tree);
         extractedPhrases.stream().forEach((holder) -> {
             newSentence.addPhraseOccurrence(holder.getBeginPosition(), holder.getEndPosition(), new Phrase(holder.getPhrase()));
@@ -199,6 +203,41 @@ public class TextProcessor {
         }
     }
 
+    private void extractRelationship(AnnotatedText annotatedText, List<CoreMap> sentences, Annotation document) {
+        Map<Integer, CorefChain> corefChains = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);
+        if (corefChains != null) {
+            for (CorefChain chain : corefChains.values()) {
+                CorefChain.CorefMention representative = chain.getRepresentativeMention();
+                int representativeSenteceNumber = representative.sentNum - 1;
+                List<CoreLabel> representativeTokens = sentences.get(representativeSenteceNumber).get(CoreAnnotations.TokensAnnotation.class);
+                int beginPosition = representativeTokens.get(representative.startIndex - 1).beginPosition();
+                int endPosition = representativeTokens.get(representative.endIndex - 1).endPosition();
+                Phrase representativePhraseOccurrence = annotatedText.getSentences().get(representativeSenteceNumber).getPhraseOccurrence(beginPosition, endPosition);
+                if (representativePhraseOccurrence == null) {
+                    LOG.warn("Representative Phrase not found: " + representative.mentionSpan);
+                }
+                for (CorefChain.CorefMention mention : chain.getMentionsInTextualOrder()) {
+                    if (mention == representative) {
+                        continue;
+                    }
+                    int mentionSentenceNumber = mention.sentNum - 1;
+
+                    List<CoreLabel> mentionTokens = sentences.get(mentionSentenceNumber).get(CoreAnnotations.TokensAnnotation.class);
+                    int beginPositionMention = mentionTokens.get(mention.startIndex - 1).beginPosition();
+                    int endPositionMention = mentionTokens.get(mention.endIndex - 1).endPosition();
+                    Phrase mentionPhraseOccurrence = annotatedText.getSentences().get(representativeSenteceNumber).getPhraseOccurrence(beginPositionMention, endPositionMention);
+                    if (mentionPhraseOccurrence == null) {
+                        LOG.warn("Mention Phrase not found: " + mention.mentionSpan);
+                    }
+                    if (representativePhraseOccurrence != null 
+                            && mentionPhraseOccurrence != null) {
+                        mentionPhraseOccurrence.setReference(representativePhraseOccurrence);
+                    }                    
+                }
+            }
+        }
+    }
+
     public AnnotatedText sentiment(AnnotatedText annotated) {
         StanfordCoreNLP pipeline = pipelines.get(PIPELINE.SENTIMENT);
         annotated.getSentences().parallelStream().forEach((item) -> {
@@ -216,8 +255,9 @@ public class TextProcessor {
     private int extractSentiment(CoreMap sentence) {
         Tree tree = sentence
                 .get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
-        if (tree == null) 
+        if (tree == null) {
             return Sentence.NO_SENTIMENT;
+        }
         int score = RNNCoreAnnotations.getPredictedClass(tree);
         return score;
     }

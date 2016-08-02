@@ -17,6 +17,7 @@ package com.graphaware.nlp.domain;
 
 public class Phrase {
     private final String content;
+    private Phrase reference;
 
     public Phrase(String content) {
         this.content = content.trim();
@@ -32,5 +33,12 @@ public class Phrase {
             return false;
         return this.content.equalsIgnoreCase(((Phrase)o).content);
     }
-    
+
+    public Phrase getReference() {
+        return reference;
+    }
+
+    public void setReference(Phrase reference) {
+        this.reference = reference;
+    }
 }

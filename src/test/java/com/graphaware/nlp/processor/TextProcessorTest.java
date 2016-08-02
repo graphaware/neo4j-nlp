@@ -194,6 +194,8 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertTrue(sentence1.getPhraseOccurrence(103).contains(new Phrase("Sentiment")));
         assertTrue(sentence1.getPhraseOccurrence(113).contains(new Phrase("Analysis")));
         
+        //his(76)-> the third author(54)
+        //assertTrue(sentence1.getPhraseOccurrence(76).get(1).getReference().getContent().equalsIgnoreCase("the third author"));
         Sentence sentence2 = annotateText.getSentences().get(1);
         assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
         assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());

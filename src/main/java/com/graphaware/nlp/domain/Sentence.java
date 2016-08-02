@@ -35,14 +35,14 @@ import org.neo4j.graphdb.ResourceIterator;
 public class Sentence implements Persistable {
 
     public static final int NO_SENTIMENT = -1;
-    
+
     private final Map<String, Tag> tags;
     private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences;
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences;
 
     private final String sentence;
     private int sentiment = NO_SENTIMENT;
-    
+
     private boolean store = false;
     private String id;
 
@@ -83,7 +83,7 @@ public class Sentence implements Persistable {
 
     public void addTagOccurrence(int begin, int end, Tag tag) {
         if (begin < 0) {
-            throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")" );
+            throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
         }
         if (tagOccurrences == null) {
             tagOccurrences = new HashMap<>();
@@ -101,13 +101,13 @@ public class Sentence implements Persistable {
         if (occurrence != null) {
             return occurrence.getElement();
         } else {
-          return null;  
+            return null;
         }
     }
-    
+
     public void addPhraseOccurrence(int begin, int end, Phrase phrase) {
         if (begin < 0) {
-            throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent()+ ")" );
+            throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent() + ")");
         }
         if (phraseOccurrences == null) {
             phraseOccurrences = new HashMap<>();
@@ -125,7 +125,7 @@ public class Sentence implements Persistable {
             throw new RuntimeException("Begin cannot be negative");
         }
         Map<Integer, PartOfTextOccurrence<Phrase>> occurrence = phraseOccurrences.get(begin);
-        
+
         if (occurrence != null) {
             List<Phrase> result = new ArrayList<>();
             occurrence.values().stream().forEach((item) -> {
@@ -133,8 +133,20 @@ public class Sentence implements Persistable {
             });
             return result;
         } else {
-          return new ArrayList<>();  
+            return new ArrayList<>();
         }
+    }
+
+    public Phrase getPhraseOccurrence(int begin, int end) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative");
+        }
+        Map<Integer, PartOfTextOccurrence<Phrase>> occurrences = phraseOccurrences.get(begin);
+
+        if (occurrences != null && occurrences.containsKey(end)) {
+                return occurrences.get(end).getElement();
+        }
+        return null;
     }
 
     @Override
