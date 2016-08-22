@@ -54,7 +54,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, false, false);
+                + "the outcome of the election was exactly as we predicted.", 1, 0, false);
 
         assertEquals(4, annotateText.getSentences().size());
         assertEquals(15, annotateText.getSentences().get(0).getTags().size());
@@ -110,7 +110,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         ConceptNet5Importer conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
                 .build();
         String text = "Say hi to Christophe";
-        AnnotatedText annotateText = textProcessor.annotateText(text, 1, false, false);
+        AnnotatedText annotateText = textProcessor.annotateText(text, 1, 0, false);
         List<Node> nodes = new ArrayList<>();
         try (Transaction beginTx = getDatabase().beginTx()) {
             Node annotatedNode = annotateText.storeOnGraph(getDatabase());
@@ -134,23 +134,23 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     public void testSentiment() {
         TextProcessor textProcessor = new TextProcessor();
 
-        AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", 1, true, false);
+        AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(0, annotateText.getSentences().get(0).getSentiment());
 
-        annotateText = textProcessor.annotateText("It was really horrible to study at Stanford", 1, true, false);
+        annotateText = textProcessor.annotateText("It was really horrible to study at Stanford", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(1, annotateText.getSentences().get(0).getSentiment());
 
-        annotateText = textProcessor.annotateText("I studied at Stanford", 1, true, false);
+        annotateText = textProcessor.annotateText("I studied at Stanford", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(2, annotateText.getSentences().get(0).getSentiment());
 
-        annotateText = textProcessor.annotateText("I liked to study at Stanford", 1, true, false);
+        annotateText = textProcessor.annotateText("I liked to study at Stanford", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(3, annotateText.getSentences().get(0).getSentiment());
 
-        annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1, true, false);
+        annotateText = textProcessor.annotateText("I liked so much to study at Stanford, I enjoyed my time there, I would recommend every body", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         assertEquals(4, annotateText.getSentences().get(0).getSentiment());
     }
@@ -195,7 +195,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertTrue(sentence1.getPhraseOccurrence(113).contains(new Phrase("Analysis")));
         
         //his(76)-> the third author(54)
-        //assertTrue(sentence1.getPhraseOccurrence(76).get(1).getReference().getContent().equalsIgnoreCase("the third author"));
+        assertTrue(sentence1.getPhraseOccurrence(76).get(1).getReference().getContent().equalsIgnoreCase("the third author"));
         Sentence sentence2 = annotateText.getSentences().get(1);
         assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
         assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());

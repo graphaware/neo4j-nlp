@@ -24,5 +24,7 @@ public enum Labels implements Label {
     AnnotatedText,
     Sentence,
     Tag,
-    Phrase
+    Phrase,
+    PhraseOccurrence,
+    TagOccurrence
 }

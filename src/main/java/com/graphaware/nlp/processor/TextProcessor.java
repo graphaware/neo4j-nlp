@@ -52,9 +52,10 @@ public class TextProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessor.class);
 
     public enum PIPELINE {
-        BASIC,
+        TOKENIZER,
         SENTIMENT,
-        COMPLETE
+        TOKENIZER_AND_SENTIMENT,
+        PHRASE
     }
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
@@ -63,46 +64,69 @@ public class TextProcessor {
     private final Pattern patternCheck;
 
     public TextProcessor() {
-        createBasicPipeline();
+        createTokenizerPipeline();
         createSentimentPipeline();
-        createCompletePipeline();
+        createTokenizerAndSentimentPipeline();
+        createPhrasePipeline();
 
         String pattern = "\\p{Punct}";
         patternCheck = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
     }
 
-    private void createBasicPipeline() {
+    private void createTokenizerPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
                 .defaultStopWordAnnotator()
+                .threadNumber(6)
                 .build();
-        pipelines.put(PIPELINE.BASIC, pipeline);
+        pipelines.put(PIPELINE.TOKENIZER, pipeline);
     }
 
     private void createSentimentPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
                 .extractSentiment()
+                .threadNumber(6)
                 .build();
         pipelines.put(PIPELINE.SENTIMENT, pipeline);
     }
 
-    private void createCompletePipeline() {
+    private void createTokenizerAndSentimentPipeline() {
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
                 .defaultStopWordAnnotator()
                 .extractSentiment()
                 .threadNumber(6)
                 .build();
-        pipelines.put(PIPELINE.COMPLETE, pipeline);
+        pipelines.put(PIPELINE.TOKENIZER_AND_SENTIMENT, pipeline);
     }
 
-    public AnnotatedText annotateText(String text, Object id, boolean sentiment, boolean store) {
+    private void createPhrasePipeline() {
+        StanfordCoreNLP pipeline = new PipelineBuilder()
+                .tokenize()
+                .defaultStopWordAnnotator()
+                .extractSentiment()
+                .extractCoref()
+                .extractRelations()
+                .threadNumber(6)
+                .build();
+        pipelines.put(PIPELINE.PHRASE, pipeline);
+    }
+
+    public AnnotatedText annotateText(String text, Object id, int level, boolean store) {
         StanfordCoreNLP pipeline;
-        if (sentiment) {
-            pipeline = pipelines.get(PIPELINE.COMPLETE);
-        } else {
-            pipeline = pipelines.get(PIPELINE.BASIC);
+        switch (level) {
+            case 0:
+                pipeline = pipelines.get(PIPELINE.TOKENIZER);
+                break;
+            case 1:
+                pipeline = pipelines.get(PIPELINE.TOKENIZER_AND_SENTIMENT);
+                break;
+            case 2:
+                pipeline = pipelines.get(PIPELINE.PHRASE);
+                break;
+            default:
+                pipeline = pipelines.get(PIPELINE.TOKENIZER);
         }
         return annotateText(text, id, pipeline, store);
     }
@@ -116,8 +140,9 @@ public class TextProcessor {
         sentences.stream().map((sentence) -> {
             return sentence;
         }).forEach((sentence) -> {
-            String sentenceId = id + "_" + sentenceSequence.getAndIncrement();
-            final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId);
+            int sentenceNumber = sentenceSequence.getAndIncrement();
+            String sentenceId = id + "_" + sentenceNumber;
+            final Sentence newSentence = new Sentence(sentence.toString(), store, sentenceId, sentenceNumber);
             extractTokens(sentence, newSentence);
             extractSentiment(sentence, newSentence);
             extractPhrases(sentence, newSentence);
@@ -155,25 +180,21 @@ public class TextProcessor {
                     if (currentNe.equals(backgroundSymbol) && currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = getTag(token);
                         if (tag != null) {
-                            newSentence.addTag(tag);
-                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), tag);
+                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (currentNe.equals(backgroundSymbol) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag newTag = new Tag(currToken.getToken());
                         newTag.setNe(currToken.getNe());
-                        newSentence.addTag(newTag);
-                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newTag);
+                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(newTag));
                         currToken.reset();
                         Tag tag = getTag(token);
                         if (tag != null) {
-                            newSentence.addTag(tag);
-                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), tag);
+                            newSentence.addTagOccurrence(token.beginPosition(), token.endPosition(), newSentence.addTag(tag));
                         }
                     } else if (!currentNe.equals(currToken.getNe()) && !currToken.getNe().equals(backgroundSymbol)) {
                         Tag tag = new Tag(currToken.getToken());
                         tag.setNe(currToken.getNe());
-                        newSentence.addTag(tag);
-                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+                        newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
                         currToken.reset();
                         currToken.updateToken(StringUtils.getNotNullString(token.get(CoreAnnotations.OriginalTextAnnotation.class)));
                         currToken.setBeginPosition(token.beginPosition());
@@ -198,8 +219,7 @@ public class TextProcessor {
         if (currToken.getToken().length() > 0) {
             Tag tag = new Tag(currToken.getToken());
             tag.setNe(currToken.getNe());
-            newSentence.addTag(tag);
-            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), tag);
+            newSentence.addTagOccurrence(currToken.getBeginPosition(), currToken.getEndPosition(), newSentence.addTag(tag));
         }
     }
 
@@ -211,7 +231,7 @@ public class TextProcessor {
                 int representativeSenteceNumber = representative.sentNum - 1;
                 List<CoreLabel> representativeTokens = sentences.get(representativeSenteceNumber).get(CoreAnnotations.TokensAnnotation.class);
                 int beginPosition = representativeTokens.get(representative.startIndex - 1).beginPosition();
-                int endPosition = representativeTokens.get(representative.endIndex - 1).endPosition();
+                int endPosition = representativeTokens.get(representative.endIndex - 2).endPosition();
                 Phrase representativePhraseOccurrence = annotatedText.getSentences().get(representativeSenteceNumber).getPhraseOccurrence(beginPosition, endPosition);
                 if (representativePhraseOccurrence == null) {
                     LOG.warn("Representative Phrase not found: " + representative.mentionSpan);
@@ -224,15 +244,15 @@ public class TextProcessor {
 
                     List<CoreLabel> mentionTokens = sentences.get(mentionSentenceNumber).get(CoreAnnotations.TokensAnnotation.class);
                     int beginPositionMention = mentionTokens.get(mention.startIndex - 1).beginPosition();
-                    int endPositionMention = mentionTokens.get(mention.endIndex - 1).endPosition();
-                    Phrase mentionPhraseOccurrence = annotatedText.getSentences().get(representativeSenteceNumber).getPhraseOccurrence(beginPositionMention, endPositionMention);
+                    int endPositionMention = mentionTokens.get(mention.endIndex - 2).endPosition();
+                    Phrase mentionPhraseOccurrence = annotatedText.getSentences().get(mentionSentenceNumber).getPhraseOccurrence(beginPositionMention, endPositionMention);
                     if (mentionPhraseOccurrence == null) {
                         LOG.warn("Mention Phrase not found: " + mention.mentionSpan);
                     }
-                    if (representativePhraseOccurrence != null 
+                    if (representativePhraseOccurrence != null
                             && mentionPhraseOccurrence != null) {
                         mentionPhraseOccurrence.setReference(representativePhraseOccurrence);
-                    }                    
+                    }
                 }
             }
         }
@@ -281,7 +301,7 @@ public class TextProcessor {
 
     public Tag annotateTag(String text) {
         Annotation document = new Annotation(text);
-        pipelines.get(PIPELINE.BASIC).annotate(document);
+        pipelines.get(PIPELINE.TOKENIZER).annotate(document);
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
         Optional<CoreMap> sentence = sentences.stream().findFirst();
         if (sentence.isPresent()) {

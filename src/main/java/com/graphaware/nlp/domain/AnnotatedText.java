@@ -19,6 +19,7 @@ import static com.graphaware.nlp.domain.Labels.AnnotatedText;
 import static com.graphaware.nlp.domain.Relationships.CONTAINS_SENTENCE;
 import static com.graphaware.nlp.domain.Relationships.FIRST_SENTENCE;
 import static com.graphaware.nlp.domain.Relationships.NEXT_SENTENCE;
+import static com.graphaware.nlp.domain.Relationships.REFER_TO;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +58,8 @@ public class AnnotatedText implements Persistable {
             annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
             final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
 
-            sentences.stream().map((sentence) -> sentence.storeOnGraph(database)).forEach((sentenceNode) -> {
+            sentences.stream().forEach((sentence) -> {
+                Node sentenceNode = sentence.storeOnGraph(database);
                 annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
                 Node previousSentence = previousSentenceReference.get();
                 if (previousSentence == null) {
@@ -66,6 +68,14 @@ public class AnnotatedText implements Persistable {
                     previousSentence.createRelationshipTo(sentenceNode, NEXT_SENTENCE);
                 }
                 previousSentenceReference.set(sentenceNode);
+                List<Phrase> phraseOccurrences = sentence.getPhraseOccurrence();
+                phraseOccurrences.stream().forEach((phrase) -> {
+                    if (phrase.getReference() != null) {
+                        Node phraseNode = phrase.getOrCreate(database);
+                        Node referredPhraseNode = phrase.getReference().getOrCreate(database);
+                        phraseNode.createRelationshipTo(referredPhraseNode, REFER_TO);
+                    }
+                });
             });
             tmpAnnotatedNode = annotatedTextNode;
         } else {

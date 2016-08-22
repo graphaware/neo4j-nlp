@@ -15,9 +15,16 @@
  */
 package com.graphaware.nlp.domain;
 
-public class Phrase {
+import static com.graphaware.nlp.domain.Labels.Phrase;
+import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
+import java.util.Objects;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+
+public class Phrase implements Persistable {
     private final String content;
     private Phrase reference;
+    private Node phraseNode;
 
     public Phrase(String content) {
         this.content = content.trim();
@@ -34,11 +41,37 @@ public class Phrase {
         return this.content.equalsIgnoreCase(((Phrase)o).content);
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 37 * hash + Objects.hashCode(this.content);
+        return hash;
+    }
+
     public Phrase getReference() {
         return reference;
     }
 
     public void setReference(Phrase reference) {
         this.reference = reference;
+    }
+
+    @Override
+    public Node storeOnGraph(GraphDatabaseService database) {
+        phraseNode = getOrCreate(database);
+        return phraseNode;
+    }
+    
+    public Node getOrCreate(GraphDatabaseService database) {
+        if (phraseNode != null) {
+            return phraseNode;
+        }
+        phraseNode = database.findNode(Phrase, CONTENT_VALUE, content);
+        if (phraseNode != null) {
+            return phraseNode;
+        }
+        phraseNode = database.createNode(Phrase);
+        phraseNode.setProperty(CONTENT_VALUE, content);
+        return phraseNode;
     }
 }

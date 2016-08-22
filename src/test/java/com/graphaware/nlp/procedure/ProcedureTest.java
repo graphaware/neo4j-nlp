@@ -109,7 +109,7 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             params.put("value", TEXT);
             params.put("id", id);
             Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
-                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, sentiment: true}) YIELD result\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, nlpDepth: 1}) YIELD result\n"
                     + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
                     + "return result", params);
             ResourceIterator<Object> rowIterator = news.columnAs("result");

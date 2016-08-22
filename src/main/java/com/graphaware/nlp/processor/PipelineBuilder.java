@@ -30,6 +30,7 @@ public class PipelineBuilder {
     public PipelineBuilder extractSentiment() {
         checkForExistingAnnotators();
         annotattors.append("parse, sentiment");
+        //properties.setProperty("parse.model", "edu/stanford/nlp/models/srparser/englishSR.ser.gz");
         return this;
     }
 

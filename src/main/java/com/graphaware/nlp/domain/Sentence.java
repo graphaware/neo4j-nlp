@@ -15,12 +15,22 @@
  */
 package com.graphaware.nlp.domain;
 
+import static com.graphaware.nlp.domain.Labels.PhraseOccurrence;
 import static com.graphaware.nlp.domain.SentimentLabels.*;
 import static com.graphaware.nlp.domain.Labels.Sentence;
+import static com.graphaware.nlp.domain.Labels.TagOccurrence;
+import static com.graphaware.nlp.domain.Properties.END_POSITION;
 import static com.graphaware.nlp.domain.Properties.HASH;
 import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
+import static com.graphaware.nlp.domain.Properties.SENTENCE_NUMBER;
+import static com.graphaware.nlp.domain.Properties.START_POSITION;
 import static com.graphaware.nlp.domain.Properties.TEXT;
+import static com.graphaware.nlp.domain.Relationships.HAS_PHRASE;
 import static com.graphaware.nlp.domain.Relationships.HAS_TAG;
+import static com.graphaware.nlp.domain.Relationships.PHRASE_OCCURRENCE_PHRASE;
+import static com.graphaware.nlp.domain.Relationships.SENTENCE_PHRASE_OCCURRENCE;
+import static com.graphaware.nlp.domain.Relationships.SENTENCE_TAG_OCCURRENCE;
+import static com.graphaware.nlp.domain.Relationships.TAG_OCCURRENCE_TAG;
 import static com.graphaware.nlp.util.HashFunctions.MD5;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,28 +41,32 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Transaction;
 
 public class Sentence implements Persistable {
 
     public static final int NO_SENTIMENT = -1;
 
     private final Map<String, Tag> tags;
-    private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences;
-    private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences;
+    private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences = new HashMap<>();
+    private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
 
     private final String sentence;
     private int sentiment = NO_SENTIMENT;
 
     private boolean store = false;
     private String id;
+    private int sentenceNumber;
 
-    public Sentence(String sentence, boolean store, String id) {
+    public Sentence(String sentence, boolean store, String id, int sentenceNumber) {
         this(sentence, id);
         this.store = store;
+        this.sentenceNumber = sentenceNumber;
     }
 
     public Sentence(String sentence, String id) {
         this.tags = new HashMap<>();
+        this.tagOccurrences = new HashMap<>();
         this.sentence = sentence;
         this.id = id;
     }
@@ -61,11 +75,14 @@ public class Sentence implements Persistable {
         return tags.values();
     }
 
-    public void addTag(Tag tag) {
+    public Tag addTag(Tag tag) {
         if (tags.containsKey(tag.getLemma())) {
-            tags.get(tag.getLemma()).incMultiplicity();
+            Tag result = tags.get(tag.getLemma());
+            result.incMultiplicity();
+            return result;
         } else {
             tags.put(tag.getLemma(), tag);
+            return tag;
         }
     }
 
@@ -84,9 +101,6 @@ public class Sentence implements Persistable {
     public void addTagOccurrence(int begin, int end, Tag tag) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
-        }
-        if (tagOccurrences == null) {
-            tagOccurrences = new HashMap<>();
         }
         //Will update end if already exist
         tagOccurrences.put(begin, new PartOfTextOccurrence<>(tag, begin, end));
@@ -144,30 +158,78 @@ public class Sentence implements Persistable {
         Map<Integer, PartOfTextOccurrence<Phrase>> occurrences = phraseOccurrences.get(begin);
 
         if (occurrences != null && occurrences.containsKey(end)) {
-                return occurrences.get(end).getElement();
+            return occurrences.get(end).getElement();
         }
         return null;
     }
 
+    public List<Phrase> getPhraseOccurrence() {
+        List<Phrase> result = new ArrayList<>();
+        phraseOccurrences.values().stream().forEach((phraseList) -> {
+            phraseList.values().stream().forEach((item) -> {
+                result.add(item.getElement());
+            });
+        });
+
+        return result;
+
+    }
+
     @Override
     public Node storeOnGraph(GraphDatabaseService database) {
-        Node sequenceNode = checkIfExist(database, id);
-        if (sequenceNode == null) {
-            Node newSentenceNode = database.createNode(Sentence);
-            newSentenceNode.setProperty(HASH, MD5(sentence));
-            newSentenceNode.setProperty(PROPERTY_ID, id);
-            if (store) {
-                newSentenceNode.setProperty(TEXT, sentence);
+        Node sentenceNode = checkIfExist(database, id);
+        if (sentenceNode == null) {
+            try (Transaction tx = database.beginTx();) {
+                Node newSentenceNode = database.createNode(Sentence);
+                newSentenceNode.setProperty(HASH, MD5(sentence));
+                newSentenceNode.setProperty(PROPERTY_ID, id);
+                newSentenceNode.setProperty(SENTENCE_NUMBER, sentenceNumber);
+                if (store) {
+                    newSentenceNode.setProperty(TEXT, sentence);
+                }
+                storeTags(database, newSentenceNode);
+                storePhrases(database, newSentenceNode);
+                sentenceNode = newSentenceNode;
+                assignSentimentLabel(sentenceNode);
+                tx.success();
             }
-            tags.values().stream().forEach((tag) -> {
-                Node tagNode = tag.storeOnGraph(database);
-                Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
-                hasTagRel.setProperty("tf", tag.getMultiplicity());
-            });
-            sequenceNode = newSentenceNode;
+        } else {
+            assignSentimentLabel(sentenceNode);
         }
-        assignSentimentLabel(sequenceNode);
-        return sequenceNode;
+        return sentenceNode;
+    }
+
+    private void storeTags(GraphDatabaseService database, Node newSentenceNode) {
+        tags.values().stream().forEach((tag) -> {
+            Node tagNode = tag.storeOnGraph(database);
+            Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
+            hasTagRel.setProperty("tf", tag.getMultiplicity());
+        });
+        tagOccurrences.values().stream().forEach((tagOccurrenceAtPosition) -> {
+            Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database);
+            Node tagOccurrenceNode = database.createNode(TagOccurrence);
+            tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
+            tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
+            newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
+            tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
+        });
+    }
+
+    private void storePhrases(GraphDatabaseService database, Node newSentenceNode) {
+        if (phraseOccurrences != null) {
+            phraseOccurrences.values().stream().forEach((phraseOccurrencesAtPosition) -> {
+                phraseOccurrencesAtPosition.values().stream().forEach((phraseOccurrence) -> {
+                    Node phraseNode = phraseOccurrence.getElement().storeOnGraph(database);
+                    newSentenceNode.createRelationshipTo(phraseNode, HAS_PHRASE);
+                    Node phraseOccurrenceNode = database.createNode(PhraseOccurrence);
+                    phraseOccurrenceNode.setProperty(START_POSITION, phraseOccurrence.getSpan().first());
+                    phraseOccurrenceNode.setProperty(END_POSITION, phraseOccurrence.getSpan().second());
+                    newSentenceNode.createRelationshipTo(phraseOccurrenceNode, SENTENCE_PHRASE_OCCURRENCE);
+                    phraseOccurrenceNode.createRelationshipTo(phraseNode, PHRASE_OCCURRENCE_PHRASE);
+                    //TODO: Add relationship with tags
+                });
+            });
+        }
     }
 
     private void assignSentimentLabel(Node sentenceNode) {
@@ -202,7 +264,8 @@ public class Sentence implements Persistable {
         }
         String text = (String) sentenceNode.getProperty(TEXT);
         String id = (String) sentenceNode.getProperty(PROPERTY_ID);
-        return new Sentence(text, true, id);
+        Integer sentenceNumber = (Integer) sentenceNode.getProperty(SENTENCE_NUMBER);
+        return new Sentence(text, true, id, sentenceNumber);
     }
 
     private Node checkIfExist(GraphDatabaseService database, Object id) {

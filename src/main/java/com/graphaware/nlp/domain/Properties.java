@@ -28,6 +28,10 @@ public final class Properties {
     public static final String HASH = "hash";
     public static final String TEXT = "text";
     public static final String NUM_TERMS = "numTerms";
+    public static final String SENTENCE_NUMBER = "sentenceNumber";
+    public static final String START_POSITION = "startPosition";
+    public static final String END_POSITION = "endPosition";
+    public static final String CONTENT_VALUE = "value";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

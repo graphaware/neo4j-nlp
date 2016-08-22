@@ -17,6 +17,7 @@
 package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.Tag;
+import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,13 +90,13 @@ public class Tag implements Persistable {
         return tagNode;
     }
 
-    private Node getOrCreate(GraphDatabaseService database) {
-        Node tagNode = database.findNode(Tag, "value", lemma);
+    public Node getOrCreate(GraphDatabaseService database) {
+        Node tagNode = database.findNode(Tag, CONTENT_VALUE, lemma);
         if (tagNode != null) {
             return tagNode;
         }
         tagNode = database.createNode(Tag);
-        tagNode.setProperty("value", lemma);
+        tagNode.setProperty(CONTENT_VALUE, lemma);
         if (ne != null) {
             tagNode.setProperty("ne", ne);
         }

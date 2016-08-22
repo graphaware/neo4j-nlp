@@ -66,7 +66,7 @@ public class NLPProcedure {
     private static final String PARAMETER_NAME_LANG = "lang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
     private static final String PARAMETER_NAME_ID = "id";
-    private static final String PARAMETER_NAME_SENTIMENT = "sentiment";
+    private static final String PARAMETER_NAME_DEEP_LEVEL = "nlpDepth";
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
     private static final String PARAMETER_NAME_SCORE = "score";
@@ -100,11 +100,11 @@ public class NLPProcedure {
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
-                    boolean sentiment = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SENTIMENT, false);
+                    int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     Node annotatedText = checkIfExist(id);
                     if (annotatedText == null) {
-                        AnnotatedText annotateText = textProcessor.annotateText(text, id, sentiment, store);
+                        AnnotatedText annotateText = textProcessor.annotateText(text, id, level, store);
                         annotatedText = annotateText.storeOnGraph(database);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
@@ -162,7 +162,7 @@ public class NLPProcedure {
                 if (filter == null) {
                     throw new RuntimeException("A filter value needs to be provided");
                 }
-                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, false, false);
+                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, 0, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
             }
         };
@@ -258,7 +258,7 @@ public class NLPProcedure {
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 String text = (String) input[0];
-                AnnotatedText annotateText = textProcessor.annotateText(text, 0, false, false);
+                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, false);
                 List<String> tokens = annotateText.getTokens();
                 Map<String, Object> params = new HashMap<>();
                 params.put("tokens", tokens);
