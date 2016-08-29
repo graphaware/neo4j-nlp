@@ -199,7 +199,26 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         Sentence sentence2 = annotateText.getSentences().get(1);
         assertEquals("chart", sentence2.getTagOccurrence(184).getLemma());
         assertEquals("Figure", sentence2.getTagOccurrence(193).getLemma());
-        
-        
+    }
+    
+    @Test
+    public void testAnnotatedShortText() {
+        TextProcessor textProcessor = new TextProcessor();
+        AnnotatedText annotateText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", 1, 1, false);
+
+        assertEquals(1, annotateText.getSentences().size());
+
+        GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
+        peristence.persistOnGraph(annotateText);        
+
+    }
+    
+    @Test
+    public void testAnnotatedShortText2() {
+        TextProcessor textProcessor = new TextProcessor();
+        AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", 1, 1, false);
+        assertEquals(1, annotateText.getSentences().size());
+        GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
+        peristence.persistOnGraph(annotateText);        
     }
 }
