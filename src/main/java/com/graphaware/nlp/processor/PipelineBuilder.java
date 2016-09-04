@@ -9,6 +9,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.Properties;
 
 public class PipelineBuilder {
+
     private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 
     private final Properties properties = new Properties();
@@ -54,6 +55,21 @@ public class PipelineBuilder {
         annotattors.append("stopword");
         properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
+        return this;
+    }
+
+    public PipelineBuilder customStopWordAnnotator(String customStopWordList) {
+        checkForExistingAnnotators();
+        String stopWordList;
+        if (annotattors.indexOf("stopword") >= 0) {
+            String alreadyexistingStopWordList = properties.getProperty(StopwordAnnotator.STOPWORDS_LIST);
+            stopWordList = alreadyexistingStopWordList + "," + customStopWordList;
+        } else {
+            annotattors.append("stopword");
+            properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
+            stopWordList = customStopWordList;
+        }
+        properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);
         return this;
     }
 

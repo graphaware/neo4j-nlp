@@ -96,7 +96,7 @@ public class NLPProcedure {
                     Map<String, Object> inputParams = (Map) input[0];
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                     boolean checkForLanguage = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_LANGUAGE_CHECK, true);
-                    LOG.warn("Text: " + text);
+                    LOG.info("Text: " + text);
                     if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text))) {
                         LOG.info("text is null or language not supported or unable to detect the language");
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
