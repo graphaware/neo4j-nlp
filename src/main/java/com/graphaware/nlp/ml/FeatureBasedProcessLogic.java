@@ -13,19 +13,19 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.logic;
+package com.graphaware.nlp.ml;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
 import com.graphaware.nlp.domain.Labels;
 import com.graphaware.nlp.domain.Relationships;
-import com.graphaware.nlp.queue.SimilarityItemProcessEntry;
-import com.graphaware.nlp.queue.SimilarityItem;
-import com.graphaware.nlp.queue.SimilarityQueueProcessor;
+import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
+import com.graphaware.nlp.ml.queue.SimilarityItem;
+import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
-import com.graphaware.nlp.util.similarity.CosineSimilarity;
-import com.graphaware.nlp.util.similarity.Similarity;
+import com.graphaware.nlp.ml.similarity.CosineSimilarity;
+import com.graphaware.nlp.ml.similarity.Similarity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

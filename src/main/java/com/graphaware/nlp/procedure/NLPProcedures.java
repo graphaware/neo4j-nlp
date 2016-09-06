@@ -15,8 +15,12 @@
  */
 package com.graphaware.nlp.procedure;
 
-import com.graphaware.nlp.logic.FeatureBasedProcessLogic;
-import com.graphaware.nlp.queue.SimilarityQueueProcessor;
+import com.graphaware.nlp.application.search.SearchProcedure;
+import com.graphaware.nlp.conceptnet5.ConceptProcedure;
+import com.graphaware.nlp.ml.FeatureBasedProcessLogic;
+import com.graphaware.nlp.processor.TextProcessorProcedure;
+import com.graphaware.nlp.ml.MLProcedure;
+import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import java.util.concurrent.Executors;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
@@ -47,15 +51,21 @@ public class NLPProcedures {
 
     @PostConstruct
     public void init() throws ProcedureException, KernelException {
-        NLPProcedure timeTreeProcedures = new NLPProcedure(database, featureBusinessLogic);
-        procedures.register(timeTreeProcedures.annotate());
-        procedures.register(timeTreeProcedures.sentiment());
-        procedures.register(timeTreeProcedures.concept());
-        procedures.register(timeTreeProcedures.computeAll());
-        procedures.register(timeTreeProcedures.search());
-        procedures.register(timeTreeProcedures.language());
-        procedures.register(timeTreeProcedures.filter());
-
+        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database);
+        procedures.register(textProcedures.annotate());
+        procedures.register(textProcedures.sentiment());
+        procedures.register(textProcedures.language());
+        procedures.register(textProcedures.filter());
+        
+        ConceptProcedure conceptProcedures = new ConceptProcedure(database);
+        procedures.register(conceptProcedures.concept());
+        
+        MLProcedure mlProcedures = new MLProcedure(featureBusinessLogic);
+        procedures.register(mlProcedures.computeAll());
+        
+        SearchProcedure searchProcedures = new SearchProcedure(database);
+        procedures.register(searchProcedures.search());
+        
         Executors.newSingleThreadExecutor().execute(queueProcessor);
     }
 }

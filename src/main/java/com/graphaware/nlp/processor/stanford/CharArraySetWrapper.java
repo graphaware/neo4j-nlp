@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.processor;
+package com.graphaware.nlp.processor.stanford;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

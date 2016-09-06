@@ -13,10 +13,8 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.util.similarity;
+package com.graphaware.nlp.processor;
 
-import java.util.Map;
-
-public interface Similarity {
-    public float getSimilarity(Map<Long, Float> x, Map<Long, Float> y);
+public interface TextProcessingPipeline<T> {
+    public T getPipeline();
 }

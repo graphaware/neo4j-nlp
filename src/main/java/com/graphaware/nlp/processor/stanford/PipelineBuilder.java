@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.graphaware.nlp.processor;
+package com.graphaware.nlp.processor.stanford;
 
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.Properties;
@@ -53,7 +53,7 @@ public class PipelineBuilder {
     public PipelineBuilder defaultStopWordAnnotator() {
         checkForExistingAnnotators();
         annotattors.append("stopword");
-        properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
+        properties.setProperty("customAnnotatorClass.stopword", StopwordAnnotator.class.getName());
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, CUSTOM_STOP_WORD_LIST);
         return this;
     }
@@ -66,7 +66,7 @@ public class PipelineBuilder {
             stopWordList = alreadyexistingStopWordList + "," + customStopWordList;
         } else {
             annotattors.append("stopword");
-            properties.setProperty("customAnnotatorClass.stopword", "com.graphaware.nlp.processor.StopwordAnnotator");
+            properties.setProperty("customAnnotatorClass.stopword", StopwordAnnotator.class.getName());
             stopWordList = customStopWordList;
         }
         properties.setProperty(StopwordAnnotator.STOPWORDS_LIST, stopWordList);

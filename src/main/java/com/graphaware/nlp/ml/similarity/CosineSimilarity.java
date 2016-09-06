@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.util.similarity;
+package com.graphaware.nlp.ml.similarity;
 
 import java.util.Map;
 import java.util.TreeSet;

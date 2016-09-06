@@ -17,6 +17,7 @@ package com.graphaware.nlp.conceptnet5;
 
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.util.ServiceLoader;
 import java.util.List;
 import org.junit.Test;
 
@@ -30,7 +31,7 @@ public class ConceptNet5ImporterTest {
      */
     @Test
     public void testImportHierarchy() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         ConceptNet5Importer instance = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor).build();
         Tag source = textProcessor.annotateTag("bad");
         List<Tag> result = instance.importHierarchy(source, "en");

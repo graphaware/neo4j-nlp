@@ -16,6 +16,8 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.processor.stanford.PipelineBuilder;
+import com.graphaware.nlp.util.ServiceLoader;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.junit.Test;
 
@@ -23,7 +25,7 @@ public class TextProcessorProfileTest {
 
     @Test
     public void testAnnotatedText() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
                 .defaultStopWordAnnotator()

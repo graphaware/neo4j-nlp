@@ -13,30 +13,10 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.processor;
+package com.graphaware.nlp.ml.similarity;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.Tag;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import java.util.List;
 import java.util.Map;
 
-public interface TextProcessor {
-    
-    public List<String> getPipelines();
-    
-    public void createPipeline(Map<String, Object> pipelineSpec);
-
-    public AnnotatedText annotateText(String text, Object id, int level, boolean store);
-
-    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store);
-
-    public Tag annotateSentence(String text);
-
-    public Tag annotateTag(String text);
-
-    public boolean checkPuntuation(String value);
-
-    public AnnotatedText sentiment(AnnotatedText annotated);
-
+public interface Similarity {
+    public float getSimilarity(Map<Long, Float> x, Map<Long, Float> y);
 }

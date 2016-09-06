@@ -22,6 +22,8 @@ import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
+import com.graphaware.nlp.processor.stanford.PipelineBuilder;
+import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
 
     @Test
     public void testAnnotatedText() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
@@ -99,14 +101,14 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
 
     @Test
     public void testAnnotatedTag() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         Tag annotateTag = textProcessor.annotateTag("winners");
         assertEquals(annotateTag.getLemma(), "winner");
     }
 
     @Test
     public void testAnnotationAndConcept() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         ConceptNet5Importer conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
                 .build();
         String text = "Say hi to Christophe";
@@ -132,7 +134,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
 
     @Test
     public void testSentiment() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
 
         AnnotatedText annotateText = textProcessor.annotateText("I really hate to study at Stanford, it was a waste of time, I'll never be there again", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
@@ -157,7 +159,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     
     @Test
     public void testAnnotatedTextWithPosition() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         StanfordCoreNLP pipeline = new PipelineBuilder()
                 .tokenize()
                 .defaultStopWordAnnotator()
@@ -203,7 +205,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     
     @Test
     public void testAnnotatedShortText() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotateText = textProcessor.annotateText("Fixing Batch Endpoint Logging Problem", 1, 1, false);
 
         assertEquals(1, annotateText.getSentences().size());
@@ -215,7 +217,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     
     @Test
     public void testAnnotatedShortText2() {
-        TextProcessor textProcessor = new TextProcessor();
+        TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
         AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
