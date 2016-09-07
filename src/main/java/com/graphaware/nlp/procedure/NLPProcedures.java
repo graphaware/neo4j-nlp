@@ -21,6 +21,7 @@ import com.graphaware.nlp.ml.FeatureBasedProcessLogic;
 import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.nlp.ml.MLProcedure;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
+import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.concurrent.Executors;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
@@ -42,6 +43,10 @@ public class NLPProcedures {
 
     @Autowired
     private FeatureBasedProcessLogic featureBusinessLogic;
+    
+    
+    @Autowired
+    private TextProcessorsManager processorsManager;
 
     @Autowired
     public NLPProcedures(GraphDatabaseService database, Procedures procedures) {
@@ -51,11 +56,13 @@ public class NLPProcedures {
 
     @PostConstruct
     public void init() throws ProcedureException, KernelException {
-        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database);
+        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database, processorsManager);
         procedures.register(textProcedures.annotate());
         procedures.register(textProcedures.sentiment());
         procedures.register(textProcedures.language());
         procedures.register(textProcedures.filter());
+        procedures.register(textProcedures.getProcessors());
+        procedures.register(textProcedures.getPipelines());
         
         ConceptProcedure conceptProcedures = new ConceptProcedure(database);
         procedures.register(conceptProcedures.concept());

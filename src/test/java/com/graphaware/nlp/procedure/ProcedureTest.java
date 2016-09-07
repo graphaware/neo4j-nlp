@@ -350,4 +350,27 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             tx.success();
         }
     }
+    
+    
+    @Test
+    public void testGetProceduresManagement() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result news = getDatabase().execute("CALL ga.nlp.getProcessors() YIELD class\n"
+                    + "return class");
+            ResourceIterator<Object> rowIterator = news.columnAs("class");
+            assertTrue(rowIterator.hasNext());
+            String resultNode = (String) rowIterator.next();
+            assertEquals("com.graphaware.nlp.processor.stanford.StanfordTextProcessor", resultNode);
+            tx.success();
+        }
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result news = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+//            String resultNode = (String) rowIterator.next();
+//            assertEquals("com.graphaware.nlp.processor.stanford.StanfordTextProcessor", resultNode);
+            tx.success();
+        }
+    }
 }

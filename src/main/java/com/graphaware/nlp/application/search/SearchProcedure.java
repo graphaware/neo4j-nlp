@@ -87,6 +87,37 @@ public class SearchProcedure extends NLPProcedure {
         };
     }
 
+    public CallableProcedure.BasicProcedure score() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("score"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTNode)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
+                .out(PARAMETER_NAME_SCORE, Neo4jTypes.NTFloat).build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                Node annotatedTextNode = (Node) input[0];
+                Map<String, Object> params = new HashMap<>();
+                params.put("id", annotatedTextNode.getId());
+                Result queryResult = database.execute("MATCH (text:AnnotatedText)-[:CONTAINS_SENTENCE]->(s)-[it:HAS_TAG]->(tag)\n"
+                        + "WHERE id(text) = {id}\n"
+                        + "WITH text, sum(it.tf) as total\n"
+                        + "MATCH (text)-[:CONTAINS_SENTENCE]->(s)-[ht:HAS_TAG]->(tag)\n"
+                        + "WITH text, tag, sum(ht.tf) as freq, total\n"
+                        + "ORDER BY freq DESC\n"
+                        + "MATCH (tag)<-[ot:HAS_TAG]-()\n"
+                        + "WITH text, tag, toFloat((freq * 1.0f)  / (sum(ot.tf) * total)) as score\n"
+                        + "RETURN tag.value as value, score\n", params);
+                Set<Object[]> result = new HashSet<>();
+                while (queryResult.hasNext()) {
+                    Map<String, Object> row = queryResult.next();
+                    result.add(new Object[]{row.get("value"), row.get("score")});
+                }
+                return Iterators.asRawIterator(result.iterator());
+            }
+        };
+    }
+
     protected List<Long> getNodesFromInput(Object[] input) {
         List<Long> firstNodeIds = new ArrayList<>();
         if (input[0] == null) {

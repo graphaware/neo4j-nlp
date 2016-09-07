@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.processor.stanford;
 
+import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.domain.Sentence;
@@ -48,6 +49,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@NLPTextProcessor(name = "StanfordTextProcessor")
 public class StanfordTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);

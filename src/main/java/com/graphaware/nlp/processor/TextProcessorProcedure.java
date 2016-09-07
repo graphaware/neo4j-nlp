@@ -22,7 +22,10 @@ import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -42,6 +45,7 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     private final TextProcessor textProcessor;
     private final GraphDatabaseService database;
+    private final TextProcessorsManager processorManager;
 
     private static final String PARAMETER_NAME_TEXT = "text";
     private static final String PARAMETER_NAME_FILTER = "filter";
@@ -50,10 +54,13 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_DEEP_LEVEL = "nlpDepth";
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
+    private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
+    private static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
 
-    public TextProcessorProcedure(GraphDatabaseService database) {
+    public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
         this.textProcessor = new StanfordTextProcessor();
+        this.processorManager = processorManager;
     }
 
     public CallableProcedure.BasicProcedure annotate() {
@@ -159,6 +166,47 @@ public class TextProcessorProcedure extends NLPProcedure {
                 annotatedText = textProcessor.sentiment(annotatedText);
                 annotatedText.storeOnGraph(database);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
+            }
+        };
+    }
+
+    public CallableProcedure.BasicProcedure getProcessors() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getProcessors"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .out(PARAMETER_NAME_OUTPUT_TP_CLASS, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                Set<String> textProcessors = processorManager.getTextProcessors();
+                Set<Object[]> result = new HashSet<>();
+                textProcessors.forEach(row -> {
+                    result.add(new Object[]{row});
+                });
+                return Iterators.asRawIterator(result.iterator());
+            }
+        };
+    }
+    
+    public CallableProcedure.BasicProcedure getPipelines() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelines"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+                String textProcessor = (String) inputParams.get(PARAMETER_NAME_TEXT_PROCESSOR);
+                TextProcessor textProcessorInstance = processorManager.getTextProcessor(textProcessor);
+                Set<Object[]> result = new HashSet<>();
+                List<String> pipelines = textProcessorInstance.getPipelines();
+                pipelines.forEach(row -> {
+                    result.add(new Object[]{row});
+                });
+                return Iterators.asRawIterator(result.iterator());
             }
         };
     }
