@@ -240,6 +240,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(inputParams);
+                //if succeeded
+                processorManager.storePipelines(inputParams);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
                     creationResult.getResult() == 0 ? "succeess" : "Error: " + creationResult.getMessage()
                 }).iterator());

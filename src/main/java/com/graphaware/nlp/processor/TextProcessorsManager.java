@@ -59,16 +59,12 @@ public class TextProcessorsManager {
 
     public PipelineCreationResult createPipeline(Map<String, Object> inputParams) {
         String processorName = (String) inputParams.get("textProcessor");
-        
-        if (processorName == null || !textProcessors.containsKey(processorName)) {
+            if (processorName == null || !textProcessors.containsKey(processorName)) {
             return new PipelineCreationResult(-1, "Processor class not specified or not existing");
         }
         TextProcessor processor = textProcessors.get(processorName);
-        
         //TODO add catch
         processor.createPipeline(inputParams);
-        //if succeeded
-        storePipelines(inputParams);
         return new PipelineCreationResult(0, "");
     }
 
@@ -82,7 +78,7 @@ public class TextProcessorsManager {
         }
     }
     
-    private void storePipelines(Map<String, Object> inputParams) {
+    public void storePipelines(Map<String, Object> inputParams) {
         try (Transaction tx = database.beginTx()) {
             Node pipelineNode = database.createNode(Pipeline);
             inputParams.entrySet().stream().forEach(entry -> {
