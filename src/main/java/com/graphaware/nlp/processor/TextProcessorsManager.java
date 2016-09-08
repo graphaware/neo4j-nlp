@@ -16,11 +16,15 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
+import static com.graphaware.nlp.domain.Labels.Pipeline;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.Map;
 import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,11 +73,23 @@ public class TextProcessorsManager {
     }
 
     private void loadPipelines() {
-        //Load stored pipeline
+        try (Transaction tx = database.beginTx()) {
+            ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
+            pipelineNodes.stream().forEach(pipeline -> {
+                createPipeline(pipeline.getAllProperties());
+            });            
+            tx.success();
+        }
     }
     
     private void storePipelines(Map<String, Object> inputParams) {
-        //store pipeline
+        try (Transaction tx = database.beginTx()) {
+            Node pipelineNode = database.createNode(Pipeline);
+            inputParams.entrySet().stream().forEach(entry -> {
+                pipelineNode.setProperty(entry.getKey(), entry.getValue());
+            });            
+            tx.success();
+        }
     }
 
     public TextProcessor getDefaultProcessor() {
