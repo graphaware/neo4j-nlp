@@ -65,13 +65,13 @@ public class NLPProcedures {
         procedures.register(textProcedures.getPipelines());
         procedures.register(textProcedures.addPipeline());
         
-        ConceptProcedure conceptProcedures = new ConceptProcedure(database);
+        ConceptProcedure conceptProcedures = new ConceptProcedure(database, processorsManager);
         procedures.register(conceptProcedures.concept());
         
         MLProcedure mlProcedures = new MLProcedure(featureBusinessLogic);
         procedures.register(mlProcedures.computeAll());
         
-        SearchProcedure searchProcedures = new SearchProcedure(database);
+        SearchProcedure searchProcedures = new SearchProcedure(database, processorsManager);
         procedures.register(searchProcedures.search());
         
         Executors.newSingleThreadExecutor().execute(queueProcessor);

@@ -53,10 +53,10 @@ import org.slf4j.LoggerFactory;
 public class StanfordTextProcessor implements TextProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
-    protected static final String TOKENIZER = "tokenizer";
-    protected static final String SENTIMENT = "sentiment";
-    protected static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
-    protected static final String PHRASE = "phrase";
+    public static final String TOKENIZER = "tokenizer";
+    public static final String SENTIMENT = "sentiment";
+    public static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
+    public static final String PHRASE = "phrase";
 
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
@@ -115,24 +115,28 @@ public class StanfordTextProcessor implements TextProcessor {
     }
 
     public AnnotatedText annotateText(String text, Object id, int level, boolean store) {
-        StanfordCoreNLP pipeline;
+        String pipeline;
         switch (level) {
             case 0:
-                pipeline = pipelines.get(TOKENIZER);
+                pipeline = TOKENIZER;
                 break;
             case 1:
-                pipeline = pipelines.get(TOKENIZER_AND_SENTIMENT);
+                pipeline = TOKENIZER_AND_SENTIMENT;
                 break;
             case 2:
-                pipeline = pipelines.get(PHRASE);
+                pipeline = PHRASE;
                 break;
             default:
-                pipeline = pipelines.get(TOKENIZER);
+                pipeline = TOKENIZER;
         }
         return annotateText(text, id, pipeline, store);
     }
 
-    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store) {
+    public AnnotatedText annotateText(String text, Object id, String name, boolean store) {
+        StanfordCoreNLP pipeline = pipelines.get(name);
+        if (pipeline == null) {
+            throw new RuntimeException("Pipeline: " + name + " doesn't exist");
+        }
         AnnotatedText result = new AnnotatedText(id);
         Annotation document = new Annotation(text);
         pipeline.annotate(document);
@@ -520,7 +524,11 @@ public class StanfordTextProcessor implements TextProcessor {
     public List<String> getPipelines() {
         return new ArrayList<>(pipelines.keySet());
     }
-
+    
+    public boolean checkPipeline(String name) {
+        return pipelines.containsKey(name);
+    }
+    
     @Override
     public void createPipeline(Map<String, Object> pipelineSpec) {
         //TODO add validation
@@ -538,13 +546,13 @@ public class StanfordTextProcessor implements TextProcessor {
             pipelineBuilder.customStopWordAnnotator(stopWords);
         }
 
-        if ((Boolean) pipelineSpec.getOrDefault("sentiment", true)) {
+        if ((Boolean) pipelineSpec.getOrDefault("sentiment", false)) {
             pipelineBuilder.extractSentiment();
         }
-        if ((Boolean) pipelineSpec.getOrDefault("coref", true)) {
+        if ((Boolean) pipelineSpec.getOrDefault("coref", false)) {
             pipelineBuilder.extractCoref();
         }
-        if ((Boolean) pipelineSpec.getOrDefault("relations", true)) {
+        if ((Boolean) pipelineSpec.getOrDefault("relations", false)) {
             pipelineBuilder.extractRelations();
         }
         Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4);

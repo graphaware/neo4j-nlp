@@ -20,7 +20,6 @@ import com.graphaware.nlp.domain.Labels;
 import com.graphaware.nlp.domain.Properties;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
-import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -56,10 +55,11 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
     private static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
+    private static final String PARAMETER_NAME_TEXT_PIPELINE = "pipeline";
 
     public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
-        this.textProcessor = new StanfordTextProcessor();
+        this.textProcessor = processorManager.getDefaultProcessor();
         this.processorManager = processorManager;
     }
 
@@ -83,11 +83,28 @@ public class TextProcessorProcedure extends NLPProcedure {
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
-                    int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     Node annotatedText = checkIfExist(id);
                     if (annotatedText == null) {
-                        AnnotatedText annotateText = textProcessor.annotateText(text, id, level, store);
+                        String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
+                        AnnotatedText annotateText;
+                        if (processor.length() > 0) {
+                            String pipeline = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, ""));
+                            if (pipeline.length() == 0) {
+                                throw new RuntimeException("You need to specify a pipeline");
+                            }
+                            TextProcessor textProcessorInstance = processorManager.getTextProcessor(processor);
+                            if (textProcessorInstance == null) {
+                                throw new RuntimeException("Text processor " + processor + "doesn't exist");
+                            }
+                            if (!textProcessorInstance.checkPipeline(pipeline)) {
+                                throw new RuntimeException("Pipeline with name " + pipeline + "doesn't exist for processor " + processor);
+                            }
+                            annotateText = textProcessorInstance.annotateText(text, id, pipeline, store);
+                        } else {
+                            int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
+                            annotateText = textProcessor.annotateText(text, id, level, store);
+                        }
                         annotatedText = annotateText.storeOnGraph(database);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());

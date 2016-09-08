@@ -6,7 +6,6 @@
 package com.graphaware.nlp.util;
 
 import com.graphaware.nlp.processor.TextProcessor;
-import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class ServiceLoader {
 
     private static Reflections reflections;
-    private static final Logger LOG = LoggerFactory.getLogger(StanfordTextProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceLoader.class);
 
     public static TextProcessor loadTextProcessor(String processorClazz) {
         TextProcessor processor;

@@ -16,6 +16,7 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
+import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +74,10 @@ public class TextProcessorsManager {
     
     private void storePipelines(Map<String, Object> inputParams) {
         //store pipeline
+    }
+
+    public TextProcessor getDefaultProcessor() {
+        return textProcessors.get(StanfordTextProcessor.class.getName());
     }
 
     public static class PipelineCreationResult {

@@ -8,7 +8,7 @@ package com.graphaware.nlp.processor.stanford;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.Properties;
 
-public class PipelineBuilder {
+class PipelineBuilder {
 
     private static final String CUSTOM_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
 

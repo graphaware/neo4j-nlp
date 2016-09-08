@@ -17,7 +17,6 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Tag;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +25,13 @@ public interface TextProcessor {
     public List<String> getPipelines();
     
     public void createPipeline(Map<String, Object> pipelineSpec);
+    
+    public boolean checkPipeline(String name);
 
+    @Deprecated
     public AnnotatedText annotateText(String text, Object id, int level, boolean store);
 
-    public AnnotatedText annotateText(String text, Object id, StanfordCoreNLP pipeline, boolean store);
+    public AnnotatedText annotateText(String text, Object id, String name, boolean store);
 
     public Tag annotateSentence(String text);
 

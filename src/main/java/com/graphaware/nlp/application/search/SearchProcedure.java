@@ -18,7 +18,7 @@ package com.graphaware.nlp.application.search;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
-import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
+import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,9 +47,9 @@ public class SearchProcedure extends NLPProcedure {
 
     private static final String PARAMETER_NAME_SCORE = "score";
 
-    public SearchProcedure(GraphDatabaseService database) {
+    public SearchProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
-        this.textProcessor = new StanfordTextProcessor();
+        this.textProcessor = processorManager.getDefaultProcessor();
     }
 
     public CallableProcedure.BasicProcedure search() {

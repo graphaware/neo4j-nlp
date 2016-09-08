@@ -22,10 +22,8 @@ import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.persistence.GraphPersistence;
 import com.graphaware.nlp.persistence.LocalGraphDatabase;
-import com.graphaware.nlp.processor.stanford.PipelineBuilder;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -160,14 +158,6 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
     @Test
     public void testAnnotatedTextWithPosition() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        StanfordCoreNLP pipeline = new PipelineBuilder()
-                .tokenize()
-                .defaultStopWordAnnotator()
-                .extractSentiment()
-                .extractCoref()
-                .extractRelations()
-                .threadNumber(6)
-                .build();
         AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
@@ -178,7 +168,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, pipeline, false);
+                + "the outcome of the election was exactly as we predicted.", 1, "phrase", false);
 
         assertEquals(4, annotateText.getSentences().size());
         Sentence sentence1 = annotateText.getSentences().get(0);

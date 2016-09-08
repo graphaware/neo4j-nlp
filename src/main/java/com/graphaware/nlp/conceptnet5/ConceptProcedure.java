@@ -20,7 +20,7 @@ import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_LANGUAG
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
-import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
+import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,9 +56,9 @@ public class ConceptProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_LANG = "lang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
 
-    public ConceptProcedure(GraphDatabaseService database) {
+    public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
-        this.textProcessor = new StanfordTextProcessor();
+        this.textProcessor = processorManager.getDefaultProcessor();
         this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
                 .build();
     }

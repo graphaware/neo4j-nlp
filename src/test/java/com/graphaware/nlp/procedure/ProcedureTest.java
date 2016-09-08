@@ -422,5 +422,47 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(found);
             tx.success();
         }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            String id = "id1";
+            Map<String, Object> params = new HashMap<>();
+            params.put("value", TEXT);
+            params.put("id", id);
+            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', pipeline: 'testPipe'}) YIELD result\n"
+                    + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
+                    + "return result", params);
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            Node resultNode = (Node) rowIterator.next();
+            assertEquals(resultNode.getProperty("id"), id);
+            params.clear();
+            params.put("id", id);
+            Result tags = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence)-[:HAS_TAG]->(result:Tag) RETURN result", params);
+            rowIterator = tags.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+
+            Result sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:CONTAINS_SENTENCE]->(s:Sentence) RETURN labels(s) as result", params);
+            rowIterator = sentences.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            int countSentence = 0;
+            while (rowIterator.hasNext()) {
+                List<Object> next = (List) rowIterator.next();
+                assertEquals(1, next.size());
+                countSentence++;
+            }
+            
+            sentences = getDatabase().execute("MATCH (a:AnnotatedText {id: {id}})-[:FIRST_SENTENCE|NEXT_SENTENCE*..]->(s:Sentence) RETURN labels(s) as result", params);
+            rowIterator = sentences.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            int newCountSentence = 0;
+            while (rowIterator.hasNext()) {
+                List<Object> next = (List) rowIterator.next();
+                assertEquals(next.size(), 1);
+                newCountSentence++;
+            }
+            assertEquals(countSentence, newCountSentence);
+            tx.success();
+        }
     }
 }

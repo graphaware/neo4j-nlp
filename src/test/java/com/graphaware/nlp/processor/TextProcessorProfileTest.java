@@ -15,10 +15,7 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.processor.stanford.PipelineBuilder;
 import com.graphaware.nlp.util.ServiceLoader;
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.junit.Test;
 
 public class TextProcessorProfileTest {
@@ -26,12 +23,7 @@ public class TextProcessorProfileTest {
     @Test
     public void testAnnotatedText() {
         TextProcessor textProcessor = ServiceLoader.loadTextProcessor("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
-        StanfordCoreNLP pipeline = new PipelineBuilder()
-                .tokenize()
-                .defaultStopWordAnnotator()
-                .threadNumber(12)
-                .build();
-        AnnotatedText annotateText = textProcessor.annotateText("On 8 May 2013, "
+        textProcessor.annotateText("On 8 May 2013, "
                 + "one week before the Pakistani election, the third author, "
                 + "in his keynote address at the Sentiment Analysis Symposium, "
                 + "forecast the winner of the Pakistani election. The chart "
@@ -41,6 +33,6 @@ public class TextProcessorProfileTest {
                 + "an article titled “Pakistan Elections: Five Reasons Why the "
                 + "Vote is Unpredictable,”1 in which he claimed that the election "
                 + "was too close to call. It was not, and despite his being in Pakistan, "
-                + "the outcome of the election was exactly as we predicted.", 1, pipeline, false);
+                + "the outcome of the election was exactly as we predicted.", 1, "tokenizer", false);
     }
 }
