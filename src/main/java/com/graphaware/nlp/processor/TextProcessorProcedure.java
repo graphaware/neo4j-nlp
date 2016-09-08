@@ -187,7 +187,7 @@ public class TextProcessorProcedure extends NLPProcedure {
             }
         };
     }
-    
+
     public CallableProcedure.BasicProcedure getPipelines() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelines"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
@@ -207,6 +207,25 @@ public class TextProcessorProcedure extends NLPProcedure {
                     result.add(new Object[]{row});
                 });
                 return Iterators.asRawIterator(result.iterator());
+            }
+        };
+    }
+
+    public CallableProcedure.BasicProcedure addPipeline() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("addPipeline"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+                TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(inputParams);
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
+                    creationResult.getResult() == 0 ? "succeess" : "Error: " + creationResult.getMessage()
+                }).iterator());
             }
         };
     }

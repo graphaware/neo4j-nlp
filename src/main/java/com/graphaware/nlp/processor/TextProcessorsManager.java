@@ -16,9 +16,7 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
-import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -38,6 +36,7 @@ public class TextProcessorsManager {
     public TextProcessorsManager(GraphDatabaseService database) {
         this.database = database;
         loadTextProcessors();
+        loadPipelines();
     }
 
     private void loadTextProcessors() {
@@ -51,6 +50,46 @@ public class TextProcessorsManager {
     
     public TextProcessor getTextProcessor(String name) {
         return textProcessors.get(name);
+    }    
+
+    public PipelineCreationResult createPipeline(Map<String, Object> inputParams) {
+        String processorName = (String) inputParams.get("textProcessor");
+        
+        if (processorName == null || !textProcessors.containsKey(processorName)) {
+            return new PipelineCreationResult(-1, "Processor class not specified or not existing");
+        }
+        TextProcessor processor = textProcessors.get(processorName);
+        
+        //TODO add catch
+        processor.createPipeline(inputParams);
+        //if succeeded
+        storePipelines(inputParams);
+        return new PipelineCreationResult(0, "");
+    }
+
+    private void loadPipelines() {
+        //Load stored pipeline
     }
     
+    private void storePipelines(Map<String, Object> inputParams) {
+        //store pipeline
+    }
+
+    public static class PipelineCreationResult {
+        private final int result;
+        private final String message;
+
+        public PipelineCreationResult(int result, String message) {
+            this.result = result;
+            this.message = message;
+        }
+
+        public int getResult() {
+            return result;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
 }

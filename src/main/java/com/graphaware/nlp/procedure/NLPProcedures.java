@@ -63,6 +63,7 @@ public class NLPProcedures {
         procedures.register(textProcedures.filter());
         procedures.register(textProcedures.getProcessors());
         procedures.register(textProcedures.getPipelines());
+        procedures.register(textProcedures.addPipeline());
         
         ConceptProcedure conceptProcedures = new ConceptProcedure(database);
         procedures.register(conceptProcedures.concept());

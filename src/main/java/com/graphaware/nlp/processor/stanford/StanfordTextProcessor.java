@@ -58,8 +58,6 @@ public class StanfordTextProcessor implements TextProcessor {
     protected static final String TOKENIZER_AND_SENTIMENT = "tokenizerAndSentiment";
     protected static final String PHRASE = "phrase";
 
-
-
     public String backgroundSymbol = DEFAULT_BACKGROUND_SYMBOL;
 
     private final Map<String, StanfordCoreNLP> pipelines = new HashMap<>();
@@ -517,7 +515,7 @@ public class StanfordTextProcessor implements TextProcessor {
             return -1;
         }
     }
-    
+
     @Override
     public List<String> getPipelines() {
         return new ArrayList<>(pipelines.keySet());
@@ -525,6 +523,34 @@ public class StanfordTextProcessor implements TextProcessor {
 
     @Override
     public void createPipeline(Map<String, Object> pipelineSpec) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //TODO add validation
+        String name = (String) pipelineSpec.get("name");
+        PipelineBuilder pipelineBuilder = new PipelineBuilder();
+
+        if ((Boolean) pipelineSpec.getOrDefault("tokenize", true)) {
+            pipelineBuilder.tokenize();
+        }
+
+        String stopWords = (String) pipelineSpec.getOrDefault("stopWords", "default");
+        if (stopWords.equalsIgnoreCase("default")) {
+            pipelineBuilder.defaultStopWordAnnotator();
+        } else {
+            pipelineBuilder.customStopWordAnnotator(stopWords);
+        }
+
+        if ((Boolean) pipelineSpec.getOrDefault("sentiment", true)) {
+            pipelineBuilder.extractSentiment();
+        }
+        if ((Boolean) pipelineSpec.getOrDefault("coref", true)) {
+            pipelineBuilder.extractCoref();
+        }
+        if ((Boolean) pipelineSpec.getOrDefault("relations", true)) {
+            pipelineBuilder.extractRelations();
+        }
+        Long threadNumber = (Long) pipelineSpec.getOrDefault("threadNumber", 4);
+        pipelineBuilder.threadNumber(threadNumber.intValue());
+
+        StanfordCoreNLP pipeline = pipelineBuilder.build();
+        pipelines.put(name, pipeline);
     }
 }

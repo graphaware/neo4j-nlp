@@ -57,6 +57,34 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
     private static final String SHORT_TEXT_10 = "Which is the world’s fastest-growing large economy? Clue: it’s not #China http://wef.ch/29xuXFd  #economics";
 
     @Test
+    public void overallTest() {
+        testAnnotatedText();
+        clean();
+        testAnnotatedTextWithSentiment();
+        clean();
+        testAnnotatedTextAndSentiment();
+        clean();
+        testAnnotatedTextOnMultiple();
+        clean();
+        testConceptText();
+        clean();
+        testLanguageDetection();
+        clean();
+        testSupportedLanguage();
+        clean();
+        testFilter();
+        clean();
+        testGetProceduresManagement();
+        clean();
+    }
+    
+    private void clean() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            getDatabase().execute("MATCH (n) DETACH DELETE n");
+            tx.success();
+        }
+    }
+    
     public void testAnnotatedText() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -101,7 +129,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testAnnotatedTextWithSentiment() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -129,7 +156,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testAnnotatedTextAndSentiment() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -177,7 +203,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testAnnotatedTextOnMultiple() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -237,7 +262,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testConceptText() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -264,7 +288,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testLanguageDetection() {
         try (Transaction tx = getDatabase().beginTx()) {
             Map<String, Object> params = new HashMap<>();
@@ -296,7 +319,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testSupportedLanguage() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -313,7 +335,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
 
-    @Test
     public void testFilter() {
         try (Transaction tx = getDatabase().beginTx()) {
             String id = "id1";
@@ -351,8 +372,6 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
     }
     
-    
-    @Test
     public void testGetProceduresManagement() {
         try (Transaction tx = getDatabase().beginTx()) {
             Result news = getDatabase().execute("CALL ga.nlp.getProcessors() YIELD class\n"
@@ -370,6 +389,37 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(rowIterator.hasNext());
 //            String resultNode = (String) rowIterator.next();
 //            assertEquals("com.graphaware.nlp.processor.stanford.StanfordTextProcessor", resultNode);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result news = getDatabase().execute("CALL ga.nlp.addPipeline({"
+                    + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                    + "name: 'testPipe', "
+                    + "stopWords: 'class,instance,issue', "
+                    + "threadNumber: 5}) "
+                    + "YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            String resultNode = (String) rowIterator.next();
+            assertEquals("succeess", resultNode);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result news = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            
+            boolean found = false;
+            while (rowIterator.hasNext()) {
+                String resultNode = (String) rowIterator.next();
+                if (resultNode.equalsIgnoreCase("testPipe")) {
+                    found = true;
+                }
+            }            
+            assertTrue(found);
             tx.success();
         }
     }
