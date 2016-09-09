@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.0.3.39</version>
+    <version>3.0.4.44-SNAPSHOT</version>
   </parent>
     
   <groupId>com.graphaware</groupId>
@@ -14,8 +14,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <stanford.nlp.version>3.6.0</stanford.nlp.version>
-    <neo4j.version>3.0.3</neo4j.version>
-    <graphaware.version>3.0.3.39</graphaware.version>
+    <neo4j.version>3.0.4</neo4j.version>
+    <graphaware.version>3.0.4.43</graphaware.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
@@ -77,7 +77,7 @@
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>resttest</artifactId>
       <scope>test</scope>
-      <version>${graphaware.version}.13</version>
+      <version>3.0.4.43.13</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

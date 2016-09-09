@@ -493,5 +493,36 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             assertTrue(!found);
             tx.success();
         }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result res = getDatabase().execute("CALL ga.nlp.addPipeline({"
+                    + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                    + "name: 'testPipe', "
+                    + "stopWords: 'class,instance,issue', "
+                    + "threadNumber: 5}) "
+                    + "YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            String resultNode = (String) rowIterator.next();
+            assertEquals("succeess", resultNode);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result res = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
+            
+            boolean found = false;
+            while (rowIterator.hasNext()) {
+                String resultNode = (String) rowIterator.next();
+                if (resultNode.equalsIgnoreCase("testPipe")) {
+                    found = true;
+                }
+            }            
+            assertTrue(found);
+            tx.success();
+        }
     }
 }
