@@ -41,4 +41,6 @@ public interface TextProcessor {
 
     public AnnotatedText sentiment(AnnotatedText annotated);
 
+    public void removePipeline(String pipeline);
+
 }

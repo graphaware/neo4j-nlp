@@ -19,11 +19,14 @@ import com.graphaware.nlp.annotation.NLPTextProcessor;
 import static com.graphaware.nlp.domain.Labels.Pipeline;
 import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,9 +90,37 @@ public class TextProcessorsManager {
             tx.success();
         }
     }
+    
+    public void removePipeline(Map<String, Object> inputParams) {
+        try (Transaction tx = database.beginTx()) {
+            Node pipelineNode = database.createNode(Pipeline);
+            inputParams.entrySet().stream().forEach(entry -> {
+                pipelineNode.setProperty(entry.getKey(), entry.getValue());
+            });            
+            tx.success();
+        }
+    }
 
     public TextProcessor getDefaultProcessor() {
         return textProcessors.get(StanfordTextProcessor.class.getName());
+    }
+
+    public void removePipeline(String processor, String pipeline) {
+        TextProcessor textProcessor = textProcessors.get(processor);
+        if (processor == null)
+            throw new RuntimeException("No text processor with name " + processor + " available");
+        textProcessor.removePipeline(pipeline);
+        removePipelineNode(processor, pipeline);
+    }
+
+    private void removePipelineNode(String processor, String pipeline) throws QueryExecutionException {
+      Map<String, Object> map = new HashMap<>();
+      map.put("textProcessor", processor);
+      map.put("name", pipeline);
+      try (Transaction tx = database.beginTx()) {
+        database.execute("MATCH (n:Pipeline {textProcessor: {textProcessor}, name: {name}}) DELETE n", map);
+        tx.success();
+      }
     }
 
     public static class PipelineCreationResult {

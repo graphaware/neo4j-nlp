@@ -374,18 +374,18 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
     
     public void testGetProceduresManagement() {
         try (Transaction tx = getDatabase().beginTx()) {
-            Result news = getDatabase().execute("CALL ga.nlp.getProcessors() YIELD class\n"
+            Result res = getDatabase().execute("CALL ga.nlp.getProcessors() YIELD class\n"
                     + "return class");
-            ResourceIterator<Object> rowIterator = news.columnAs("class");
+            ResourceIterator<Object> rowIterator = res.columnAs("class");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
             assertEquals("com.graphaware.nlp.processor.stanford.StanfordTextProcessor", resultNode);
             tx.success();
         }
         try (Transaction tx = getDatabase().beginTx()) {
-            Result news = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+            Result res = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
                     + "return result");
-            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
 //            String resultNode = (String) rowIterator.next();
 //            assertEquals("com.graphaware.nlp.processor.stanford.StanfordTextProcessor", resultNode);
@@ -393,14 +393,14 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
         
         try (Transaction tx = getDatabase().beginTx()) {
-            Result news = getDatabase().execute("CALL ga.nlp.addPipeline({"
+            Result res = getDatabase().execute("CALL ga.nlp.addPipeline({"
                     + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
                     + "name: 'testPipe', "
                     + "stopWords: 'class,instance,issue', "
                     + "threadNumber: 5}) "
                     + "YIELD result\n"
                     + "return result");
-            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             String resultNode = (String) rowIterator.next();
             assertEquals("succeess", resultNode);
@@ -408,9 +408,9 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
         }
         
         try (Transaction tx = getDatabase().beginTx()) {
-            Result news = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+            Result res = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
                     + "return result");
-            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
             
             boolean found = false;
             while (rowIterator.hasNext()) {
@@ -428,11 +428,11 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
             Map<String, Object> params = new HashMap<>();
             params.put("value", TEXT);
             params.put("id", id);
-            Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
+            Result res = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
                     + "CALL ga.nlp.annotate({text:n.text, id: {id}, textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', pipeline: 'testPipe'}) YIELD result\n"
                     + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
                     + "return result", params);
-            ResourceIterator<Object> rowIterator = news.columnAs("result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
             assertTrue(rowIterator.hasNext());
             Node resultNode = (Node) rowIterator.next();
             assertEquals(resultNode.getProperty("id"), id);
@@ -462,6 +462,35 @@ public class ProcedureTest extends GraphAwareIntegrationTest {
                 newCountSentence++;
             }
             assertEquals(countSentence, newCountSentence);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result res = getDatabase().execute("CALL ga.nlp.removePipeline({"
+                    + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                    + "pipeline: 'testPipe'}) "
+                    + "YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
+            assertTrue(rowIterator.hasNext());
+            String resultNode = (String) rowIterator.next();
+            assertEquals("succeess", resultNode);
+            tx.success();
+        }
+        
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result res = getDatabase().execute("CALL ga.nlp.getPipelines({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor'}) YIELD result\n"
+                    + "return result");
+            ResourceIterator<Object> rowIterator = res.columnAs("result");
+            
+            boolean found = false;
+            while (rowIterator.hasNext()) {
+                String resultNode = (String) rowIterator.next();
+                if (resultNode.equalsIgnoreCase("testPipe")) {
+                    found = true;
+                }
+            }            
+            assertTrue(!found);
             tx.success();
         }
     }

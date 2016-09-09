@@ -561,4 +561,11 @@ public class StanfordTextProcessor implements TextProcessor {
         StanfordCoreNLP pipeline = pipelineBuilder.build();
         pipelines.put(name, pipeline);
     }
+    
+    @Override
+    public void removePipeline(String name) {
+        if (!pipelines.containsKey(name))
+            throw new RuntimeException("No pipeline found with name: " + name);
+        pipelines.remove(name);
+    }
 }

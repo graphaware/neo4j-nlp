@@ -37,6 +37,7 @@ import org.neo4j.kernel.api.proc.ProcedureSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class TextProcessorProcedure extends NLPProcedure {
 
@@ -245,6 +246,31 @@ public class TextProcessorProcedure extends NLPProcedure {
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
                     creationResult.getResult() == 0 ? "succeess" : "Error: " + creationResult.getMessage()
                 }).iterator());
+            }
+        };
+    }
+
+    public CallableProcedure.BasicProcedure removePipeline() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("removePipeline"))
+                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+
+                String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
+                if (processor.length() > 0) {
+                    String pipeline = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, ""));
+                    if (pipeline.length() == 0) {
+                        throw new RuntimeException("You need to specify a pipeline");
+                    }
+                    processorManager.removePipeline(processor, pipeline);
+                }
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{"succeess"}).iterator());
             }
         };
     }
