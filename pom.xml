@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.0.4.44-SNAPSHOT</version>
+    <version>3.0.4.43</version>
   </parent>
     
   <groupId>com.graphaware</groupId>
