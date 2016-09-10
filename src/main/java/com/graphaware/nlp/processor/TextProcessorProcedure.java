@@ -119,10 +119,7 @@ public class TextProcessorProcedure extends NLPProcedure {
             private Node checkIfExist(Object id) {
                 if (id != null) {
                     try {
-                        Node annotated = database.findNode(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
-                        if (null != annotated) {
-                            return annotated;
-                        }
+                        return database.findNode(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
                     } catch (MultipleFoundException e) {
                         LOG.warn("Multiple AnnotatedText nodes found for id " + id);
                         throw new RuntimeException(e);
