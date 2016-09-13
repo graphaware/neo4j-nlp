@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.MultipleFoundException;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.helpers.collection.Iterators;
@@ -117,9 +118,11 @@ public class TextProcessorProcedure extends NLPProcedure {
 
             private Node checkIfExist(Object id) {
                 if (id != null) {
-                    ResourceIterator<Node> findNodes = database.findNodes(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
-                    if (findNodes.hasNext()) {
-                        return findNodes.next();
+                    try {
+                        return database.findNode(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
+                    } catch (MultipleFoundException e) {
+                        LOG.warn("Multiple AnnotatedText nodes found for id " + id);
+                        throw new RuntimeException(e);
                     }
                 }
                 return null;
