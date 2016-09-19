@@ -20,8 +20,12 @@ import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConceptNet5Importer {
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
+
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
     public static final String DEFAULT_LANGUAGE = "en";
@@ -49,6 +53,7 @@ public class ConceptNet5Importer {
     public List<Tag> importHierarchy(Tag source, String lang, int depth) {
         return importHierarchy(source, lang, depth, DEFAULT_ADMITTED_RELATIONSHIP);
     }
+
     public List<Tag> importHierarchy(Tag source, String lang) {
         return importHierarchy(source, lang, depthSearch, DEFAULT_ADMITTED_RELATIONSHIP);
     }
@@ -56,25 +61,29 @@ public class ConceptNet5Importer {
     public List<Tag> importHierarchy(Tag source, String lang, int depth, String... admittedRelations) {
         return importHierarchy(source, lang, depth, Arrays.asList(admittedRelations));
     }
-    
+
     public List<Tag> importHierarchy(Tag source, String lang, int depth, List<String> admittedRelations) {
         List<Tag> res = new ArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
-        ConceptNet5EdgeResult values = client.getValues(word, lang);
-        values.getEdges().stream().forEach((concept) -> {
-            String conceptPrefix = "/c/" + lang + "/";
-            String parentConcept = concept.getEnd().substring(conceptPrefix.length());
-            if (parentConcept != null
-                    && concept.getStart().equalsIgnoreCase(conceptPrefix + word)
-                    && checkAdmittedRelations(concept, admittedRelations)) {
-                Tag annotateTag = tryToAnnotate(parentConcept);
-                if (depth > 1) {
-                    importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+        try {
+            ConceptNet5EdgeResult values = client.getValues(word, lang);
+            values.getEdges().stream().forEach((concept) -> {
+                String conceptPrefix = "/c/" + lang + "/";
+                String parentConcept = concept.getEnd().substring(conceptPrefix.length());
+                if (parentConcept != null
+                        && concept.getStart().equalsIgnoreCase(conceptPrefix + word)
+                        && checkAdmittedRelations(concept, admittedRelations)) {
+                    Tag annotateTag = tryToAnnotate(parentConcept);
+                    if (depth > 1) {
+                        importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+                    }
+                    source.addParent(concept.getRel(), annotateTag);
+                    res.add(annotateTag);
                 }
-                source.addParent(concept.getRel(), annotateTag);
-                res.add(annotateTag);
-            }
-        });
+            });
+        } catch (Exception ex) {
+            LOG.error("Error while improting hierarchy for " + word + "(" + lang + "). Ignored!", ex);
+        }
         return res;
     }
 
