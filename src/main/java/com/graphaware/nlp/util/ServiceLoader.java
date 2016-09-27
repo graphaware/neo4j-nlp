@@ -78,7 +78,7 @@ public class ServiceLoader {
 
     private static <T, A extends Annotation> Map<String, Class<T>> loadClassByAnnotation(Class<A> annotation) {
         if (reflections == null) {
-            loadReflections("com.graphaware.nlp");
+            loadReflections("com.graphaware");
         }
         Map<String, Class<T>> loader = new HashMap<>();
         Set<Class<?>> providers = reflections.getTypesAnnotatedWith(annotation);

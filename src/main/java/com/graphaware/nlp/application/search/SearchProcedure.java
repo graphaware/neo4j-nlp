@@ -37,7 +37,6 @@ import org.neo4j.kernel.api.proc.ProcedureSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class SearchProcedure extends NLPProcedure {
 

@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.ml;
+package com.graphaware.nlp.ml.similarity;
 
 import com.graphaware.nlp.procedure.NLPProcedure;
 import java.util.ArrayList;
@@ -31,18 +31,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
-public class MLProcedure extends NLPProcedure {
+public class SimilarityProcedure extends NLPProcedure {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MLProcedure.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcedure.class);
 
     private final FeatureBasedProcessLogic featureBusinessLogic;
 
-    public MLProcedure(FeatureBasedProcessLogic featureBusinessLogic) {
+    public SimilarityProcedure(FeatureBasedProcessLogic featureBusinessLogic) {
         this.featureBusinessLogic = featureBusinessLogic;
     }
 
     public CallableProcedure.BasicProcedure computeAll() {
-        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("cosine", "compute"))
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "cosine", "compute"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTInteger).build()) {

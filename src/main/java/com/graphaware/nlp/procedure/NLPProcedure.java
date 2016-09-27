@@ -26,7 +26,7 @@ public class NLPProcedure {
 
 
 
-    protected static ProcedureSignature.ProcedureName getProcedureName(String... procedureName) {
+        protected static ProcedureSignature.ProcedureName getProcedureName(String... procedureName) {
         String namespace[] = new String[2 + procedureName.length];
         int i = 0;
         namespace[i++] = "ga";
