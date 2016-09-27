@@ -44,7 +44,6 @@ public class NLPProcedures {
     @Autowired
     private FeatureBasedProcessLogic featureBusinessLogic;
     
-    
     @Autowired
     private TextProcessorsManager processorsManager;
 
