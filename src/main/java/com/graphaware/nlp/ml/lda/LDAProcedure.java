@@ -22,6 +22,7 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.spark.ml.lda.LDAProcessor;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,10 +84,11 @@ public class LDAProcedure extends NLPProcedure {
 
                 try {
                     LOG.warn("Start extracting topic");
-                    LDAProcessor.extract("MATCH (n:AnnotatedText) "
+                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
                             + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
                             + "WHERE length(t.value) > 5 "
-                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, database, storeModel);
+                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, storeModel);
+                    storeTopics(topics);
                     LOG.warn("Completed extracting topic");
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
                         1
@@ -94,6 +96,31 @@ public class LDAProcedure extends NLPProcedure {
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);
                     throw new RuntimeException(ex);
+                }
+            }
+
+            private void storeTopics(Tuple2<Object, Tuple2<String, Object>[]>[] topicsAssociation) {
+                for (Tuple2<Object, Tuple2<String, Object>[]> document : topicsAssociation) {
+                    long docId = (Long)document._1;
+                    Map<String, Object> param = new HashMap<>();
+                    param.put("docId", docId);
+                    database.execute("MATCH (a:AnnotatedText) "
+                            + "WHERE id(a) = {docId} "
+                            + "MATCH (a)<-[d:DESCRIBES]-() "
+                            + "DELETE d ",
+                            param);
+                    Tuple2<String, Object>[] topics = document._2;
+                    for (Tuple2<String, Object> topic : topics) {
+                        Map<String, Object> internalParam = new HashMap<>();
+                        internalParam.put("docId", docId);
+                        internalParam.put("topic", topic._1);
+                        internalParam.put("value", topic._2);
+                        database.execute("MATCH (t:Tag) "
+                                + "MATCH (a:AnnotatedText) "
+                                + "WHERE t.value = {topic} AND id(a) = {docId} "
+                                + "MERGE (a)<-[:DESCRIBES {value: {value}}]-(t) ",
+                                internalParam);
+                    }
                 }
             }
         };
@@ -117,18 +144,18 @@ public class LDAProcedure extends NLPProcedure {
                 }
                 AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, false);
                 List<Tag> tags = annotateText.getTags();
-                Tuple2<String,Object>[] tagsArray = new Tuple2[tags.size()];
-                for (int i = 0; i< tags.size(); i++) {
+                Tuple2<String, Object>[] tagsArray = new Tuple2[tags.size()];
+                for (int i = 0; i < tags.size(); i++) {
                     Tag tag = tags.get(i);
                     tagsArray[i] = new Tuple2<>(tag.getLemma(), tag.getMultiplicity());
                 }
                 try {
                     LOG.warn("Start extracting topic");
-                    Tuple2<String,Object>[] topics = LDAProcessor.predictTopics(tagsArray);
+                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray);
                     LOG.warn("Completed extracting topic: " + topics);
                     Set<Object[]> result = new HashSet<>();
                     for (int i = 0; i < topics.length; i++) {
-                        result.add(new Object[]{topics[i]._1, ((Double)topics[i]._2).floatValue()});
+                        result.add(new Object[]{topics[i]._1, ((Double) topics[i]._2).floatValue()});
                     }
                     return Iterators.asRawIterator(result.iterator());
                 } catch (Exception ex) {
