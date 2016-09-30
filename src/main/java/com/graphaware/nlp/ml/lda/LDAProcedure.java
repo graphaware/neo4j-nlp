@@ -20,7 +20,7 @@ import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import com.graphaware.spark.ml.lda.LDAProcessor;
+//import com.graphaware.spark.ml.lda.LDAProcessor;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,11 +84,11 @@ public class LDAProcedure extends NLPProcedure {
 
                 try {
                     LOG.warn("Start extracting topic");
-                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
-                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
-                            + "WHERE length(t.value) > 5 "
-                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, storeModel);
-                    storeTopics(topics);
+//                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
+//                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
+//                            + "WHERE length(t.value) > 5 "
+//                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, storeModel);
+//                    storeTopics(topics);
                     LOG.warn("Completed extracting topic");
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
                         1
@@ -151,12 +151,12 @@ public class LDAProcedure extends NLPProcedure {
                 }
                 try {
                     LOG.warn("Start extracting topic");
-                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray);
-                    LOG.warn("Completed extracting topic: " + topics);
+//                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray);
+//                    LOG.warn("Completed extracting topic: " + topics);
                     Set<Object[]> result = new HashSet<>();
-                    for (int i = 0; i < topics.length; i++) {
-                        result.add(new Object[]{topics[i]._1, ((Double) topics[i]._2).floatValue()});
-                    }
+//                    for (int i = 0; i < topics.length; i++) {
+//                        result.add(new Object[]{topics[i]._1, ((Double) topics[i]._2).floatValue()});
+//                    }
                     return Iterators.asRawIterator(result.iterator());
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);

@@ -4,7 +4,7 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.0.4.44-SNAPSHOT</version>
+    <version>3.0.4.43</version>
   </parent>
     
   <groupId>com.graphaware</groupId>
@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <stanford.nlp.version>3.6.0</stanford.nlp.version>
     <neo4j.version>3.0.4</neo4j.version>
-    <graphaware.version>3.0.4.44-SNAPSHOT</graphaware.version>
+    <graphaware.version>3.0.4.43</graphaware.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
@@ -47,12 +47,12 @@
       <artifactId>neo4j</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
+    <!--dependency>
       <groupId>com.graphaware</groupId>
       <artifactId>neo4j-spark-ml</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>provided</scope>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
@@ -74,7 +74,7 @@
       <version>2.24.0</version>
       <scope>test</scope>
     </dependency>
-
+    
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
