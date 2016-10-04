@@ -91,7 +91,7 @@ public class ConceptProcedure extends NLPProcedure {
                     });
 
                     conceptTags.stream().forEach((newTag) -> {
-                        newTag.storeOnGraph(database);
+                        newTag.storeOnGraph(database, false);
                     });
                     beginTx.success();
                 }

@@ -50,16 +50,20 @@ public class AnnotatedText implements Persistable {
     }
 
     @Override
-    public Node storeOnGraph(GraphDatabaseService database) {
+    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
         Node tmpAnnotatedNode = checkIfExist(database, id);
-        if (tmpAnnotatedNode == null) {
-            final Node annotatedTextNode = database.createNode(AnnotatedText);
+        if (tmpAnnotatedNode == null || force) {
+            final Node annotatedTextNode;
+            if ( tmpAnnotatedNode != null)
+                annotatedTextNode = tmpAnnotatedNode;
+            else 
+                annotatedTextNode = database.createNode(AnnotatedText);
             annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
             annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
             final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
 
             sentences.stream().forEach((sentence) -> {
-                Node sentenceNode = sentence.storeOnGraph(database);
+                Node sentenceNode = sentence.storeOnGraph(database, force);
                 annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
                 Node previousSentence = previousSentenceReference.get();
                 if (previousSentence == null) {
@@ -71,8 +75,8 @@ public class AnnotatedText implements Persistable {
                 List<Phrase> phraseOccurrences = sentence.getPhraseOccurrence();
                 phraseOccurrences.stream().forEach((phrase) -> {
                     if (phrase.getReference() != null) {
-                        Node phraseNode = phrase.getOrCreate(database);
-                        Node referredPhraseNode = phrase.getReference().getOrCreate(database);
+                        Node phraseNode = phrase.getOrCreate(database, force);
+                        Node referredPhraseNode = phrase.getReference().getOrCreate(database, force);
                         phraseNode.createRelationshipTo(referredPhraseNode, REFER_TO);
                     }
                 });
@@ -84,7 +88,7 @@ public class AnnotatedText implements Persistable {
             * only the Sentence are updated 
              */
             sentences.stream().forEach((sentence) -> {
-                sentence.storeOnGraph(database);
+                sentence.storeOnGraph(database, force);
             });
         }
         node = tmpAnnotatedNode;

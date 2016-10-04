@@ -56,6 +56,7 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
     private static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
     private static final String PARAMETER_NAME_TEXT_PIPELINE = "pipeline";
+    private static final String PARAMETER_NAME_FORCE = "force";
 
     public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
@@ -84,8 +85,10 @@ public class TextProcessorProcedure extends NLPProcedure {
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
+                    boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
                     Node annotatedText = checkIfExist(id);
-                    if (annotatedText == null) {
+                    
+                    if (annotatedText == null || force) {
                         String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
                         AnnotatedText annotateText;
                         if (processor.length() > 0) {
@@ -95,17 +98,17 @@ public class TextProcessorProcedure extends NLPProcedure {
                             }
                             TextProcessor textProcessorInstance = processorManager.getTextProcessor(processor);
                             if (textProcessorInstance == null) {
-                                throw new RuntimeException("Text processor " + processor + "doesn't exist");
+                                throw new RuntimeException("Text processor " + processor + " doesn't exist");
                             }
                             if (!textProcessorInstance.checkPipeline(pipeline)) {
-                                throw new RuntimeException("Pipeline with name " + pipeline + "doesn't exist for processor " + processor);
+                                throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
                             }
                             annotateText = textProcessorInstance.annotateText(text, id, pipeline, store);
                         } else {
                             int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
                             annotateText = textProcessor.annotateText(text, id, level, store);
                         }
-                        annotatedText = annotateText.storeOnGraph(database);
+                        annotatedText = annotateText.storeOnGraph(database, force);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
                 } catch (Exception ex) {
@@ -183,7 +186,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
                 AnnotatedText annotatedText = AnnotatedText.load(annotatedNode);
                 annotatedText = textProcessor.sentiment(annotatedText);
-                annotatedText.storeOnGraph(database);
+                annotatedText.storeOnGraph(database, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
             }
         };

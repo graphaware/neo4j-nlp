@@ -21,14 +21,20 @@ import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 //import com.graphaware.spark.ml.lda.LDAProcessor;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
 import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
@@ -58,9 +64,6 @@ public class LDAProcedure extends NLPProcedure {
     private final static String PARAMETER_NAME_STORE = "store";
     private final static String PARAMETER_NAME_TEXT = "text";
 
-    private static final String PARAMETER_NAME_OUTPUT_TOPIC = "topic";
-    private static final String PARAMETER_NAME_OUTPUT_VALUE = "value";
-
     public LDAProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
         this.processorManager = processorManager;
@@ -83,45 +86,49 @@ public class LDAProcedure extends NLPProcedure {
                 Boolean storeModel = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE, PARAMETER_DEFAULT_STORE);
 
                 try {
-                    LOG.warn("Start extracting topic");
+//                    LOG.warn("Start extracting topic");
 //                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
 //                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
 //                            + "WHERE length(t.value) > 5 "
 //                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, storeModel);
-//                    storeTopics(topics);
-                    LOG.warn("Completed extracting topic");
-                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
-                        1
-                    }).iterator());
+//                    Collection<Node> resultNodes = storeTopics(topics);
+//                    LOG.warn("Completed extracting topic");
+                    Set<Object[]> result = new HashSet<>();
+//                    resultNodes.stream().forEach((item) -> {
+//                        result.add(new Object[]{item});
+//                    });
+                    return Iterators.asRawIterator(result.iterator());
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);
                     throw new RuntimeException(ex);
                 }
             }
 
-            private void storeTopics(Tuple2<Object, Tuple2<String, Object>[]>[] topicsAssociation) {
+            private Collection<Node> storeTopics(Tuple2<Object, Tuple2<String, Object>[]>[] topicsAssociation) {
+                Map<Long, Node> topicNodes = new HashMap<>();
+                database.execute("MATCH (t:Topic) DETACH DELETE t");
+
                 for (Tuple2<Object, Tuple2<String, Object>[]> document : topicsAssociation) {
-                    long docId = (Long)document._1;
-                    Map<String, Object> param = new HashMap<>();
-                    param.put("docId", docId);
-                    database.execute("MATCH (a:AnnotatedText) "
-                            + "WHERE id(a) = {docId} "
-                            + "MATCH (a)<-[d:DESCRIBES]-() "
-                            + "DELETE d ",
-                            param);
+                    long docId = (Long) document._1;
                     Tuple2<String, Object>[] topics = document._2;
-                    for (Tuple2<String, Object> topic : topics) {
-                        Map<String, Object> internalParam = new HashMap<>();
-                        internalParam.put("docId", docId);
-                        internalParam.put("topic", topic._1);
-                        internalParam.put("value", topic._2);
-                        database.execute("MATCH (t:Tag) "
-                                + "MATCH (a:AnnotatedText) "
-                                + "WHERE t.value = {topic} AND id(a) = {docId} "
-                                + "MERGE (a)<-[:DESCRIBES {value: {value}}]-(t) ",
-                                internalParam);
+                    Node topic = getOrCreateTopic(topics);
+                    if (topic == null) {
+                        throw new RuntimeException("Cannot create new Topic");
+                    }
+                    Map<String, Object> internalParam = new HashMap<>();
+                    internalParam.put("docId", docId);
+                    internalParam.put("topicId", topic.getId());
+                    database.execute("MATCH (t:Topic) "
+                            + "MATCH (a:AnnotatedText) "
+                            + "WHERE id(t) = {topicId} AND id(a) = {docId} "
+                            + "MERGE (a)<-[:DESCRIBES]-(t) "
+                            + "RETURN t",
+                            internalParam);
+                    if (!topicNodes.containsKey(topic.getId())) {
+                        topicNodes.put(topic.getId(), topic);
                     }
                 }
+                return topicNodes.values();
             }
         };
     }
@@ -130,8 +137,7 @@ public class LDAProcedure extends NLPProcedure {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "topic"))
                 .mode(ProcedureSignature.Mode.READ_WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-                .out(PARAMETER_NAME_OUTPUT_TOPIC, Neo4jTypes.NTString)
-                .out(PARAMETER_NAME_OUTPUT_VALUE, Neo4jTypes.NTFloat)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
                 .build()) {
 
             @Override
@@ -142,6 +148,7 @@ public class LDAProcedure extends NLPProcedure {
                 if (text == null) {
                     throw new RuntimeException("Missing parameter " + PARAMETER_NAME_TEXT);
                 }
+                Integer numberOfTopics = (Integer) inputParams.getOrDefault(PARAMETER_NAME_TOPICS, PARAMETER_DEFAULT_TOPICS);
                 AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, false);
                 List<Tag> tags = annotateText.getTags();
                 Tuple2<String, Object>[] tagsArray = new Tuple2[tags.size()];
@@ -151,13 +158,10 @@ public class LDAProcedure extends NLPProcedure {
                 }
                 try {
                     LOG.warn("Start extracting topic");
-//                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray);
+//                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray, numberOfTopics);
 //                    LOG.warn("Completed extracting topic: " + topics);
-                    Set<Object[]> result = new HashSet<>();
-//                    for (int i = 0; i < topics.length; i++) {
-//                        result.add(new Object[]{topics[i]._1, ((Double) topics[i]._2).floatValue()});
-//                    }
-                    return Iterators.asRawIterator(result.iterator());
+                    Node topicNode = null;//getOrCreateTopic(topics);
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{topicNode}).iterator());
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);
                     throw new RuntimeException(ex);
@@ -166,4 +170,29 @@ public class LDAProcedure extends NLPProcedure {
         };
     }
 
+    private Node getOrCreateTopic(Tuple2<String, Object>[] topics) {
+        List<String> keywords = new ArrayList<>();
+        List<Float> values = new ArrayList<>();
+
+        for (Tuple2<String, Object> topic : topics) {
+            keywords.add(topic._1);
+            values.add(Float.valueOf(String.valueOf(topic._2)));
+        }
+        Map<String, Object> internalParam = new HashMap<>();
+        internalParam.put("keywords", keywords);
+        internalParam.put("values", values);
+        Result topicResult = database.execute("MERGE (t:Topic {keywords:{keywords}, values:{values}}) \n"
+                + "WITH t, range(0, size(t.keywords) - 1) as indexes\n"
+                + "UNWIND indexes as i\n"
+                + "MERGE (tag:Tag {value: t.keywords[i]}) \n"
+                + "MERGE (t)<-[:DESCRIBES {value: t.values[i]}]-(tag) \n"
+                + "RETURN t",
+                internalParam);
+        ResourceIterator<Node> topic = topicResult.columnAs("t");
+        if (topic.hasNext()) {
+            return topic.next();
+        } else {
+            return null;
+        }
+    }
 }

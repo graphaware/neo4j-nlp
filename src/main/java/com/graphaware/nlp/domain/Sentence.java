@@ -176,19 +176,23 @@ public class Sentence implements Persistable {
     }
 
     @Override
-    public Node storeOnGraph(GraphDatabaseService database) {
+    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
         Node sentenceNode = checkIfExist(database, id);
-        if (sentenceNode == null) {
+        if (sentenceNode == null || force) {
             try (Transaction tx = database.beginTx();) {
-                Node newSentenceNode = database.createNode(Sentence);
+                Node newSentenceNode;
+                if (sentenceNode == null)
+                    newSentenceNode = database.createNode(Sentence);
+                else 
+                    newSentenceNode = sentenceNode;
                 newSentenceNode.setProperty(HASH, MD5(sentence));
                 newSentenceNode.setProperty(PROPERTY_ID, id);
                 newSentenceNode.setProperty(SENTENCE_NUMBER, sentenceNumber);
                 if (store) {
                     newSentenceNode.setProperty(TEXT, sentence);
                 }
-                storeTags(database, newSentenceNode);
-                storePhrases(database, newSentenceNode);
+                storeTags(database, newSentenceNode, force);
+                storePhrases(database, newSentenceNode, force);
                 sentenceNode = newSentenceNode;
                 assignSentimentLabel(sentenceNode);
                 tx.success();
@@ -199,14 +203,14 @@ public class Sentence implements Persistable {
         return sentenceNode;
     }
 
-    private void storeTags(GraphDatabaseService database, Node newSentenceNode) {
+    private void storeTags(GraphDatabaseService database, Node newSentenceNode, boolean force) {
         tags.values().stream().forEach((tag) -> {
-            Node tagNode = tag.storeOnGraph(database);
+            Node tagNode = tag.storeOnGraph(database, force);
             Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
             hasTagRel.setProperty("tf", tag.getMultiplicity());
         });
         tagOccurrences.values().stream().forEach((tagOccurrenceAtPosition) -> {
-            Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database);
+            Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
             Node tagOccurrenceNode = database.createNode(TagOccurrence);
             tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
             tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
@@ -215,11 +219,11 @@ public class Sentence implements Persistable {
         });
     }
 
-    private void storePhrases(GraphDatabaseService database, Node newSentenceNode) {
+    private void storePhrases(GraphDatabaseService database, Node newSentenceNode, boolean force) {
         if (phraseOccurrences != null) {
             phraseOccurrences.values().stream().forEach((phraseOccurrencesAtPosition) -> {
                 phraseOccurrencesAtPosition.values().stream().forEach((phraseOccurrence) -> {
-                    Node phraseNode = phraseOccurrence.getElement().storeOnGraph(database);
+                    Node phraseNode = phraseOccurrence.getElement().storeOnGraph(database, force);
                     newSentenceNode.createRelationshipTo(phraseNode, HAS_PHRASE);
                     Node phraseOccurrenceNode = database.createNode(PhraseOccurrence);
                     phraseOccurrenceNode.setProperty(START_POSITION, phraseOccurrence.getSpan().first());

@@ -18,5 +18,5 @@ package com.graphaware.nlp.persistence;
 import com.graphaware.nlp.domain.Persistable;
 
 public interface GraphPersistence {
-    public void persistOnGraph(Persistable text);
+    public void persistOnGraph(Persistable text, boolean force);
 }

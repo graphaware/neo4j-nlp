@@ -19,5 +19,5 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 public interface Persistable {
-    public Node storeOnGraph(GraphDatabaseService graphdb);    
+    public Node storeOnGraph(GraphDatabaseService graphdb, boolean force);    
 }

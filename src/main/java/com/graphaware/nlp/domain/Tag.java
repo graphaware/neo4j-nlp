@@ -73,11 +73,11 @@ public class Tag implements Persistable {
     }
 
     @Override
-    public Node storeOnGraph(GraphDatabaseService database) {
-        Node tagNode = getOrCreate(database);
+    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
+        Node tagNode = getOrCreate(database, force);
         if (parents != null) {
             parents.stream().forEach((tagRelationship) -> {
-                Node parentTagNode = tagRelationship.getParent().storeOnGraph(database);
+                Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
                 Map<String, Object> params = new HashMap<>();
                 params.put("type", tagRelationship.getRelation());
                 params.put("sourceId", tagNode.getId());
@@ -90,12 +90,13 @@ public class Tag implements Persistable {
         return tagNode;
     }
 
-    public Node getOrCreate(GraphDatabaseService database) {
+    public Node getOrCreate(GraphDatabaseService database, boolean force) {
         Node tagNode = database.findNode(Tag, CONTENT_VALUE, lemma);
-        if (tagNode != null) {
+        if (tagNode != null && !force) {
             return tagNode;
         }
-        tagNode = database.createNode(Tag);
+        if (tagNode == null)
+            tagNode = database.createNode(Tag);
         tagNode.setProperty(CONTENT_VALUE, lemma);
         if (ne != null) {
             tagNode.setProperty("ne", ne);

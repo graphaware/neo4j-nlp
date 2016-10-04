@@ -63,7 +63,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals(9, annotateText.getSentences().get(3).getTags().size());
 
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
-        peristence.persistOnGraph(annotateText);
+        peristence.persistOnGraph(annotateText, false);
         checkLocation("Pakistan");
         checkVerb("show");
 
@@ -113,7 +113,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         AnnotatedText annotateText = textProcessor.annotateText(text, 1, 0, false);
         List<Node> nodes = new ArrayList<>();
         try (Transaction beginTx = getDatabase().beginTx()) {
-            Node annotatedNode = annotateText.storeOnGraph(getDatabase());
+            Node annotatedNode = annotateText.storeOnGraph(getDatabase(), false);
             Map<String, Object> params = new HashMap<>();
             params.put("id", annotatedNode.getId());
             Result queryRes = getDatabase().execute("MATCH (n:AnnotatedText)-[*..2]->(t:Tag) where id(n) = {id} return t", params);
@@ -123,7 +123,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
                 nodes.add(tag);
                 List<Tag> conceptTags = conceptnet5Importer.importHierarchy(Tag.createTag(tag), "en");
                 conceptTags.stream().forEach((newTag) -> {
-                    nodes.add(newTag.storeOnGraph(getDatabase()));
+                    nodes.add(newTag.storeOnGraph(getDatabase(), false));
                 });
             }
             beginTx.success();
@@ -201,7 +201,7 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals(1, annotateText.getSentences().size());
 
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
-        peristence.persistOnGraph(annotateText);        
+        peristence.persistOnGraph(annotateText, false);        
 
     }
     
@@ -211,6 +211,6 @@ public class TextProcessorTest extends EmbeddedDatabaseIntegrationTest {
         AnnotatedText annotateText = textProcessor.annotateText("Importing CSV data does nothing", 1, 1, false);
         assertEquals(1, annotateText.getSentences().size());
         GraphPersistence peristence = new LocalGraphDatabase(getDatabase());
-        peristence.persistOnGraph(annotateText);        
+        peristence.persistOnGraph(annotateText, false);        
     }
 }

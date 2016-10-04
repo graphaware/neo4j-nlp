@@ -57,20 +57,21 @@ public class Phrase implements Persistable {
     }
 
     @Override
-    public Node storeOnGraph(GraphDatabaseService database) {
-        phraseNode = getOrCreate(database);
+    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
+        phraseNode = getOrCreate(database, force);
         return phraseNode;
     }
     
-    public Node getOrCreate(GraphDatabaseService database) {
+    public Node getOrCreate(GraphDatabaseService database, boolean force) {
         if (phraseNode != null) {
             return phraseNode;
         }
         phraseNode = database.findNode(Phrase, CONTENT_VALUE, content);
-        if (phraseNode != null) {
+        if (phraseNode != null && !force) {
             return phraseNode;
         }
-        phraseNode = database.createNode(Phrase);
+        if (phraseNode == null)
+            phraseNode = database.createNode(Phrase);
         phraseNode.setProperty(CONTENT_VALUE, content);
         return phraseNode;
     }

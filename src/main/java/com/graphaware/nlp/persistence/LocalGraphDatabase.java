@@ -29,9 +29,9 @@ public class LocalGraphDatabase implements GraphPersistence {
     }
 
     @Override
-    public void persistOnGraph(Persistable text) {
+    public void persistOnGraph(Persistable text, boolean force) {
         try (Transaction tx = database.beginTx()) {
-            text.storeOnGraph(database);
+            text.storeOnGraph(database, force);
             tx.success();
         } catch (QueryExecutionException ex) {
             throw new RuntimeException("Error while persisting", ex);
