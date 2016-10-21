@@ -20,7 +20,7 @@ import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-//import com.graphaware.spark.ml.lda.LDAProcessor;
+import com.graphaware.spark.ml.lda.LDAProcessor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,9 +53,9 @@ public class LDAProcedure extends NLPProcedure {
     private final TextProcessorsManager processorManager;
     private final TextProcessor textProcessor;
 
-    private final static int PARAMETER_DEFAULT_GROUPS = 5;
-    private final static int PARAMETER_DEFAULT_ITERATIONS = 20;
-    private final static int PARAMETER_DEFAULT_TOPICS = 10;
+    private final static long PARAMETER_DEFAULT_GROUPS = 5l;
+    private final static long PARAMETER_DEFAULT_ITERATIONS = 20l;
+    private final static long PARAMETER_DEFAULT_TOPICS = 10l;
     private final static boolean PARAMETER_DEFAULT_STORE = true;
 
     private final static String PARAMETER_NAME_GROUPS = "clusters";
@@ -80,23 +80,23 @@ public class LDAProcedure extends NLPProcedure {
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
-                Integer numberOfTopicGroups = (Integer) inputParams.getOrDefault(PARAMETER_NAME_GROUPS, PARAMETER_DEFAULT_GROUPS);
-                Integer maxIterations = (Integer) inputParams.getOrDefault(PARAMETER_NAME_ITERATIONS, PARAMETER_DEFAULT_ITERATIONS);
-                Integer numberOfTopics = (Integer) inputParams.getOrDefault(PARAMETER_NAME_TOPICS, PARAMETER_DEFAULT_TOPICS);
+                Long numberOfTopicGroups = (Long) inputParams.getOrDefault(PARAMETER_NAME_GROUPS, PARAMETER_DEFAULT_GROUPS);
+                Long maxIterations = (Long) inputParams.getOrDefault(PARAMETER_NAME_ITERATIONS, PARAMETER_DEFAULT_ITERATIONS);
+                Long numberOfTopics = (Long) inputParams.getOrDefault(PARAMETER_NAME_TOPICS, PARAMETER_DEFAULT_TOPICS);
                 Boolean storeModel = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE, PARAMETER_DEFAULT_STORE);
 
                 try {
-//                    LOG.warn("Start extracting topic");
-//                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
-//                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
-//                            + "WHERE length(t.value) > 5 "
-//                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups, maxIterations, numberOfTopics, storeModel);
-//                    Collection<Node> resultNodes = storeTopics(topics);
-//                    LOG.warn("Completed extracting topic");
+                    LOG.warn("Start extracting topic");
+                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
+                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
+                            + "WHERE length(t.value) > 5 "
+                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups.intValue(), maxIterations.intValue(), numberOfTopics.intValue(), storeModel);
+                    Collection<Node> resultNodes = storeTopics(topics);
+                    LOG.warn("Completed extracting topic");
                     Set<Object[]> result = new HashSet<>();
-//                    resultNodes.stream().forEach((item) -> {
-//                        result.add(new Object[]{item});
-//                    });
+                    resultNodes.stream().forEach((item) -> {
+                        result.add(new Object[]{item});
+                    });
                     return Iterators.asRawIterator(result.iterator());
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);
@@ -158,9 +158,9 @@ public class LDAProcedure extends NLPProcedure {
                 }
                 try {
                     LOG.warn("Start extracting topic");
-//                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray, numberOfTopics);
-//                    LOG.warn("Completed extracting topic: " + topics);
-                    Node topicNode = null;//getOrCreateTopic(topics);
+                    Tuple2<String, Object>[] topics = LDAProcessor.predictTopics(tagsArray, numberOfTopics);
+                    LOG.warn("Completed extracting topic: " + topics);
+                    Node topicNode = getOrCreateTopic(topics);
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{topicNode}).iterator());
                 } catch (Exception ex) {
                     LOG.error("Error while annotating", ex);

@@ -17,7 +17,6 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import static com.graphaware.nlp.domain.Labels.Pipeline;
-import com.graphaware.nlp.processor.stanford.StanfordTextProcessor;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,7 +100,7 @@ public class TextProcessorsManager {
     }
 
     public TextProcessor getDefaultProcessor() {
-        return textProcessors.get(StanfordTextProcessor.class.getName());
+        return textProcessors.get("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
     }
 
     public void removePipeline(String processor, String pipeline) {

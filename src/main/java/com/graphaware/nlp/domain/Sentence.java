@@ -32,6 +32,10 @@ import static com.graphaware.nlp.domain.Relationships.SENTENCE_PHRASE_OCCURRENCE
 import static com.graphaware.nlp.domain.Relationships.SENTENCE_TAG_OCCURRENCE;
 import static com.graphaware.nlp.domain.Relationships.TAG_OCCURRENCE_TAG;
 import static com.graphaware.nlp.util.HashFunctions.MD5;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,11 +47,13 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 
-public class Sentence implements Persistable {
+public class Sentence implements Persistable, Serializable, Comparable<Sentence> {
+    
+    private static final long serialVersionUID = -1L;
 
     public static final int NO_SENTIMENT = -1;
 
-    private final Map<String, Tag> tags;
+    private Map<String, Tag> tags;
     private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences = new HashMap<>();
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
 
@@ -280,5 +286,22 @@ public class Sentence implements Persistable {
             }
         }
         return null;
+    }
+    
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        s.defaultWriteObject();
+        s.writeObject(tags);        
+    }
+   
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        this.tags = (Map<String, Tag>)s.readObject();
+    }
+
+    @Override
+    public int compareTo(Sentence o) {
+        if (o == null || !(o instanceof Sentence))
+            return 1;
+        return this.sentenceNumber - o.sentenceNumber;
     }
 }

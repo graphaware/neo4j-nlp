@@ -7,13 +7,12 @@
     <version>3.0.4.43</version>
   </parent>
     
-  <groupId>com.graphaware</groupId>
-  <artifactId>neo4j-nlp</artifactId>
+  <groupId>com.graphaware.neo4j</groupId>
+  <artifactId>nlp</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <stanford.nlp.version>3.6.0</stanford.nlp.version>
     <neo4j.version>3.0.4</neo4j.version>
     <graphaware.version>3.0.4.43</graphaware.version>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -26,33 +25,16 @@
       <artifactId>spring-webmvc</artifactId>
     </dependency>
     <dependency>
-      <groupId>edu.stanford.nlp</groupId>
-      <artifactId>stanford-corenlp</artifactId>
-      <version>${stanford.nlp.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>edu.stanford.nlp</groupId>
-      <artifactId>stanford-corenlp</artifactId>
-      <version>${stanford.nlp.version}</version>
-      <classifier>models</classifier>
-    </dependency>
-    <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j</artifactId>
       <scope>provided</scope>
     </dependency>
-    <!--dependency>
+    <dependency>
       <groupId>com.graphaware</groupId>
       <artifactId>neo4j-spark-ml</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>provided</scope>
-    </dependency-->
+    </dependency>
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
@@ -100,12 +82,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.graphaware.neo4j</groupId>
-      <artifactId>resttest</artifactId>
-      <scope>test</scope>
-      <version>3.0.4.43.13</version>
-    </dependency>
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>
@@ -128,7 +104,12 @@
       <artifactId>runtime-api</artifactId>
       <scope>test</scope>
     </dependency>
-    
+    <!--dependency>
+      <groupId>edu.stanford.nlp</groupId>
+      <artifactId>stanford-corenlp</artifactId>
+      <version>${stanford.nlp.version}</version>
+      <scope>test</scope>
+    </dependency-->
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>runtime</artifactId>
@@ -138,6 +119,11 @@
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>server</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.21</version>
     </dependency>
   </dependencies>
   <build>

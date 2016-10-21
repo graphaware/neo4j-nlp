@@ -18,6 +18,10 @@ package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.Tag;
 import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,10 +29,12 @@ import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-public class Tag implements Persistable {
+public class Tag implements Persistable, Serializable {
 
+    private static final long serialVersionUID = -1L;
+    
     private int multiplicity = 1;
-    private final String lemma;
+    private String lemma;
     private String pos;
     private String ne;
     private Collection<TagParentRelation> parents;
@@ -55,6 +61,10 @@ public class Tag implements Persistable {
 
     public void incMultiplicity() {
         multiplicity++;
+    }
+    
+    public void setMultiplicity(int multiplicity) {
+        this.multiplicity = multiplicity;
     }
 
     public String getPos() {
@@ -118,4 +128,21 @@ public class Tag implements Persistable {
         assert (tagNode.hasLabel(Tag));
         assert (allProperties.containsKey("value"));
     }
+    
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        s.defaultWriteObject();
+        s.writeObject(lemma);
+        s.writeObject(pos);
+        s.writeObject(ne);
+        s.writeInt(multiplicity);
+    }
+   
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        this.lemma = (String)s.readObject();
+        this.pos = (String)s.readObject();
+        this.ne = (String)s.readObject();
+        this.multiplicity = s.readInt();
+    }
+    
 }

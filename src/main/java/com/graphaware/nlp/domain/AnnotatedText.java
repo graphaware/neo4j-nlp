@@ -20,6 +20,10 @@ import static com.graphaware.nlp.domain.Relationships.CONTAINS_SENTENCE;
 import static com.graphaware.nlp.domain.Relationships.FIRST_SENTENCE;
 import static com.graphaware.nlp.domain.Relationships.NEXT_SENTENCE;
 import static com.graphaware.nlp.domain.Relationships.REFER_TO;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,11 +33,16 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class AnnotatedText implements Persistable {
+public class AnnotatedText implements Persistable, Serializable {
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotatedText.class);
+    
+    private static final long serialVersionUID = -1L;
 
-    private final Object id;
-    private final List<Sentence> sentences;
+    private Object id;
+    private List<Sentence> sentences;
     private Node node;
 
     public AnnotatedText(Object id) {
@@ -51,6 +60,7 @@ public class AnnotatedText implements Persistable {
 
     @Override
     public Node storeOnGraph(GraphDatabaseService database, boolean force) {
+        LOG.info("Start storing annotatedText " + id);
         Node tmpAnnotatedNode = checkIfExist(database, id);
         if (tmpAnnotatedNode == null || force) {
             final Node annotatedTextNode;
@@ -61,7 +71,8 @@ public class AnnotatedText implements Persistable {
             annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
             annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
             final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
-
+            sentences.sort((Sentence o1, Sentence o2) -> o1.compareTo(o2));
+            
             sentences.stream().forEach((sentence) -> {
                 Node sentenceNode = sentence.storeOnGraph(database, force);
                 annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
@@ -92,6 +103,7 @@ public class AnnotatedText implements Persistable {
             });
         }
         node = tmpAnnotatedNode;
+        LOG.info("end storing annotatedText " + id);
         return tmpAnnotatedNode;
     }
 
@@ -203,5 +215,22 @@ public class AnnotatedText implements Persistable {
         }
 
     }
-
+    
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        s.defaultWriteObject();
+        s.writeObject(id);
+        s.writeInt(sentences.size());
+        for (Sentence sentence : sentences)
+            s.writeObject(sentence);        
+    }
+   
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        this.id = s.readObject();
+        int sentencesSize = s.readInt();
+        this.sentences = new ArrayList<>();
+        for (int i = 0; i < sentencesSize; i++) {
+            addSentence((Sentence)s.readObject());
+        }
+    }
 }
