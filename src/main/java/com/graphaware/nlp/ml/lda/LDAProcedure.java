@@ -57,11 +57,13 @@ public class LDAProcedure extends NLPProcedure {
     private final static long PARAMETER_DEFAULT_ITERATIONS = 20l;
     private final static long PARAMETER_DEFAULT_TOPICS = 10l;
     private final static boolean PARAMETER_DEFAULT_STORE = true;
+    private final static boolean PARAMETER_DEFAULT_CONCEPT = false;
 
     private final static String PARAMETER_NAME_GROUPS = "clusters";
     private final static String PARAMETER_NAME_ITERATIONS = "iterations";
     private final static String PARAMETER_NAME_TOPICS = "topics";
     private final static String PARAMETER_NAME_STORE = "store";
+    private final static String PARAMETER_NAME_CONCEPT = "concept";
     private final static String PARAMETER_NAME_TEXT = "text";
 
     public LDAProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
@@ -84,13 +86,28 @@ public class LDAProcedure extends NLPProcedure {
                 Long maxIterations = (Long) inputParams.getOrDefault(PARAMETER_NAME_ITERATIONS, PARAMETER_DEFAULT_ITERATIONS);
                 Long numberOfTopics = (Long) inputParams.getOrDefault(PARAMETER_NAME_TOPICS, PARAMETER_DEFAULT_TOPICS);
                 Boolean storeModel = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE, PARAMETER_DEFAULT_STORE);
+                Boolean concept = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_CONCEPT, PARAMETER_DEFAULT_CONCEPT);
 
                 try {
                     LOG.warn("Start extracting topic");
-                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract("MATCH (n:AnnotatedText) "
-                            + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
-                            + "WHERE length(t.value) > 5 "
-                            + "return id(n) as docId, sum(r.tf) as tf, t.value as word", numberOfTopicGroups.intValue(), maxIterations.intValue(), numberOfTopics.intValue(), storeModel);
+                    String query;
+                    if (!concept) {
+                        query = "MATCH (n:AnnotatedText) "
+                                + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag) "
+                                + "WHERE size(t.value) > 5 "
+                                + "return id(n) as docId, sum(r.tf) as tf, t.value as word";
+                    } else {
+                        query = "MATCH (n:AnnotatedText)\n"
+                                + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag)\n"
+                                + "OPTIONAL MATCH (t)-[:IS_RELATED]->(rt)\n"
+                                + "WHERE size(t.value) > 5\n"
+                                + "WITH id(n) as docId, sum(r.tf) as tf, t.value + collect(rt.value) as tags\n"
+                                + "UNWIND tags as tag\n"
+                                + "WITH docId, tf, tag as word\n"
+                                + "where size(word) > 5\n"
+                                + "return docId, tf, word";
+                    }
+                    Tuple2<Object, Tuple2<String, Object>[]>[] topics = LDAProcessor.extract(query, numberOfTopicGroups.intValue(), maxIterations.intValue(), numberOfTopics.intValue(), storeModel);
                     Collection<Node> resultNodes = storeTopics(topics);
                     LOG.warn("Completed extracting topic");
                     Set<Object[]> result = new HashSet<>();

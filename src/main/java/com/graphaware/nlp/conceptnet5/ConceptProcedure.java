@@ -25,8 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -52,6 +55,7 @@ public class ConceptProcedure extends NLPProcedure {
     private final GraphDatabaseService database;
 
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
+    private static final String PARAMETER_NAME_TAG = "tag";
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_LANG = "lang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
@@ -72,19 +76,33 @@ public class ConceptProcedure extends NLPProcedure {
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
+                List<Tag> conceptTags = new ArrayList<>();
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
+                Node tagToBeAnnotated = null;
+                if (annotatedNode == null) {
+                    tagToBeAnnotated = (Node) inputParams.get(PARAMETER_NAME_TAG);
+                }
                 int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
                 String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
                 List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
                 try (Transaction beginTx = database.beginTx()) {
-                    ResourceIterator<Node> tagsIterator = getAnnotatedTextTags(annotatedNode);
+                    Iterator<Node> tagsIterator;
+                    if (annotatedNode != null) {
+                        tagsIterator = getAnnotatedTextTags(annotatedNode);
+                    } else if (tagToBeAnnotated != null) {
+                        List<Node> proc = new ArrayList<>();
+                        proc.add(tagToBeAnnotated);
+                        tagsIterator = proc.iterator();
+                    } else {
+                        throw new RuntimeException("You need to specify or an annotated text or a list of tags");
+                    }
+
                     List<Tag> tags = new ArrayList<>();
                     while (tagsIterator.hasNext()) {
                         Tag tag = Tag.createTag(tagsIterator.next());
                         tags.add(tag);
                     }
-                    List<Tag> conceptTags = new ArrayList<>();
                     tags.parallelStream().forEach((tag) -> {
                         conceptTags.addAll(conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships));
                         conceptTags.add(tag);
@@ -95,7 +113,15 @@ public class ConceptProcedure extends NLPProcedure {
                     });
                     beginTx.success();
                 }
-                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
+                if (annotatedNode != null) {
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
+                } else {
+                    Set<Object[]> result = new HashSet<>();
+                    conceptTags.stream().forEach((item) -> {
+                        result.add(new Object[]{item});
+                    });
+                    return Iterators.asRawIterator(result.iterator());
+                }
             }
 
             private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
