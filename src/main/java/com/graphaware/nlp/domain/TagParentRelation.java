@@ -18,10 +18,17 @@ package com.graphaware.nlp.domain;
 public class TagParentRelation {
     private Tag parent;
     private String relation;
+    private float weight;
 
     public TagParentRelation(Tag parent, String relation) {
         this.parent = parent;
         this.relation = relation;
+    }
+    
+    public TagParentRelation(Tag parent, String relation, float weight) {
+        this.parent = parent;
+        this.relation = relation;
+        this.weight = weight;
     }
 
     public Tag getParent() {
@@ -38,6 +45,14 @@ public class TagParentRelation {
 
     public void setRelation(String relation) {
         this.relation = relation;
+    }
+
+    public float getWeight() {
+        return weight;
+    }
+
+    public void setWeight(float weight) {
+        this.weight = weight;
     }
     
 }

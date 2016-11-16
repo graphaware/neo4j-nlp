@@ -63,7 +63,8 @@ public class ConceptProcedure extends NLPProcedure {
     public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
         this.textProcessor = processorManager.getDefaultProcessor();
-        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
+        //this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
+        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor)
                 .build();
     }
 

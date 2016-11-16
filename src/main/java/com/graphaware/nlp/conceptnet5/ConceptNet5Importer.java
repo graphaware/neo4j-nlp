@@ -77,7 +77,7 @@ public class ConceptNet5Importer {
                     if (depth > 1) {
                         importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
                     }
-                    source.addParent(concept.getRel(), annotateTag);
+                    source.addParent(concept.getRel(), annotateTag, concept.getWeight());
                     res.add(annotateTag);
                 }
             });

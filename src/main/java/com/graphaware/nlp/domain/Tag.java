@@ -75,6 +75,13 @@ public class Tag implements Persistable, Serializable {
         return ne;
     }
 
+    public void addParent(String rel, Tag storedTag, float weight) {
+        if (parents == null) {
+            parents = new HashSet<>();
+        }
+        parents.add(new TagParentRelation(storedTag, rel, weight));
+    }
+    
     public void addParent(String rel, Tag storedTag) {
         if (parents == null) {
             parents = new HashSet<>();
@@ -90,11 +97,12 @@ public class Tag implements Persistable, Serializable {
                 Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
                 Map<String, Object> params = new HashMap<>();
                 params.put("type", tagRelationship.getRelation());
+                params.put("weight", tagRelationship.getWeight());
                 params.put("sourceId", tagNode.getId());
                 params.put("destId", parentTagNode.getId());
                 database.execute("MATCH (source:Tag), (destination:Tag)\n"
                         + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
-                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}}]->(destination)" , params);
+                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}, weight: {weight}}]->(destination)" , params);
             });
         }
         return tagNode;
@@ -119,7 +127,7 @@ public class Tag implements Persistable, Serializable {
 
     public static Tag createTag(Node tagNode) {
         checkNodeIsATag(tagNode);
-        Tag tag = new Tag((String) tagNode.getProperty("value"));
+        Tag tag = new Tag(String.valueOf(tagNode.getProperty("value")));
         return tag;
     }
 

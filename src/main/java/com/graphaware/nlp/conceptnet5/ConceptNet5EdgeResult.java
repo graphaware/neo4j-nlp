@@ -16,27 +16,27 @@
 package com.graphaware.nlp.conceptnet5;
 
 import java.util.List;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-public class ConceptNet5EdgeResult
-{
-  private List<ConceptNet5Concept> edges;
-  private int numFound;
-  public List<ConceptNet5Concept> getEdges()
-  {
-    return edges;
-  }
-  public void setEdges(List<ConceptNet5Concept> edges)
-  {
-    this.edges = edges;
-  }
-  
-  
-  public int getNumFound()
-  {
-    return numFound;
-  }
-  public void setNumFound(int numFound)
-  {
-    this.numFound = numFound;
-  }
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ConceptNet5EdgeResult {
+    
+    private List<ConceptNet5Concept> edges;
+    private int numFound;
+
+    public List<ConceptNet5Concept> getEdges() {
+        return edges;
+    }
+
+    public void setEdges(List<ConceptNet5Concept> edges) {
+        this.edges = edges;
+    }
+
+    public int getNumFound() {
+        return numFound;
+    }
+
+    public void setNumFound(int numFound) {
+        this.numFound = numFound;
+    }    
 }
