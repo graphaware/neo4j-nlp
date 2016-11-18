@@ -36,6 +36,16 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>com.graphaware.neo4j</groupId>
+      <artifactId>runtime</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.graphaware.neo4j</groupId>
+      <artifactId>runtime-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-client</artifactId>
       <version>1.19.1</version>
@@ -98,23 +108,13 @@
       <artifactId>reflections</artifactId>
       <version>0.9.10</version>
     </dependency>
-    
-    <dependency>
-      <groupId>com.graphaware.neo4j</groupId>
-      <artifactId>runtime-api</artifactId>
-      <scope>test</scope>
-    </dependency>
+   
     <!--dependency>
       <groupId>edu.stanford.nlp</groupId>
       <artifactId>stanford-corenlp</artifactId>
       <version>${stanford.nlp.version}</version>
       <scope>test</scope>
     </dependency-->
-    <dependency>
-      <groupId>com.graphaware.neo4j</groupId>
-      <artifactId>runtime</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>server</artifactId>

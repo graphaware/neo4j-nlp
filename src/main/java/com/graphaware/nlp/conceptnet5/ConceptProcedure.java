@@ -58,13 +58,14 @@ public class ConceptProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_TAG = "tag";
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_LANG = "lang";
+    private static final String PARAMETER_NAME_SPLIT_TAG = "splitTag";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
 
     public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
         this.textProcessor = processorManager.getDefaultProcessor();
-        //this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://conceptnet5.media.mit.edu/data/5.4", textProcessor)
-        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor)
+        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.conceptnet.io", textProcessor)
+//        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor)
                 .build();
     }
 
@@ -86,6 +87,7 @@ public class ConceptProcedure extends NLPProcedure {
                 }
                 int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
                 String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
+                Boolean splitTags = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SPLIT_TAG, false);
                 List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
                 try (Transaction beginTx = database.beginTx()) {
                     Iterator<Node> tagsIterator;
@@ -93,7 +95,7 @@ public class ConceptProcedure extends NLPProcedure {
                         tagsIterator = getAnnotatedTextTags(annotatedNode);
                     } else if (tagToBeAnnotated != null) {
                         List<Node> proc = new ArrayList<>();
-                        proc.add(tagToBeAnnotated);
+                        proc.add(tagToBeAnnotated);                            
                         tagsIterator = proc.iterator();
                     } else {
                         throw new RuntimeException("You need to specify or an annotated text or a list of tags");
@@ -102,6 +104,10 @@ public class ConceptProcedure extends NLPProcedure {
                     List<Tag> tags = new ArrayList<>();
                     while (tagsIterator.hasNext()) {
                         Tag tag = Tag.createTag(tagsIterator.next());
+                        if (splitTags) {
+                            List<Tag> annotateTags = textProcessor.annotateTags(tag.getLemma());
+                            annotateTags.forEach((newTag) -> tags.add(newTag));
+                        }
                         tags.add(tag);
                     }
                     tags.parallelStream().forEach((tag) -> {

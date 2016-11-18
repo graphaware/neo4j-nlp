@@ -71,13 +71,19 @@ public class ConceptNet5Importer {
                 String conceptPrefix = "/c/" + lang + "/";
                 String parentConcept = concept.getEnd().substring(conceptPrefix.length());
                 if (parentConcept != null
-                        && concept.getStart().equalsIgnoreCase(conceptPrefix + word)
+                        && (concept.getStart().equalsIgnoreCase(conceptPrefix + word) ||
+                        concept.getEnd().equalsIgnoreCase(conceptPrefix + word))
                         && checkAdmittedRelations(concept, admittedRelations)) {
                     Tag annotateTag = tryToAnnotate(parentConcept);
                     if (depth > 1) {
                         importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
                     }
-                    source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                    if (concept.getStart().equalsIgnoreCase(conceptPrefix + word)) {
+                        source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                    }
+                    else {
+                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
+                    }
                     res.add(annotateTag);
                 }
             });

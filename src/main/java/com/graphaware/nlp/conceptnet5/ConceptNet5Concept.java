@@ -20,8 +20,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConceptNet5Concept {
-    //private String context;
-    //private String dataset;
 
     @JsonProperty("end")
     private IdAwareElement end;

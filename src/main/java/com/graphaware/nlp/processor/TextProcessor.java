@@ -36,6 +36,8 @@ public interface TextProcessor {
     public Tag annotateSentence(String text);
 
     public Tag annotateTag(String text);
+    
+    public List<Tag> annotateTags(String text);
 
     public boolean checkPuntuation(String value);
 
