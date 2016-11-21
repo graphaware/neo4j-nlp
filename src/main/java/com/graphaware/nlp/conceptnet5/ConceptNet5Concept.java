@@ -22,138 +22,69 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class ConceptNet5Concept {
 
     @JsonProperty("end")
-    private IdAwareElement end;
-    //private List<String> features;
-    //private String id;
-    //private String license;
+    private TermElement end;
+    private String dataset;
+    private String license;
     @JsonProperty("rel")
-    private IdAwareElement rel;
-    //private String source_uri;
-    //private List<String> sources;
+    private RelElement rel;
     @JsonProperty("start")
-    private IdAwareElement start;
-    //private String surfaceEnd;
-    //private String surfaceStart;
-    //private String surfaceText;
-    //private String uri;
+    private TermElement start;
+    private String surfaceText;
     private float weight;
-//  public String getContext()
-//  {
-//    return context;
-//  }
-//  public void setContext(String context)
-//  {
-//    this.context = context;
-//  }
-//  public String getDataset()
-//  {
-//    return dataset;
-//  }
-//  public void setDataset(String dataset)
-//  {
-//    this.dataset = dataset;
-//  }
 
     public String getEnd() {
-        return end.id;
+        return end.label;
     }
-//  public List<String> getFeatures()
-//  {
-//    return features;
-//  }
-//  public void setFeatures(List<String> features)
-//  {
-//    this.features = features;
-//  }
-//  public String getId()
-//  {
-//    return id;
-//  }
-//  public void setId(String id)
-//  {
-//    this.id = id;
-//  }
-//  public String getLicense()
-//  {
-//    return license;
-//  }
-//  public void setLicense(String license)
-//  {
-//    this.license = license;
-//  }
-
+    
+    public String getEndLanguage() {
+        return end.language;
+    }
+    
     public String getRel() {
-        return rel.id;
+        return rel.label;
     }
 
-//  public String getSource_uri()
-//  {
-//    return source_uri;
-//  }
-//  public void setSource_uri(String source_uri)
-//  {
-//    this.source_uri = source_uri;
-//  }
-//  public List<String> getSources()
-//  {
-//    return sources;
-//  }
-//  public void setSources(List<String> sources)
-//  {
-//    this.sources = sources;
-//  }
     public String getStart() {
-        return start.id;
+        return start.label;
+    }
+    
+    public String getStartLanguage() {
+        return start.language;
     }
 
-//  public String getSurfaceEnd()
-//  {
-//    return surfaceEnd;
-//  }
-//  public void setSurfaceEnd(String surfaceEnd)
-//  {
-//    this.surfaceEnd = surfaceEnd;
-//  }
-//  public String getSurfaceStart()
-//  {
-//    return surfaceStart;
-//  }
-//  public void setSurfaceStart(String surfaceStart)
-//  {
-//    this.surfaceStart = surfaceStart;
-//  }
-//  public String getSurfaceText()
-//  {
-//    return surfaceText;
-//  }
-//  public void setSurfaceText(String surfaceText)
-//  {
-//    this.surfaceText = surfaceText;
-//  }
-//  public String getUri()
-//  {
-//    return uri;
-//  }
-//  public void setUri(String uri)
-//  {
-//    this.uri = uri;
-//  }
     public float getWeight() {
         return weight;
     }
 
-    public void setWeight(float weight) {
-        this.weight = weight;
+    public String getDataset() {
+        return dataset;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    class IdAwareElement {
+    public String getSurfaceText() {
+        return surfaceText;
+    }
 
-        public IdAwareElement() {
+    public String getLicense() {
+        return license;
+    }
+    
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    class TermElement {
+
+        public TermElement() {
         }
 
         @JsonProperty("@id")
         protected String id;
+
+        protected String label;
+
+        protected String language;
+
+        @JsonProperty("sense_label")
+        protected String senseLabel;
+
+        protected String term;
 
         public String getId() {
             return id;
@@ -162,5 +93,65 @@ public class ConceptNet5Concept {
         public void setId(String id) {
             this.id = id;
         }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
+
+        public String getSenseLabel() {
+            return senseLabel;
+        }
+
+        public void setSenseLabel(String senseLabel) {
+            this.senseLabel = senseLabel;
+        }
+
+        public String getTerm() {
+            return term;
+        }
+
+        public void setTerm(String term) {
+            this.term = term;
+        }
+
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    class RelElement {
+
+        public RelElement() {
+        }
+        @JsonProperty("@id")
+        protected String id;
+        protected String label;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+        
     }
 }

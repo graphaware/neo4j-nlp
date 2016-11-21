@@ -16,6 +16,7 @@
 package com.graphaware.nlp.application.search;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
@@ -62,7 +63,8 @@ public class SearchProcedure extends NLPProcedure {
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
                 String text = (String) input[0];
-                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, false);
+                String lang = LanguageManager.getInstance().detectLanguage(text);
+                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, lang, false);
                 List<String> tokens = annotateText.getTokens();
                 Map<String, Object> params = new HashMap<>();
                 params.put("tokens", tokens);

@@ -13,11 +13,12 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-
 package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.Tag;
 import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
+import static com.graphaware.nlp.domain.Properties.LANGUAGE;
+import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,15 +33,17 @@ import org.neo4j.graphdb.Node;
 public class Tag implements Persistable, Serializable {
 
     private static final long serialVersionUID = -1L;
-    
+
     private int multiplicity = 1;
     private String lemma;
     private String pos;
     private String ne;
     private Collection<TagParentRelation> parents;
+    private String language;
 
-    public Tag(String lemma) {
+    public Tag(String lemma, String language) {
         this.lemma = lemma;
+        this.language = language;
     }
 
     public String getLemma() {
@@ -62,7 +65,7 @@ public class Tag implements Persistable, Serializable {
     public void incMultiplicity() {
         multiplicity++;
     }
-    
+
     public void setMultiplicity(int multiplicity) {
         this.multiplicity = multiplicity;
     }
@@ -75,18 +78,23 @@ public class Tag implements Persistable, Serializable {
         return ne;
     }
 
-    public void addParent(String rel, Tag storedTag, float weight) {
-        if (parents == null) {
-            parents = new HashSet<>();
-        }
-        parents.add(new TagParentRelation(storedTag, rel, weight));
+    public String getId() {
+        return lemma + "_" + language;
     }
-    
+
+    public void addParent(String rel, Tag storedTag, float weight) {
+        addParent(new TagParentRelation(storedTag, rel, weight));
+    }
+
     public void addParent(String rel, Tag storedTag) {
+        addParent(new TagParentRelation(storedTag, rel));
+    }
+
+    public void addParent(TagParentRelation parentRelationship) {
         if (parents == null) {
             parents = new HashSet<>();
         }
-        parents.add(new TagParentRelation(storedTag, rel));
+        parents.add(parentRelationship);
     }
 
     @Override
@@ -102,20 +110,23 @@ public class Tag implements Persistable, Serializable {
                 params.put("destId", parentTagNode.getId());
                 database.execute("MATCH (source:Tag), (destination:Tag)\n"
                         + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
-                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}, weight: {weight}}]->(destination)" , params);
+                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}, weight: {weight}}]->(destination)", params);
             });
         }
         return tagNode;
     }
 
     public Node getOrCreate(GraphDatabaseService database, boolean force) {
-        Node tagNode = database.findNode(Tag, CONTENT_VALUE, lemma);
+        Node tagNode = database.findNode(Tag, PROPERTY_ID, getId());
         if (tagNode != null && !force) {
             return tagNode;
         }
-        if (tagNode == null)
+        if (tagNode == null) {
             tagNode = database.createNode(Tag);
+        }
+        tagNode.setProperty(PROPERTY_ID, getId());
         tagNode.setProperty(CONTENT_VALUE, lemma);
+        tagNode.setProperty(LANGUAGE, language);
         if (ne != null) {
             tagNode.setProperty("ne", ne);
         }
@@ -127,30 +138,35 @@ public class Tag implements Persistable, Serializable {
 
     public static Tag createTag(Node tagNode) {
         checkNodeIsATag(tagNode);
-        Tag tag = new Tag(String.valueOf(tagNode.getProperty("value")));
+        Tag tag = new Tag(String.valueOf(tagNode.getProperty(CONTENT_VALUE)),
+                String.valueOf(tagNode.getProperty(LANGUAGE)));
         return tag;
     }
 
     private static void checkNodeIsATag(Node tagNode) {
         Map<String, Object> allProperties = tagNode.getAllProperties();
         assert (tagNode.hasLabel(Tag));
-        assert (allProperties.containsKey("value"));
+        assert (allProperties.containsKey(PROPERTY_ID));
+        assert (allProperties.containsKey(CONTENT_VALUE));
+        assert (allProperties.containsKey(LANGUAGE));
     }
-    
+
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
         s.writeObject(lemma);
+        s.writeObject(language);
         s.writeObject(pos);
         s.writeObject(ne);
         s.writeInt(multiplicity);
     }
-   
+
     private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
-        this.lemma = (String)s.readObject();
-        this.pos = (String)s.readObject();
-        this.ne = (String)s.readObject();
+        this.lemma = (String) s.readObject();
+        this.language = (String) s.readObject();
+        this.pos = (String) s.readObject();
+        this.ne = (String) s.readObject();
         this.multiplicity = s.readInt();
     }
-    
+
 }

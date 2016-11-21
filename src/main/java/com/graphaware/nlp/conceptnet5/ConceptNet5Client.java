@@ -15,18 +15,30 @@
  */
 package com.graphaware.nlp.conceptnet5;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.slf4j.LoggerFactory;
 
 public class ConceptNet5Client {
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
 
     private final String conceptNet5EndPoint;
     private final ClientConfig cfg;
+
+    private final Cache<String, ConceptNet5EdgeResult> cache = CacheBuilder
+            .newBuilder()
+            .maximumSize(10000)
+            .expireAfterAccess(30, TimeUnit.MINUTES)
+            .build();
 
     public ConceptNet5Client(String conceptNet5EndPoint) {
         this.conceptNet5EndPoint = conceptNet5EndPoint;
@@ -36,6 +48,17 @@ public class ConceptNet5Client {
 
     public ConceptNet5EdgeResult getValues(String concept, String lang) {
         String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept;
+        ConceptNet5EdgeResult value;
+        try {
+            value = cache.get(url, () -> getValuesAux(url));
+        } catch (ExecutionException ex) {
+            LOG.error("Error while getting value for concept " + concept + " lang " + lang, ex);
+            throw new RuntimeException("Error while getting value for concept " + concept + " lang " + lang);
+        }
+        return value;
+    }
+
+    public ConceptNet5EdgeResult getValuesAux(String url) {
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
                 .accept(MediaType.APPLICATION_JSON)

@@ -29,15 +29,15 @@ public interface TextProcessor {
     public boolean checkPipeline(String name);
 
     @Deprecated
-    public AnnotatedText annotateText(String text, Object id, int level, boolean store);
+    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store);
 
-    public AnnotatedText annotateText(String text, Object id, String name, boolean store);
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store);
 
-    public Tag annotateSentence(String text);
+    public Tag annotateSentence(String text, String lang);
 
-    public Tag annotateTag(String text);
+    public Tag annotateTag(String text, String lang);
     
-    public List<Tag> annotateTags(String text);
+    public List<Tag> annotateTags(String text, String lang);
 
     public boolean checkPuntuation(String value);
 

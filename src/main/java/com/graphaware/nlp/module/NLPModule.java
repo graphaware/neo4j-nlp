@@ -15,11 +15,12 @@
  */
 package com.graphaware.nlp.module;
 
+import com.graphaware.runtime.manager.TxDrivenModuleManager;
 import com.graphaware.runtime.module.BaseRuntimeModule;
-import com.graphaware.spark.ml.SparkConnection;
-import java.io.File;
+import com.graphaware.runtime.module.BaseTxDrivenModule;
+import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
+import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * {@link com.graphaware.runtime.module.TxDrivenModule} that assigns UUID's to
  * nodes in the graph.
  */
-public class NLPModule extends BaseRuntimeModule {
+public class NLPModule extends BaseTxDrivenModule<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NLPModule.class);
 
@@ -41,8 +42,17 @@ public class NLPModule extends BaseRuntimeModule {
         LOG.info("ConceptNet ULR: " + nlpMLConfiguration.getConceptNetUrl());
     }
 
+    public NLPConfiguration getNlpMLConfiguration() {
+        return nlpMLConfiguration;
+    }
+    
     @Override
     public void shutdown() {
+    }
+
+    @Override
+    public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
+        return null;
     }
 
 }

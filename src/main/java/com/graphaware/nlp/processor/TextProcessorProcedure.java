@@ -79,7 +79,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                     boolean checkForLanguage = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_LANGUAGE_CHECK, true);
                     LOG.info("Text: " + text);
-                    if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text))) {
+                    String lang = LanguageManager.getInstance().detectLanguage(text);
+                    if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(lang))) {
                         LOG.info("text is null or language not supported or unable to detect the language");
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
@@ -103,10 +104,10 @@ public class TextProcessorProcedure extends NLPProcedure {
                             if (!textProcessorInstance.checkPipeline(pipeline)) {
                                 throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
                             }
-                            annotateText = textProcessorInstance.annotateText(text, id, pipeline, store);
+                            annotateText = textProcessorInstance.annotateText(text, id, pipeline, lang, store);
                         } else {
                             int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
-                            annotateText = textProcessor.annotateText(text, id, level, store);
+                            annotateText = textProcessor.annotateText(text, id, level,lang, store);
                         }
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
@@ -159,7 +160,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
-                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(text)) {
+                String lang = LanguageManager.getInstance().detectLanguage(text);
+                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(lang)) {
                     LOG.info("text is null or language not supported or unable to detect the language");
                     return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                 }
@@ -167,7 +169,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                 if (filter == null) {
                     throw new RuntimeException("A filter value needs to be provided");
                 }
-                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, 0, false);
+                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, 0, lang, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
             }
         };

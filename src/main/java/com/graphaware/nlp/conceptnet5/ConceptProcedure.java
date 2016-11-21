@@ -18,9 +18,13 @@ package com.graphaware.nlp.conceptnet5;
 import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
 import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_LANGUAGE;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import com.graphaware.runtime.GraphAwareRuntime;
+import com.graphaware.runtime.RuntimeRegistry;
+import com.graphaware.runtime.module.RuntimeModule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,7 +40,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
@@ -51,7 +54,7 @@ public class ConceptProcedure extends NLPProcedure {
     private static final Logger LOG = LoggerFactory.getLogger(ConceptProcedure.class);
 
     private final TextProcessor textProcessor;
-    private final ConceptNet5Importer conceptnet5Importer;
+    private ConceptNet5Importer conceptnet5Importer;
     private final GraphDatabaseService database;
 
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
@@ -64,9 +67,18 @@ public class ConceptProcedure extends NLPProcedure {
     public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
         this.textProcessor = processorManager.getDefaultProcessor();
-        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.conceptnet.io", textProcessor)
+
+    }
+
+    public ConceptNet5Importer getImporter() {
+        if (conceptnet5Importer == null) {
+            GraphAwareRuntime runtime = RuntimeRegistry.getStartedRuntime(database);
+            LOG.error(">>>>>>>: " + runtime.getModule("NLP", NLPModule.class).getClass().toString());
+            String url = runtime.getModule(NLPModule.class).getNlpMLConfiguration().getConceptNetUrl();
 //        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor)
-                .build();
+            this.conceptnet5Importer = new ConceptNet5Importer.Builder(url, textProcessor).build();
+        }
+        return conceptnet5Importer;
     }
 
     public CallableProcedure.BasicProcedure concept() {
@@ -77,25 +89,26 @@ public class ConceptProcedure extends NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
-                checkIsMap(input[0]);
-                List<Tag> conceptTags = new ArrayList<>();
-                Map<String, Object> inputParams = (Map) input[0];
-                Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
-                Node tagToBeAnnotated = null;
-                if (annotatedNode == null) {
-                    tagToBeAnnotated = (Node) inputParams.get(PARAMETER_NAME_TAG);
-                }
-                int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
-                String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
-                Boolean splitTags = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SPLIT_TAG, false);
-                List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
-                try (Transaction beginTx = database.beginTx()) {
+                try {
+                    checkIsMap(input[0]);
+                    List<Tag> conceptTags = new ArrayList<>();
+                    Map<String, Object> inputParams = (Map) input[0];
+                    Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
+                    Node tagToBeAnnotated = null;
+                    if (annotatedNode == null) {
+                        tagToBeAnnotated = (Node) inputParams.get(PARAMETER_NAME_TAG);
+                    }
+                    int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
+                    String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
+                    Boolean splitTags = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SPLIT_TAG, false);
+                    List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
+                    //try (Transaction beginTx = database.beginTx()) {
                     Iterator<Node> tagsIterator;
                     if (annotatedNode != null) {
                         tagsIterator = getAnnotatedTextTags(annotatedNode);
                     } else if (tagToBeAnnotated != null) {
                         List<Node> proc = new ArrayList<>();
-                        proc.add(tagToBeAnnotated);                            
+                        proc.add(tagToBeAnnotated);
                         tagsIterator = proc.iterator();
                     } else {
                         throw new RuntimeException("You need to specify or an annotated text or a list of tags");
@@ -105,29 +118,41 @@ public class ConceptProcedure extends NLPProcedure {
                     while (tagsIterator.hasNext()) {
                         Tag tag = Tag.createTag(tagsIterator.next());
                         if (splitTags) {
-                            List<Tag> annotateTags = textProcessor.annotateTags(tag.getLemma());
-                            annotateTags.forEach((newTag) -> tags.add(newTag));
+                            List<Tag> annotateTags = textProcessor.annotateTags(tag.getLemma(), lang);
+                            if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
+                                tags.add(tag);
+                            } else {
+                                annotateTags.forEach((newTag) -> {
+                                    tags.add(newTag); 
+                                    tag.addParent("subTag", newTag, 0.0f);
+                                });
+                                conceptTags.add(tag);
+                            }
+                        } else {
+                            tags.add(tag);                            
                         }
-                        tags.add(tag);
+
                     }
                     tags.parallelStream().forEach((tag) -> {
-                        conceptTags.addAll(conceptnet5Importer.importHierarchy(tag, lang, depth, admittedRelationships));
+                        conceptTags.addAll(getImporter().importHierarchy(tag, lang, depth, admittedRelationships));
                         conceptTags.add(tag);
                     });
 
                     conceptTags.stream().forEach((newTag) -> {
                         newTag.storeOnGraph(database, false);
                     });
-                    beginTx.success();
-                }
-                if (annotatedNode != null) {
-                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
-                } else {
-                    Set<Object[]> result = new HashSet<>();
-                    conceptTags.stream().forEach((item) -> {
-                        result.add(new Object[]{item});
-                    });
-                    return Iterators.asRawIterator(result.iterator());
+                    if (annotatedNode != null) {
+                        return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
+                    } else {
+                        Set<Object[]> result = new HashSet<>();
+                        conceptTags.stream().forEach((item) -> {
+                            result.add(new Object[]{item});
+                        });
+                        return Iterators.asRawIterator(result.iterator());
+                    }
+                } catch (Exception ex) {
+                    LOG.error("error!!!! ", ex);
+                    throw new RuntimeException("Error", ex);
                 }
             }
 

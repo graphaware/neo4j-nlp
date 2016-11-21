@@ -166,7 +166,7 @@ public class LDAProcedure extends NLPProcedure {
                     throw new RuntimeException("Missing parameter " + PARAMETER_NAME_TEXT);
                 }
                 Integer numberOfTopics = (Integer) inputParams.getOrDefault(PARAMETER_NAME_TOPICS, PARAMETER_DEFAULT_TOPICS);
-                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, false);
+                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, "en", false);
                 List<Tag> tags = annotateText.getTags();
                 Tuple2<String, Object>[] tagsArray = new Tuple2[tags.size()];
                 for (int i = 0; i < tags.size(); i++) {

@@ -16,6 +16,7 @@
 package com.graphaware.nlp.conceptnet5;
 
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConceptNet5Importer {
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
     public static final String DEFAULT_LANGUAGE = "en";
@@ -68,23 +69,25 @@ public class ConceptNet5Importer {
         try {
             ConceptNet5EdgeResult values = client.getValues(word, lang);
             values.getEdges().stream().forEach((concept) -> {
-                String conceptPrefix = "/c/" + lang + "/";
-                String parentConcept = concept.getEnd().substring(conceptPrefix.length());
-                if (parentConcept != null
-                        && (concept.getStart().equalsIgnoreCase(conceptPrefix + word) ||
-                        concept.getEnd().equalsIgnoreCase(conceptPrefix + word))
-                        && checkAdmittedRelations(concept, admittedRelations)) {
-                    Tag annotateTag = tryToAnnotate(parentConcept);
-                    if (depth > 1) {
-                        importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
-                    }
-                    if (concept.getStart().equalsIgnoreCase(conceptPrefix + word)) {
+                if (checkAdmittedRelations(concept, admittedRelations)
+                        && (concept.getStart().equalsIgnoreCase(word)
+                        || concept.getEnd().equalsIgnoreCase(word))) {
+                    if (concept.getStart().equalsIgnoreCase(word)) {
+                        Tag annotateTag = tryToAnnotate(concept.getEnd(), concept.getEndLanguage());
+                        if (depth > 1) {
+                            importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+                        }
                         source.addParent(concept.getRel(), annotateTag, concept.getWeight());
-                    }
-                    else {
+                        res.add(annotateTag);
+                    } else {
+                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage());
+                        //TODO evaluate if also in this case could be useful go in deep
+//                        if (depth > 1) {
+//                            importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+//                        }
                         annotateTag.addParent(concept.getRel(), source, concept.getWeight());
+                        res.add(annotateTag);
                     }
-                    res.add(annotateTag);
                 }
             });
         } catch (Exception ex) {
@@ -93,10 +96,13 @@ public class ConceptNet5Importer {
         return res;
     }
 
-    private Tag tryToAnnotate(String parentConcept) {
-        Tag annotateTag = nlpProcessor.annotateTag(parentConcept);
+    private Tag tryToAnnotate(String parentConcept, String language) {
+        Tag annotateTag = null;
+        if (LanguageManager.getInstance().isLanguageSupported(language)) {
+            annotateTag = nlpProcessor.annotateTag(parentConcept, language);
+        }
         if (annotateTag == null) {
-            annotateTag = new Tag(parentConcept);
+            annotateTag = new Tag(parentConcept, language);
         }
         return annotateTag;
     }
@@ -112,7 +118,6 @@ public class ConceptNet5Importer {
 
         private final ConceptNet5Client client;
         private final TextProcessor nlpProcessor;
-        private String[] admittedRelations = DEFAULT_ADMITTED_RELATIONSHIP;
         private int depthSearch = 2;
 
         public Builder(String cnet5Host, TextProcessor nlpProcessor) {
@@ -122,11 +127,6 @@ public class ConceptNet5Importer {
         public Builder(ConceptNet5Client client, TextProcessor nlpProcessor) {
             this.client = client;
             this.nlpProcessor = nlpProcessor;
-        }
-
-        public Builder setAdmittedRelations(String[] admittedRelations) {
-            this.admittedRelations = admittedRelations;
-            return this;
         }
 
         public Builder setDepthSearch(int depthSearch) {

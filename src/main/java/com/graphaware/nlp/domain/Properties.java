@@ -32,6 +32,7 @@ public final class Properties {
     public static final String START_POSITION = "startPosition";
     public static final String END_POSITION = "endPosition";
     public static final String CONTENT_VALUE = "value";
+    public static final String LANGUAGE = "language";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.
