@@ -15,12 +15,16 @@
  */
 package com.graphaware.nlp.conceptnet5;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +38,12 @@ public class ConceptNet5Importer {
     private final ConceptNet5Client client;
     private final TextProcessor nlpProcessor;
     private int depthSearch = 2;
+
+    private final Cache<String, Tag> cache = CacheBuilder
+            .newBuilder()
+            .maximumSize(10000)
+            .expireAfterAccess(30, TimeUnit.MINUTES)
+            .build();
 
     public ConceptNet5Importer(String conceptNet5EndPoint, TextProcessor nlpProcessor, int depth, String... admittedRelations) {
         this(new ConceptNet5Client(conceptNet5EndPoint), nlpProcessor, depth, admittedRelations);
@@ -64,7 +74,7 @@ public class ConceptNet5Importer {
     }
 
     public List<Tag> importHierarchy(Tag source, String lang, int depth, List<String> admittedRelations) {
-        List<Tag> res = new ArrayList<>();
+        List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         try {
             ConceptNet5EdgeResult values = client.getValues(word, lang);
@@ -96,6 +106,23 @@ public class ConceptNet5Importer {
         return res;
     }
 
+//    private synchronized Tag tryToAnnotate(final String parentConcept, final String language) {
+//        Tag value;
+//        String id = parentConcept + "_" + language;
+//        try {
+//            value = cache.get(id, new Callable<Tag>() {
+//                @Override
+//                public Tag call() throws Exception {
+//                    return tryToAnnotateAux(parentConcept, language);
+//                }
+//            });
+//        } catch (Exception ex) {
+//            LOG.error("Error while try to annotate concept " + parentConcept + " lang " + language, ex);
+//            throw new RuntimeException("Error while try to annotate concept " + parentConcept + " lang " + language);
+//        }
+//        return value;
+//    }
+    
     private Tag tryToAnnotate(String parentConcept, String language) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {

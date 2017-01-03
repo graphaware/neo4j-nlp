@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArraySet;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -44,6 +45,7 @@ public class Tag implements Persistable, Serializable {
     public Tag(String lemma, String language) {
         this.lemma = lemma;
         this.language = language;
+        this.parents = new CopyOnWriteArraySet<>();
     }
 
     public String getLemma() {
@@ -62,7 +64,7 @@ public class Tag implements Persistable, Serializable {
         return multiplicity;
     }
 
-    public void incMultiplicity() {
+    public synchronized void incMultiplicity() {
         multiplicity++;
     }
 
@@ -91,9 +93,6 @@ public class Tag implements Persistable, Serializable {
     }
 
     public void addParent(TagParentRelation parentRelationship) {
-        if (parents == null) {
-            parents = new HashSet<>();
-        }
         parents.add(parentRelationship);
     }
 

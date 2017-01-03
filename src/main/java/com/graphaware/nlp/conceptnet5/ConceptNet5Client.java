@@ -50,7 +50,7 @@ public class ConceptNet5Client {
         String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept;
         ConceptNet5EdgeResult value;
         try {
-            value = cache.get(url, () -> getValuesAux(url));
+            value = cache.get(url, () -> getValues(url));
         } catch (ExecutionException ex) {
             LOG.error("Error while getting value for concept " + concept + " lang " + lang, ex);
             throw new RuntimeException("Error while getting value for concept " + concept + " lang " + lang);
@@ -58,7 +58,7 @@ public class ConceptNet5Client {
         return value;
     }
 
-    public ConceptNet5EdgeResult getValuesAux(String url) {
+    public ConceptNet5EdgeResult getValues(String url) {
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
                 .accept(MediaType.APPLICATION_JSON)
