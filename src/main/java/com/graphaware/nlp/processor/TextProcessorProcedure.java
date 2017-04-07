@@ -80,7 +80,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                     boolean checkForLanguage = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_LANGUAGE_CHECK, true);
                     LOG.info("Text: " + text);
                     String lang = LanguageManager.getInstance().detectLanguage(text);
-                    if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(lang))) {
+                    if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text))) {
                         LOG.info("text is null or language not supported or unable to detect the language");
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
