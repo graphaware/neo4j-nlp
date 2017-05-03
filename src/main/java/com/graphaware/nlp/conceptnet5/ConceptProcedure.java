@@ -24,7 +24,6 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.RuntimeRegistry;
-import com.graphaware.runtime.module.RuntimeModule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,8 +42,9 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
+import org.neo4j.kernel.api.proc.Context;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.procedure.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
@@ -83,12 +83,12 @@ public class ConceptProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure concept() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("concept"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 try {
                     checkIsMap(input[0]);
                     List<Tag> conceptTags = new ArrayList<>();
