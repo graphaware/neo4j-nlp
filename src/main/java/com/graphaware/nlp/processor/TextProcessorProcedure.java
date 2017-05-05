@@ -87,6 +87,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
+                    if (id==null)
+                      LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
                     Node annotatedText = checkIfExist(id);
@@ -109,7 +111,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                             annotateText = textProcessorInstance.annotateText(text, id, pipeline, lang, store);
                         } else {
                             int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
-                            annotateText = textProcessor.annotateText(text, id, level,lang, store);
+                            annotateText = textProcessor.annotateText(text, id, level, lang, store);
                         }
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
