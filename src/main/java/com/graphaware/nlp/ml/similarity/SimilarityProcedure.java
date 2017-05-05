@@ -27,9 +27,11 @@ import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.neo4j.procedure.Mode;
 
 public class SimilarityProcedure extends NLPProcedure {
 
@@ -43,12 +45,12 @@ public class SimilarityProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure computeAll() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "cosine", "compute"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTInteger).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 int processed = 0;
                 List<Long> firstNodeIds = getNodesFromInput(input);
                 processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds);

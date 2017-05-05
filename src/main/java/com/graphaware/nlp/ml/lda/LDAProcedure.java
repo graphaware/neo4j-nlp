@@ -40,10 +40,12 @@ import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.neo4j.procedure.Mode;
 
 public class LDAProcedure extends NLPProcedure {
 
@@ -74,7 +76,7 @@ public class LDAProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure lda() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "lda"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTInteger).build()) {
 
@@ -152,7 +154,7 @@ public class LDAProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure topicDistribution() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "topic"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
                 .build()) {

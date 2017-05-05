@@ -34,9 +34,11 @@ import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.neo4j.procedure.Mode;
 
 public class TextProcessorProcedure extends NLPProcedure {
 
@@ -66,7 +68,7 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure annotate() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("annotate"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
 
@@ -134,12 +136,12 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure language() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("language"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
@@ -151,12 +153,12 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure filter() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("filter"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTBoolean).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
@@ -177,12 +179,12 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure sentiment() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("sentiment"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
@@ -196,12 +198,12 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure getProcessors() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getProcessors"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .out(PARAMETER_NAME_OUTPUT_TP_CLASS, Neo4jTypes.NTString)
                 .build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 Set<String> textProcessors = processorManager.getTextProcessors();
                 Set<Object[]> result = new HashSet<>();
                 textProcessors.forEach(row -> {
@@ -214,13 +216,13 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure getPipelines() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelines"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
                 .build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 String textProcessor = (String) inputParams.get(PARAMETER_NAME_TEXT_PROCESSOR);
@@ -237,13 +239,13 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure addPipeline() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("addPipeline"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
                 .build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(inputParams);
@@ -258,13 +260,13 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure removePipeline() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("removePipeline"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
                 .build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
 

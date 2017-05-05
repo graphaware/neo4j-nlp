@@ -45,9 +45,11 @@ import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.neo4j.procedure.Mode;
 
 public class ConceptProcedure extends NLPProcedure {
 
@@ -83,12 +85,12 @@ public class ConceptProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure concept() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("concept"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 try {
                     checkIsMap(input[0]);
                     List<Tag> conceptTags = new ArrayList<>();

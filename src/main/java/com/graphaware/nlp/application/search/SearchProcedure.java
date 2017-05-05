@@ -35,9 +35,11 @@ import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
+import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
+import org.neo4j.procedure.Mode;
 
 public class SearchProcedure extends NLPProcedure {
 
@@ -55,13 +57,13 @@ public class SearchProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure search() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("search"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTString)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
                 .out(PARAMETER_NAME_SCORE, Neo4jTypes.NTFloat).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 String text = (String) input[0];
                 String lang = LanguageManager.getInstance().detectLanguage(text);
                 AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, lang, false);
@@ -91,13 +93,13 @@ public class SearchProcedure extends NLPProcedure {
 
     public CallableProcedure.BasicProcedure score() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("score"))
-                .mode(ProcedureSignature.Mode.READ_WRITE)
+                .mode(Mode.WRITE)
                 .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTNode)
                 .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode)
                 .out(PARAMETER_NAME_SCORE, Neo4jTypes.NTFloat).build()) {
 
             @Override
-            public RawIterator<Object[], ProcedureException> apply(CallableProcedure.Context ctx, Object[] input) throws ProcedureException {
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 Node annotatedTextNode = (Node) input[0];
                 Map<String, Object> params = new HashMap<>();
                 params.put("id", annotatedTextNode.getId());

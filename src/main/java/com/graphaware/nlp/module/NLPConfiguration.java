@@ -15,8 +15,10 @@
  */
 package com.graphaware.nlp.module;
 
-import com.graphaware.common.policy.InclusionPolicies;
-import com.graphaware.common.policy.none.IncludeNoRelationships;
+//import com.graphaware.common.policy.InclusionPolicies;
+//import com.graphaware.common.policy.none.IncludeNoRelationships;
+import com.graphaware.common.policy.inclusion.InclusionPolicies;
+import com.graphaware.common.policy.inclusion.none.IncludeNoRelationships;
 import com.graphaware.runtime.config.BaseTxDrivenModuleConfiguration;
 import com.graphaware.runtime.policy.InclusionPoliciesFactory;
 

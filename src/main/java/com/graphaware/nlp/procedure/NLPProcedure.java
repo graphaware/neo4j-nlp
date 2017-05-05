@@ -16,6 +16,7 @@
 package com.graphaware.nlp.procedure;
 
 import java.util.Map;
+import org.neo4j.kernel.api.proc.QualifiedName;
 import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 
@@ -26,7 +27,7 @@ public class NLPProcedure {
 
 
 
-        protected static ProcedureSignature.ProcedureName getProcedureName(String... procedureName) {
+    protected static QualifiedName getProcedureName(String... procedureName) {
         String namespace[] = new String[2 + procedureName.length];
         int i = 0;
         namespace[i++] = "ga";
