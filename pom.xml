@@ -30,12 +30,12 @@
       <artifactId>neo4j</artifactId>
       <scope>provided</scope>
     </dependency>
-    <dependency>
+    <!--dependency>
       <groupId>com.graphaware</groupId>
       <artifactId>neo4j-spark-ml</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>provided</scope>
-    </dependency>
+    </dependency-->
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>runtime</artifactId>

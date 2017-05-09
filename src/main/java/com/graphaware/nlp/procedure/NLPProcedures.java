@@ -17,7 +17,7 @@ package com.graphaware.nlp.procedure;
 
 import com.graphaware.nlp.application.search.SearchProcedure;
 import com.graphaware.nlp.conceptnet5.ConceptProcedure;
-import com.graphaware.nlp.ml.lda.LDAProcedure;
+//import com.graphaware.nlp.ml.lda.LDAProcedure;
 import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
 import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.nlp.ml.similarity.SimilarityProcedure;
@@ -76,9 +76,9 @@ public class NLPProcedures {
         SimilarityProcedure similarityProcedures = new SimilarityProcedure(featureBusinessLogic);
         procedures.register(similarityProcedures.computeAll());
         
-        LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
-        procedures.register(ldaProcedures.lda());
-        procedures.register(ldaProcedures.topicDistribution());
+//        LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
+//        procedures.register(ldaProcedures.lda());
+//        procedures.register(ldaProcedures.topicDistribution());
         
         SearchProcedure searchProcedures = new SearchProcedure(database, processorsManager);
         procedures.register(searchProcedures.search());
