@@ -25,7 +25,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -39,7 +38,7 @@ public class Tag implements Persistable, Serializable {
     private String lemma;
     private String pos;
     private String ne;
-    private Collection<TagParentRelation> parents;
+    private final Collection<TagParentRelation> parents;
     private String language;
 
     public Tag(String lemma, String language) {

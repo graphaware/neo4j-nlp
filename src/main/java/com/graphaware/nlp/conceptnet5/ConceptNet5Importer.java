@@ -20,6 +20,7 @@ import com.google.common.cache.CacheBuilder;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -36,7 +37,6 @@ public class ConceptNet5Importer {
     public static final String DEFAULT_LANGUAGE = "en";
 
     private final ConceptNet5Client client;
-    private final TextProcessor nlpProcessor;
     private int depthSearch = 2;
 
     private final Cache<String, Tag> cache = CacheBuilder
@@ -45,52 +45,50 @@ public class ConceptNet5Importer {
             .expireAfterAccess(30, TimeUnit.MINUTES)
             .build();
 
-    public ConceptNet5Importer(String conceptNet5EndPoint, TextProcessor nlpProcessor, int depth, String... admittedRelations) {
-        this(new ConceptNet5Client(conceptNet5EndPoint), nlpProcessor, depth, admittedRelations);
+    public ConceptNet5Importer(String conceptNet5EndPoint, int depth, String... admittedRelations) {
+        this(new ConceptNet5Client(conceptNet5EndPoint), depth, admittedRelations);
     }
 
-    public ConceptNet5Importer(ConceptNet5Client client, TextProcessor nlpProcessor, int depth, String... admittedRelations) {
+    public ConceptNet5Importer(ConceptNet5Client client, int depth, String... admittedRelations) {
         this.client = client;
-        this.nlpProcessor = nlpProcessor;
         this.depthSearch = depth;
     }
 
     private ConceptNet5Importer(Builder builder) {
         this.client = builder.client;
-        this.nlpProcessor = builder.nlpProcessor;
         this.depthSearch = builder.depthSearch;
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, int depth) {
-        return importHierarchy(source, lang, depth, DEFAULT_ADMITTED_RELATIONSHIP);
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor) {
+        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang) {
-        return importHierarchy(source, lang, depthSearch, DEFAULT_ADMITTED_RELATIONSHIP);
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, TextProcessor nlpProcessor) {
+        return importHierarchy(source, lang, filterLang, depthSearch, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, int depth, String... admittedRelations) {
-        return importHierarchy(source, lang, depth, Arrays.asList(admittedRelations));
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, String... admittedRelations) {
+        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, int depth, List<String> admittedRelations) {
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations) {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         try {
             ConceptNet5EdgeResult values = client.getValues(word, lang);
             values.getEdges().stream().forEach((concept) -> {
                 if (checkAdmittedRelations(concept, admittedRelations)
-                        && (concept.getStart().equalsIgnoreCase(word)
-                        || concept.getEnd().equalsIgnoreCase(word))) {
+                        && (concept.getStart().equalsIgnoreCase(word) || concept.getEnd().equalsIgnoreCase(word))
+                        && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
                     if (concept.getStart().equalsIgnoreCase(word)) {
-                        Tag annotateTag = tryToAnnotate(concept.getEnd(), concept.getEndLanguage());
+                        Tag annotateTag = tryToAnnotate(concept.getEnd(), concept.getEndLanguage(), nlpProcessor);
                         if (depth > 1) {
-                            importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
+                            importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations);
                         }
                         source.addParent(concept.getRel(), annotateTag, concept.getWeight());
                         res.add(annotateTag);
                     } else {
-                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage());
+                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
                         //TODO evaluate if also in this case could be useful go in deep
 //                        if (depth > 1) {
 //                            importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
@@ -123,7 +121,7 @@ public class ConceptNet5Importer {
 //        return value;
 //    }
     
-    private Tag tryToAnnotate(String parentConcept, String language) {
+    private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
             annotateTag = nlpProcessor.annotateTag(parentConcept, language);
@@ -144,16 +142,14 @@ public class ConceptNet5Importer {
     public static class Builder {
 
         private final ConceptNet5Client client;
-        private final TextProcessor nlpProcessor;
         private int depthSearch = 2;
 
-        public Builder(String cnet5Host, TextProcessor nlpProcessor) {
-            this(new ConceptNet5Client(cnet5Host), nlpProcessor);
+        public Builder(String cnet5Host) {
+            this(new ConceptNet5Client(cnet5Host));
         }
 
-        public Builder(ConceptNet5Client client, TextProcessor nlpProcessor) {
+        public Builder(ConceptNet5Client client) {
             this.client = client;
-            this.nlpProcessor = nlpProcessor;
         }
 
         public Builder setDepthSearch(int depthSearch) {

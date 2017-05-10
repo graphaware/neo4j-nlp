@@ -17,13 +17,15 @@ package com.graphaware.nlp.procedure;
 
 import java.util.Map;
 import org.neo4j.kernel.api.proc.QualifiedName;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureName;
 
 public class NLPProcedure {
 
     protected static final String PARAMETER_NAME_INPUT = "input";
     protected static final String PARAMETER_NAME_INPUT_OUTPUT = "result";
+    
+    protected static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
+    protected static final String PARAMETER_NAME_TEXT_PIPELINE = "pipeline";
 
 
 

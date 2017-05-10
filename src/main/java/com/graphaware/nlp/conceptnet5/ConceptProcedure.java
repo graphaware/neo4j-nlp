@@ -24,7 +24,6 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.RuntimeRegistry;
-import com.graphaware.runtime.module.RuntimeModule;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,7 +43,6 @@ import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
 import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,20 +53,25 @@ public class ConceptProcedure extends NLPProcedure {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConceptProcedure.class);
 
-    private final TextProcessor textProcessor;
     private ConceptNet5Importer conceptnet5Importer;
     private final GraphDatabaseService database;
+    private final TextProcessorsManager processorManager;
+    
+    private static final String RELATIONSHIP_IS_RELATED_TO_SUB_TAG = "subTag";
+
 
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
     private static final String PARAMETER_NAME_TAG = "tag";
     private static final String PARAMETER_NAME_DEPTH = "depth";
     private static final String PARAMETER_NAME_LANG = "lang";
     private static final String PARAMETER_NAME_SPLIT_TAG = "splitTag";
+    private static final String PARAMETER_NAME_FILTER_LANG = "filterLang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
+
 
     public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
-        this.textProcessor = processorManager.getDefaultProcessor();
+        this.processorManager = processorManager;
 
     }
 
@@ -77,8 +80,7 @@ public class ConceptProcedure extends NLPProcedure {
             GraphAwareRuntime runtime = RuntimeRegistry.getStartedRuntime(database);
             LOG.error(">>>>>>>: " + runtime.getModule("NLP", NLPModule.class).getClass().toString());
             String url = runtime.getModule(NLPModule.class).getNlpMLConfiguration().getConceptNetUrl();
-//        this.conceptnet5Importer = new ConceptNet5Importer.Builder("http://api.localhost", textProcessor)
-            this.conceptnet5Importer = new ConceptNet5Importer.Builder(url, textProcessor).build();
+            this.conceptnet5Importer = new ConceptNet5Importer.Builder(url).build();
         }
         return conceptnet5Importer;
     }
@@ -103,8 +105,8 @@ public class ConceptProcedure extends NLPProcedure {
                     int depth = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEPTH, 2)).intValue();
                     String lang = (String) inputParams.getOrDefault(PARAMETER_NAME_LANG, DEFAULT_LANGUAGE);
                     Boolean splitTags = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SPLIT_TAG, false);
+                    Boolean filterByLang = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FILTER_LANG, true);
                     List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
-                    //try (Transaction beginTx = database.beginTx()) {
                     Iterator<Node> tagsIterator;
                     if (annotatedNode != null) {
                         tagsIterator = getAnnotatedTextTags(annotatedNode);
@@ -115,28 +117,29 @@ public class ConceptProcedure extends NLPProcedure {
                     } else {
                         throw new RuntimeException("You need to specify or an annotated text or a list of tags");
                     }
-
+                    
+                    TextProcessor processor = getProcessor(inputParams);
                     List<Tag> tags = new ArrayList<>();
                     while (tagsIterator.hasNext()) {
                         Tag tag = Tag.createTag(tagsIterator.next());
                         if (splitTags) {
-                            List<Tag> annotateTags = textProcessor.annotateTags(tag.getLemma(), lang);
+                            List<Tag> annotateTags = processor.annotateTags(tag.getLemma(), lang);
                             if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
                                 tags.add(tag);
                             } else {
                                 annotateTags.forEach((newTag) -> {
-                                    tags.add(newTag); 
-                                    tag.addParent("subTag", newTag, 0.0f);
+                                    tags.add(newTag);
+                                    tag.addParent(RELATIONSHIP_IS_RELATED_TO_SUB_TAG, newTag, 0.0f);
                                 });
                                 conceptTags.add(tag);
                             }
                         } else {
-                            tags.add(tag);                            
+                            tags.add(tag);
                         }
 
                     }
                     tags.parallelStream().forEach((tag) -> {
-                        conceptTags.addAll(getImporter().importHierarchy(tag, lang, depth, admittedRelationships));
+                        conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships));
                         conceptTags.add(tag);
                     });
 
@@ -156,6 +159,18 @@ public class ConceptProcedure extends NLPProcedure {
                     LOG.error("error!!!! ", ex);
                     throw new RuntimeException("Error", ex);
                 }
+            }
+
+            private TextProcessor getProcessor(Map<String, Object> inputParams) throws RuntimeException {
+                String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
+                if (processor.length() > 0) {
+                    TextProcessor textProcessorInstance = processorManager.getTextProcessor(processor);
+                    if (textProcessorInstance == null) {
+                        throw new RuntimeException("Text processor " + processor + " doesn't exist");
+                    }
+                    return textProcessorInstance;
+                }
+                return processorManager.getDefaultProcessor();
             }
 
             private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {

@@ -56,8 +56,7 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
-    private static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
-    private static final String PARAMETER_NAME_TEXT_PIPELINE = "pipeline";
+    
     private static final String PARAMETER_NAME_FORCE = "force";
 
     public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
