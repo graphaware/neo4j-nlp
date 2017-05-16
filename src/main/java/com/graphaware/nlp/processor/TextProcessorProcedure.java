@@ -61,8 +61,11 @@ public class TextProcessorProcedure extends NLPProcedure {
 
     public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
-        this.textProcessor = processorManager.getDefaultProcessor();
         this.processorManager = processorManager;
+
+        this.textProcessor = processorManager.getDefaultProcessor();
+        if (this.textProcessor==null)
+          LOG.warn("Extraction of the default text processor failed.");
     }
 
     public CallableProcedure.BasicProcedure annotate() {
@@ -93,25 +96,10 @@ public class TextProcessorProcedure extends NLPProcedure {
                     Node annotatedText = checkIfExist(id);
                     
                     if (annotatedText == null || force) {
-                        String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
                         AnnotatedText annotateText;
-                        if (processor.length() > 0) {
-                            String pipeline = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, ""));
-                            if (pipeline.length() == 0) {
-                                throw new RuntimeException("You need to specify a pipeline");
-                            }
-                            TextProcessor textProcessorInstance = processorManager.getTextProcessor(processor);
-                            if (textProcessorInstance == null) {
-                                throw new RuntimeException("Text processor " + processor + " doesn't exist");
-                            }
-                            if (!textProcessorInstance.checkPipeline(pipeline)) {
-                                throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
-                            }
-                            annotateText = textProcessorInstance.annotateText(text, id, pipeline, lang, store);
-                        } else {
-                            int level = ((Long) inputParams.getOrDefault(PARAMETER_NAME_DEEP_LEVEL, 0l)).intValue();
-                            annotateText = textProcessor.annotateText(text, id, level, lang, store);
-                        }
+                        String pipeline = (String)inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
+                        TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
+                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store);
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
@@ -190,7 +178,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
                 AnnotatedText annotatedText = AnnotatedText.load(annotatedNode);
-                annotatedText = textProcessor.sentiment(annotatedText);
+                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
+                annotatedText = currentTP.sentiment(annotatedText);
                 annotatedText.storeOnGraph(database, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
             }
@@ -282,5 +271,23 @@ public class TextProcessorProcedure extends NLPProcedure {
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{"succeess"}).iterator());
             }
         };
+    }
+
+    private TextProcessor retrieveTextProcessor(Map<String, Object> inputParams, String pipeline) {
+      TextProcessor newTP = this.textProcessor; // default processor
+      String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
+      if (processor.length() > 0) {
+        newTP = processorManager.getTextProcessor(processor);
+        if (newTP == null) {
+          throw new RuntimeException("Text processor " + processor + " doesn't exist");
+        }
+      }
+      if (pipeline.length()>0) {
+        if (!newTP.checkPipeline(pipeline)) {
+          throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
+        }
+      }
+
+      return newTP;
     }
 }
