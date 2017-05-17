@@ -1,7 +1,46 @@
 GraphAware Natural Language Processing
 =========================================================
 
-This plugin add NLP functionalities to Neo4j
+This plugin add NLP functionalities to Neo4j. It requires the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and its NLP methods are implemented either using the <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> or <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a>.
+
+Getting the Software
+-------------------------
+### Server Mode
+When using Neo4j in the <a href="http://docs.neo4j.org/chunked/stable/server-installation.html" target="_blank">standalone server</a> mode, you will need the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a> .jar files (both of which you can download <a href="https://products.graphaware.com">here</a>) dropped into the `plugins/` directory of your Neo4j installation. 
+
+The following needs to be appended to the `neo4j.conf` file in the `config/` directory:
+
+```
+  dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
+  com.graphaware.runtime.enabled=true
+
+  com.graphaware.module.NLP.2=com.graphaware.nlp.module.NLPBootstrapper
+```
+
+The actual implementation of the NLP tools is in packages <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> and <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a> (both provide similar functionalities described in section Getting Started). To get them working, just compile them and drop the .jar file(s) into `plugins/` directory:
+
+```
+# First you need to install neo4j-nlp
+cd neo4j-nlp
+mvn clean install
+
+# Next you can proceed to the OpenNLP and StanfordNLP
+cd ../neo4j-nlp-opennlp
+mvn clean package
+cp target/nlp-stanfordnlp-1.0.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
+```
+
+Example of the `plugins/` directory:
+```
+-rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-1.0-SNAPSHOT.jar
+-rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.1.3.47.jar
+-rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-1.0-SNAPSHOT.jar
+```
+
+Note: both implementations (especially StanfordNLP) are rather greedy - you'll need a lot of RAM.
+
+Getting Started
+--------------------
 
 List of procedures available:
 
