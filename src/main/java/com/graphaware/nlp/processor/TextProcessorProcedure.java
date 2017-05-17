@@ -160,7 +160,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                 if (filter == null) {
                     throw new RuntimeException("A filter value needs to be provided");
                 }
-                AnnotatedText annotatedText = textProcessor.annotateText(text, 0, 0, lang, false);
+                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
+                AnnotatedText annotatedText = currentTP.annotateText(text, 0, 0, lang, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
             }
         };

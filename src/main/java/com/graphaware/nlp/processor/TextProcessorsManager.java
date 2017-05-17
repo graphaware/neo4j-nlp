@@ -37,6 +37,8 @@ public class TextProcessorsManager {
 
     private final GraphDatabaseService database;
     private Map<String, TextProcessor> textProcessors;
+
+    private static final String defaultTextProcessor = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
     
     @Autowired
     public TextProcessorsManager(GraphDatabaseService database) {
@@ -100,7 +102,11 @@ public class TextProcessorsManager {
     }
 
     public TextProcessor getDefaultProcessor() {
-        return textProcessors.get("com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+        if (textProcessors==null)
+          return null;
+        if (textProcessors.size()==1)
+          return textProcessors.get(textProcessors.keySet().iterator().next());
+        return textProcessors.get(defaultTextProcessor); // 'null' if defaultTextProcessor doesn't exist
     }
 
     public void removePipeline(String processor, String pipeline) {
