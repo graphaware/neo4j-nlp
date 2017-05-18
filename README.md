@@ -124,7 +124,7 @@ CALL ga.nlp.filter({text:'On 8 May 2013,
     an article titled Pakistan Elections: Five Reasons Why the 
     Vote is Unpredictable, in which he claimed that the election 
     was too close to call. It was not, and despite his being in Pakistan, 
-    the outcome of the election was exactly as we predicted.", filter: 'Owen Bennett Jones/PERSON, BBC, Pakistan/LOCATION'}) YIELD result 
+    the outcome of the election was exactly as we predicted.', filter: 'Owen Bennett Jones/PERSON, BBC, Pakistan/LOCATION'}) YIELD result 
 return result
 ```
 
