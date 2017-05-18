@@ -1,7 +1,7 @@
 GraphAware Natural Language Processing
 =========================================================
 
-This plugin add NLP functionalities to Neo4j. It requires the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and its NLP methods are implemented either using the <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> or <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a>.
+This plugin adds NLP functionalities to Neo4j. It requires the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and its NLP methods are implemented either using the <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> or <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a>.
 
 Getting the Software
 -------------------------
