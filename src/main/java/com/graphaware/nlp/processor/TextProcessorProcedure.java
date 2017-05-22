@@ -56,6 +56,12 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
+
+    private static final String PARAMETER_NAME_TRAIN_PROJECT = "project";
+    private static final String PARAMETER_NAME_TRAIN_ALG = "alg";
+    private static final String PARAMETER_NAME_TRAIN_MODEL = "model";
+    private static final String PARAMETER_NAME_TRAIN_FILE = "file";
+    private static final String PARAMETER_NAME_TRAIN_LANG = "lang"; 
     
     private static final String PARAMETER_NAME_FORCE = "force";
 
@@ -269,6 +275,43 @@ public class TextProcessorProcedure extends NLPProcedure {
                     }
                     processorManager.removePipeline(processor, pipeline);
                 }
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{"succeess"}).iterator());
+            }
+        };
+    }
+
+    public CallableProcedure.BasicProcedure train() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("train"))
+                .mode(Mode.WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+
+                String project = (String) inputParams.get(PARAMETER_NAME_TRAIN_PROJECT);
+                if (project==null) project = "default";
+                String lang = (String) inputParams.get(PARAMETER_NAME_TRAIN_LANG);
+                if (lang==null) lang = "en";
+
+                // check for mandatory arguments
+                if (!inputParams.containsKey(PARAMETER_NAME_TRAIN_ALG) ||
+                    !inputParams.containsKey(PARAMETER_NAME_TRAIN_MODEL) ||
+                    !inputParams.containsKey(PARAMETER_NAME_TRAIN_FILE) ) {
+                  throw new RuntimeException("You need to specify mandatory parameters: " + PARAMETER_NAME_TRAIN_ALG + ", " + PARAMETER_NAME_TRAIN_MODEL + ", " + PARAMETER_NAME_TRAIN_FILE);
+                }
+
+                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
+
+                String alg = (String) inputParams.get(PARAMETER_NAME_TRAIN_ALG);
+                String model = (String) inputParams.get(PARAMETER_NAME_TRAIN_MODEL);
+                String file = (String) inputParams.get(PARAMETER_NAME_TRAIN_FILE);
+
+                currentTP.train(project, alg, model, file, lang);
+
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{"succeess"}).iterator());
             }
         };

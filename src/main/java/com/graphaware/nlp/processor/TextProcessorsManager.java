@@ -104,9 +104,9 @@ public class TextProcessorsManager {
     public TextProcessor getDefaultProcessor() {
         if (textProcessors==null)
           return null;
-        if (textProcessors.size()==1)
-          return textProcessors.get(textProcessors.keySet().iterator().next());
-        return textProcessors.get(defaultTextProcessor); // 'null' if defaultTextProcessor doesn't exist
+        if (textProcessors.containsKey(defaultTextProcessor))
+          return textProcessors.get(defaultTextProcessor);  // return the default text processor if it's available
+        return textProcessors.get(textProcessors.keySet().iterator().next()); // in case the defaultTextProcessor doesn't exist, return first text processor in the list, otherwise 'null'
     }
 
     public void removePipeline(String processor, String pipeline) {

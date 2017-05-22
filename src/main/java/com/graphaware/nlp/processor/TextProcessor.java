@@ -45,4 +45,6 @@ public interface TextProcessor {
 
     public void removePipeline(String pipeline);
 
+    public void train(String project, String alg, String model, String file, String lang);
+
 }
