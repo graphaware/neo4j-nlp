@@ -56,7 +56,7 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
-    private static final String PARAMETER_NAME_NER_PROJECT = "nerProject";
+    private static final String PARAMETER_NAME_CUSTOM_PROJECT = "customProject";
 
     private static final String PARAMETER_NAME_TRAIN_PROJECT = "project";
     private static final String PARAMETER_NAME_TRAIN_ALG = "alg";
@@ -100,14 +100,14 @@ public class TextProcessorProcedure extends NLPProcedure {
                       LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
-                    String nerProj = (String) inputParams.getOrDefault(PARAMETER_NAME_NER_PROJECT, "");
+                    String proj = (String) inputParams.getOrDefault(PARAMETER_NAME_CUSTOM_PROJECT, "");
                     Node annotatedText = checkIfExist(id);
                     
                     if (annotatedText==null || force) {
                         AnnotatedText annotateText;
                         String pipeline = (String)inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
                         TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
-                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store, nerProj);
+                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store, proj);
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
