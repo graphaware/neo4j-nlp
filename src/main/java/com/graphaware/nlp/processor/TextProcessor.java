@@ -31,7 +31,7 @@ public interface TextProcessor {
     @Deprecated
     public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store);
 
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store);
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, String nerProject);
 
     public Tag annotateSentence(String text, String lang);
 
