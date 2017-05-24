@@ -41,7 +41,7 @@ public interface TextProcessor {
 
     public boolean checkPuntuation(String value);
 
-    public AnnotatedText sentiment(AnnotatedText annotated);
+    public AnnotatedText sentiment(AnnotatedText annotated, String project);
 
     public void removePipeline(String pipeline);
 

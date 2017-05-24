@@ -186,9 +186,11 @@ public class TextProcessorProcedure extends NLPProcedure {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
+                String proj = (String) inputParams.getOrDefault(PARAMETER_NAME_CUSTOM_PROJECT, "");
+
                 AnnotatedText annotatedText = AnnotatedText.load(annotatedNode);
                 TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
-                annotatedText = currentTP.sentiment(annotatedText);
+                annotatedText = currentTP.sentiment(annotatedText, proj);
                 annotatedText.storeOnGraph(database, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
             }
