@@ -160,7 +160,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                 Map<String, Object> inputParams = (Map) input[0];
                 String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
                 String lang = LanguageManager.getInstance().detectLanguage(text);
-                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(lang)) {
+                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(text)) {
                     LOG.info("text is null or language not supported or unable to detect the language");
                     return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                 }
