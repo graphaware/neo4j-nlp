@@ -335,7 +335,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                     unusedKeys.add(k);
                 });
                 if (unusedKeys.size()>0) {
-                  LOG.warn("Warning! Unused keys (possible typos?): " + String.join(", ", unusedKeys));
+                  LOG.warn("Warning! Unused parameter(s) (possible typos?): " + String.join(", ", unusedKeys));
                 }
 
                 TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
@@ -348,7 +348,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                   res = "failure";
 
                 if (unusedKeys.size()>0)
-                  res += "; Warning, unsed key(s): " + String.join(", ", unusedKeys);
+                  res += "; Warning, unsed parameter(s): " + String.join(", ", unusedKeys);
 
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{res}).iterator());
             }

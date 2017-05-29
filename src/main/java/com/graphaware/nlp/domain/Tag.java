@@ -19,6 +19,7 @@ import static com.graphaware.nlp.domain.Labels.Tag;
 import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
 import static com.graphaware.nlp.domain.Properties.LANGUAGE;
 import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
+import com.graphaware.nlp.domain.NERLabels;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -98,6 +99,7 @@ public class Tag implements Persistable, Serializable {
     @Override
     public Node storeOnGraph(GraphDatabaseService database, boolean force) {
         Node tagNode = getOrCreate(database, force);
+        assignNERLabel(tagNode);;
         if (parents != null) {
             parents.stream().forEach((tagRelationship) -> {
                 Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
@@ -139,6 +141,22 @@ public class Tag implements Persistable, Serializable {
         Tag tag = new Tag(String.valueOf(tagNode.getProperty(CONTENT_VALUE)),
                 String.valueOf(tagNode.getProperty(LANGUAGE)));
         return tag;
+    }
+
+    private void assignNERLabel(Node node) {
+        switch (this.ne.toLowerCase()) {
+            case "person":
+                node.addLabel(NERLabels.Person);
+                break;
+            case "date":
+                node.addLabel(NERLabels.Date);
+                break;
+            case "organization":
+                node.addLabel(NERLabels.Organization);
+                break;
+            default:
+                break;
+        }
     }
 
     private static void checkNodeIsATag(Node tagNode) {
