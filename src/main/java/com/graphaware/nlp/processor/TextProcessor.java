@@ -45,6 +45,6 @@ public interface TextProcessor {
 
     public void removePipeline(String pipeline);
 
-    public void train(String project, String alg, String model, String file, String lang);
+    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
 
 }

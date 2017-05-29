@@ -27,8 +27,6 @@ public class NLPProcedure {
     protected static final String PARAMETER_NAME_TEXT_PROCESSOR = "textProcessor";
     protected static final String PARAMETER_NAME_TEXT_PIPELINE = "pipeline";
 
-
-
     protected static QualifiedName getProcedureName(String... procedureName) {
         String namespace[] = new String[2 + procedureName.length];
         int i = 0;

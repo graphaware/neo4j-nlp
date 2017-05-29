@@ -101,12 +101,17 @@ public class TextProcessorsManager {
         }
     }
 
-    public TextProcessor getDefaultProcessor() {
+    public String getDefaultProcessorName() {
         if (textProcessors==null)
           return null;
         if (textProcessors.containsKey(defaultTextProcessor))
-          return textProcessors.get(defaultTextProcessor);  // return the default text processor if it's available
-        return textProcessors.get(textProcessors.keySet().iterator().next()); // in case the defaultTextProcessor doesn't exist, return first text processor in the list, otherwise 'null'
+          return defaultTextProcessor; // return the default text processor if it's available
+        else
+          return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
+    }
+
+    public TextProcessor getDefaultProcessor() {
+        return textProcessors.get(getDefaultProcessorName());
     }
 
     public void removePipeline(String processor, String pipeline) {
