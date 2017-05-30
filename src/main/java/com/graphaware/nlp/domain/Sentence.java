@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -54,7 +55,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
     public static final int NO_SENTIMENT = -1;
 
     private Map<String, Tag> tags;
-    private Map<Integer, PartOfTextOccurrence<Tag>> tagOccurrences = new HashMap<>();
+    private Map<Integer, List<PartOfTextOccurrence<Tag>>> tagOccurrences = new HashMap<>();
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
 
     private final String sentence;
@@ -108,8 +109,10 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
         }
-        //Will update end if already exist
-        tagOccurrences.put(begin, new PartOfTextOccurrence<>(tag, begin, end));
+        if (tagOccurrences.containsKey(begin))
+          tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end));
+        else
+          tagOccurrences.put(begin, Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end)));
     }
 
     //Currently used only for testing purpose
@@ -117,9 +120,9 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");
         }
-        PartOfTextOccurrence<Tag> occurrence = tagOccurrences.get(begin);
+        List<PartOfTextOccurrence<Tag>> occurrence = tagOccurrences.get(begin);
         if (occurrence != null) {
-            return occurrence.getElement();
+            return occurrence.get(0).getElement(); // TO DO: take into account that more than one PartOfTextOccurrence is possible
         } else {
             return null;
         }
@@ -215,13 +218,15 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
             Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
             hasTagRel.setProperty("tf", tag.getMultiplicity());
         });
-        tagOccurrences.values().stream().forEach((tagOccurrenceAtPosition) -> {
-            Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
-            Node tagOccurrenceNode = database.createNode(TagOccurrence);
-            tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
-            tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
-            newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
-            tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
+        tagOccurrences.values().stream().forEach((tagOccurrences) -> {
+            for (PartOfTextOccurrence<Tag> tagOccurrenceAtPosition: tagOccurrences) {
+              Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
+              Node tagOccurrenceNode = database.createNode(TagOccurrence);
+              tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
+              tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
+              newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
+              tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
+            }
         });
     }
 

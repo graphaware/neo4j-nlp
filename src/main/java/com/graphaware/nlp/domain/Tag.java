@@ -147,14 +147,22 @@ public class Tag implements Persistable, Serializable {
         tagNode.setProperty(PROPERTY_ID, getId());
         tagNode.setProperty(CONTENT_VALUE, lemma);
         tagNode.setProperty(LANGUAGE, language);
-        if (ne!=null)
+        if (ne!=null) {
             tagNode.setProperty("ne", ne);
-        else if (neL!=null)
-            tagNode.setProperty("ne", neL);
-        if (pos!=null)
+        } else if (neL!=null) {
+            if (neL.size()>1)
+              tagNode.setProperty("ne", neL.toArray(new String[neL.size()]));
+            else if (neL.size()==1)
+              tagNode.setProperty("ne", neL.get(0));
+        }
+        if (pos!=null) {
             tagNode.setProperty("pos", pos);
-        else if (posL!=null)
-            tagNode.setProperty("pos", posL);
+        } else if (posL!=null) {
+            if (posL.size()>1)
+              tagNode.setProperty("pos", posL.toArray(new String[posL.size()]));
+            else if (posL.size()==1)
+              tagNode.setProperty("pos", posL.get(0));
+        }
 
         return tagNode;
     }
