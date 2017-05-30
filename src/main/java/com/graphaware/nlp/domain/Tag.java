@@ -27,6 +27,8 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.CopyOnWriteArraySet;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -38,7 +40,9 @@ public class Tag implements Persistable, Serializable {
     private int multiplicity = 1;
     private String lemma;
     private String pos;
+    private List<String> posL;
     private String ne;
+    private List<String> neL;
     private final Collection<TagParentRelation> parents;
     private String language;
 
@@ -56,8 +60,16 @@ public class Tag implements Persistable, Serializable {
         this.pos = pos;
     }
 
+    public void setPos(List<String> pos) {
+        this.posL = pos;
+    }
+
     public void setNe(String ne) {
         this.ne = ne;
+    }
+
+    public void setNe(List<String> ne) {
+        this.neL = ne;
     }
 
     public int getMultiplicity() {
@@ -80,6 +92,14 @@ public class Tag implements Persistable, Serializable {
         return ne;
     }
 
+    public List<String> getPosAsList() {
+        return posL;
+    }
+
+    public List<String> getNeAsList() {
+        return neL;
+    }
+
     public String getId() {
         return lemma + "_" + language;
     }
@@ -99,7 +119,7 @@ public class Tag implements Persistable, Serializable {
     @Override
     public Node storeOnGraph(GraphDatabaseService database, boolean force) {
         Node tagNode = getOrCreate(database, force);
-        assignNERLabel(tagNode);;
+        assignNERLabel(tagNode);
         if (parents != null) {
             parents.stream().forEach((tagRelationship) -> {
                 Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
@@ -127,12 +147,15 @@ public class Tag implements Persistable, Serializable {
         tagNode.setProperty(PROPERTY_ID, getId());
         tagNode.setProperty(CONTENT_VALUE, lemma);
         tagNode.setProperty(LANGUAGE, language);
-        if (ne != null) {
+        if (ne!=null)
             tagNode.setProperty("ne", ne);
-        }
-        if (pos != null) {
+        else if (neL!=null)
+            tagNode.setProperty("ne", neL);
+        if (pos!=null)
             tagNode.setProperty("pos", pos);
-        }
+        else if (posL!=null)
+            tagNode.setProperty("pos", posL);
+
         return tagNode;
     }
 
@@ -144,9 +167,17 @@ public class Tag implements Persistable, Serializable {
     }
 
     private void assignNERLabel(Node node) {
-        switch (this.ne.toLowerCase()) {
+        List<String> NEs = this.neL;
+        if (NEs==null)
+          NEs = Arrays.asList(this.ne);
+
+        for (String ent: NEs) {
+          switch (ent.toLowerCase()) {
             case "person":
                 node.addLabel(NERLabels.Person);
+                break;
+            case "location":
+                node.addLabel(NERLabels.Location);
                 break;
             case "date":
                 node.addLabel(NERLabels.Date);
@@ -154,8 +185,27 @@ public class Tag implements Persistable, Serializable {
             case "organization":
                 node.addLabel(NERLabels.Organization);
                 break;
+            case "money":
+                node.addLabel(NERLabels.Money);
+                break;
+            case "percentage":
+                node.addLabel(NERLabels.Percentage);
+                break;
+            case "time":
+                node.addLabel(NERLabels.Time);
+                break;
+            case "component":
+                node.addLabel(NERLabels.Component);
+                break;
+            case "equipment":
+                node.addLabel(NERLabels.Equipment);
+                break;
+            case "chemical":
+                node.addLabel(NERLabels.Chemical);
+                break;
             default:
                 break;
+          }
         }
     }
 
@@ -171,8 +221,14 @@ public class Tag implements Persistable, Serializable {
         s.defaultWriteObject();
         s.writeObject(lemma);
         s.writeObject(language);
-        s.writeObject(pos);
-        s.writeObject(ne);
+        if (posL!=null)
+          s.writeObject(posL);
+        else
+          s.writeObject(pos);
+        if (neL!=null)
+          s.writeObject(neL);
+        else
+          s.writeObject(ne);
         s.writeInt(multiplicity);
     }
 
@@ -181,7 +237,9 @@ public class Tag implements Persistable, Serializable {
         this.lemma = (String) s.readObject();
         this.language = (String) s.readObject();
         this.pos = (String) s.readObject();
+        this.posL = (List<String>) s.readObject();
         this.ne = (String) s.readObject();
+        this.neL = (List<String>) s.readObject();
         this.multiplicity = s.readInt();
     }
 
