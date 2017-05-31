@@ -64,12 +64,14 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN n, result;
 ```
 
-Available parameters are:
-
-* text: (mandatory) the text to be processed
-* id: (mandatory) the id to assign to the new node created
-* sentiment: (optional, default false) this allow to specify if also sentiment is extracted for each sentence in text, if true a label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
-* store: (optional, default true) this enable the storing of sentence in the sentence node. This is necessary if sentences need to be processed later, for example for sentiment extraction
+Available parameters:
+  * `text` (mandatory): the text to be processed
+  * `id` (mandatory): the id to assign to the new node created
+  * `textProcessor` (optional): specify text processor to use (default is StanfordNLP, but if it's not present, the first available one is automatically used instead - see Neo4j log for information about which one was used)
+  * `pipeline` (optional, default is *tokenizer*)
+  * `languageCheck` (optional, default *true*): check whether is language detected correctly and whether it is supported
+  * `sentiment` (optional, default *false*): this allow to specify if also sentiment is extracted for each sentence in the text, if true a label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
+  * `store` (optional, default *true*): this enable the storing of sentence in the sentence node. This is necessary if sentences need to be processed later, for example for sentiment extraction
 
 ##2. Sentiment extraction
 
@@ -81,6 +83,10 @@ CALL ga.nlp.sentiment({node:a}) YIELD result
 MATCH (result)-[:CONTAINS_SENTENCE]->(s:Sentence) 
 return labels(s) as labels
 ```
+
+Available parameters:
+  * `node` (mandatory): node (with label *AnnotatedText*) to analyse
+  * `textProcessor` (optional)
 
 ##3. Ontology
 Another feature provided by GraphAware NLP is the ability to build ontology hierarchies, starting from the tags extracted from the text. 

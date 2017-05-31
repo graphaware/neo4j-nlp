@@ -21,6 +21,7 @@ import com.graphaware.nlp.domain.Properties;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.util.GenericModelParameters;
+import com.graphaware.nlp.util.OptionalNLPParameters;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -61,7 +62,6 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_STORE_TEXT = "store";
     private static final String PARAMETER_NAME_LANGUAGE_CHECK = "languageCheck";
     private static final String PARAMETER_NAME_OUTPUT_TP_CLASS = "class";
-    private static final String PARAMETER_NAME_CUSTOM_PROJECT = "customProject";
 
     private static final String PARAMETER_NAME_TRAIN_PROJECT = "project";
     private static final String PARAMETER_NAME_TRAIN_ALG = "alg";
@@ -96,26 +96,32 @@ public class TextProcessorProcedure extends NLPProcedure {
                     checkIsMap(input[0]);
                     Map<String, Object> inputParams = (Map) input[0];
                     String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
+                    if (text == null) {
+                        LOG.info("Text is null.");
+                        return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
+                    }
                     boolean checkForLanguage = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_LANGUAGE_CHECK, true);
                     LOG.info("Annotating Text: " + text);
                     String lang = LanguageManager.getInstance().detectLanguage(text);
-                    if (text == null || (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text))) {
-                        LOG.info("text is null or language not supported or unable to detect the language");
+                    if (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text)) {
+                        LOG.info("Language not supported or unable to detect the language. Detected language: " + lang);
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
                     if (id==null)
                       LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
+                    Node annotatedText = checkIfExist(id);
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
-                    String proj = (String) inputParams.getOrDefault(PARAMETER_NAME_CUSTOM_PROJECT, "");
-                    Node annotatedText = checkIfExist(id);
+
+                    // optional parameters
+                    Map<String, String> otherPars = extractOptionalParameters(inputParams);
                     
                     if (annotatedText==null || force) {
                         AnnotatedText annotateText;
                         String pipeline = (String)inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
                         TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
-                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store, proj);
+                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store, otherPars);
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
@@ -194,11 +200,13 @@ public class TextProcessorProcedure extends NLPProcedure {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
                 Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
-                String proj = (String) inputParams.getOrDefault(PARAMETER_NAME_CUSTOM_PROJECT, "");
+
+                // extract optional parameters
+                Map<String, String> otherParams = extractOptionalParameters(inputParams);
 
                 AnnotatedText annotatedText = AnnotatedText.load(annotatedNode);
                 TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
-                annotatedText = currentTP.sentiment(annotatedText, proj);
+                annotatedText = currentTP.sentiment(annotatedText, otherParams);
                 annotatedText.storeOnGraph(database, false);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
             }
@@ -353,6 +361,15 @@ public class TextProcessorProcedure extends NLPProcedure {
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{res}).iterator());
             }
         };
+    }
+
+    private Map<String, String> extractOptionalParameters(Map<String, Object> input) {
+         Map<String, String> otherPars = new HashMap<String, String>();
+        if (input.containsKey(OptionalNLPParameters.CUSTOM_PROJECT))
+            otherPars.put(OptionalNLPParameters.CUSTOM_PROJECT, String.valueOf(input.get(OptionalNLPParameters.CUSTOM_PROJECT)));
+        if (input.containsKey(OptionalNLPParameters.SENTIMENT_PROB_THR))
+            otherPars.put(OptionalNLPParameters.SENTIMENT_PROB_THR, String.valueOf(input.get(OptionalNLPParameters.SENTIMENT_PROB_THR)));
+        return otherPars;
     }
 
     private TextProcessor retrieveTextProcessor(Map<String, Object> inputParams, String pipeline) {

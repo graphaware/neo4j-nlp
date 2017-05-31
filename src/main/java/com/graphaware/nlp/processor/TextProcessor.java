@@ -31,7 +31,7 @@ public interface TextProcessor {
     @Deprecated
     public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store);
 
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, String nerProject);
+    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams);
 
     public Tag annotateSentence(String text, String lang);
 
@@ -41,7 +41,7 @@ public interface TextProcessor {
 
     public boolean checkPuntuation(String value);
 
-    public AnnotatedText sentiment(AnnotatedText annotated, String project);
+    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams);
 
     public void removePipeline(String pipeline);
 
