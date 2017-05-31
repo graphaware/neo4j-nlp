@@ -20,15 +20,26 @@ import org.neo4j.graphdb.Label;
 /**
  * All labels used in the project.
  */
-public enum NERLabels implements Label {
-    Person,
-    Date,
-    Location,
-    Organization,
-    Percentage,
-    Time,
-    Money,
-    Component,
-    Equipment,
-    Chemical
+public class NERLabel implements Label {
+
+  private String name;
+
+  public NERLabel(String name) {
+    if (name==null) {
+      throw new IllegalArgumentException();
+    }
+    this.name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+  }
+
+  public String name() {
+    return this.name;
+  }
+
+  public static Label label(String name) {
+    if (name==null) {
+      throw new IllegalArgumentException();
+    }
+    return new NERLabel(name);
+  }
+
 }

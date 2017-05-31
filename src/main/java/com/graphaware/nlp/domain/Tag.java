@@ -19,7 +19,7 @@ import static com.graphaware.nlp.domain.Labels.Tag;
 import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
 import static com.graphaware.nlp.domain.Properties.LANGUAGE;
 import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
-import com.graphaware.nlp.domain.NERLabels;
+import com.graphaware.nlp.domain.NERLabel;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -180,40 +180,8 @@ public class Tag implements Persistable, Serializable {
           NEs = Arrays.asList(this.ne);
 
         for (String ent: NEs) {
-          switch (ent.toLowerCase()) {
-            case "person":
-                node.addLabel(NERLabels.Person);
-                break;
-            case "location":
-                node.addLabel(NERLabels.Location);
-                break;
-            case "date":
-                node.addLabel(NERLabels.Date);
-                break;
-            case "organization":
-                node.addLabel(NERLabels.Organization);
-                break;
-            case "money":
-                node.addLabel(NERLabels.Money);
-                break;
-            case "percentage":
-                node.addLabel(NERLabels.Percentage);
-                break;
-            case "time":
-                node.addLabel(NERLabels.Time);
-                break;
-            case "component":
-                node.addLabel(NERLabels.Component);
-                break;
-            case "equipment":
-                node.addLabel(NERLabels.Equipment);
-                break;
-            case "chemical":
-                node.addLabel(NERLabels.Chemical);
-                break;
-            default:
-                break;
-          }
+          if (ent==null) continue;
+          node.addLabel(new NERLabel(ent));
         }
     }
 
