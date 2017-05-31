@@ -44,7 +44,7 @@ Getting Started
 
 List of procedures available:
 
-##1. Tag extraction 
+**1. Tag extraction**
 
 This procedure allows to process text and get back sentences and tags after processing. The return value is a node of type AnnotatedText that is connected to sentences and them to tags.
 This is an example of usage:
@@ -73,7 +73,7 @@ Available parameters:
   * `sentiment` (optional, default *false*): this allow to specify if also sentiment is extracted for each sentence in the text, if true a label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
   * `store` (optional, default *true*): this enable the storing of sentence in the sentence node. This is necessary if sentences need to be processed later, for example for sentiment extraction
 
-##2. Sentiment extraction
+**2. Sentiment extraction**
 
 This procedure allows to process sentences beloging to AnnotatedText node and add sentiment to each of them. A label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
 
@@ -88,7 +88,7 @@ Available parameters:
   * `node` (mandatory): node (with label *AnnotatedText*) to analyse
   * `textProcessor` (optional)
 
-##3. Ontology
+**3. Ontology**
 Another feature provided by GraphAware NLP is the ability to build ontology hierarchies, starting from the tags extracted from the text. 
 The source for this ontology is ConceptNet5. It is a semantic network containing lots of things computers know about the world, 
 especially when understanding text written by people.
@@ -99,7 +99,7 @@ CALL ga.nlp.concept({node:a, depth: 2}) YIELD result
 return result
 ```
 
-##4. Search
+**4. Search**
 Text processed during the annotation process is decomposed in all the main tags. Stop words, lemmatization, punctuation pruning and other cleaning procedures are applied to reduce the amount of tags to the most significant. 
 Furthermore, for each tag, its term frequency is stored to provide information about how often a lemma appears in the document. 
 Using such data and inspired by Elasticsearch scoring functions, GraphAware NLP exposes a search procedure that provides basic search capabilities leveraging tag information stored after text analysis.
@@ -111,13 +111,13 @@ RETURN DISTINCT news, score
 ORDER BY score desc;
 ```
 
-##5. Language Detection
+**5. Language Detection**
 
 ```
 CALL ga.nlp.language({text:{value}}) YIELD result return result
 ```
 
-##6. NLP based filter
+**6. NLP based filter**
 
 ```
 CALL ga.nlp.filter({text:'On 8 May 2013,
@@ -134,7 +134,8 @@ CALL ga.nlp.filter({text:'On 8 May 2013,
 return result
 ```
 
-##7. Cosine similarity computation
+**7. Cosine similarity computation**
+
 Once tags are extracted from all the news or other nodes containing some text, it is possible to compute similarities between them using content based similarity. 
 During this process, each annotated text is described using the TF-IDF encoding format. TF-IDF is an established technique from the field of information retrieval and stands for Term Frequency-Inverse Document Frequency. 
 Text documents can be TF-IDF encoded as vectors in a multidimensional Euclidean space. The space dimensions correspond to the tags, previously extracted from the documents. The coordinates of a given document in each dimension (i.e., for each tag) are calculated as a product of two sub-measures: term frequency and inverse document frequency.

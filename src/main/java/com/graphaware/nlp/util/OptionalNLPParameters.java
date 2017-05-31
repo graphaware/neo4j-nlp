@@ -15,6 +15,9 @@
  */
 package com.graphaware.nlp.util;
 
+/*
+ * Use this class to expand parameter space of TextProcessor methods (such as annotate(), sentiment(), ...)
+ */
 public class OptionalNLPParameters {
   public static final String CUSTOM_PROJECT = "customProject";
   public static final String SENTIMENT_PROB_THR = "sentimentProbabilityThr";
