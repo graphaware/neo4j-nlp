@@ -16,9 +16,11 @@
 package com.graphaware.nlp.domain;
 
 /*
- * Use definitions in this class if you want to be consistent accross different implemented text processors
+ * Default values for node and relationship properties.
+ *   Use definitions in this class if you want to be consistent accross different implemented text processors
  */
 public class NLPDefaultValues {
   public static final String POS = "-";
   public static final String NE  = "-";
+  public static final String PHRASE_TYPE = "-";
 }

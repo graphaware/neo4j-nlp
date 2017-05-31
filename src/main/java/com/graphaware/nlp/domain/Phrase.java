@@ -17,18 +17,27 @@ package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Labels.Phrase;
 import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
+import static com.graphaware.nlp.domain.Properties.PHRASE_TYPE;
+import com.graphaware.nlp.domain.NLPDefaultValues;
 import java.util.Objects;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 public class Phrase implements Persistable {
     private final String content;
+    private String type;
     private Phrase reference;
     private Node phraseNode;
 
     public Phrase(String content) {
         this.content = content.trim();
-    }    
+        this.type = null;
+    }
+
+    public Phrase(String content, String type) {
+      this(content);
+      this.type = type;
+    }
 
     public String getContent() {
         return content;
@@ -73,6 +82,10 @@ public class Phrase implements Persistable {
         if (phraseNode == null)
             phraseNode = database.createNode(Phrase);
         phraseNode.setProperty(CONTENT_VALUE, content);
+        if (type!=null)
+          phraseNode.setProperty(PHRASE_TYPE, type);
+        else
+          phraseNode.setProperty(PHRASE_TYPE, NLPDefaultValues.PHRASE_TYPE);
         return phraseNode;
     }
 }
