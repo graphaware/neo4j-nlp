@@ -323,10 +323,8 @@ public class TextProcessorProcedure extends NLPProcedure {
                 String file = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_FILE));
 
                 // optional arguments
-                String project = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_PROJECT));
-                if (project==null) project = "default";
-                String lang = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_LANG));
-                if (lang==null) lang = "en";
+                String project = String.valueOf(inputParams.getOrDefault(PARAMETER_NAME_TRAIN_PROJECT, "default"));
+                String lang = String.valueOf(inputParams.getOrDefault(PARAMETER_NAME_TRAIN_LANG, "en"));
 
                 // training parameters (optional)
                 Map<String, String> params = new HashMap<String, String>();
