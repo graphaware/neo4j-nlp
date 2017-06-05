@@ -23,4 +23,5 @@ public class GenericModelParameters {
   public static final String TRAIN_THREADS = "threads";
   public static final String TRAIN_ENTITYTYPE = "entityType";
   public static final String VALIDATE_FOLDS = "nFolds";
+  public static final String VALIDATE_FILE = "validationFile";
 }

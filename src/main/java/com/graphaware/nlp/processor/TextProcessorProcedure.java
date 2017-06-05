@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.MultipleFoundException;
@@ -69,7 +70,7 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_TRAIN_FILE = "file";
     private static final String PARAMETER_NAME_TRAIN_LANG = "lang"; 
     private static final List<String> TRAINING_PARAMETERS = Arrays.asList(GenericModelParameters.TRAIN_ALG, GenericModelParameters.TRAIN_TYPE, GenericModelParameters.TRAIN_ITER, GenericModelParameters.TRAIN_CUTOFF,
-                                                                GenericModelParameters.TRAIN_THREADS, GenericModelParameters.TRAIN_ENTITYTYPE, GenericModelParameters.VALIDATE_FOLDS);
+                                                                GenericModelParameters.TRAIN_THREADS, GenericModelParameters.TRAIN_ENTITYTYPE, GenericModelParameters.VALIDATE_FOLDS, GenericModelParameters.VALIDATE_FILE);
     
     private static final String PARAMETER_NAME_FORCE = "force";
 
