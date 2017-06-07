@@ -22,13 +22,14 @@ import org.neo4j.graphdb.Label;
  */
 public class NERLabel implements Label {
 
-    private String name;
+    private static final String PREFIX_NER_LABEL_NAME = "NER";
+    private final String name;
 
     public NERLabel(String name) {
         if (name == null) {
             throw new IllegalArgumentException();
         }
-        this.name = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+        this.name = PREFIX_NER_LABEL_NAME + name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
     }
 
     public String name() {
