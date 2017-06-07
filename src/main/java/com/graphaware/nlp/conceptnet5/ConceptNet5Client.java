@@ -26,10 +26,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConceptNet5Client {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
 
     private final String conceptNet5EndPoint;
     private final ClientConfig cfg;

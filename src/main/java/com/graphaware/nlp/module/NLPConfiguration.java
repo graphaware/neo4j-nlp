@@ -29,19 +29,24 @@ import com.graphaware.runtime.policy.InclusionPoliciesFactory;
 public class NLPConfiguration extends BaseTxDrivenModuleConfiguration<NLPConfiguration> {
 
     private static final String DEFAULT_CONCEPTNET_URL = "http://api.conceptnet.io";
+    private static final String DEFAULT_SPARK_REST_URL = "http://localhost:8082";
     
     private final String conceptNetUrl;
+    private final String sparkRestUrl;
 
-    public NLPConfiguration(InclusionPolicies inclusionPolicies,  long initializeUntil, String conceptNetUrl) {
+    public NLPConfiguration(InclusionPolicies inclusionPolicies,  long initializeUntil, String conceptNetUrl, String sparkRestUrl) {
         super(inclusionPolicies, initializeUntil);
         this.conceptNetUrl = conceptNetUrl;
+        this.sparkRestUrl = sparkRestUrl;
     }
 
     public static NLPConfiguration defaultConfiguration() {
         return new NLPConfiguration(InclusionPoliciesFactory
                 .allBusiness()
-                .with(IncludeNoRelationships.getInstance())
-                , ALWAYS, DEFAULT_CONCEPTNET_URL);
+                .with(IncludeNoRelationships.getInstance()), 
+                ALWAYS, 
+                DEFAULT_CONCEPTNET_URL, 
+                DEFAULT_SPARK_REST_URL);
     }
 
     /**
@@ -49,15 +54,23 @@ public class NLPConfiguration extends BaseTxDrivenModuleConfiguration<NLPConfigu
      */
     @Override
     protected NLPConfiguration newInstance(InclusionPolicies inclusionPolicies, long initializeUntil) {
-        return new NLPConfiguration(inclusionPolicies, initializeUntil, getConceptNetUrl());
+        return new NLPConfiguration(inclusionPolicies, initializeUntil, getConceptNetUrl(), getSparkRestUrl());
     }
 
     public String getConceptNetUrl() {
         return conceptNetUrl;
     }
 
+    public String getSparkRestUrl() {
+        return sparkRestUrl;
+    }
+    
     public NLPConfiguration withConceptNetUrl(String conceptNetUrl) {
-        return new NLPConfiguration(getInclusionPolicies(), initializeUntil(), conceptNetUrl);
+        return new NLPConfiguration(getInclusionPolicies(), initializeUntil(), conceptNetUrl, getSparkRestUrl());
+    }
+    
+    public NLPConfiguration withSparkRestUrl(String sparkRestUrl) {
+        return new NLPConfiguration(getInclusionPolicies(), initializeUntil(), getConceptNetUrl(), sparkRestUrl);
     }
 
     /**

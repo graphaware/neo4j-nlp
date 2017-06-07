@@ -208,7 +208,7 @@ public class AnnotatedText implements Persistable, Serializable {
 
         private boolean evaluate(Tag tag) {
             if (NE != null) {
-                return tag.getNe().equalsIgnoreCase(NE) && tag.getLemma().equalsIgnoreCase(value);
+                return tag.getNeAsList().contains(NE) && tag.getLemma().equalsIgnoreCase(value);
             } else {
                 return tag.getLemma().equalsIgnoreCase(value);
             }

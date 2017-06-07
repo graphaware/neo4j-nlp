@@ -32,6 +32,7 @@ public class NLPBootstrapper extends BaseRuntimeModuleBootstrapper<NLPConfigurat
     private static final Log LOG = LoggerFactory.getLogger(NLPBootstrapper.class);
 
     private static final String CONCEPT_NET_URL = "conceptNetUrl";
+    private static final String SPARK_REST_URL = "sparkRestUrl";
 
     /**
      * {@inheritDoc}
@@ -49,6 +50,11 @@ public class NLPBootstrapper extends BaseRuntimeModuleBootstrapper<NLPConfigurat
         if (config.get(CONCEPT_NET_URL) != null && config.get(CONCEPT_NET_URL).length() > 0) {
             configuration = configuration.withConceptNetUrl(config.get(CONCEPT_NET_URL));
             LOG.info("CONCEPT_NET_URL set to %s", configuration.getConceptNetUrl());
+        }
+        
+        if (config.get(SPARK_REST_URL) != null && config.get(SPARK_REST_URL).length() > 0) {
+            configuration = configuration.withSparkRestUrl(config.get(SPARK_REST_URL));
+            LOG.info("SPARK_REST_URL set to %s", configuration.getSparkRestUrl());
         }
         return new NLPModule(moduleId, configuration, database);
     }

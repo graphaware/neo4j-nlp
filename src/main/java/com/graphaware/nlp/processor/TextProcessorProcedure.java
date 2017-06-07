@@ -68,10 +68,10 @@ public class TextProcessorProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_TRAIN_ALG = "alg";
     private static final String PARAMETER_NAME_TRAIN_MODEL = "model";
     private static final String PARAMETER_NAME_TRAIN_FILE = "file";
-    private static final String PARAMETER_NAME_TRAIN_LANG = "lang"; 
+    private static final String PARAMETER_NAME_TRAIN_LANG = "lang";
     private static final List<String> TRAINING_PARAMETERS = Arrays.asList(GenericModelParameters.TRAIN_ALG, GenericModelParameters.TRAIN_TYPE, GenericModelParameters.TRAIN_ITER, GenericModelParameters.TRAIN_CUTOFF,
-                                                                GenericModelParameters.TRAIN_THREADS, GenericModelParameters.TRAIN_ENTITYTYPE, GenericModelParameters.VALIDATE_FOLDS, GenericModelParameters.VALIDATE_FILE);
-    
+            GenericModelParameters.TRAIN_THREADS, GenericModelParameters.TRAIN_ENTITYTYPE, GenericModelParameters.VALIDATE_FOLDS, GenericModelParameters.VALIDATE_FILE);
+
     private static final String PARAMETER_NAME_FORCE = "force";
 
     public TextProcessorProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
@@ -80,8 +80,9 @@ public class TextProcessorProcedure extends NLPProcedure {
 
         this.defaultTextProcessorName = processorManager.getDefaultProcessorName();
         this.textProcessor = processorManager.getDefaultProcessor();
-        if (this.textProcessor==null)
-          LOG.warn("Extraction of the default text processor (" + this.defaultTextProcessorName  + ") failed.");
+        if (this.textProcessor == null) {
+            LOG.warn("Extraction of the default text processor (" + this.defaultTextProcessorName + ") failed.");
+        }
     }
 
     public CallableProcedure.BasicProcedure annotate() {
@@ -109,18 +110,19 @@ public class TextProcessorProcedure extends NLPProcedure {
                         return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
                     }
                     Object id = inputParams.get(PARAMETER_NAME_ID);
-                    if (id==null)
-                      LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
+                    if (id == null) {
+                        LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
+                    }
                     Node annotatedText = checkIfExist(id);
                     boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
                     boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
 
                     // optional parameters
                     Map<String, String> otherPars = extractOptionalParameters(inputParams);
-                    
-                    if (annotatedText==null || force) {
+
+                    if (annotatedText == null || force) {
                         AnnotatedText annotateText;
-                        String pipeline = (String)inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
+                        String pipeline = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
                         TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
                         annotateText = currentTP.annotateText(text, id, pipeline, lang, store, otherPars);
                         annotatedText = annotateText.storeOnGraph(database, force);
@@ -314,10 +316,10 @@ public class TextProcessorProcedure extends NLPProcedure {
                 Map<String, Object> inputParams = (Map) input[0];
 
                 // mandatory arguments
-                if (!inputParams.containsKey(PARAMETER_NAME_TRAIN_ALG) ||
-                    !inputParams.containsKey(PARAMETER_NAME_TRAIN_MODEL) ||
-                    !inputParams.containsKey(PARAMETER_NAME_TRAIN_FILE) ) {
-                  throw new RuntimeException("You need to specify mandatory parameters: " + PARAMETER_NAME_TRAIN_ALG + ", " + PARAMETER_NAME_TRAIN_MODEL + ", " + PARAMETER_NAME_TRAIN_FILE);
+                if (!inputParams.containsKey(PARAMETER_NAME_TRAIN_ALG)
+                        || !inputParams.containsKey(PARAMETER_NAME_TRAIN_MODEL)
+                        || !inputParams.containsKey(PARAMETER_NAME_TRAIN_FILE)) {
+                    throw new RuntimeException("You need to specify mandatory parameters: " + PARAMETER_NAME_TRAIN_ALG + ", " + PARAMETER_NAME_TRAIN_MODEL + ", " + PARAMETER_NAME_TRAIN_FILE);
                 }
                 String alg = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_ALG));
                 String model = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_MODEL));
@@ -330,32 +332,36 @@ public class TextProcessorProcedure extends NLPProcedure {
                 // training parameters (optional)
                 Map<String, String> params = new HashMap<String, String>();
                 TRAINING_PARAMETERS.forEach(par -> {
-                  if (inputParams.containsKey(par))
-                    params.put(par, String.valueOf(inputParams.get(par)));
+                    if (inputParams.containsKey(par)) {
+                        params.put(par, String.valueOf(inputParams.get(par)));
+                    }
                 });
 
                 // check training parameters consistency: are there some unexpected keys? (possible typos)
                 List<String> unusedKeys = new ArrayList<String>();
-                List<String> otherKeys  = Arrays.asList(PARAMETER_NAME_TRAIN_ALG, PARAMETER_NAME_TRAIN_MODEL, PARAMETER_NAME_TRAIN_FILE, PARAMETER_NAME_TRAIN_PROJECT, PARAMETER_NAME_TRAIN_LANG);
+                List<String> otherKeys = Arrays.asList(PARAMETER_NAME_TRAIN_ALG, PARAMETER_NAME_TRAIN_MODEL, PARAMETER_NAME_TRAIN_FILE, PARAMETER_NAME_TRAIN_PROJECT, PARAMETER_NAME_TRAIN_LANG);
                 inputParams.forEach((k, v) -> {
-                  if (!TRAINING_PARAMETERS.contains(k) && !otherKeys.contains(k))
-                    unusedKeys.add(k);
+                    if (!TRAINING_PARAMETERS.contains(k) && !otherKeys.contains(k)) {
+                        unusedKeys.add(k);
+                    }
                 });
-                if (unusedKeys.size()>0) {
-                  LOG.warn("Warning! Unused parameter(s) (possible typos?): " + String.join(", ", unusedKeys));
+                if (unusedKeys.size() > 0) {
+                    LOG.warn("Warning! Unused parameter(s) (possible typos?): " + String.join(", ", unusedKeys));
                 }
 
                 TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
 
                 String res = currentTP.train(project, alg, model, file, lang, params);
 
-                if (res.length()>0)
-                  res = "success: " + res;
-                else
-                  res = "failure";
+                if (res.length() > 0) {
+                    res = "success: " + res;
+                } else {
+                    res = "failure";
+                }
 
-                if (unusedKeys.size()>0)
-                  res += "; Warning, unsed parameter(s): " + String.join(", ", unusedKeys);
+                if (unusedKeys.size() > 0) {
+                    res += "; Warning, unsed parameter(s): " + String.join(", ", unusedKeys);
+                }
 
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{res}).iterator());
             }
@@ -363,32 +369,34 @@ public class TextProcessorProcedure extends NLPProcedure {
     }
 
     private Map<String, String> extractOptionalParameters(Map<String, Object> input) {
-         Map<String, String> otherPars = new HashMap<String, String>();
-        if (input.containsKey(OptionalNLPParameters.CUSTOM_PROJECT))
+        Map<String, String> otherPars = new HashMap<String, String>();
+        if (input.containsKey(OptionalNLPParameters.CUSTOM_PROJECT)) {
             otherPars.put(OptionalNLPParameters.CUSTOM_PROJECT, String.valueOf(input.get(OptionalNLPParameters.CUSTOM_PROJECT)));
-        if (input.containsKey(OptionalNLPParameters.SENTIMENT_PROB_THR))
+        }
+        if (input.containsKey(OptionalNLPParameters.SENTIMENT_PROB_THR)) {
             otherPars.put(OptionalNLPParameters.SENTIMENT_PROB_THR, String.valueOf(input.get(OptionalNLPParameters.SENTIMENT_PROB_THR)));
+        }
         return otherPars;
     }
 
     private TextProcessor retrieveTextProcessor(Map<String, Object> inputParams, String pipeline) {
-      TextProcessor newTP = this.textProcessor; // default processor
-      String newTPName = this.defaultTextProcessorName;
-      String processor = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, "");
-      if (processor.length() > 0) {
-        newTPName = processor;
-        newTP = processorManager.getTextProcessor(processor);
-        if (newTP == null) {
-          throw new RuntimeException("Text processor " + processor + " doesn't exist");
+        TextProcessor newTP = this.textProcessor; // default processor
+        String newTPName = this.defaultTextProcessorName;
+        String processor = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, "");
+        if (processor.length() > 0) {
+            newTPName = processor;
+            newTP = processorManager.getTextProcessor(processor);
+            if (newTP == null) {
+                throw new RuntimeException("Text processor " + processor + " doesn't exist");
+            }
         }
-      }
-      if (pipeline.length()>0) {
-        if (!newTP.checkPipeline(pipeline)) {
-          throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
+        if (pipeline.length() > 0) {
+            if (!newTP.checkPipeline(pipeline)) {
+                throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
+            }
         }
-      }
-      LOG.info("Using text processor: " + newTPName);
+        LOG.info("Using text processor: " + newTPName);
 
-      return newTP;
+        return newTP;
     }
 }
