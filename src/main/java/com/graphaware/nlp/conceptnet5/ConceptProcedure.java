@@ -56,9 +56,9 @@ public class ConceptProcedure extends NLPProcedure {
     private ConceptNet5Importer conceptnet5Importer;
     private final GraphDatabaseService database;
     private final TextProcessorsManager processorManager;
-    
-    private static final String RELATIONSHIP_IS_RELATED_TO_SUB_TAG = "subTag";
 
+    private static final String RELATIONSHIP_IS_RELATED_TO_SUB_TAG = "subTag";
+    public static final List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
 
     private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
     private static final String PARAMETER_NAME_TAG = "tag";
@@ -67,7 +67,7 @@ public class ConceptProcedure extends NLPProcedure {
     private static final String PARAMETER_NAME_SPLIT_TAG = "splitTag";
     private static final String PARAMETER_NAME_FILTER_LANG = "filterLang";
     private static final String PARAMETER_NAME_ADMITTED_RELATIONSHIPS = "admittedRelationships";
-
+    private static final String PARAMETER_NAME_ADMITTED_POS = "admittedPoses";
 
     public ConceptProcedure(GraphDatabaseService database, TextProcessorsManager processorManager) {
         this.database = database;
@@ -78,7 +78,6 @@ public class ConceptProcedure extends NLPProcedure {
     public ConceptNet5Importer getImporter() {
         if (conceptnet5Importer == null) {
             GraphAwareRuntime runtime = RuntimeRegistry.getStartedRuntime(database);
-            LOG.error(">>>>>>>: " + runtime.getModule("NLP", NLPModule.class).getClass().toString());
             String url = runtime.getModule(NLPModule.class).getNlpMLConfiguration().getConceptNetUrl();
             this.conceptnet5Importer = new ConceptNet5Importer.Builder(url).build();
         }
@@ -107,6 +106,7 @@ public class ConceptProcedure extends NLPProcedure {
                     Boolean splitTags = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_SPLIT_TAG, false);
                     Boolean filterByLang = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FILTER_LANG, true);
                     List<String> admittedRelationships = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_RELATIONSHIPS, Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP));
+                    List<String> admittedPos = (List<String>) inputParams.getOrDefault(PARAMETER_NAME_ADMITTED_POS, DEFAULT_ADMITTED_POS);
                     Iterator<Node> tagsIterator;
                     if (annotatedNode != null) {
                         tagsIterator = getAnnotatedTextTags(annotatedNode);
@@ -117,7 +117,7 @@ public class ConceptProcedure extends NLPProcedure {
                     } else {
                         throw new RuntimeException("You need to specify or an annotated text or a list of tags");
                     }
-                    
+
                     TextProcessor processor = getProcessor(inputParams);
                     List<Tag> tags = new ArrayList<>();
                     while (tagsIterator.hasNext()) {
@@ -136,10 +136,9 @@ public class ConceptProcedure extends NLPProcedure {
                         } else {
                             tags.add(tag);
                         }
-
                     }
                     tags.stream().forEach((tag) -> {
-                        conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships));
+                        conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos));
                         conceptTags.add(tag);
                     });
 

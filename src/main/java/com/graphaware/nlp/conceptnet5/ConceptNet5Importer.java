@@ -20,6 +20,7 @@ import com.google.common.cache.CacheBuilder;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -57,19 +58,18 @@ public class ConceptNet5Importer {
         this.depthSearch = builder.depthSearch;
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor) {
-        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
-    }
-
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, TextProcessor nlpProcessor) {
-        return importHierarchy(source, lang, filterLang, depthSearch, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
-    }
-
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, String... admittedRelations) {
-        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
-    }
-
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations) {
+//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor) {
+//        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
+//    }
+//
+//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, TextProcessor nlpProcessor) {
+//        return importHierarchy(source, lang, filterLang, depthSearch, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
+//    }
+//
+//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, String... admittedRelations) {
+//        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
+//    }
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS) {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         try {
@@ -80,18 +80,25 @@ public class ConceptNet5Importer {
                 values = client.queryByStart(word, admittedRelations.get(0), lang);
             } else {
                 throw new RuntimeException("Admitted relations is empty");
-            }            
+            }
             values.getEdges().stream().forEach((concept) -> {
                 if (checkAdmittedRelations(concept, admittedRelations)
-                        && (concept.getStart().equalsIgnoreCase(word) || concept.getEnd().equalsIgnoreCase(word))
+                        && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
                         && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
-                    if (concept.getStart().equalsIgnoreCase(word)) {
+                    if (concept.getStart().equalsIgnoreCase(source.getLemma())) {
                         Tag annotateTag = tryToAnnotate(concept.getEnd(), concept.getEndLanguage(), nlpProcessor);
-                        if (depth > 1) {
-                            importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations);
+                        List<String> posList = annotateTag.getPosAsList();
+                        if (admittedPOS == null
+                                || admittedPOS.isEmpty()
+                                || posList == null
+                                || posList.isEmpty()
+                                || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
+                            if (depth > 1) {
+                                importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS);
+                            }
+                            source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                            res.add(annotateTag);
                         }
-                        source.addParent(concept.getRel(), annotateTag, concept.getWeight());
-                        res.add(annotateTag);
                     } else {
                         Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
                         annotateTag.addParent(concept.getRel(), source, concept.getWeight());
@@ -99,7 +106,7 @@ public class ConceptNet5Importer {
                     }
                 }
             });
-            
+
         } catch (Exception ex) {
             LOG.error("Error while improting hierarchy for " + word + "(" + lang + "). Ignored!", ex);
         }
@@ -122,7 +129,6 @@ public class ConceptNet5Importer {
 //        }
 //        return value;
 //    }
-    
     private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
