@@ -129,13 +129,13 @@ public class Tag implements Persistable, Serializable {
         tagNode.setProperty(PROPERTY_ID, getId());
         tagNode.setProperty(CONTENT_VALUE, lemma);
         tagNode.setProperty(LANGUAGE, language);
-        
+
         if (neL != null) {
             tagNode.setProperty("ne", neL.toArray(new String[neL.size()]));
-        } 
+        }
         if (posL != null) {
             tagNode.setProperty("pos", posL.toArray(new String[posL.size()]));
-        } 
+        }
 
         return tagNode;
     }
@@ -148,9 +148,11 @@ public class Tag implements Persistable, Serializable {
     }
 
     private void assignNERLabel(Node node) {
-        neL.stream().filter((ent) -> !(ent == null)).forEach((ent) -> {
-            node.addLabel(new NERLabel(ent));
-        });
+        if (neL != null) {
+            neL.stream().filter((ent) -> !(ent == null)).forEach((ent) -> {
+                node.addLabel(new NERLabel(ent));
+            });
+        }
     }
 
     private static void checkNodeIsATag(Node tagNode) {
@@ -167,10 +169,10 @@ public class Tag implements Persistable, Serializable {
         s.writeObject(language);
         if (posL != null) {
             s.writeObject(posL);
-        } 
+        }
         if (neL != null) {
             s.writeObject(neL);
-        } 
+        }
         s.writeInt(multiplicity);
     }
 

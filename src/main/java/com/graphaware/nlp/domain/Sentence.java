@@ -112,7 +112,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         if (tagOccurrences.containsKey(begin))
           tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end));
         else
-          tagOccurrences.put(begin, Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end)));
+          tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end))));
     }
 
     //Currently used only for testing purpose

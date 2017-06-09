@@ -22,7 +22,7 @@ import org.neo4j.graphdb.Label;
  */
 public class NERLabel implements Label {
 
-    private static final String PREFIX_NER_LABEL_NAME = "NER";
+    private static final String PREFIX_NER_LABEL_NAME = "NER_";
     private final String name;
 
     public NERLabel(String name) {

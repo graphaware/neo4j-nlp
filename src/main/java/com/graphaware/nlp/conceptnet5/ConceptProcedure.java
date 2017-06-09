@@ -138,13 +138,15 @@ public class ConceptProcedure extends NLPProcedure {
                         }
 
                     }
-                    tags.parallelStream().forEach((tag) -> {
+                    tags.stream().forEach((tag) -> {
                         conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships));
                         conceptTags.add(tag);
                     });
 
                     conceptTags.stream().forEach((newTag) -> {
-                        newTag.storeOnGraph(database, false);
+                        if (newTag != null) {
+                            newTag.storeOnGraph(database, false);
+                        }
                     });
                     if (annotatedNode != null) {
                         return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
