@@ -51,7 +51,7 @@ public class ConceptNet5Client {
         String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept;
         ConceptNet5EdgeResult value;
         try {
-            value = cache.get(url, () -> getValues(url));
+            value = cache.get(url, () -> cachedUrl(url));
         } catch (ExecutionException ex) {
             LOG.error("Error while getting value for concept " + concept + " lang " + lang, ex);
             throw new RuntimeException("Error while getting value for concept " + concept + " lang " + lang);
@@ -59,7 +59,7 @@ public class ConceptNet5Client {
         return value;
     }
 
-    public ConceptNet5EdgeResult getValues(String url) {
+    private ConceptNet5EdgeResult cachedUrl(String url) {
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
                 .accept(MediaType.APPLICATION_JSON)
@@ -69,15 +69,19 @@ public class ConceptNet5Client {
         return result;
     }
 
-    public ConceptNet5EdgeResult searchByStart(String concept, String lang) {
-        String url = conceptNet5EndPoint + "/search?rel=/r/IsA&start=/c/" + lang + "/" + concept + "/&limit=20";
-        WebResource resource = Client.create(cfg).resource(url);
-        ClientResponse response = resource
-                .accept(MediaType.APPLICATION_JSON)
-                .type(MediaType.APPLICATION_JSON)
-                .get(ClientResponse.class);
-        ConceptNet5EdgeResult result = response.getEntity(ConceptNet5EdgeResult.class);
-        return result;
+    public ConceptNet5EdgeResult queryByStart(String concept, String rel, String lang) {
+        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&start=/c/" + lang + "/" + concept + "&limit=10";
+        ConceptNet5EdgeResult value;
+        try {
+            value = cache.get(url, () -> cachedUrl(url));
+        } catch (ExecutionException ex) {
+            String error = "Error while getting query for concept " + concept + " lang " + lang + " and relationship " + rel;
+            LOG.error(error, ex);
+            throw new RuntimeException(error, ex);
+        }
+        return value;
     }
-
+    
+    
+    
 }

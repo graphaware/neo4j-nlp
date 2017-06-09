@@ -73,7 +73,14 @@ public class ConceptNet5Importer {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         try {
-            ConceptNet5EdgeResult values = client.getValues(word, lang);
+            ConceptNet5EdgeResult values;
+            if (admittedRelations.size() > 1) {
+                values = client.getValues(word, lang);
+            } else if (admittedRelations.size() == 1) {
+                values = client.queryByStart(word, admittedRelations.get(0), lang);
+            } else {
+                throw new RuntimeException("Admitted relations is empty");
+            }            
             values.getEdges().stream().forEach((concept) -> {
                 if (checkAdmittedRelations(concept, admittedRelations)
                         && (concept.getStart().equalsIgnoreCase(word) || concept.getEnd().equalsIgnoreCase(word))
@@ -87,15 +94,12 @@ public class ConceptNet5Importer {
                         res.add(annotateTag);
                     } else {
                         Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
-                        //TODO evaluate if also in this case could be useful go in deep
-//                        if (depth > 1) {
-//                            importHierarchy(annotateTag, lang, depth - 1, admittedRelations);
-//                        }
                         annotateTag.addParent(concept.getRel(), source, concept.getWeight());
                         res.add(annotateTag);
                     }
                 }
             });
+            
         } catch (Exception ex) {
             LOG.error("Error while improting hierarchy for " + word + "(" + lang + "). Ignored!", ex);
         }
