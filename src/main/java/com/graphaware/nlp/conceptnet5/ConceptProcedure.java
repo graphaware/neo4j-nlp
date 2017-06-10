@@ -150,11 +150,12 @@ public class ConceptProcedure extends NLPProcedure {
                     if (annotatedNode != null) {
                         return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
                     } else {
-                        Set<Object[]> result = new HashSet<>();
-                        conceptTags.stream().forEach((item) -> {
-                            result.add(new Object[]{item});
-                        });
-                        return Iterators.asRawIterator(result.iterator());
+//                        Set<Object[]> result = new HashSet<>();
+//                        conceptTags.stream().forEach((item) -> {
+//                            result.add(new Object[]{item});
+//                        });
+//                        return Iterators.asRawIterator(result.iterator());
+                        return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{tagToBeAnnotated}).iterator());
                     }
                 } catch (Exception ex) {
                     LOG.error("error!!!! ", ex);
