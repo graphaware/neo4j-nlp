@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.lda;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.ml.client.SparkRestClient;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.procedure.NLPProcedure;
@@ -22,6 +23,7 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.RuntimeRegistry;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import org.neo4j.collection.RawIterator;
@@ -38,17 +40,19 @@ import org.neo4j.procedure.Mode;
 
 public class LDAProcedure extends NLPProcedure {
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
     private static final Logger LOG = LoggerFactory.getLogger(LDAProcedure.class);
 
     private final GraphDatabaseService database;
     private final TextProcessorsManager processorManager;
     private final TextProcessor textProcessor;
-    
-    private LDARestClient ldaRestClient; 
 
-    private final static long PARAMETER_DEFAULT_GROUPS = 5l;
-    private final static long PARAMETER_DEFAULT_ITERATIONS = 20l;
-    private final static long PARAMETER_DEFAULT_TOPICS = 10l;
+    private LDARestClient ldaRestClient;
+
+    private final static int PARAMETER_DEFAULT_GROUPS = 5;
+    private final static int PARAMETER_DEFAULT_ITERATIONS = 20;
+    private final static int PARAMETER_DEFAULT_TOPICS = 10;
     private final static boolean PARAMETER_DEFAULT_STORE = true;
     private final static boolean PARAMETER_DEFAULT_CONCEPT = false;
     private final static String PARAMETER_DEFAULT_TOPIC_LABEL = "LDATopic";
@@ -97,16 +101,13 @@ public class LDAProcedure extends NLPProcedure {
                         } else {
                             query = "MATCH (n:AnnotatedText)\n"
                                     + "MATCH (n)-[:CONTAINS_SENTENCE]->(s:Sentence)-[r:HAS_TAG]->(t:Tag)\n"
-                                    + "OPTIONAL MATCH (t)-[:IS_RELATED]->(rt)\n"
-                                    + "WHERE size(t.value) > 5\n"
-                                    + "WITH id(n) as docId, sum(r.tf) as tf, t.value + collect(rt.value) as tags\n"
+                                    + "WITH id(n) as docId, sum(r.tf) as tf, t\n"
+                                    + "OPTIONAL MATCH (t)-[:IS_RELATED_TO*1..2]->(rt)\n"
+                                    + "WITH docId, tf, t, t.value + collect(rt.value) as tags\n"
                                     + "UNWIND tags as tag\n"
-                                    + "WITH docId, tf, tag as word\n"
-                                    + "where size(word) > 5\n"
-                                    + "return docId, tf, word";
+                                    + "return docId, sum(tf) as tf, tag as word";
                         }
                     }
-                    LOG.warn("Start extracting topics");
                     LDARequest request = new LDARequest();
                     request.setQuery(query);
                     request.setClusters(numberOfTopicGroups);
@@ -114,6 +115,7 @@ public class LDAProcedure extends NLPProcedure {
                     request.setTopicWords(numberOfTopics);
                     request.setStoreModel(storeModel);
                     request.setTopicLabel(topicLabel);
+                    LOG.warn("Start extracting topics: \n" + getJson(request));
                     LDAResponse process = getLDARestClient().computeLDA(request);
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{process.getProcessId()}).iterator());
                 } catch (Exception ex) {
@@ -160,7 +162,6 @@ public class LDAProcedure extends NLPProcedure {
 //            }
 //        };
 //    }
-    
     public LDARestClient getLDARestClient() {
         if (ldaRestClient == null) {
             GraphAwareRuntime runtime = RuntimeRegistry.getStartedRuntime(database);
@@ -169,5 +170,14 @@ public class LDAProcedure extends NLPProcedure {
             this.ldaRestClient = new LDARestClient(new SparkRestClient(url));
         }
         return ldaRestClient;
+    }
+
+    private String getJson(Object obj) {
+        try {
+            return mapper.writeValueAsString(obj);
+        } catch (IOException ex) {
+            LOG.error("Object cannot be converted to json.", ex);
+            return "";
+        }
     }
 }

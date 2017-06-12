@@ -64,5 +64,4 @@ public class LDARequest {
     public void setTopicLabel(String topicLabel) {
         this.topicLabel = topicLabel;
     }
-    
 }
