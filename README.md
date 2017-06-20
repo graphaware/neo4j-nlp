@@ -23,11 +23,12 @@ The actual implementation of the NLP tools is in packages <a href="https://githu
 # First you need to install neo4j-nlp
 cd neo4j-nlp
 mvn clean install
+cp target/graphaware-nlp-1.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
 
 # Next you can proceed to the OpenNLP and StanfordNLP
 cd ../neo4j-nlp-opennlp
 mvn clean package
-cp target/nlp-stanfordnlp-1.0.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
+cp target/nlp-opennlp-1.0.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
 ```
 
 Example of the `plugins/` directory:

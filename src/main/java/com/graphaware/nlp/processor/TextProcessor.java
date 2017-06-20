@@ -47,4 +47,6 @@ public interface TextProcessor {
 
     public String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
 
+    public String test(String project, String alg, String model, String file, String lang);
+
 }

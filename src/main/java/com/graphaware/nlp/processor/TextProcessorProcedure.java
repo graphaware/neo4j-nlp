@@ -367,6 +367,47 @@ public class TextProcessorProcedure extends NLPProcedure {
         };
     }
 
+    public CallableProcedure.BasicProcedure test() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("test"))
+                .mode(Mode.WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+
+                // mandatory arguments
+                if (!inputParams.containsKey(PARAMETER_NAME_TRAIN_ALG)
+                        || !inputParams.containsKey(PARAMETER_NAME_TRAIN_MODEL)
+                        || !inputParams.containsKey(PARAMETER_NAME_TRAIN_FILE)) {
+                    throw new RuntimeException("You need to specify mandatory parameters: " + PARAMETER_NAME_TRAIN_ALG + ", " + PARAMETER_NAME_TRAIN_MODEL + ", " + PARAMETER_NAME_TRAIN_FILE);
+                }
+                String alg = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_ALG));
+                String model = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_MODEL));
+                String file = String.valueOf(inputParams.get(PARAMETER_NAME_TRAIN_FILE));
+
+                // optional arguments
+                String project = String.valueOf(inputParams.getOrDefault(PARAMETER_NAME_TRAIN_PROJECT, "default"));
+                String lang = String.valueOf(inputParams.getOrDefault(PARAMETER_NAME_TRAIN_LANG, "en"));
+
+                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
+
+                String res = currentTP.test(project, alg, model, file, lang);
+
+                if (res.length() > 0) {
+                    res = "success: " + res;
+                } else {
+                    res = "failure";
+                }
+
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{res}).iterator());
+            }
+        };
+    }
+
     private Map<String, String> extractOptionalParameters(Map<String, Object> input) {
         Map<String, String> otherPars = new HashMap<String, String>();
         if (input.containsKey(OptionalNLPParameters.CUSTOM_PROJECT)) {

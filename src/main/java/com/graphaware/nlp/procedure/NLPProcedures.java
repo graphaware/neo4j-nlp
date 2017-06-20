@@ -66,6 +66,7 @@ public class NLPProcedures {
         procedures.register(textProcedures.language());
         procedures.register(textProcedures.filter());
         procedures.register(textProcedures.train());
+        procedures.register(textProcedures.test());
         //Managing Processor
         procedures.register(textProcedures.getProcessors());
         procedures.register(textProcedures.getPipelines());
