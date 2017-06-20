@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.MultipleFoundException;
@@ -39,16 +38,16 @@ import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
 import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import org.neo4j.procedure.Mode;
+import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class TextProcessorProcedure extends NLPProcedure {
 
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessorProcedure.class);
+    public static final String SUCCESS = "success";
 
     private String defaultTextProcessorName;
     private final TextProcessor textProcessor;
@@ -272,7 +271,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                 //if succeeded
                 processorManager.storePipelines(inputParams);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
-                    creationResult.getResult() == 0 ? "succeess" : "Error: " + creationResult.getMessage()
+                    creationResult.getResult() == 0 ? SUCCESS : "Error: " + creationResult.getMessage()
                 }).iterator());
             }
         };
@@ -298,7 +297,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                     }
                     processorManager.removePipeline(processor, pipeline);
                 }
-                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{"succeess"}).iterator());
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{SUCCESS}).iterator());
             }
         };
     }
