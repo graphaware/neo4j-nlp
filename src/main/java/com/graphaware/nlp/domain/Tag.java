@@ -51,7 +51,13 @@ public class Tag implements Persistable, Serializable {
     }
 
     public String getLemma() {
-        return lemma;
+        if ((neL != null && neL.contains("O")) || neL == null) {
+            return lemma.toLowerCase();
+        } else {
+            return lemma;
+        }
+            
+            
     }
 
     public void setPos(List<String> pos) {
@@ -83,7 +89,7 @@ public class Tag implements Persistable, Serializable {
     }
 
     public String getId() {
-        return lemma + "_" + language;
+        return getLemma() + "_" + language;
     }
 
     public void addParent(String rel, Tag storedTag, float weight) {
@@ -127,7 +133,7 @@ public class Tag implements Persistable, Serializable {
             tagNode = database.createNode(Tag);
         }
         tagNode.setProperty(PROPERTY_ID, getId());
-        tagNode.setProperty(CONTENT_VALUE, lemma);
+        tagNode.setProperty(CONTENT_VALUE, getLemma());
         tagNode.setProperty(LANGUAGE, language);
 
         if (neL != null) {
@@ -165,7 +171,7 @@ public class Tag implements Persistable, Serializable {
 
     private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
-        s.writeObject(lemma);
+        s.writeObject(getLemma());
         s.writeObject(language);
         if (posL != null) {
             s.writeObject(posL);
