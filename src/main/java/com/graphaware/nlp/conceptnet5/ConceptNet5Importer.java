@@ -20,11 +20,11 @@ import com.google.common.cache.CacheBuilder;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +34,11 @@ public class ConceptNet5Importer {
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
     public static final String DEFAULT_LANGUAGE = "en";
+
+    private static String REGEX = "\\(..\\)$";
+    private static String REPLACE = "";
+
+    private Pattern pattern = Pattern.compile(REGEX);
 
     private final ConceptNet5Client client;
     private int depthSearch = 2;
@@ -72,6 +77,7 @@ public class ConceptNet5Importer {
     public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS) {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
+        word = removeParenthesis(word);
         try {
             ConceptNet5EdgeResult values;
             if (admittedRelations.size() > 1) {
@@ -145,6 +151,17 @@ public class ConceptNet5Importer {
             return true;
         }
         return admittedRelations.stream().anyMatch((rel) -> (concept.getRel().contains(rel)));
+    }
+
+    protected String removeParenthesis(String concept) {
+        Pattern p = Pattern.compile(REGEX);
+        Matcher m = p.matcher(concept);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            m.appendReplacement(sb, REPLACE);
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     public static class Builder {
