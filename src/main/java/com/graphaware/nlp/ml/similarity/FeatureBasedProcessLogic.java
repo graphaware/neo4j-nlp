@@ -24,8 +24,6 @@ import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
 import com.graphaware.nlp.ml.queue.SimilarityItem;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
-import com.graphaware.nlp.ml.similarity.CosineSimilarity;
-import com.graphaware.nlp.ml.similarity.Similarity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +45,14 @@ import org.springframework.stereotype.Component;
 public class FeatureBasedProcessLogic {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeatureBasedProcessLogic.class);
+    
+    private final static String DEFAULT_VECTOR_QUERY = "MATCH (doc:AnnotatedText)\n"
+                + "WITH count(doc) as documentsCount\n"
+                + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
+                + "WHERE id(input) = {id}\n"
+                + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
+                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount\n"
+                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f + 1.0f*documentsCount)/documentsCountForTag as idf";
 
     protected final Similarity similarityFunction;
     protected final GraphDatabaseService database;
@@ -63,42 +69,40 @@ public class FeatureBasedProcessLogic {
     private final Cache<Long, Map<Long, Float>> tfCache
             = CacheBuilder.newBuilder().maximumSize(10000).expireAfterAccess(30, TimeUnit.MINUTES).build();
 
-    public float getFeatureCosine(long firstNode, long secondNode) {
-        return similarityFunction.getSimilarity(getTFMap(firstNode), getTFMap(secondNode));
+    public float getFeatureCosine(long firstNode, long secondNode, String query) {
+        return similarityFunction.getSimilarity(getTFMap(firstNode, query), getTFMap(secondNode, query));
     }
 
-    private Map<Long, Float> getTFMap(long node) throws QueryExecutionException {
+    private Map<Long, Float> getTFMap(long node, String query) throws QueryExecutionException {
         Map<Long, Float> tfMap = tfCache.getIfPresent(node);
         if (tfMap != null) {
             return tfMap;
         }
-        tfMap = createFeatureMap(node);
+        tfMap = createFeatureMap(node, query);
         tfCache.put(node, tfMap);
         return tfMap;
     }
 
-    private Map<Long, Float> createFeatureMap(long firstNode) throws QueryExecutionException {
+    private Map<Long, Float> createFeatureMap(long firstNode, String query) throws QueryExecutionException {
         Map<String, Object> params = new HashMap<>();
         params.put("id", firstNode);
-        Result res = database.execute("MATCH (doc:AnnotatedText)\n"
-                + "WITH count(doc) as documentsCount\n"
-                + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
-                + "WHERE id(input) = {id}\n"
-                + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
-                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount\n"
-                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf", params);
+        Result res = database.execute(DEFAULT_VECTOR_QUERY, params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             long id = (long) next.get("tagId");
             float tf = getFloatValue(next.get("tf"));
-            float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
             result.put(id, tf*idf);
         }
         return result;
     }
 
     public int computeFeatureSimilarityForNodes(List<Long> firstNodeIds) {
+        return computeFeatureSimilarityForNodes(firstNodeIds, DEFAULT_VECTOR_QUERY, Relationships.SIMILARITY_COSINE.name());
+    }
+    
+    public int computeFeatureSimilarityForNodes(List<Long> firstNodeIds, String query, String similarityType) {
         long startTime = System.currentTimeMillis();
         final AtomicInteger countProcessed = new AtomicInteger(0);
         final AtomicInteger countStored = new AtomicInteger(0);
@@ -116,7 +120,7 @@ public class FeatureBasedProcessLogic {
             if (nodeProcessed % 500 == 0) {
                 LOG.warn("Node Processed: " + nodeProcessed + " over " + totalNodeSize);
             }
-            computeFeatureSimilarityForNode(firstNode, countProcessed, countStored);
+            computeFeatureSimilarityForNode(firstNode, query, similarityType, countProcessed, countStored);
         });
         long totalTime = System.currentTimeMillis() - startTime;
         LOG.warn("Total node processed: " + nodeAnalyzed.get() + " over " + totalNodeSize + " in " + totalTime);
@@ -124,7 +128,7 @@ public class FeatureBasedProcessLogic {
         return countProcessed.get();
     }
 
-    private void computeFeatureSimilarityForNode(long firstNodeId, AtomicInteger countProcessed, AtomicInteger countStored) {
+    private void computeFeatureSimilarityForNode(long firstNodeId, String query, String similarityType, AtomicInteger countProcessed, AtomicInteger countStored) {
         FixedSizeOrderedList<SimilarityItem> kNN = new FixedSizeOrderedList<>(KNN_SIZE);
         try (Transaction tx0 = database.beginTx()) {
             ResourceIterator<Node> otherProperties = database.findNodes(Labels.AnnotatedText);
@@ -135,9 +139,9 @@ public class FeatureBasedProcessLogic {
             secondNodeIds.stream()
                     .forEach((secondNode) -> {
                         if (secondNode != firstNodeId) {
-                            float similarity = getFeatureCosine(firstNodeId, secondNode);
+                            float similarity = getFeatureCosine(firstNodeId, secondNode, query);
                             if (similarity > 0) {
-                                kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
+                                kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, similarityType));
                                 countStored.incrementAndGet();
                             }
                             int processed = countProcessed.incrementAndGet();

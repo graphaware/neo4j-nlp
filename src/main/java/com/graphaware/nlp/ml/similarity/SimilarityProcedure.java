@@ -26,7 +26,6 @@ import org.neo4j.helpers.collection.Iterators;
 import org.neo4j.kernel.api.exceptions.ProcedureException;
 import org.neo4j.kernel.api.proc.CallableProcedure;
 import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
 import org.neo4j.kernel.api.proc.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,8 @@ public class SimilarityProcedure extends NLPProcedure {
     private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcedure.class);
 
     private final FeatureBasedProcessLogic featureBusinessLogic;
+    private final static String PARAMETER_NAME_QUERY = "query";
+    private final static String PARAMETER_RELATIONSHIP_TYPE = "relationshipType";
 
     public SimilarityProcedure(FeatureBasedProcessLogic featureBusinessLogic) {
         this.featureBusinessLogic = featureBusinessLogic;
@@ -53,10 +54,34 @@ public class SimilarityProcedure extends NLPProcedure {
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 int processed = 0;
                 List<Long> firstNodeIds = getNodesFromInput(input);
-                processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds);
+                String query = getQuery(input);
+                String relationshipType = getRelationshipType(input);
+                if (query != null && relationshipType != null) {
+                    processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds, query, relationshipType);
+                } else {
+                    processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds);
+                }
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Integer[]{processed}).iterator());
             }
         };
+    }
+
+    private String getQuery(Object[] input) {
+        if (input[0] instanceof Map) {
+            Map<String, Object> inputParams = (Map) input[0];
+            String query = (String) inputParams.get(PARAMETER_NAME_QUERY);
+            return query;
+        }
+        return null;
+    }
+    
+    private String getRelationshipType(Object[] input) {
+        if (input[0] instanceof Map) {
+            Map<String, Object> inputParams = (Map) input[0];
+            String relationshipType = (String) inputParams.get(PARAMETER_RELATIONSHIP_TYPE);
+            return relationshipType;
+        }
+        return null;
     }
 
     protected List<Long> getNodesFromInput(Object[] input) {
