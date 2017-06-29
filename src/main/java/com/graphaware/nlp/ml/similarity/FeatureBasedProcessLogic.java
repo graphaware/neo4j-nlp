@@ -203,7 +203,7 @@ public class FeatureBasedProcessLogic {
                             float similarity = getFeatureCosine(firstNodeId, secondNode, query);
                             if (similarity > 0) {
                                 if (cn5_depth==0)
-                                    kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
+                                    kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, similarityType));
                                 else
                                     kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE_CN5.name()));
                                 countStored.incrementAndGet();
