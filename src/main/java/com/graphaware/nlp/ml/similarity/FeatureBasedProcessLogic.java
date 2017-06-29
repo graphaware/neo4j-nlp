@@ -86,7 +86,7 @@ public class FeatureBasedProcessLogic {
     private Map<Long, Float> createFeatureMap(long firstNode, String query) throws QueryExecutionException {
         Map<String, Object> params = new HashMap<>();
         params.put("id", firstNode);
-        Result res = database.execute(DEFAULT_VECTOR_QUERY, params);
+        Result res = database.execute(query, params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
@@ -122,6 +122,7 @@ public class FeatureBasedProcessLogic {
             }
             computeFeatureSimilarityForNode(firstNode, query, similarityType, countProcessed, countStored);
         });
+        tfCache.invalidateAll();
         long totalTime = System.currentTimeMillis() - startTime;
         LOG.warn("Total node processed: " + nodeAnalyzed.get() + " over " + totalNodeSize + " in " + totalTime);
         LOG.warn("Total relationships computed: " + countProcessed.get() + " stored: " + countStored.get());
