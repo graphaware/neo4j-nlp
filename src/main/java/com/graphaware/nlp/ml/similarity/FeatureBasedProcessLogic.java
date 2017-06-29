@@ -90,7 +90,7 @@ public class FeatureBasedProcessLogic {
             return tfMap;
         }
         if (cn5_depth==0)
-            tfMap = createFeatureMap(node);
+            tfMap = createFeatureMap(node, query);
         else
             tfMap = createFeatureMapWithCN5(node);
         tfCache.put(node, tfMap);
@@ -100,28 +100,15 @@ public class FeatureBasedProcessLogic {
     private Map<Long, Float> createFeatureMap(long firstNode, String query) throws QueryExecutionException {
         Map<String, Object> params = new HashMap<>();
         params.put("id", firstNode);
-        Result res = database.execute("MATCH (doc:AnnotatedText)\n"
-                + "WITH count(doc) as documentsCount\n"
-                + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
-                //+ "WHERE id(input) = {id}\n"
-                + "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\"])\n"
-                + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
-                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
-                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms", params);
+        Result res = database.execute(query, params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             long id = (long) next.get("tagId");
-            int nTerms = (int) next.get("nTerms");
-            //float tf = getFloatValue(next.get("tf"));
-            //float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
-            float tf = getFloatValue(next.get("tf")) / nTerms;
-            float idf = 0;
-            try {
-                idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
-            } catch (Exception e) {
-                LOG.error("createFeatureMap(): wrong idf value, idf = " + next.get("idf"));
-            }
+            float tf = getFloatValue(next.get("tf"));
+            //int nTerms = (int) next.get("nTerms");
+            //float tf = getFloatValue(next.get("tf")) / nTerms; // normalize to document length
+            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
             result.put(id, tf*idf);
         }
         return result;
@@ -148,14 +135,9 @@ public class FeatureBasedProcessLogic {
             long id = (long) next.get("tagId");
             int nTerms = (int) next.get("nTerms");
             //float tf = getFloatValue(next.get("tf"));
-            //float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
             float tf = getFloatValue(next.get("tf")) / nTerms;
-            float idf = 0;
-            try {
-                idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
-            } catch (Exception e) {
-                LOG.error("createFeatureMap(): wrong idf value, idf = " + next.get("idf"));
-            }
+            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+
             //if (!result.containsKey(id))
             //    result.put(id, tf*idf);
 
@@ -216,8 +198,8 @@ public class FeatureBasedProcessLogic {
             });
             secondNodeIds.stream()
                     .forEach((secondNode) -> {
-                        //if (secondNode != firstNodeId) {
-                        if (secondNode>firstNode) { // this way, only one relationship between the same AnnotatedTexts will be stored (in direction: lower_id -> higher_id)
+                        if (secondNode != firstNodeId) {
+                        //if (secondNode > firstNodeId) { // this way, only one relationship between the same AnnotatedTexts will be stored (lower_id -> higher_id)
                             float similarity = getFeatureCosine(firstNodeId, secondNode);
                             if (similarity > 0) {
                                 if (cn5_depth==0)
