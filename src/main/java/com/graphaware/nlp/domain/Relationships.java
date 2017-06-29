@@ -25,6 +25,7 @@ public enum Relationships implements RelationshipType {
     HAS_TAG,
     IS_RELATED_TO,
     SIMILARITY_COSINE,
+    SIMILARITY_COSINE_CN5,
     FIRST_SENTENCE,
     NEXT_SENTENCE,
     HAS_PHRASE,

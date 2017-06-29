@@ -39,6 +39,8 @@ public class SimilarityProcedure extends NLPProcedure {
 
     private final FeatureBasedProcessLogic featureBusinessLogic;
 
+    //private static final Boolean PARAMETER_NAME_ADJ_ADV = "adjectives_adverbs";
+
     public SimilarityProcedure(FeatureBasedProcessLogic featureBusinessLogic) {
         this.featureBusinessLogic = featureBusinessLogic;
     }
@@ -80,4 +82,28 @@ public class SimilarityProcedure extends NLPProcedure {
             throw new RuntimeException("Invalid input parameters " + input[0]);
         }
     }
+
+    public CallableProcedure.BasicProcedure computeAllWithCN5() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "cosine", "compute_with_cn5"))
+                .mode(Mode.WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTInteger).build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                //checkIsMap(input[0]);
+                //Map<String, Object> inputParams = (Map) input[0];
+                //boolean adj_adv = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_ADJ_ADV, false);
+
+                int processed = 0;
+                List<Long> firstNodeIds = getNodesFromInput(input);
+                featureBusinessLogic.useConceptNet5(1);
+                processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds);
+                featureBusinessLogic.useConceptNet5(0); // turn-off ConceptNet5 features in case someone calls again ml.cosine.compute()
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Integer[]{processed}).iterator());
+            }
+        };
+    }
+
+
 }

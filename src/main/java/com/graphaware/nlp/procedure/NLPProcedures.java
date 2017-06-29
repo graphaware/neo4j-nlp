@@ -78,6 +78,7 @@ public class NLPProcedures {
         
         SimilarityProcedure similarityProcedures = new SimilarityProcedure(featureBusinessLogic);
         procedures.register(similarityProcedures.computeAll());
+        procedures.register(similarityProcedures.computeAllWithCN5());
         
         LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
         procedures.register(ldaProcedures.lda());

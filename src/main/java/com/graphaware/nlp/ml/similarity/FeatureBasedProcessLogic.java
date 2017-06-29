@@ -26,6 +26,7 @@ import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
 import com.graphaware.nlp.ml.similarity.CosineSimilarity;
 import com.graphaware.nlp.ml.similarity.Similarity;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,9 @@ public class FeatureBasedProcessLogic {
 
     private static final Logger LOG = LoggerFactory.getLogger(FeatureBasedProcessLogic.class);
 
+    // ConceptNet5 depth to go to
+    private int cn5_depth;
+
     protected final Similarity similarityFunction;
     protected final GraphDatabaseService database;
 
@@ -58,13 +62,21 @@ public class FeatureBasedProcessLogic {
     public FeatureBasedProcessLogic(GraphDatabaseService database) {
         this.similarityFunction = new CosineSimilarity();
         this.database = database;
+        this.cn5_depth = 0;
+    }
+
+    public void useConceptNet5(int depth) {
+      this.cn5_depth = depth;
     }
 
     private final Cache<Long, Map<Long, Float>> tfCache
             = CacheBuilder.newBuilder().maximumSize(10000).expireAfterAccess(30, TimeUnit.MINUTES).build();
 
     public float getFeatureCosine(long firstNode, long secondNode) {
-        return similarityFunction.getSimilarity(getTFMap(firstNode), getTFMap(secondNode));
+        float sim = 0;
+        sim = similarityFunction.getSimilarity(getTFMap(firstNode), getTFMap(secondNode));
+        LOG.debug("Sim (" + firstNode + ", " + secondNode + ") = " + sim);
+        return sim;
     }
 
     private Map<Long, Float> getTFMap(long node) throws QueryExecutionException {
@@ -72,7 +84,10 @@ public class FeatureBasedProcessLogic {
         if (tfMap != null) {
             return tfMap;
         }
-        tfMap = createFeatureMap(node);
+        if (cn5_depth==0)
+            tfMap = createFeatureMap(node);
+        else
+            tfMap = createFeatureMapWithCN5(node);
         tfCache.put(node, tfMap);
         return tfMap;
     }
@@ -83,17 +98,74 @@ public class FeatureBasedProcessLogic {
         Result res = database.execute("MATCH (doc:AnnotatedText)\n"
                 + "WITH count(doc) as documentsCount\n"
                 + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
-                + "WHERE id(input) = {id}\n"
+                //+ "WHERE id(input) = {id}\n"
+                + "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\"])\n"
                 + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
-                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount\n"
-                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf", params);
+                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
+                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms", params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             long id = (long) next.get("tagId");
-            float tf = getFloatValue(next.get("tf"));
-            float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            int nTerms = (int) next.get("nTerms");
+            //float tf = getFloatValue(next.get("tf"));
+            //float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float tf = getFloatValue(next.get("tf")) / nTerms;
+            float idf = 0;
+            try {
+                idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            } catch (Exception e) {
+                LOG.error("createFeatureMap(): wrong idf value, idf = " + next.get("idf"));
+            }
             result.put(id, tf*idf);
+        }
+        return result;
+    }
+
+    private Map<Long, Float> createFeatureMapWithCN5(long firstNode) throws QueryExecutionException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", firstNode);
+        Result res = database.execute("MATCH (doc:AnnotatedText)\n"
+                + "WITH count(doc) as documentsCount\n"
+                + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
+                //+ "WHERE id(input) = {id}\n"
+                + "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\"])\n"
+                //+ "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"JJ\", \"JJR\", \"JJS\", \"RB\", \"RBR\", \"RBS\"])\n"
+                + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
+                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
+                + "OPTIONAL MATCH (tag)-[rt:IS_RELATED_TO]->(t2_l1:Tag)\n"
+                + "WITH tag, tf, documentsCountForTag, documentsCount, nTerms, collect(id(t2_l1) + \"_\" + rt.weight) as cn5_l1_tags, sum(rt.weight) as cn5_l1_sum_w, max(rt.weight) as cn5_l1_max_w\n"
+                + "UNWIND cn5_l1_tags as cn5_l1_tag\n"
+                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms, cn5_l1_tag, cn5_l1_sum_w, cn5_l1_max_w", params);
+        Map<Long, Float> result = new HashMap<>();
+        while (res != null && res.hasNext()) {
+            Map<String, Object> next = res.next();
+            long id = (long) next.get("tagId");
+            int nTerms = (int) next.get("nTerms");
+            //float tf = getFloatValue(next.get("tf"));
+            //float idf = Double.valueOf(Math.log(1f + Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float tf = getFloatValue(next.get("tf")) / nTerms;
+            float idf = 0;
+            try {
+                idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            } catch (Exception e) {
+                LOG.error("createFeatureMap(): wrong idf value, idf = " + next.get("idf"));
+            }
+            //if (!result.containsKey(id))
+            //    result.put(id, tf*idf);
+
+            // add ConceptNet5 Level_1 tags
+            float sumW = getFloatValue(next.get("cn5_l1_sum_w"));
+            float maxW = getFloatValue(next.get("cn5_l1_max_w"));
+            String cn5_tag = (String) next.get("cn5_l1_tag");
+            String[] temp = cn5_tag.trim().split("_");
+            long id2 = Long.valueOf(temp[0]);
+            float w = getFloatValue(temp[1]);
+            if (!result.containsKey(id2))
+                result.put(id2, tf*idf * w/sumW);
+            else
+                //result.put(id2, result.get(id2) + tf*idf * w/sumW); // if this CN5 tag exists, update it's value
+                result.put(id2, result.get(id2) + tf*idf * w/maxW); // if this CN5 tag exists, update it's value
         }
         return result;
     }
@@ -118,6 +190,7 @@ public class FeatureBasedProcessLogic {
             }
             computeFeatureSimilarityForNode(firstNode, countProcessed, countStored);
         });
+        tfCache.invalidateAll();
         long totalTime = System.currentTimeMillis() - startTime;
         LOG.warn("Total node processed: " + nodeAnalyzed.get() + " over " + totalNodeSize + " in " + totalTime);
         LOG.warn("Total relationships computed: " + countProcessed.get() + " stored: " + countStored.get());
@@ -134,10 +207,14 @@ public class FeatureBasedProcessLogic {
             });
             secondNodeIds.stream()
                     .forEach((secondNode) -> {
-                        if (secondNode != firstNodeId) {
+                        //if (secondNode != firstNodeId) {
+                        if (secondNode>firstNode) { // this way, only one relationship between the same AnnotatedTexts will be stored (in direction: lower_id -> higher_id)
                             float similarity = getFeatureCosine(firstNodeId, secondNode);
                             if (similarity > 0) {
-                                kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
+                                if (cn5_depth==0)
+                                    kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
+                                else
+                                    kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE_CN5.name()));
                                 countStored.incrementAndGet();
                             }
                             int processed = countProcessed.incrementAndGet();

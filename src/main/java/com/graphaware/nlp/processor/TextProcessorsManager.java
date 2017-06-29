@@ -106,8 +106,10 @@ public class TextProcessorsManager {
           return null;
         if (textProcessors.containsKey(defaultTextProcessor))
           return defaultTextProcessor; // return the default text processor if it's available
-        else
+        if (textProcessors.keySet().size()>0)
           return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
+        else
+          return null;
     }
 
     public TextProcessor getDefaultProcessor() {
