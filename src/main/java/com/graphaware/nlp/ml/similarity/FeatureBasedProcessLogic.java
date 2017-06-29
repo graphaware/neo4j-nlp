@@ -200,7 +200,7 @@ public class FeatureBasedProcessLogic {
                     .forEach((secondNode) -> {
                         if (secondNode != firstNodeId) {
                         //if (secondNode > firstNodeId) { // this way, only one relationship between the same AnnotatedTexts will be stored (lower_id -> higher_id)
-                            float similarity = getFeatureCosine(firstNodeId, secondNode);
+                            float similarity = getFeatureCosine(firstNodeId, secondNode, query);
                             if (similarity > 0) {
                                 if (cn5_depth==0)
                                     kNN.add(new SimilarityItem(firstNodeId, secondNode, similarity, Relationships.SIMILARITY_COSINE.name()));
