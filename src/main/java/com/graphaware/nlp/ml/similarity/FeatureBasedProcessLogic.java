@@ -127,7 +127,7 @@ public class FeatureBasedProcessLogic {
                 + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
                 + "OPTIONAL MATCH (tag)-[rt:IS_RELATED_TO]->(t2_l1:Tag)\n"
                 + "WITH tag, tf, documentsCountForTag, documentsCount, nTerms, collect(id(t2_l1) + \"_\" + rt.weight) as cn5_l1_tags, sum(rt.weight) as cn5_l1_sum_w, max(rt.weight) as cn5_l1_max_w\n"
-                + "UNWIND cn5_l1_tags as cn5_l1_tag\n"
+                + "UNWIND (CASE cn5_l1_tags WHEN [] THEN [null] ELSE cn5_l1_tags END) as cn5_l1_tag\n"
                 + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms, cn5_l1_tag, cn5_l1_sum_w, cn5_l1_max_w", params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
@@ -138,21 +138,23 @@ public class FeatureBasedProcessLogic {
             float tf = getFloatValue(next.get("tf")) / nTerms;
             float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
 
-            //if (!result.containsKey(id))
-            //    result.put(id, tf*idf);
-
-            // add ConceptNet5 Level_1 tags
+            // ConceptNet5 Level_1 tags
             float sumW = getFloatValue(next.get("cn5_l1_sum_w"));
             float maxW = getFloatValue(next.get("cn5_l1_max_w"));
             String cn5_tag = (String) next.get("cn5_l1_tag");
-            String[] temp = cn5_tag.trim().split("_");
-            long id2 = Long.valueOf(temp[0]);
-            float w = getFloatValue(temp[1]);
-            if (!result.containsKey(id2))
-                result.put(id2, tf*idf * w/sumW);
-            else
-                //result.put(id2, result.get(id2) + tf*idf * w/sumW); // if this CN5 tag exists, update it's value
-                result.put(id2, result.get(id2) + tf*idf * w/maxW); // if this CN5 tag exists, update it's value
+
+            if (cn5_tag.equals("null")) // save direct tags only when there are no concepts from CN5
+                result.put(id, tf*idf);
+            else {
+                String[] temp = cn5_tag.trim().split("_");
+                long id2 = Long.valueOf(temp[0]);
+                float w = getFloatValue(temp[1]);
+                if (!result.containsKey(id2))
+                    result.put(id2, tf*idf * w/sumW);
+                else
+                    //result.put(id2, result.get(id2) + tf*idf * w/sumW); // if this CN5 tag exists, update it's value
+                    result.put(id2, result.get(id2) + tf*idf * w/maxW); // if this CN5 tag exists, update it's value
+            }
         }
         return result;
     }
