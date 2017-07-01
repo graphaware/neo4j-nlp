@@ -24,10 +24,8 @@ public class CosineFunctions {
     public double cosine(
             @Name("vector1") List<Double> vector1,
             @Name("vector2") List<Double> vector2) {
-        Map<Long, Float> vector1Map = getVectorMap(vector1);
-        Map<Long, Float> vector2Map = getVectorMap(vector2);
-        float similarity = new CosineSimilarity().getSimilarity(vector1Map, vector2Map);
-        return Float.valueOf(similarity).doubleValue();
+        double similarity = new CosineSimilarity().getSimilarity(vector1, vector2);
+        return similarity;
     }
 
     protected Map<Long, Float> getVectorMap(List<Double> vector1) {

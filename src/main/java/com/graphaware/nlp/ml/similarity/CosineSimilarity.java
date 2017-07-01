@@ -15,9 +15,11 @@
  */
 package com.graphaware.nlp.ml.similarity;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 public class CosineSimilarity implements Similarity {
 
@@ -25,6 +27,17 @@ public class CosineSimilarity implements Similarity {
     public float getSimilarity(Map<Long, Float> xVector, Map<Long, Float> yVector) {
         float a = getDotProduct(xVector, yVector);
         float b = getNorm(xVector) * getNorm(yVector);
+
+        if (b > 0) {
+            return a / b;
+        } else {
+            return 0;
+        }
+    }
+    //improved version for user functions
+    public double getSimilarity(List<Double> xVector, List<Double> yVector) {
+        double a = getDotProduct(xVector, yVector);
+        double b = getNorm(xVector) * getNorm(yVector);
 
         if (b > 0) {
             return a / b;
@@ -48,6 +61,18 @@ public class CosineSimilarity implements Similarity {
         return sum.get();
     }
 
+    private double getDotProduct(final List<Double> xVector, final List<Double> yVector) {
+
+        final AtomicReference<Float> sum = new AtomicReference<>(0f);
+        IntStream.range(0, xVector.size())
+                .boxed().forEach((key) -> {
+                    float curValue = sum.get();
+                    curValue += xVector.get(key) * yVector.get(key);
+                    sum.set(curValue);
+                });
+        return sum.get();
+    }
+
     private float getNorm(Map<Long, Float> xVector) {
         final AtomicReference<Float> sum = new AtomicReference<>(0f);
         xVector.values().stream().forEach((value) -> {
@@ -56,6 +81,16 @@ public class CosineSimilarity implements Similarity {
             sum.set(curValue);
         });
         return Double.valueOf(Math.sqrt(sum.get().doubleValue())).floatValue();
+    }
+    
+    private double getNorm(List<Double> xVector) {
+        final AtomicReference<Float> sum = new AtomicReference<>(0f);
+        xVector.stream().forEach((value) -> {
+            float curValue = sum.get();
+            curValue += value * value;
+            sum.set(curValue);
+        });
+        return Math.sqrt(sum.get().doubleValue());
     }
 
 }
