@@ -127,7 +127,7 @@ public class FeatureBasedProcessLogic {
                 + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
                 + "OPTIONAL MATCH (tag)-[rt:IS_RELATED_TO]->(t2_l1:Tag)\n"
                 + "WITH tag, tf, documentsCountForTag, documentsCount, nTerms, collect(id(t2_l1) + \"_\" + rt.weight) as cn5_l1_tags, sum(rt.weight) as cn5_l1_sum_w, max(rt.weight) as cn5_l1_max_w\n"
-                + "UNWIND (CASE cn5_l1_tags WHEN [] THEN [null] ELSE cn5_l1_tags END) as cn5_l1_tag\n"
+                + "UNWIND (CASE cn5_l1_tags WHEN [] THEN [\"-\"] ELSE cn5_l1_tags END) as cn5_l1_tag\n"
                 + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms, cn5_l1_tag, cn5_l1_sum_w, cn5_l1_max_w", params);
         Map<Long, Float> result = new HashMap<>();
         while (res != null && res.hasNext()) {
@@ -143,7 +143,7 @@ public class FeatureBasedProcessLogic {
             float maxW = getFloatValue(next.get("cn5_l1_max_w"));
             String cn5_tag = (String) next.get("cn5_l1_tag");
 
-            if (cn5_tag.equals("null")) // save direct tags only when there are no concepts from CN5
+            if (cn5_tag.equals("-")) // save direct tags only when there are no concepts from CN5
                 result.put(id, tf*idf);
             else {
                 String[] temp = cn5_tag.trim().split("_");
