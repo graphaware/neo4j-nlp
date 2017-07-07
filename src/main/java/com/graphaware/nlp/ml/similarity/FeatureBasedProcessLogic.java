@@ -108,7 +108,7 @@ public class FeatureBasedProcessLogic {
             float tf = getFloatValue(next.get("tf"));
             //int nTerms = (int) next.get("nTerms");
             //float tf = getFloatValue(next.get("tf")) / nTerms; // normalize to document length
-            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float idf = Double.valueOf(Math.log10(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
             result.put(id, tf*idf);
         }
         return result;
@@ -119,42 +119,53 @@ public class FeatureBasedProcessLogic {
         params.put("id", firstNode);
         Result res = database.execute("MATCH (doc:AnnotatedText)\n"
                 + "WITH count(doc) as documentsCount\n"
-                + "MATCH (input:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
-                //+ "WHERE id(input) = {id}\n"
-                + "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\"])\n"
-                //+ "WHERE id(input) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"JJ\", \"JJR\", \"JJS\", \"RB\", \"RBR\", \"RBS\"])\n"
-                + "MATCH (tag)<-[:HAS_TAG]-(:Sentence)<-[:CONTAINS_SENTENCE]-(document:AnnotatedText)\n"
-                + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount, input.numTerms as nTerms\n"
+                + "MATCH (document:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
+                //+ "WHERE id(document) = {id}\n"
+                + "WHERE id(document) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"WP$\"])\n"
+                //+ "WHERE id(document) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"JJ\", \"JJR\", \"JJS\", \"RB\", \"RBR\", \"RBS\", \"WP$\"])\n"
+                + "WITH tag, sum(ht.tf) as tf, count(distinct document) as documentsCountForTag, documentsCount, document.numTerms as nTerms\n"
                 + "OPTIONAL MATCH (tag)-[rt:IS_RELATED_TO]->(t2_l1:Tag)\n"
+                + "WHERE NOT (t2_l1 IN [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"WP$\"]) AND (case tag.word2vec when null then false else (case t2_l1.word2vec when null then false else com.graphaware.nlp.ml.similarity.cosine(tag.word2vec, t2_l1.word2vec) > 0.1 end) end)\n"
                 + "WITH tag, tf, documentsCountForTag, documentsCount, nTerms, collect(id(t2_l1) + \"_\" + rt.weight) as cn5_l1_tags, sum(rt.weight) as cn5_l1_sum_w, max(rt.weight) as cn5_l1_max_w\n"
-                + "UNWIND (CASE cn5_l1_tags WHEN [] THEN [null] ELSE cn5_l1_tags END) as cn5_l1_tag\n"
-                + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms, cn5_l1_tag, cn5_l1_sum_w, cn5_l1_max_w", params);
+                + "UNWIND (CASE cn5_l1_tags WHEN [] THEN [\"-1\"] ELSE cn5_l1_tags END) as cn5_l1_tagStr\n"
+                + "RETURN distinct id(tag) as tagId, tf, (1.0f*documentsCount)/documentsCountForTag as idf, nTerms, split(cn5_l1_tagStr, \"_\")[0] as cn5_l1_tag, split(cn5_l1_tagStr, \"_\")[1] as cn5_l1_tag_w, cn5_l1_sum_w, cn5_l1_max_w\n"
+                + "ORDER BY tagId, cn5_l1_tag", params);
         Map<Long, Float> result = new HashMap<>();
+        Map<Long, Float> result_idf = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             long id = (long) next.get("tagId");
             int nTerms = (int) next.get("nTerms");
             //float tf = getFloatValue(next.get("tf"));
             float tf = getFloatValue(next.get("tf")) / nTerms;
-            float idf = Double.valueOf(Math.log(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
+            float idf = Double.valueOf(Math.log10(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
 
             // ConceptNet5 Level_1 tags
             float sumW = getFloatValue(next.get("cn5_l1_sum_w"));
             float maxW = getFloatValue(next.get("cn5_l1_max_w"));
-            String cn5_tag = (String) next.get("cn5_l1_tag");
+            long cn5_tag = Long.valueOf((String) next.get("cn5_l1_tag"));
+            float cn5_tag_w = getFloatValue(next.get("cn5_l1_tag_w"));
 
-            if (cn5_tag.equals("null")) // save direct tags only when there are no concepts from CN5
-                result.put(id, tf*idf);
-            else {
-                String[] temp = cn5_tag.trim().split("_");
-                long id2 = Long.valueOf(temp[0]);
-                float w = getFloatValue(temp[1]);
-                if (!result.containsKey(id2))
-                    result.put(id2, tf*idf * w/sumW);
-                else
-                    //result.put(id2, result.get(id2) + tf*idf * w/sumW); // if this CN5 tag exists, update it's value
-                    result.put(id2, result.get(id2) + tf*idf * w/maxW); // if this CN5 tag exists, update it's value
+            //result.put(id, tf);
+            //result_idf.put(id, idf);
+
+            if (cn5_tag!=-1) {
+              if (!result.containsKey(cn5_tag)) {
+                  result.put(cn5_tag, tf * cn5_tag_w/maxW);   
+                  result_idf.put(cn5_tag, idf);
+              } else {
+                  result.put(cn5_tag, result.get(cn5_tag) + tf * cn5_tag_w/maxW);
+                  if (result_idf.get(cn5_tag) < idf) // we want to use the highest idf
+                      result_idf.put(cn5_tag, idf);
+              }
+            } else {
+                result.put(id, tf);
+                result_idf.put(id, idf);
             }
+        }
+        
+        for (Long key: result.keySet()) {
+            result.put(key, result.get(key) * result_idf.get(key));
         }
         return result;
     }
