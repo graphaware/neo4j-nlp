@@ -120,9 +120,7 @@ public class FeatureBasedProcessLogic {
         Result res = database.execute("MATCH (doc:AnnotatedText)\n"
                 + "WITH count(doc) as documentsCount\n"
                 + "MATCH (document:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[ht:HAS_TAG]->(tag:Tag)\n"
-                //+ "WHERE id(document) = {id}\n"
-                + "WHERE id(document) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"WP$\"])\n"
-                //+ "WHERE id(document) = {id} and not (tag.pos in [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"JJ\", \"JJR\", \"JJS\", \"RB\", \"RBR\", \"RBS\", \"WP$\"])\n"
+                + "WHERE id(document) = {id} and not (tag.pos in [\"CC\", \"CD\", \"DT\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"WP$\"])\n" // JJR, JJS ?
                 + "WITH tag, sum(ht.tf) as tf, count(distinct document) as documentsCountForTag, documentsCount, document.numTerms as nTerms\n"
                 + "OPTIONAL MATCH (tag)-[rt:IS_RELATED_TO]->(t2_l1:Tag)\n"
                 + "WHERE NOT (t2_l1 IN [\"CC\", \"CD\", \"IN\", \"MD\", \"PRP\", \"PRP$\", \"UH\", \"WDT\", \"WP\", \"WRB\", \"TO\", \"PDT\", \"RP\", \"WP$\"]) AND (case tag.word2vec when null then false else (case t2_l1.word2vec when null then false else com.graphaware.nlp.ml.similarity.cosine(tag.word2vec, t2_l1.word2vec) > 0.1 end) end)\n"
