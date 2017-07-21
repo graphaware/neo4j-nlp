@@ -142,6 +142,6 @@ During this process, each annotated text is described using the TF-IDF encoding 
 Text documents can be TF-IDF encoded as vectors in a multidimensional Euclidean space. The space dimensions correspond to the tags, previously extracted from the documents. The coordinates of a given document in each dimension (i.e., for each tag) are calculated as a product of two sub-measures: term frequency and inverse document frequency.
 
 ```
-CALL ga.nlp.cosine.compute({}) YIELD result
+CALL ga.nlp.ml.cosine.compute({}) YIELD result
 ```
 

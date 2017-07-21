@@ -39,7 +39,7 @@ public interface TextProcessor {
     
     public List<Tag> annotateTags(String text, String lang);
 
-    public boolean checkPuntuation(String value);
+    public boolean checkPunctuation(String value);
 
     public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams);
 
