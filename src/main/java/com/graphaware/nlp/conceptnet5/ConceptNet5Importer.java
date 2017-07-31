@@ -78,6 +78,7 @@ public class ConceptNet5Importer {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         word = removeParenthesis(word);
+        word = removeApices(word);
         try {
             ConceptNet5EdgeResult values;
             if (admittedRelations.size() > 1) {
@@ -91,8 +92,12 @@ public class ConceptNet5Importer {
                 if (checkAdmittedRelations(concept, admittedRelations)
                         && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
                         && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
+                    
                     if (concept.getStart().equalsIgnoreCase(source.getLemma())) {
-                        Tag annotateTag = tryToAnnotate(concept.getEnd(), concept.getEndLanguage(), nlpProcessor);
+                        String value = concept.getEnd();
+                        value = removeApices(value);
+                        value = removeParenthesis(value);
+                        Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor);
                         List<String> posList = annotateTag.getPosAsList();
                         if (admittedPOS == null
                                 || admittedPOS.isEmpty()
@@ -106,15 +111,15 @@ public class ConceptNet5Importer {
                             res.add(annotateTag);
                         }
                     } else {
-                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
-                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
-                        res.add(annotateTag);
+//                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
+//                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
+//                        res.add(annotateTag);
                     }
                 }
             });
 
         } catch (Exception ex) {
-            LOG.error("Error while improting hierarchy for " + word + "(" + lang + "). Ignored!", ex);
+            LOG.error("Error while improting hierarchy for " + word + " (" + lang + "). Ignored!", ex);
         }
         return res;
     }
@@ -162,6 +167,12 @@ public class ConceptNet5Importer {
         }
         m.appendTail(sb);
         return sb.toString();
+    }
+    protected String removeApices(String concept) {
+        if (concept != null) {
+            return concept.replace("\"", "");
+        }
+        return null;
     }
 
     public static class Builder {

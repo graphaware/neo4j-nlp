@@ -125,7 +125,9 @@ public class Tag implements Persistable, Serializable {
                 params.put("destId", parentTagNode.getId());
                 database.execute("MATCH (source:Tag), (destination:Tag)\n"
                         + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
-                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}, weight: {weight}}]->(destination)", params);
+                        + "MERGE (source)-[r:IS_RELATED_TO {type: {type}}]->(destination)\n"
+                        + "ON CREATE SET r.weight = {weight}", params);
+                
             });
         }
         return tagNode;
