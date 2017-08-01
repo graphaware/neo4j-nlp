@@ -41,6 +41,8 @@ public class Tag implements Persistable, Serializable {
     private List<String> neL;
     private final Collection<TagParentRelation> parents;
     private String language;
+    
+    private Map<String, Object> properties;
 
     public Tag(String lemma, String language) {
         this.lemma = lemma;
@@ -102,6 +104,13 @@ public class Tag implements Persistable, Serializable {
         parents.add(parentRelationship);
     }
 
+    public void addProperties(String key, Object value) {
+        if (properties == null) {
+            this.properties = new HashMap<>();
+        }
+        properties.put(key, value);
+    }
+
     @Override
     public Node storeOnGraph(GraphDatabaseService database, boolean force) {
         Node tagNode = getOrCreate(database, force);
@@ -116,7 +125,9 @@ public class Tag implements Persistable, Serializable {
                 params.put("destId", parentTagNode.getId());
                 database.execute("MATCH (source:Tag), (destination:Tag)\n"
                         + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
-                        + "MERGE (source)-[:IS_RELATED_TO {type: {type}, weight: {weight}}]->(destination)", params);
+                        + "MERGE (source)-[r:IS_RELATED_TO {type: {type}}]->(destination)\n"
+                        + "ON CREATE SET r.weight = {weight}", params);
+                
             });
         }
         return tagNode;
@@ -139,6 +150,12 @@ public class Tag implements Persistable, Serializable {
         }
         if (posL != null) {
             tagNode.setProperty("pos", posL.toArray(new String[posL.size()]));
+        }
+        
+        if (properties != null) {
+            for (Map.Entry<String, Object> property : properties.entrySet()) {
+                tagNode.setProperty(property.getKey(), property.getValue());
+            }
         }
 
         return tagNode;

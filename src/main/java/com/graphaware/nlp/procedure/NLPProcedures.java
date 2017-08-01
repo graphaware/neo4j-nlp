@@ -24,6 +24,8 @@ import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.nlp.ml.similarity.SimilarityProcedure;
 import com.graphaware.nlp.ml.textrank.TextRankProcedure;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
+import com.graphaware.nlp.ml.word2vec.Word2VecModel;
+import com.graphaware.nlp.ml.word2vec.Word2VecProcedure;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.concurrent.Executors;
@@ -50,6 +52,9 @@ public class NLPProcedures {
     
     @Autowired
     private TextProcessorsManager processorsManager;
+    
+    @Autowired
+    private Word2VecModel word2VecModel;
     
     private NLPConfiguration nlpConfiguration;
 
@@ -91,6 +96,9 @@ public class NLPProcedures {
         
         SearchProcedure searchProcedures = new SearchProcedure(database, processorsManager);
         procedures.register(searchProcedures.search());
+        
+        Word2VecProcedure word2vecProcedures = new Word2VecProcedure(database, word2VecModel, processorsManager);
+        procedures.register(word2vecProcedures.attachAll());
         
         Executors.newSingleThreadExecutor().execute(queueProcessor);
     }

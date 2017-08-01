@@ -48,7 +48,7 @@ public class ConceptNet5Client {
     }
 
     public ConceptNet5EdgeResult getValues(String concept, String lang) {
-        String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept;
+        String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept + "&limit=100";
         ConceptNet5EdgeResult value;
         try {
             value = cache.get(url, () -> cachedUrl(url));
@@ -70,7 +70,7 @@ public class ConceptNet5Client {
     }
 
     public ConceptNet5EdgeResult queryByStart(String concept, String rel, String lang) {
-        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&start=/c/" + lang + "/" + concept + "&limit=10";
+        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&start=/c/" + lang + "/" + concept + "&limit=100";
         ConceptNet5EdgeResult value;
         try {
             value = cache.get(url, () -> cachedUrl(url));

@@ -16,7 +16,6 @@
 package com.graphaware.nlp.conceptnet5;
 
 import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
-import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_LANGUAGE;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.procedure.NLPProcedure;
@@ -28,11 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;

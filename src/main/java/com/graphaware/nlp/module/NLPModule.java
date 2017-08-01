@@ -15,11 +15,10 @@
  */
 package com.graphaware.nlp.module;
 
-import com.graphaware.runtime.manager.TxDrivenModuleManager;
-import com.graphaware.runtime.module.BaseRuntimeModule;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
+import java.io.File;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     private static final Logger LOG = LoggerFactory.getLogger(NLPModule.class);
 
     public static final String DEFAULT_MODULE_ID = "NLP";
-
+    
     private final NLPConfiguration nlpMLConfiguration;
 
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
