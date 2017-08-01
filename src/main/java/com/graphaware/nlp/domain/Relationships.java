@@ -33,5 +33,6 @@ public enum Relationships implements RelationshipType {
     TAG_OCCURRENCE_TAG,
     SENTENCE_PHRASE_OCCURRENCE,
     PHRASE_OCCURRENCE_PHRASE,
-    REFER_TO
+    REFER_TO,
+    DESCRIBES
 }

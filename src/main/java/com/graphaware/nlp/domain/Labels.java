@@ -27,5 +27,6 @@ public enum Labels implements Label {
     Phrase,
     PhraseOccurrence,
     TagOccurrence,
-    Pipeline
+    Pipeline,
+    Keyword
 }

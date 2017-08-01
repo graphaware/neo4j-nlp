@@ -153,7 +153,7 @@ public class FeatureBasedProcessLogic {
                   result_idf.put(cn5_tag, idf);
               } else {
                   result.put(cn5_tag, result.get(cn5_tag) + tf * cn5_tag_w/maxW);
-                  if (result_idf.get(cn5_tag) < idf) // we want to use the highest idf
+                  if (result_idf.get(cn5_tag) < idf) // use the highest idf
                       result_idf.put(cn5_tag, idf);
               }
             } else {

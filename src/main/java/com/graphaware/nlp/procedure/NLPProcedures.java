@@ -22,6 +22,7 @@ import com.graphaware.nlp.ml.lda.LDAProcedure;
 import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
 import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.nlp.ml.similarity.SimilarityProcedure;
+import com.graphaware.nlp.ml.textrank.TextRankProcedure;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.processor.TextProcessorsManager;
@@ -79,6 +80,10 @@ public class NLPProcedures {
         SimilarityProcedure similarityProcedures = new SimilarityProcedure(featureBusinessLogic);
         procedures.register(similarityProcedures.computeAll());
         procedures.register(similarityProcedures.computeAllWithCN5());
+
+        TextRankProcedure textrankProcedures = new TextRankProcedure(database);
+        procedures.register(textrankProcedures.computePageRank());
+        procedures.register(textrankProcedures.compute());
         
         LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
         procedures.register(ldaProcedures.lda());
