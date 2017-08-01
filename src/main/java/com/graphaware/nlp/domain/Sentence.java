@@ -42,11 +42,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Map;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.graphdb.Transaction;
+
+import org.apache.commons.lang.StringUtils;
+import org.neo4j.graphdb.*;
 
 public class Sentence implements Persistable, Serializable, Comparable<Sentence> {
     
@@ -57,6 +55,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
     private Map<String, Tag> tags;
     private Map<Integer, List<PartOfTextOccurrence<Tag>>> tagOccurrences = new HashMap<>();
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
+    private List<TypedDependency> typedDependencies = new ArrayList<>();
 
     private final String sentence;
     private int sentiment = NO_SENTIMENT;
@@ -113,6 +112,24 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
           tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end));
         else
           tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end))));
+    }
+
+    public void addTagOccurrence(int begin, int end, Tag tag, List<String> tokenIds) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
+        }
+        if (tagOccurrences.containsKey(begin))
+            tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end, tokenIds));
+        else
+            tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end, tokenIds))));
+    }
+
+    public void addTypedDependency(TypedDependency typedDependency) {
+        this.typedDependencies.add(typedDependency);
+    }
+
+    public List<TypedDependency> getTypedDependencies() {
+        return typedDependencies;
     }
 
     //Currently used only for testing purpose
@@ -218,15 +235,50 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
             Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
             hasTagRel.setProperty("tf", tag.getMultiplicity());
         });
+
+        Map<String, Long> tokenIdToTagOccurenceNodeIdMap = new HashMap<>();
+
         tagOccurrences.values().stream().forEach((tagOccurrences) -> {
             for (PartOfTextOccurrence<Tag> tagOccurrenceAtPosition: tagOccurrences) {
-              Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
-              Node tagOccurrenceNode = database.createNode(TagOccurrence);
-              tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
-              tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
-              newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
-              tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
+                Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
+                Node tagOccurrenceNode = database.createNode(TagOccurrence);
+                for (String tokenId : tagOccurrenceAtPosition.getPartIds()) {
+                    tokenIdToTagOccurenceNodeIdMap.put(tokenId, tagOccurrenceNode.getId());
+                }
+                tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
+                tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
+                newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
+                tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
             }
+        });
+
+        typedDependencies.forEach(typedDependency -> {
+            if (!tokenIdToTagOccurenceNodeIdMap.containsKey(typedDependency.getSource())) {
+                System.out.println(String.format("could not find reference in map for %s", typedDependency.getSource()));
+                return;
+            }
+
+            if (!tokenIdToTagOccurenceNodeIdMap.containsKey(typedDependency.getTarget())) {
+                System.out.println(String.format("could not find reference in map for %s", typedDependency.getTarget()));
+                return;
+            }
+
+            Node source = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getSource()));
+            Node target = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getTarget()));
+            if (source.getId() == target.getId()) {
+                return;
+            }
+            String relType = typedDependency.getName().toUpperCase();
+            Relationship dependencyRelationship = source.createRelationshipTo(target, RelationshipType.withName(relType));
+            if (null != typedDependency.getSpecific()) {
+                dependencyRelationship.setProperty("specifc", typedDependency.getSpecific());
+            }
+
+            System.out.println(String.format("Created relationship from %s to %s with type %s",
+                    typedDependency.getSource(),
+                    typedDependency.getTarget(),
+                    relType));
+
         });
     }
 

@@ -17,14 +17,24 @@ package com.graphaware.nlp.domain;
 
 import com.graphaware.common.util.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class PartOfTextOccurrence<T> {
 
     private final T element;
     private final Pair<Integer, Integer> span;
+    private final List<String> partIds = new ArrayList<>();
 
     public PartOfTextOccurrence(T element, int begin, int end) {
         this.element = element;
         this.span = new Pair<>(begin, end);
+    }
+
+    public PartOfTextOccurrence(T element, int begin, int end, List<String> partIds) {
+        this.element = element;
+        this.span = new Pair<>(begin, end);
+        this.partIds.addAll(partIds);
     }
 
     public T getElement() {
@@ -33,5 +43,9 @@ class PartOfTextOccurrence<T> {
 
     public Pair<Integer, Integer> getSpan() {
         return span;
+    }
+
+    public List<String> getPartIds() {
+        return partIds;
     }
 }
