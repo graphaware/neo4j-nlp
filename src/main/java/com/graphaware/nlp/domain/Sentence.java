@@ -271,7 +271,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
             String relType = typedDependency.getName().toUpperCase();
             Relationship dependencyRelationship = source.createRelationshipTo(target, RelationshipType.withName(relType));
             if (null != typedDependency.getSpecific()) {
-                dependencyRelationship.setProperty("specifc", typedDependency.getSpecific());
+                dependencyRelationship.setProperty("specific", typedDependency.getSpecific());
             }
 
             System.out.println(String.format("Created relationship from %s to %s with type %s",
