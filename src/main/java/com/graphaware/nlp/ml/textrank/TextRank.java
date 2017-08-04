@@ -41,6 +41,7 @@ public class TextRank {
     private final GraphDatabaseService database;
     private boolean removeStopWords;
     private List<String> stopWords;
+    private Map<Long, String> idToValue = new HashMap<>();
 
     public TextRank(GraphDatabaseService database) {
         this.database = database;
@@ -57,6 +58,7 @@ public class TextRank {
         this.removeStopWords = val;
     }
 
+    @Deprecated
     public boolean createCooccurrencesOld(Node annotatedText, String relType, String relWeight) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
@@ -95,7 +97,7 @@ public class TextRank {
                 + "WHERE size(t.value) > 2 AND ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS'] )\n" // only nouns and adjectives
                 + "WITH s, collect(t) as tags\n"
                 + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2\n",
+                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val\n",
                 params);
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
         while (res != null && res.hasNext()) {
@@ -103,6 +105,9 @@ public class TextRank {
             Long tag1 = (Long) next.get("tag1");
             Long tag2 = (Long) next.get("tag2");
             addTagToCoOccurrence(results, tag1, tag2);
+            idToValue.put(tag1, (String) next.get("tag1_val"));
+            idToValue.put(tag2, (String) next.get("tag2_val"));
+            LOG.debug("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
         }
         return results;
     }
@@ -122,6 +127,7 @@ public class TextRank {
         }
     }
 
+    @Deprecated
     public boolean deleteCooccurrences(Long annotatedID, String relType) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedID);
@@ -142,14 +148,17 @@ public class TextRank {
     public boolean evaluate(Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence, int iter, double damp, double threshold) {
         PageRank pageRank = new PageRank(database);
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
+        pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+            .forEach(en -> LOG.debug(idToValue.get(en.getKey()) + ": " + en.getValue()));
         List<Long> top10 = getTop10(pageRanks);
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         params.put("nodeList", top10);
         Result res = database.execute(
-                "MATCH (node)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
+                "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
                 + "WHERE id(a) = {id} and id(node) in {nodeList}\n"
-                + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId",
+                + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId\n"
+                + "ORDER BY sP asc",
                 params);
         // First: merge neighboring words into phrases
         long prev_eP = -1000;
