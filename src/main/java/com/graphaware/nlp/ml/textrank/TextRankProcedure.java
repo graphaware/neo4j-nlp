@@ -47,11 +47,13 @@ public class TextRankProcedure extends NLPProcedure {
     private final static String PARAMETER_RELATIONSHIP_WEIGHT = "relationshipWeight";
     private final static String PARAMETER_ITERATIONS = "iter";
     private final static String PARAMETER_DAMPING_FACTOR = "damp";
+    private final static String PARAMETER_DAMPING_THRESHOLD = "threshold";
     private final static String PARAMETER_STOPWORDS = "stopwords";
     private final static String PARAMETER_DO_STOPWORDS = "removeStopWords";
 
     private static final int DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
+    private static final double DEFAULT_THRESHOLD = 0.0001;
     private static final String DEFAULT_CO_OCCURRENCE_RELATIONTHIP = "CO_OCCURRENCE";
     private static final String DEFAULT_WEIGHT_PROPERTY = "weight";
     private static final boolean DEFAULT_STOPWORDS_ENABLING = false;
@@ -109,6 +111,7 @@ public class TextRankProcedure extends NLPProcedure {
                 Node annotatedText = (Node) inputParams.get(PARAMETER_ANNOTATED_TEXT);
                 int iter = (int) inputParams.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS);
                 double damp = (double) inputParams.getOrDefault(PARAMETER_DAMPING_FACTOR, DEFAULT_DUMPING_FACTOR);
+                double threshold = (double) inputParams.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD);
                 boolean doStopwords = (boolean) inputParams.getOrDefault(PARAMETER_DO_STOPWORDS, DEFAULT_STOPWORDS_ENABLING);
                 TextRank textrank = new TextRank(database);
 
@@ -121,9 +124,7 @@ public class TextRankProcedure extends NLPProcedure {
                 String resReport = "success";
                 
                 Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(annotatedText); 
-                boolean res = textrank.evaluate(annotatedText, coOccurrence, iter, damp);
-                
-                
+                boolean res = textrank.evaluate(annotatedText, coOccurrence, iter, damp, threshold);
 
                 if (!res) {
                     resReport = "failure";
