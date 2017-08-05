@@ -40,6 +40,7 @@ public class TextRank {
     private static final Logger LOG = LoggerFactory.getLogger(TextRank.class);
     private final GraphDatabaseService database;
     private boolean removeStopWords;
+    private boolean directionMatters;
     private List<String> stopWords;
     private Map<Long, String> idToValue = new HashMap<>();
 
@@ -47,6 +48,7 @@ public class TextRank {
         this.database = database;
         this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few");
         this.removeStopWords = false;
+        this.directionMatters = true;
     }
 
     public void setStopwords(String stopwords) {
@@ -56,6 +58,10 @@ public class TextRank {
 
     public void removeStopWords(boolean val) {
         this.removeStopWords = val;
+    }
+
+    public void respectDirections(boolean val) {
+        this.directionMatters = val;
     }
 
     @Deprecated
@@ -105,6 +111,8 @@ public class TextRank {
             Long tag1 = (Long) next.get("tag1");
             Long tag2 = (Long) next.get("tag2");
             addTagToCoOccurrence(results, tag1, tag2);
+            if (!directionMatters) // when direction of co-occurrence relationships is not important
+              addTagToCoOccurrence(results, tag2, tag1);
             idToValue.put(tag1, (String) next.get("tag1_val"));
             idToValue.put(tag2, (String) next.get("tag2_val"));
             LOG.debug("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
@@ -148,9 +156,17 @@ public class TextRank {
     public boolean evaluate(Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence, int iter, double damp, double threshold) {
         PageRank pageRank = new PageRank(database);
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
-        pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-            .forEach(en -> LOG.debug(idToValue.get(en.getKey()) + ": " + en.getValue()));
         List<Long> top10 = getTop10(pageRanks);
+
+        pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+            .forEach(en -> LOG.info(idToValue.get(en.getKey()) + ": " + en.getValue()));
+        LOG.info("Sum of PageRanks = " + pageRanks.values().stream().mapToDouble(Number::doubleValue).sum());
+        String topStr = "";
+        for (Long id: top10) {
+            topStr += idToValue.get(id) + ", ";
+        }
+        LOG.info("Top 10 tags: " + topStr);
+
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         params.put("nodeList", top10);
@@ -160,6 +176,7 @@ public class TextRank {
                 + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId\n"
                 + "ORDER BY sP asc",
                 params);
+
         // First: merge neighboring words into phrases
         long prev_eP = -1000;
         String keyword = "";
@@ -240,10 +257,14 @@ public class TextRank {
     }
 
     private List<Long> getTop10(Map<Long, Double> pageRanks) {
-        List<Map.Entry<Long, Double>> sortedPageRanks = MapUtil.getSortedListByValue(pageRanks);
+        /*List<Map.Entry<Long, Double>> sortedPageRanks = MapUtil.getSortedListByValue(pageRanks);
         int maxTop = pageRanks.size() > 10 ? 10 : pageRanks.size();
         List<Long> top10 = sortedPageRanks.subList(0, maxTop).stream()
-                .map((item) -> item.getKey()).collect(Collectors.toList());
+                .map((item) -> item.getKey()).collect(Collectors.toList());*/
+        List<Long> top10 = pageRanks.entrySet().stream()
+            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+            .limit(10)
+            .map((item) -> item.getKey()).collect(Collectors.toList());
         return top10;
     }
 }

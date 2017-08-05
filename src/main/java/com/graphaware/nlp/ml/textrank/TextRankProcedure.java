@@ -50,13 +50,15 @@ public class TextRankProcedure extends NLPProcedure {
     private final static String PARAMETER_DAMPING_THRESHOLD = "threshold";
     private final static String PARAMETER_STOPWORDS = "stopwords";
     private final static String PARAMETER_DO_STOPWORDS = "removeStopWords";
+    private final static String PARAMETER_RESPECT_DIRECTIONS = "respectDirections";
 
-    private static final int DEFAULT_ITERATIONS = 30;
+    private static final long DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
     private static final double DEFAULT_THRESHOLD = 0.0001;
     private static final String DEFAULT_CO_OCCURRENCE_RELATIONTHIP = "CO_OCCURRENCE";
     private static final String DEFAULT_WEIGHT_PROPERTY = "weight";
     private static final boolean DEFAULT_STOPWORDS_ENABLING = false;
+    private static final boolean DEFAULT_RESPECT_DIRECTIONS = false;
     
     private final GraphDatabaseService database;
 
@@ -109,10 +111,11 @@ public class TextRankProcedure extends NLPProcedure {
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new String[]{"failure"}).iterator());
                 }
                 Node annotatedText = (Node) inputParams.get(PARAMETER_ANNOTATED_TEXT);
-                int iter = (int) inputParams.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS);
+                int iter = ((Long) inputParams.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS)).intValue();
                 double damp = (double) inputParams.getOrDefault(PARAMETER_DAMPING_FACTOR, DEFAULT_DUMPING_FACTOR);
                 double threshold = (double) inputParams.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD);
                 boolean doStopwords = (boolean) inputParams.getOrDefault(PARAMETER_DO_STOPWORDS, DEFAULT_STOPWORDS_ENABLING);
+                boolean respectDirections = (boolean) inputParams.getOrDefault(PARAMETER_RESPECT_DIRECTIONS, DEFAULT_RESPECT_DIRECTIONS);
                 TextRank textrank = new TextRank(database);
 
                 
@@ -120,6 +123,7 @@ public class TextRankProcedure extends NLPProcedure {
                     textrank.setStopwords((String) inputParams.get(PARAMETER_STOPWORDS));
                 }
                 textrank.removeStopWords(doStopwords);
+                textrank.respectDirections(respectDirections);
 
                 String resReport = "success";
                 

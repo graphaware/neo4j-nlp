@@ -36,6 +36,7 @@ public class PageRank {
     public Map<Long, Double> run(Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, int iter, double dampFactor, double threshold) {
         Map<Long, Double> nodeWeights = initializeNodeWeights(coOccurrences);
         Map<Long, Double> pagerank = getInitializedPageRank(nodeWeights, dampFactor);
+        int nNodes = pagerank.size();
         boolean thresholdHit = false;
         for (int iteration = 0; iteration < iter && !thresholdHit; iteration++) {
             Map<Long, Double> prTemp = new HashMap<>();
@@ -48,20 +49,40 @@ public class PageRank {
                         .forEach((nodeIdInt) -> {
                             Map<Long, CoOccurrenceItem> coOccurrentTags = coOccurrences.get(nodeIdInt);
                             //Can be optimized
-                            double totalWeightSum = coOccurrentTags.values().stream().map(item -> item.getCount()).mapToDouble(Integer::intValue).sum();
+                            double totalWeightSum = coOccurrentTags.values().stream().map(item -> item.getCount()).mapToDouble(Number::doubleValue).sum();
                             internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt));
+                            //internalSum.addAndGet(1.0d/coOccurrentTags.size() * pagerank.get(nodeIdInt));
                         });
-                double newPrValue = (1 - dampFactor) + dampFactor * internalSum.get();
+                //double newPrValue = (1 - dampFactor) + dampFactor * internalSum.get(); // this PR is not probability (PR values don't add up to 1)
+                double newPrValue = (1 - dampFactor) / nNodes + dampFactor * internalSum.get(); // PR is a probability (PR values add up to 1)
                 prTemp.put(nodeIdExt, newPrValue);
             });
             thresholdHit = checkThreshold(pagerank, prTemp, threshold);
             if (thresholdHit) {
-                LOG.warn("Threshold hit after " + iter + " iterations");
+                LOG.warn("Threshold hit after " + iteration + " iterations");
             }
             // finish page rank computation and store it to the final list
             nodeWeights.keySet().stream().forEach((nodeIdExt) -> {
                 pagerank.put(nodeIdExt, prTemp.get(nodeIdExt));
             });
+
+            // FOR TESTING: DELETE IT !
+            /*for (Long i: nodeWeights.keySet()) {
+                double pr = 0.;
+                for (Long j: nodeWeights.keySet()) {
+                    if (i==j) continue;
+                    if (!coOccurrences.containsKey(j)) continue;
+                    if (!coOccurrences.get(j).containsKey(i)) continue;
+                    pr += 1.0 * pagerank.get(j) / coOccurrences.get(j).size();
+                }
+                pr = (1 - dampFactor) / nNodes + dampFactor * pr;
+                prTemp.put(i, pr);
+            }
+
+            for (Long i: nodeWeights.keySet()) {
+                pagerank.put(i, prTemp.get(i));
+            }*/
+
         } // iterations
         return pagerank;
     }
@@ -92,7 +113,7 @@ public class PageRank {
         Iterator<Long> iterator = pagerank.keySet().iterator();
         while (iterator.hasNext()) {
             long nodeIdExt = iterator.next();
-            double diff = prTemp.get(nodeIdExt) - pagerank.get(nodeIdExt);
+            double diff = Math.abs(prTemp.get(nodeIdExt) - pagerank.get(nodeIdExt));
             if (diff > threshold) {
                 return false;
             }
