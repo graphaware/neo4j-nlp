@@ -145,6 +145,10 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         }
     }
 
+    public Map<Integer, List<PartOfTextOccurrence<Tag>>> getTagOccurrences() {
+        return tagOccurrences;
+    }
+
     public void addPhraseOccurrence(int begin, int end, Phrase phrase) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent() + ")");
