@@ -59,7 +59,7 @@ public class PageRank {
             });
             thresholdHit = checkThreshold(pagerank, prTemp, threshold);
             if (thresholdHit) {
-                LOG.warn("Threshold hit after " + iteration + " iterations");
+                LOG.warn("Threshold hit after " + (iteration+1) + " iterations");
             }
             // finish page rank computation and store it to the final list
             nodeWeights.keySet().stream().forEach((nodeIdExt) -> {
