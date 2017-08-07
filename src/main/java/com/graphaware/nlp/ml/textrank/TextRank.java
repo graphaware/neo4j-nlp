@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -42,6 +43,7 @@ public class TextRank {
     private boolean removeStopWords;
     private boolean directionMatters;
     private List<String> stopWords;
+    private List<String> admittedPOSs;
     private Map<Long, String> idToValue = new HashMap<>();
 
     public TextRank(GraphDatabaseService database) {
@@ -49,6 +51,7 @@ public class TextRank {
         this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few");
         this.removeStopWords = false;
         this.directionMatters = true;
+        this.admittedPOSs = Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"); // "Unknown" because we want to keep tags that have unknown POS
     }
 
     public void setStopwords(String stopwords) {
@@ -95,24 +98,52 @@ public class TextRank {
     public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
-        Result res = database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+        // a query for creating co-occurrences per sentence
+        /*Result res = database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
                 + "WHERE id(a) = {id} \n"
                 + "WITH s, to\n"
                 + "ORDER BY s.sentenceNumber, to.startPosition\n"
                 + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-                + "WHERE size(t.value) > 2 AND ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS'] )\n" // only nouns and adjectives
+                   // Only nouns and adjectives. Careful: sometimes POS property does not exist (mostly when NE is recognized)
+                + "WHERE size(t.value) > 2\n"// AND ( ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS']) OR NOT EXISTS(t.pos) )\n"
                 + "WITH s, collect(t) as tags\n"
                 + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val\n",
+                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n",
+                params);*/
+        // this is based on orignal TextRank: a query that doesn't care about sentence boundaries (it connects last word of a sentence with 1st word of the next sentence)
+        Result res = database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+                + "WHERE id(a) = {id} \n"
+                + "WITH to\n"
+                + "ORDER BY to.startPosition\n"
+                + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+                   // Careful: sometimes POS property does not exist (mostly when NE is recognized)
+                + "WHERE size(t.value) > 2\n" //AND ( ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS']) OR NOT EXISTS(t.pos) )\n"
+                + "WITH collect(t) as tags\n"
+                + "UNWIND range(0, size(tags) - 2, 1) as i\n"
+                + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n",
                 params);
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             Long tag1 = (Long) next.get("tag1");
             Long tag2 = (Long) next.get("tag2");
+            List<String> pos1 = Arrays.asList( ((String) next.get("pos1")).split(",") );
+            List<String> pos2 = Arrays.asList( ((String) next.get("pos2")).split(",") );
+
+            // check whether POS of both tags are admitted
+            if (pos1.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()==0)
+                continue;
+            if (pos2.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()==0)
+                continue;
+
+            // fill tag co-occurrences (adjacency matrix)
             addTagToCoOccurrence(results, tag1, tag2);
             if (!directionMatters) // when direction of co-occurrence relationships is not important
               addTagToCoOccurrence(results, tag2, tag1);
+
+            // for logging purposses
             idToValue.put(tag1, (String) next.get("tag1_val"));
             idToValue.put(tag2, (String) next.get("tag2_val"));
             LOG.debug("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
@@ -229,6 +260,7 @@ public class TextRank {
                     LOG.debug(en.getKey());
                 });
 
+        LOG.info("--- Results: ");
         results.keySet().stream().map((key) -> {
             if (key.split("_").length > 2) {
                 LOG.warn("Tag " + key + " has more than 1 underscore symbols, newly created Keyword node might be wrong");
@@ -250,6 +282,7 @@ public class TextRank {
                     Relationship rel = newNode.createRelationshipTo(annotatedText, DESCRIBES);
                     rel.setProperty("count", results.get(key));
                 }
+                LOG.info(val);
             }
         });
 
