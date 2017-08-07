@@ -233,6 +233,15 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         return sentenceNode;
     }
 
+    public void debugTagOccurenceTokenIds() {
+        tagOccurrences.values().stream().forEach(e -> {
+            for (PartOfTextOccurrence<Tag> occurrence : e) {
+                System.out.println(occurrence.getElement().getLemma());
+                System.out.println(occurrence.getPartIds());
+            }
+        });
+    }
+
     private void storeTags(GraphDatabaseService database, Node newSentenceNode, boolean force) {
         tags.values().stream().forEach((tag) -> {
             Node tagNode = tag.storeOnGraph(database, force);
@@ -257,6 +266,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         });
 
         typedDependencies.forEach(typedDependency -> {
+//            System.out.println(String.format("processing typed dependency %s-%s-%s", typedDependency.getSource(), typedDependency.getTarget(), typedDependency.getName()));
             if (!tokenIdToTagOccurenceNodeIdMap.containsKey(typedDependency.getSource())) {
                 System.out.println(String.format("could not find reference in map for %s", typedDependency.getSource()));
                 return;
@@ -269,7 +279,7 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
 
             Node source = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getSource()));
             Node target = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getTarget()));
-            if (source.getId() == target.getId()) {
+            if ((source.getId() == target.getId()) && !typedDependency.getName().equals("ROOT")) {
                 return;
             }
             String relType = typedDependency.getName().toUpperCase();
