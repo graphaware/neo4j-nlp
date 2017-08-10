@@ -76,6 +76,7 @@ public class NLPProcedures {
         //Managing Processor
         procedures.register(textProcedures.getProcessors());
         procedures.register(textProcedures.getPipelines());
+        procedures.register(textProcedures.getPipelineInfos());
         procedures.register(textProcedures.addPipeline());
         procedures.register(textProcedures.removePipeline());
         
