@@ -288,6 +288,10 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
                 dependencyRelationship.setProperty("specific", typedDependency.getSpecific());
             }
 
+            if (typedDependency.getName().equals("ROOT")) {
+                source.addLabel(Label.label("ROOT"));
+            }
+
             System.out.println(String.format("Created relationship from %s to %s with type %s",
                     typedDependency.getSource(),
                     typedDependency.getTarget(),
