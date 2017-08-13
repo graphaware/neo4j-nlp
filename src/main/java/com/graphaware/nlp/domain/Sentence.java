@@ -145,6 +145,18 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         }
     }
 
+    public PartOfTextOccurrence<Tag> getTagOccurrenceByTagValue(String value) {
+        for (Integer i : tagOccurrences.keySet()) {
+            for (PartOfTextOccurrence<Tag> occurrence : tagOccurrences.get(i)) {
+                if (occurrence.getElement().getLemma().equals(value)) {
+                    return occurrence;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public Map<Integer, List<PartOfTextOccurrence<Tag>>> getTagOccurrences() {
         return tagOccurrences;
     }
