@@ -78,8 +78,8 @@ public class StubTextProcessor implements TextProcessor {
     }
 
     @Override
-    public boolean checkPunctuation(String value) {
-        return false;
+    public boolean checkLemmaIsValid(String value) {
+        return true;
     }
 
     @Override

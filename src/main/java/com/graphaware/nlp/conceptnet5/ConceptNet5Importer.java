@@ -93,7 +93,8 @@ public class ConceptNet5Importer {
                         && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
                         && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
                     
-                    if (concept.getStart().equalsIgnoreCase(source.getLemma())) {
+                    if (concept.getStart().equalsIgnoreCase(source.getLemma()) &&
+                            !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
                         String value = concept.getEnd();
                         value = removeApices(value);
                         value = removeParenthesis(value);
