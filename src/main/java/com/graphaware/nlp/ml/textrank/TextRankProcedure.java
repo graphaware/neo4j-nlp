@@ -42,7 +42,7 @@ public class TextRankProcedure extends NLPProcedure {
 
     //private final static String PARAMETER_NAME_QUERY = "query";
     private final static String PARAMETER_ANNOTATED_TEXT = "annotatedText";
-    //private final static String PARAMETER_NODE_TYPE = "nodeType";
+    private final static String PARAMETER_NODE_TYPE = "nodeType";
     private final static String PARAMETER_RELATIONSHIP_TYPE = "relationshipType";
     private final static String PARAMETER_RELATIONSHIP_WEIGHT = "relationshipWeight";
     private final static String PARAMETER_ITERATIONS = "iter";
@@ -51,14 +51,21 @@ public class TextRankProcedure extends NLPProcedure {
     private final static String PARAMETER_STOPWORDS = "stopwords";
     private final static String PARAMETER_DO_STOPWORDS = "removeStopWords";
     private final static String PARAMETER_RESPECT_DIRECTIONS = "respectDirections";
+    private final static String PARAMETER_RESPECT_SENTENCES = "respectSentences";
+    private final static String PARAMETER_USE_TFIDF_WEIGHTS = "useTfIdfWeights";
+    private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
 
     private static final long DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
     private static final double DEFAULT_THRESHOLD = 0.0001;
+    private static final String DEFAULT_NODE_TYPE = "Tag";
     private static final String DEFAULT_CO_OCCURRENCE_RELATIONTHIP = "CO_OCCURRENCE";
     private static final String DEFAULT_WEIGHT_PROPERTY = "weight";
     private static final boolean DEFAULT_STOPWORDS_ENABLING = false;
     private static final boolean DEFAULT_RESPECT_DIRECTIONS = false;
+    private static final boolean DEFAULT_RESPECT_SENTENCES = false;
+    private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
+    private static final long DEFAULT_COOCCURRENCE_WINDOW = 2;
     
     private final GraphDatabaseService database;
 
@@ -67,34 +74,48 @@ public class TextRankProcedure extends NLPProcedure {
         this.database = database;
     }
 
-//    public CallableProcedure.BasicProcedure computePageRank() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "textrank", "computePageRank"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
-//                .out(PARAMETER_NAME_NODE, Neo4jTypes.NTNode)
-//                .out(PARAMETER_NAME_SCORE, Neo4jTypes.NTFloat)
-//                .out(PARAMETER_NAME_NODEW, Neo4jTypes.NTFloat).build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                Map<String, Object> inputParams = (Map) input[0];
-//                if (!inputParams.containsKey(PARAMETER_ANNOTATED_TEXT)) {
-//                    LOG.error("Missing parameter \'" + PARAMETER_ANNOTATED_TEXT + "\'");
-//                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new String[]{"failure"}).iterator());
-//                }
-//                Long annotatedID = (Long) inputParams.get(PARAMETER_ANNOTATED_TEXT);
-//                //String nodeType = (String) inputParams.getOrDefault(PARAMETER_NODE_TYPE, "Tag")
-//                String relType = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_TYPE, DEFAULT_CO_OCCURRENCE_RELATIONTHIP);
-//                String relWeight = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_WEIGHT, DEFAULT_WEIGHT_PROPERTY);
-//                int iter = (int) inputParams.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS);
-//                double damp = (double) inputParams.getOrDefault(PARAMETER_DAMPING_FACTOR, DEFAULT_DUMPING_FACTOR);
-//
-//                Set<Object[]> result = pagerank.run(annotatedID, /*nodeType,*/ relType, relWeight, iter, damp);
-//
-//                return Iterators.asRawIterator(result.iterator());
-//            }
-//        };
-//    }
+    public CallableProcedure.BasicProcedure computePageRank() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "textrank", "computePageRank"))
+                .mode(Mode.WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTAny)
+                .out("result", Neo4jTypes.NTString).build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                Map<String, Object> inputParams = (Map) input[0];
+                if (!inputParams.containsKey(PARAMETER_ANNOTATED_TEXT)) {
+                    LOG.error("Missing parameter \'" + PARAMETER_ANNOTATED_TEXT + "\'");
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new String[]{"failure"}).iterator());
+                }
+                Node annotatedText = (Node) inputParams.get(PARAMETER_ANNOTATED_TEXT);
+                String nodeType = (String) inputParams.getOrDefault(PARAMETER_NODE_TYPE, DEFAULT_NODE_TYPE);
+                String relType = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_TYPE, DEFAULT_CO_OCCURRENCE_RELATIONTHIP);
+                String relWeight = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_WEIGHT, DEFAULT_WEIGHT_PROPERTY);
+                int iter = ((Long) inputParams.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS)).intValue();
+                double damp = (double) inputParams.getOrDefault(PARAMETER_DAMPING_FACTOR, DEFAULT_DUMPING_FACTOR);
+                double threshold = (double) inputParams.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD);
+
+                String result = "success";
+
+                PageRank pagerank = new PageRank(database);
+                Map<Long, Map<Long, CoOccurrenceItem>> map_graph = pagerank.processGraph(annotatedText, nodeType, relType, relWeight);
+                if (map_graph.size()==0) {
+                    result = "failure";
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{result}).iterator());
+                }
+                Map<Long, Double> pageranks = pagerank.run(map_graph, iter, damp, threshold);
+                if (pageranks.size()==0) {
+                    result = "failure";
+                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{result}).iterator());
+                }
+                pageranks.entrySet().stream().forEach(en -> LOG.info("PR(" + en.getKey() + ") = " + en.getValue()));
+                LOG.info("Sum of PageRanks: " + pageranks.values().stream().mapToDouble(Number::doubleValue).sum());
+                pagerank.storeOnGraph(pageranks, nodeType);
+
+                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{result}).iterator());
+            }
+        };
+    }
 
     public CallableProcedure.BasicProcedure compute() {
         return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("ml", "textrank", "compute"))
@@ -116,14 +137,20 @@ public class TextRankProcedure extends NLPProcedure {
                 double threshold = (double) inputParams.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD);
                 boolean doStopwords = (boolean) inputParams.getOrDefault(PARAMETER_DO_STOPWORDS, DEFAULT_STOPWORDS_ENABLING);
                 boolean respectDirections = (boolean) inputParams.getOrDefault(PARAMETER_RESPECT_DIRECTIONS, DEFAULT_RESPECT_DIRECTIONS);
-                TextRank textrank = new TextRank(database);
+                boolean respectSentences = (boolean) inputParams.getOrDefault(PARAMETER_RESPECT_SENTENCES, DEFAULT_RESPECT_SENTENCES);
+                boolean useTfIdfWeights = (boolean) inputParams.getOrDefault(PARAMETER_USE_TFIDF_WEIGHTS, DEFAULT_USE_TFIDF_WEIGHTS);
+                int cooccurrenceWindow = ((Long) inputParams.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue();
 
+                TextRank textrank = new TextRank(database);
                 
                 if (inputParams.containsKey(PARAMETER_STOPWORDS)) {
                     textrank.setStopwords((String) inputParams.get(PARAMETER_STOPWORDS));
                 }
                 textrank.removeStopWords(doStopwords);
                 textrank.respectDirections(respectDirections);
+                textrank.respectSentences(respectSentences);
+                textrank.useTfIdfWeights(useTfIdfWeights);
+                textrank.setCooccurrenceWindow(cooccurrenceWindow);
 
                 String resReport = "success";
                 

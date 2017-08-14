@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,34 +30,53 @@ public class PageRank {
 
     private static final Logger LOG = LoggerFactory.getLogger(PageRank.class);
 
+    private Map<Long, Double> nodeWeights;
     protected final GraphDatabaseService database;
 
     public PageRank(GraphDatabaseService database) {
         this.database = database;
     }
 
+    public void setNodeWeights(Map<Long, Double> w) {
+        this.nodeWeights = w;
+    }
+
     public Map<Long, Double> run(Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, int iter, double dampFactor, double threshold) {
-        Map<Long, Double> nodeWeights = initializeNodeWeights(coOccurrences);
+        nodeWeights = initializeNodeWeights(coOccurrences);
         Map<Long, Double> pagerank = getInitializedPageRank(nodeWeights, dampFactor);
         int nNodes = pagerank.size();
         boolean thresholdHit = false;
+        Map<Long, Double> prTemp = new HashMap<>();
         for (int iteration = 0; iteration < iter && !thresholdHit; iteration++) {
-            Map<Long, Double> prTemp = new HashMap<>();
+            //Map<Long, Double> prTemp = new HashMap<>();
             // calculate main part of the PR calculation, include weights of nodes and relationships
-            nodeWeights.keySet().stream().forEach((nodeIdExt) -> {
+            nodeWeights.entrySet().stream().forEach(enExt -> {
+                Long nodeIdExt = enExt.getKey();
+                Double nodeWExt = enExt.getValue();
                 AtomicDouble internalSum = new AtomicDouble(0.0);
-                nodeWeights.keySet().stream()
-                        .filter((nodeIdInt) -> coOccurrences.containsKey(nodeIdInt)
-                        && coOccurrences.get(nodeIdInt).containsKey(nodeIdExt))
-                        .forEach((nodeIdInt) -> {
+                //AtomicDouble internalNodeWSum = new AtomicDouble(0.0);
+                nodeWeights.entrySet().stream()
+                        .filter(enInt -> coOccurrences.containsKey(enInt.getKey()) && coOccurrences.get(enInt.getKey()).containsKey(nodeIdExt))
+                        .forEach(enInt -> {
+                            Long nodeIdInt = enInt.getKey();
+                            Double nodeWInt = enInt.getValue();
+                            //internalNodeWSum.addAndGet(nodeWInt);
                             Map<Long, CoOccurrenceItem> coOccurrentTags = coOccurrences.get(nodeIdInt);
                             //Can be optimized
                             double totalWeightSum = coOccurrentTags.values().stream().map(item -> item.getCount()).mapToDouble(Number::doubleValue).sum();
-                            internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt));
-                            //internalSum.addAndGet(1.0d/coOccurrentTags.size() * pagerank.get(nodeIdInt));
+                            //internalSum.addAndGet(1.0d/coOccurrentTags.size() * pagerank.get(nodeIdInt)); // no relationship weights
+                            internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt)); // with relationship weights
+                            //internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt) * nodeWInt); // with relationship & node weights
                         });
                 //double newPrValue = (1 - dampFactor) + dampFactor * internalSum.get(); // this PR is not probability (PR values don't add up to 1)
                 double newPrValue = (1 - dampFactor) / nNodes + dampFactor * internalSum.get(); // PR is a probability (PR values add up to 1)
+
+                // PageRank with node weights
+                //long nInt = nodeWeights.entrySet().stream()
+                //        .filter(enInt -> coOccurrences.containsKey(enInt.getKey()) && coOccurrences.get(enInt.getKey()).containsKey(nodeIdExt))
+                //        .count();
+                //double newPrValue = (1 - dampFactor) / nNodes + dampFactor * internalSum.get() * (nInt / internalNodeWSum.get()); // PR is a probability (PR values add up to 1); WITH node weights
+                
                 prTemp.put(nodeIdExt, newPrValue);
             });
             thresholdHit = checkThreshold(pagerank, prTemp, threshold);
@@ -66,17 +88,24 @@ public class PageRank {
                 pagerank.put(nodeIdExt, prTemp.get(nodeIdExt));
             });
 
-            // FOR TESTING: DELETE IT !
+            // FOR TESTING: ALTERNATIVE IMPLEMENTATION OF THE ALG. ABOVE
+            //LOG.info("------- Iteration " + iteration + " (nNodes = " + nNodes + ", " + nodeWeights.size() + ")");
             /*for (Long i: nodeWeights.keySet()) {
-                double pr = 0.;
+                double pr = 0.0;
                 for (Long j: nodeWeights.keySet()) {
-                    if (i==j) continue;
+                    if (i.equals(j)) continue;
                     if (!coOccurrences.containsKey(j)) continue;
                     if (!coOccurrences.get(j).containsKey(i)) continue;
                     pr += 1.0 * pagerank.get(j) / coOccurrences.get(j).size();
+
+                    //if (i.longValue()==252450L) {
+                    //    LOG.info("A: Tag = " + j + ", pr = " + pagerank.get(j) + ", n_outs = " + coOccurrences.get(j).size() + "; PR = " + pr.get());
+                    //}
+                    //if (i.longValue()==252461L) {
+                    //    LOG.info("G: Tag = " + j + ", pr = " + pagerank.get(j) + ", n_outs = " + coOccurrences.get(j).size() + "; PR = " + pr.get());
+                    //}
                 }
-                pr = (1 - dampFactor) / nNodes + dampFactor * pr;
-                prTemp.put(i, pr);
+                prTemp.put(i, (1.0 - dampFactor) / nNodes + dampFactor * pr );
             }
 
             for (Long i: nodeWeights.keySet()) {
@@ -87,8 +116,63 @@ public class PageRank {
         return pagerank;
     }
 
+    public Map<Long, Map<Long, CoOccurrenceItem>> processGraph(Node annotatedText, String nodeType, String relType, String relWeight) {
+        String query = "MATCH (a:AnnotatedText)-[*1..2]->(t1:" + nodeType + ")-[r:" + relType + "]->(t2:" + nodeType + ")\n"
+            + "WHERE (t2)<-[*1..2]-(a)\n"
+            + "RETURN id(t1) as tag1, id(t2) as tag2, r." + relWeight + " as w, count(*)\n";
+        LOG.info("Running query: " + query);
+        Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
+        try (Transaction tx = database.beginTx();) {
+            Result res = database.execute(query);
+            while (res != null && res.hasNext()) {
+                Map<String, Object> next = res.next();
+                Long tag1 = (Long) next.get("tag1");
+                Long tag2 = (Long) next.get("tag2");
+                double w = 1.;
+                try {
+                    w = (double) next.get("w");
+                } catch (Exception e) {
+                    LOG.debug("Failed to extract relationship weight, setting it to 1.");
+                }
+                //LOG.debug("Adding relationships: " + tag1 + " -> " + tag2);
+                addTagToCoOccurrence(results, tag1, tag2);
+            }
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("processGraph() failed: " + e.getMessage());
+        }
+        return results;
+    }
+
+    public void storeOnGraph(Map<Long, Double> pageranks, String nodeType) {
+        for (Long tag: pageranks.keySet()) {
+            try (Transaction tx = database.beginTx();) {
+                database.execute("MATCH (t:" + nodeType + ") WHERE id(t)=" + tag + "\n SET t.pagerank = " + pageranks.get(tag));
+                tx.success();
+            } catch (Exception e) {
+                LOG.error("storeOnGraph() failed: " + e.getMessage());
+            }
+        }
+    }
+
+    private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long tag1, Long tag2) {
+        Map<Long, CoOccurrenceItem> mapTag1;
+        if (!results.containsKey(tag1)) {
+            mapTag1 = new HashMap<>();
+            results.put(tag1, mapTag1);
+        } else {
+            mapTag1 = results.get(tag1);
+        }
+        if (mapTag1.containsKey(tag2)) {
+            mapTag1.get(tag2).incCount();
+        } else {
+            mapTag1.put(tag2, new CoOccurrenceItem(tag1, tag2));
+        }
+    }
+
     private Map<Long, Double> initializeNodeWeights(Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences) {
-        
+        if (nodeWeights!=null && nodeWeights.size()>0)
+            return nodeWeights;
         Map<Long, Double> nodeInitialWeights = new HashMap<>();
         coOccurrences.entrySet().stream().forEach((coOccurrence) -> {
             coOccurrence.getValue().entrySet().stream().forEach((entry) -> {
@@ -122,3 +206,24 @@ public class PageRank {
     }
 
 }
+/*
+create (at:AnnotatedText {id: "test118"})-[:TestRel]->(d:Test {value: "D"})
+merge (d)-[:Related_to]->(a:Test {value: "A"})<-[:TestRel]-(at)
+merge (d)-[:Related_to]->(b:Test {value: "B"})<-[:TestRel]-(at)
+merge (at)-[:TestRel]->(e:Test {value: "E"})-[:Related_to]->(b)
+merge (e)-[:Related_to]->(d)
+merge (e)-[:Related_to]->(f:Test {value: "F"})<-[:TestRel]-(at)
+merge (f)-[:Related_to]->(e)
+merge (f)-[:Related_to]->(b)
+merge (b)-[:Related_to]->(c:Test {value: "C"})<-[:TestRel]-(at)
+merge (c)-[:Related_to]->(b)
+
+merge (at)-[:TestRel]->(g:Test {value: "G"})-[:Related_to]->(b)
+merge (at)-[:TestRel]->(h:Test {value: "H"})-[:Related_to]->(b)
+merge (at)-[:TestRel]->(i:Test {value: "I"})-[:Related_to]->(b)
+merge (g)-[:Related_to]->(e)
+merge (h)-[:Related_to]->(e)
+merge (i)-[:Related_to]->(e)
+merge (at)-[:TestRel]->(j:Test {value: "J"})-[:Related_to]->(e)
+merge (at)-[:TestRel]->(k:Test {value: "K"})-[:Related_to]->(e)
+*/

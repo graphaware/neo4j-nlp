@@ -87,7 +87,7 @@ public class NLPProcedures {
         procedures.register(similarityProcedures.computeAllWithCN5());
 
         TextRankProcedure textrankProcedures = new TextRankProcedure(database);
-        //procedures.register(textrankProcedures.computePageRank());
+        procedures.register(textrankProcedures.computePageRank());
         procedures.register(textrankProcedures.compute());
         
         LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);

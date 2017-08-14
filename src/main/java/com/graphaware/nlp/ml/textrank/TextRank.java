@@ -42,15 +42,21 @@ public class TextRank {
     private final GraphDatabaseService database;
     private boolean removeStopWords;
     private boolean directionMatters;
+    private boolean respectSentences;
+    private boolean useTfIdfWeights;
+    private int cooccurrenceWindow;
     private List<String> stopWords;
     private List<String> admittedPOSs;
     private Map<Long, String> idToValue = new HashMap<>();
 
     public TextRank(GraphDatabaseService database) {
         this.database = database;
-        this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few");
+        this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few", "best", "worst");
         this.removeStopWords = false;
         this.directionMatters = true;
+        this.respectSentences = false;
+        this.useTfIdfWeights = false;
+        this.cooccurrenceWindow = 2;
         this.admittedPOSs = Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"); // "Unknown" because we want to keep tags that have unknown POS
     }
 
@@ -65,6 +71,17 @@ public class TextRank {
 
     public void respectDirections(boolean val) {
         this.directionMatters = val;
+    }
+
+    public void respectSentences(boolean val) {
+        this.respectSentences = val;
+    }
+    public void useTfIdfWeights(boolean val) {
+        this.useTfIdfWeights = val;
+    }
+
+    public void setCooccurrenceWindow(int val) {
+        this.cooccurrenceWindow = val;
     }
 
     @Deprecated
@@ -98,33 +115,39 @@ public class TextRank {
     public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
-        // a query for creating co-occurrences per sentence
-        /*Result res = database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
-                + "WHERE id(a) = {id} \n"
-                + "WITH s, to\n"
-                + "ORDER BY s.sentenceNumber, to.startPosition\n"
-                + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-                   // Only nouns and adjectives. Careful: sometimes POS property does not exist (mostly when NE is recognized)
-                + "WHERE size(t.value) > 2\n"// AND ( ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS']) OR NOT EXISTS(t.pos) )\n"
-                + "WITH s, collect(t) as tags\n"
-                + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
-                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n",
-                params);*/
-        // this is based on orignal TextRank: a query that doesn't care about sentence boundaries (it connects last word of a sentence with 1st word of the next sentence)
-        Result res = database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+
+        // query based on orignal TextRank: it doesn't care about sentence boundaries (it connects last word of a sentence with 1st word of the next sentence)
+        String query = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
                 + "WHERE id(a) = {id} \n"
                 + "WITH to\n"
                 + "ORDER BY to.startPosition\n"
                 + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-                   // Careful: sometimes POS property does not exist (mostly when NE is recognized)
-                + "WHERE size(t.value) > 2\n" //AND ( ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS']) OR NOT EXISTS(t.pos) )\n"
+                + "WHERE size(t.value) > 2\n"
                 + "WITH collect(t) as tags\n"
                 + "UNWIND range(0, size(tags) - 2, 1) as i\n"
                 + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
-                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n",
-                params);
+                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
+
+        // a query for creating co-occurrences per sentence
+        if (respectSentences) {
+            query = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+                + "WHERE id(a) = {id} \n"
+                + "WITH s, to\n"
+                + "ORDER BY s.sentenceNumber, to.startPosition\n"
+                + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+                + "WHERE size(t.value) > 2\n"
+                + "WITH s, collect(t) as tags\n"
+                + "ORDER BY s.sentenceNumber\n"
+                + "UNWIND range(0, size(tags) - 2, 1) as i\n"
+                + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+                    + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
+        }
+
+        Result res = database.execute(query, params);
+
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
+        Long previous1 = -1L;
+        int n_skips = 1;
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             Long tag1 = (Long) next.get("tag1");
@@ -133,20 +156,35 @@ public class TextRank {
             List<String> pos2 = Arrays.asList( ((String) next.get("pos2")).split(",") );
 
             // check whether POS of both tags are admitted
-            if (pos1.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()==0)
-                continue;
-            if (pos2.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()==0)
-                continue;
+            boolean bPOS1 = pos1.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()!=0;
+            boolean bPOS2 = pos2.stream().filter(pos -> pos!=null && admittedPOSs.contains(pos)).count()!=0;
 
             // fill tag co-occurrences (adjacency matrix)
-            addTagToCoOccurrence(results, tag1, tag2);
-            if (!directionMatters) // when direction of co-occurrence relationships is not important
-              addTagToCoOccurrence(results, tag2, tag1);
+            //   * window of words N = 2 (i.e. neighbours only)
+            if (bPOS1 && bPOS2) {
+                addTagToCoOccurrence(results, tag1, tag2);
+                if (!directionMatters) // when direction of co-occurrence relationships is not important
+                    addTagToCoOccurrence(results, tag2, tag1);
+                //LOG.info("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
+                n_skips = 1;
+            }
+            //   * window of words N > 2
+            else if (bPOS2) {
+                if (n_skips<cooccurrenceWindow) {
+                    addTagToCoOccurrence(results, previous1, tag2);
+                    if (!directionMatters)
+                        addTagToCoOccurrence(results, tag2, previous1);
+                    //LOG.info("  window N=" + (n_skips+1) + " co-occurrence: " + idToValue.get(previous1) + " -> " + (String) next.get("tag2_val"));
+                }
+                n_skips = 1;
+            } else {    
+                n_skips++;
+                if (bPOS1) previous1 = tag1;
+            }
 
             // for logging purposses
             idToValue.put(tag1, (String) next.get("tag1_val"));
             idToValue.put(tag2, (String) next.get("tag2_val"));
-            LOG.debug("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
         }
         return results;
     }
@@ -186,21 +224,24 @@ public class TextRank {
 
     public boolean evaluate(Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence, int iter, double damp, double threshold) {
         PageRank pageRank = new PageRank(database);
+        if (useTfIdfWeights)
+            pageRank.setNodeWeights( initializeNodeWeights_TfIdf(annotatedText, coOccurrence) );
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
-        List<Long> top10 = getTop10(pageRanks);
+        int n_oneThird = (int) (pageRanks.size()/3.0f);
+        List<Long> topx = getTopX(pageRanks, n_oneThird);
 
         pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
             .forEach(en -> LOG.info(idToValue.get(en.getKey()) + ": " + en.getValue()));
         LOG.info("Sum of PageRanks = " + pageRanks.values().stream().mapToDouble(Number::doubleValue).sum());
         String topStr = "";
-        for (Long id: top10) {
+        for (Long id: topx) {
             topStr += idToValue.get(id) + ", ";
         }
-        LOG.info("Top 10 tags: " + topStr);
+        LOG.info("Top " + n_oneThird + " tags: " + topStr);
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
-        params.put("nodeList", top10);
+        params.put("nodeList", topx);
         Result res = database.execute(
                 "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
                 + "WHERE id(a) = {id} and id(node) in {nodeList}\n"
@@ -254,7 +295,7 @@ public class TextRank {
 
         // Next: include into final result simply top-x single words
         keywords.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(8)
+                .limit(n_oneThird > 10 ? 10 : n_oneThird)
                 .forEach(en -> {
                     results.put(en.getKey(), 1);
                     LOG.debug(en.getKey());
@@ -289,15 +330,54 @@ public class TextRank {
         return true;
     }
 
-    private List<Long> getTop10(Map<Long, Double> pageRanks) {
-        /*List<Map.Entry<Long, Double>> sortedPageRanks = MapUtil.getSortedListByValue(pageRanks);
-        int maxTop = pageRanks.size() > 10 ? 10 : pageRanks.size();
-        List<Long> top10 = sortedPageRanks.subList(0, maxTop).stream()
-                .map((item) -> item.getKey()).collect(Collectors.toList());*/
-        List<Long> top10 = pageRanks.entrySet().stream()
+    private List<Long> getTopX(Map<Long, Double> pageRanks, int x) {
+        List<Long> topx = pageRanks.entrySet().stream()
             .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-            .limit(10)
+            .limit(x)
             .map((item) -> item.getKey()).collect(Collectors.toList());
-        return top10;
+        return topx;
+    }
+
+    private Map<Long, Double> initializeNodeWeights_TfIdf(Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences) {
+        Map<Long, Double> nodeWeights = new HashMap<Long, Double>();
+        coOccurrences.entrySet().stream().forEach((coOccurrence) -> {
+            coOccurrence.getValue().entrySet().stream().forEach((entry) -> {
+                nodeWeights.put(entry.getValue().getSource(), 1.0d);
+                nodeWeights.put(entry.getValue().getDestination(), 1.0d);
+            });
+        });
+
+        String query = "MATCH (doc:AnnotatedText)\n"
+            + "WITH count(doc) as documentsCount\n"
+            + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[ht:HAS_TAG]->(t:Tag)\n"
+            + "WHERE id(a) = " + annotatedText.getId() + "\n"
+            + "WITH t, sum(ht.tf) as tf, documentsCount\n"
+            + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[:HAS_TAG]->(t)\n"
+            + "RETURN id(t) as tag, t.value as tagVal, tf, count(distinct a) as docCountForTag, documentsCount\n";
+
+        try (Transaction tx = database.beginTx();) {
+            Result res = database.execute(query);
+            while (res != null && res.hasNext()) {
+                Map<String, Object> next = res.next();
+                Long tag = (Long) next.get("tag");
+                if (!nodeWeights.keySet().contains(tag)) // initialize only those that are needed!
+                    continue;
+                long tf = ((Long) next.get("tf")).longValue();
+
+                long docCount = (long) next.get("documentsCount");
+                long docCountTag = (long) next.get("docCountForTag");
+                double idf = Double.valueOf(Math.log10(Double.valueOf(1.0f*docCount/docCountTag).doubleValue())).floatValue();
+
+                //nodeWeights.put(tag, tf*idf);
+                nodeWeights.put(tag, idf);
+                //LOG.info((String) next.get("tagVal") + ": tf = " + tf + ", idf = " + idf + " (docCountTag = " + docCountTag + "), tf*idf = " + tf*idf);
+            }
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while initializing node weights: ", e);
+            return nodeWeights;
+        }
+
+        return nodeWeights;
     }
 }
