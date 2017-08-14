@@ -17,6 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Labels;
+import com.graphaware.nlp.domain.PipelineInfo;
 import com.graphaware.nlp.domain.Properties;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
@@ -251,6 +252,44 @@ public class TextProcessorProcedure extends NLPProcedure {
                 pipelines.forEach(row -> {
                     result.add(new Object[]{row});
                 });
+                return Iterators.asRawIterator(result.iterator());
+            }
+        };
+    }
+
+    public CallableProcedure.BasicProcedure getPipelineInfos() {
+        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelineInfos"))
+                .mode(Mode.WRITE)
+                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
+                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
+                .build()) {
+
+            @Override
+            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
+                checkIsMap(input[0]);
+                Map<String, Object> inputParams = (Map) input[0];
+                String textProcessor = (String) inputParams.get(PARAMETER_NAME_TEXT_PROCESSOR);
+                TextProcessor textProcessorInstance = processorManager.getTextProcessor(textProcessor);
+                Set<Object[]> result = new HashSet<>();
+                List<PipelineInfo> pipelines = textProcessorInstance.getPipelineInfos();
+                if (null == pipelines) {
+                    System.out.println("getPipelinesInfos RETURN null");
+                    return Iterators.asRawIterator(result.iterator());
+                }
+
+                for (PipelineInfo pipelineInfo : pipelines) {
+                    if (null != pipelineInfo) {
+                        Map<String, Object> info = new HashMap<>();
+                        info.put("name", pipelineInfo.getName());
+                        info.put("class", pipelineInfo.getTextProcessorClass());
+                        info.put("specifications", pipelineInfo.getSpecifications());
+                        info.put("stopwords", pipelineInfo.getStopwords());
+
+                        result.add(new Object[]{info});
+                    }
+
+                }
+
                 return Iterators.asRawIterator(result.iterator());
             }
         };

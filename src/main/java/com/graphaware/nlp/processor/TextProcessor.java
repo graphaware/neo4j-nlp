@@ -16,6 +16,7 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.PipelineInfo;
 import com.graphaware.nlp.domain.Tag;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,8 @@ import java.util.Map;
 public interface TextProcessor {
     
     public List<String> getPipelines();
+
+    public List<PipelineInfo> getPipelineInfos();
     
     public void createPipeline(Map<String, Object> pipelineSpec);
     

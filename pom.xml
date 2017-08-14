@@ -15,6 +15,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <graphaware.version>3.1.3.48</graphaware.version>
+    <resttest.version>3.1.3.45.15</resttest.version>
   </properties>
   
   <dependencies>
@@ -77,6 +79,7 @@
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>tests</artifactId>
+      <version>${graphaware.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -96,7 +99,14 @@
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>server</artifactId>
+      <version>${graphaware.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.graphaware.neo4j</groupId>
+      <artifactId>resttest</artifactId>
+      <scope>test</scope>
+      <version>${resttest.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
