@@ -196,7 +196,8 @@ public class FeatureBasedProcessLogic {
             float idf = Double.valueOf(Math.log10(Float.valueOf(getFloatValue(next.get("idf"))).doubleValue())).floatValue();
 
             // ConceptNet5 Level_1 tags
-            long cn5_tag = Long.valueOf((String) next.get("cn5_l1_tag"));
+            //long cn5_tag = Long.valueOf((String) next.get("cn5_l1_tag"));
+            long cn5_tag = (long) next.get("cn5_l1_tag");
             float cn5_tag_w = getFloatValue(next.get("cn5_l1_tag_w"));
 
             if (cn5_tag>-1) {
