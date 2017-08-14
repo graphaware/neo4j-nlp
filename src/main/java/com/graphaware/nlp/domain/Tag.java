@@ -170,7 +170,9 @@ public class Tag implements Persistable, Serializable {
 
     private void assignNERLabel(Node node) {
         if (neL != null) {
+            System.out.println("NEL IS " + neL);
             neL.stream().filter((ent) -> !(ent == null)).forEach((ent) -> {
+                System.out.println("assinging : " + ent + " to : " + node.getProperty("value").toString()) ;
                 node.addLabel(new NERLabel(ent));
             });
         }

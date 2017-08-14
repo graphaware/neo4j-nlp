@@ -19,9 +19,16 @@ import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
 import java.io.File;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * {@link com.graphaware.runtime.module.TxDrivenModule} that assigns UUID's to
@@ -35,10 +42,13 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     
     private final NLPConfiguration nlpMLConfiguration;
 
+    private final GraphDatabaseService database;
+
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
         this.nlpMLConfiguration = configuration;
-        LOG.info("ConceptNet ULR: " + nlpMLConfiguration.getConceptNetUrl());
+        LOG.info("ConceptNet URL: " + nlpMLConfiguration.getConceptNetUrl());
+        this.database = database;
     }
 
     public NLPConfiguration getNlpMLConfiguration() {
@@ -51,6 +61,17 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     @Override
     public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
+        itd.getAllDeletedNodes().forEach((Node node) -> {
+            if (node.hasLabel(Label.label("Pipeline"))) {
+                String name = node.getProperty("name").toString();
+                String processor = node.getProperty("textProcessor").toString();
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("textProcessor", processor);
+                parameters.put("pipeline", name);
+                database.execute("CALL ga.nlp.removePipeline({params})", Collections.singletonMap("params", parameters));
+            }
+        });
+
         return null;
     }
 

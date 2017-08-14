@@ -92,6 +92,10 @@ public class Sentence implements Persistable, Serializable, Comparable<Sentence>
         }
     }
 
+    public Tag getTag(String k) {
+        return tags.get(k);
+    }
+
     public int getSentiment() {
         return sentiment;
     }
