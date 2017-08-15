@@ -18,7 +18,6 @@ package com.graphaware.nlp.ml.textrank;
 import com.graphaware.nlp.procedure.NLPProcedure;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import org.neo4j.collection.RawIterator;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -66,9 +65,8 @@ public class TextRankProcedure extends NLPProcedure {
     private static final boolean DEFAULT_RESPECT_SENTENCES = false;
     private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
     private static final long DEFAULT_COOCCURRENCE_WINDOW = 2;
-    
-    private final GraphDatabaseService database;
 
+    private final GraphDatabaseService database;
 
     public TextRankProcedure(GraphDatabaseService database) {
         this.database = database;
@@ -87,7 +85,6 @@ public class TextRankProcedure extends NLPProcedure {
                     LOG.error("Missing parameter \'" + PARAMETER_ANNOTATED_TEXT + "\'");
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new String[]{"failure"}).iterator());
                 }
-                Node annotatedText = (Node) inputParams.get(PARAMETER_ANNOTATED_TEXT);
                 String nodeType = (String) inputParams.getOrDefault(PARAMETER_NODE_TYPE, DEFAULT_NODE_TYPE);
                 String relType = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_TYPE, DEFAULT_CO_OCCURRENCE_RELATIONTHIP);
                 String relWeight = (String) inputParams.getOrDefault(PARAMETER_RELATIONSHIP_WEIGHT, DEFAULT_WEIGHT_PROPERTY);
@@ -96,15 +93,14 @@ public class TextRankProcedure extends NLPProcedure {
                 double threshold = (double) inputParams.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD);
 
                 String result = "success";
-
                 PageRank pagerank = new PageRank(database);
-                Map<Long, Map<Long, CoOccurrenceItem>> map_graph = pagerank.processGraph(annotatedText, nodeType, relType, relWeight);
-                if (map_graph.size()==0) {
+                Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences = pagerank.processGraph(nodeType, relType, relWeight);
+                if (coOccurrences.isEmpty()) {
                     result = "failure";
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{result}).iterator());
                 }
-                Map<Long, Double> pageranks = pagerank.run(map_graph, iter, damp, threshold);
-                if (pageranks.size()==0) {
+                Map<Long, Double> pageranks = pagerank.run(coOccurrences, iter, damp, threshold);
+                if (pageranks.isEmpty()) {
                     result = "failure";
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{result}).iterator());
                 }
@@ -125,7 +121,6 @@ public class TextRankProcedure extends NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-                System.out.println("->>>>>>>>>>");
                 Map<String, Object> inputParams = (Map) input[0];
                 if (!inputParams.containsKey(PARAMETER_ANNOTATED_TEXT)) {
                     LOG.error("Missing parameter \'" + PARAMETER_ANNOTATED_TEXT + "\'");
@@ -142,7 +137,7 @@ public class TextRankProcedure extends NLPProcedure {
                 int cooccurrenceWindow = ((Long) inputParams.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue();
 
                 TextRank textrank = new TextRank(database);
-                
+
                 if (inputParams.containsKey(PARAMETER_STOPWORDS)) {
                     textrank.setStopwords((String) inputParams.get(PARAMETER_STOPWORDS));
                 }
@@ -153,8 +148,8 @@ public class TextRankProcedure extends NLPProcedure {
                 textrank.setCooccurrenceWindow(cooccurrenceWindow);
 
                 String resReport = "success";
-                
-                Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(annotatedText); 
+
+                Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(annotatedText);
                 boolean res = textrank.evaluate(annotatedText, coOccurrence, iter, damp, threshold);
 
                 if (!res) {
