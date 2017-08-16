@@ -126,6 +126,15 @@ public class Sentence implements Comparable<Sentence> {
         return tagOccurrences;
     }
 
+    public List<PartOfTextOccurrence<Tag>> getTagOccurrencesValues() {
+        List<PartOfTextOccurrence<Tag>> values = new ArrayList<>();
+        tagOccurrences.values().forEach(t -> {
+            values.addAll(t);
+        });
+
+        return values;
+    }
+
     public void addPhraseOccurrence(int begin, int end, Phrase phrase) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent() + ")");

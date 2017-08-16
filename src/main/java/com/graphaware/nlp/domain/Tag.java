@@ -82,6 +82,10 @@ public class Tag {
         return getLemma() + "_" + language;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
     public void addParent(String rel, Tag storedTag, float weight) {
         addParent(new TagParentRelation(storedTag, rel, weight));
     }

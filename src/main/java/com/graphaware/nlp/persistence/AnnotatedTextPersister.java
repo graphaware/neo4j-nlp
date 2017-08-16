@@ -1,11 +1,10 @@
 package com.graphaware.nlp.persistence;
 
 import com.graphaware.common.log.LoggerFactory;
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.Phrase;
-import com.graphaware.nlp.domain.Sentence;
+import com.graphaware.nlp.domain.*;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.logging.Log;
 
 import java.util.List;
@@ -60,6 +59,71 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         previous.createRelationshipTo(next, configuration().getRelationshipFor(Relationships.NEXT_SENTENCE));
     }
 
+    private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, boolean force) {
+        sentence.getTags().forEach(tag -> {
+            Node tagNode = getOrCreateTag(tag, force);
+            relateSentenceToTag(sentenceNode, tagNode, tag.getMultiplicity());
+        });
+    }
+
+    private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, boolean force) {
+        sentence.getTagOccurrences().values().forEach(occurrence -> {
+            for (PartOfTextOccurrence<Tag> tagAtPosition : occurrence) {
+                Node tagNode = getOrCreateTag(tagAtPosition.getElement(), force);
+                Node tagOccurrenceNode = createTagOccurrenceNode(tagAtPosition);
+                relateTagOccurrenceToTag(tagOccurrenceNode, tagNode);
+                relateSentenceToTagOccurrence(sentenceNode, tagOccurrenceNode);
+            }
+        });
+    }
+
+    private void relateSentenceToTagOccurrence(Node sentenceNode, Node tagOccurrenceNode) {
+        sentenceNode.createRelationshipTo(tagOccurrenceNode, configuration().getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE));
+    }
+
+    private void relateSentenceToTag(Node sentenceNode, Node tagNode, int multiplicity) {
+        Relationship rel = sentenceNode.createRelationshipTo(tagNode, configuration().getRelationshipFor(Relationships.HAS_TAG));
+        rel.setProperty(configuration().getPropertyKeyFor(Properties.TF), multiplicity);
+    }
+
+    private Node createTagOccurrenceNode(PartOfTextOccurrence<Tag> occurrence) {
+        Node node = database.createNode(configuration().getLabelFor(Labels.TagOccurrence));
+        node.setProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_BEGIN), occurrence.getSpan().first());
+        node.setProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_END), occurrence.getSpan().second());
+
+        return node;
+    }
+
+    private void relateTagOccurrenceToTag(Node tagOccurrence, Node tag) {
+        tagOccurrence.createRelationshipTo(tag, configuration().getRelationshipFor(Relationships.TAG_OCCURRENCE_TAG));
+    }
+
+    private Node getOrCreateTag(Tag tag, boolean force) {
+        Node node = getIfExist(
+                configuration().getLabelFor(Labels.Tag),
+                configuration().getPropertyKeyFor(Properties.PROPERTY_ID),
+                tag.getId());
+
+        if (null == node) {
+            node = database.createNode(configuration().getLabelFor(Labels.Tag));
+            updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
+
+            return node;
+        }
+
+        if (force) {
+            updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
+        }
+
+        return node;
+    }
+
+    private void updateTag(Node node, String id, String value, String language) {
+        node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
+        node.setProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE), language);
+        node.setProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE), value);
+    }
+
     private Node storeSentence(Sentence sentence, String id, boolean force) {
         String sentenceId = String.format("%s_%s", id, sentence.getSentenceNumber());
         Node sentenceNode = getIfExist(configuration().getLabelFor(Labels.Sentence), configuration().getPropertyKeyFor(Properties.PROPERTY_ID), sentenceId);
@@ -70,12 +134,14 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
             } else {
                 newSentenceNode = sentenceNode;
                 updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
+                storeSentenceTags(sentence, newSentenceNode, id, force);
+                storeSentenceTagOccurrences(sentence, newSentenceNode, force);
+//              storeTags(database, newSentenceNode, force);
+//              storePhrases(database, newSentenceNode, force);
+//              sentenceNode = newSentenceNode;
+//              assignSentimentLabel(sentenceNode);
             }
             sentenceNode = newSentenceNode;
-//            storeTags(database, newSentenceNode, force);
-//            storePhrases(database, newSentenceNode, force);
-//            sentenceNode = newSentenceNode;
-//            assignSentimentLabel(sentenceNode);
         } else {
 //            assignSentimentLabel(sentenceNode);
         }

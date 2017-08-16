@@ -34,6 +34,9 @@ public final class Properties {
     public static final String CONTENT_VALUE = "value";
     public static final String PHRASE_TYPE = "type";
     public static final String LANGUAGE = "language";
+    public static final String TF = "tf";
+    public static final String OCCURRENCE_BEGIN = "startPosition";
+    public static final String OCCURRENCE_END = "endPosition";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

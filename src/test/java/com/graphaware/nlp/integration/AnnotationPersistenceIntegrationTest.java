@@ -3,6 +3,7 @@ package com.graphaware.nlp.integration;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.Labels;
+import com.graphaware.nlp.persistence.Relationships;
 import com.graphaware.nlp.processor.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
@@ -29,6 +30,8 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     false);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Labels.AnnotatedText));
+            assertTrue(annotatedText.hasRelationship(Relationships.CONTAINS_SENTENCE));
+            assertTrue(annotatedText.hasRelationship(Relationships.FIRST_SENTENCE));
             tx.success();
         }
     }

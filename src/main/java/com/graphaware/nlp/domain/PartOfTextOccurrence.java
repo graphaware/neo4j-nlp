@@ -20,7 +20,7 @@ import com.graphaware.common.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 
-class PartOfTextOccurrence<T> {
+public class PartOfTextOccurrence<T> {
 
     private final T element;
     private final Pair<Integer, Integer> span;
