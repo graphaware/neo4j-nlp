@@ -39,54 +39,54 @@ import javax.annotation.PostConstruct;
 import org.neo4j.kernel.api.exceptions.KernelException;
 
 public class NLPProcedures {
-
-    private final GraphDatabaseService database;
-    private final Procedures procedures;
-
-    private SimilarityQueueProcessor queueProcessor;
-
-    private FeatureBasedProcessLogic featureBusinessLogic;
-
-    private TextProcessorsManager processorsManager;
-
-    private Word2VecModel word2VecModel;
-    
-    private NLPConfiguration nlpConfiguration;
-
-    public NLPProcedures(GraphDatabaseService database, Procedures procedures) {
-        this.database = database;
-        this.procedures = procedures;
-    }
-
-    @PostConstruct
-    public void init() throws ProcedureException, KernelException {
-
-        // @todo part of those procedures should go to EE version
-        // other procedures are now loaded temporarely in NLPManager before being re-written to official neo4j procedures
-        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database, processorsManager);
-
-        
-        ConceptProcedure conceptProcedures = new ConceptProcedure(database, processorsManager);
-        procedures.register(conceptProcedures.concept());
-        
-        SimilarityProcedure similarityProcedures = new SimilarityProcedure(featureBusinessLogic);
-        procedures.register(similarityProcedures.computeAll());
-        procedures.register(similarityProcedures.computeAllWithCN5());
-
-        TextRankProcedure textrankProcedures = new TextRankProcedure(database);
-        procedures.register(textrankProcedures.computePageRank());
-        procedures.register(textrankProcedures.compute());
-        
-        LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
-        procedures.register(ldaProcedures.lda());
-//        procedures.register(ldaProcedures.topicDistribution());
-        
-        SearchProcedure searchProcedures = new SearchProcedure(database, processorsManager);
-        procedures.register(searchProcedures.search());
-        
-        Word2VecProcedure word2vecProcedures = new Word2VecProcedure(database, word2VecModel, processorsManager);
-        procedures.register(word2vecProcedures.attachAll());
-        
-        Executors.newSingleThreadExecutor().execute(queueProcessor);
-    }
+//
+//    private final GraphDatabaseService database;
+//    private final Procedures procedures;
+//
+//    private SimilarityQueueProcessor queueProcessor;
+//
+//    private FeatureBasedProcessLogic featureBusinessLogic;
+//
+//    private TextProcessorsManager processorsManager;
+//
+//    private Word2VecModel word2VecModel;
+//
+//    private NLPConfiguration nlpConfiguration;
+//
+//    public NLPProcedures(GraphDatabaseService database, Procedures procedures) {
+//        this.database = database;
+//        this.procedures = procedures;
+//    }
+//
+//    @PostConstruct
+//    public void init() throws ProcedureException, KernelException {
+//
+//        // @todo part of those procedures should go to EE version
+//        // other procedures are now loaded temporarely in NLPManager before being re-written to official neo4j procedures
+//        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database, processorsManager);
+//
+//
+//        ConceptProcedure conceptProcedures = new ConceptProcedure(database, processorsManager);
+//        procedures.register(conceptProcedures.concept());
+//
+//        SimilarityProcedure similarityProcedures = new SimilarityProcedure(featureBusinessLogic);
+//        procedures.register(similarityProcedures.computeAll());
+//        procedures.register(similarityProcedures.computeAllWithCN5());
+//
+//        TextRankProcedure textrankProcedures = new TextRankProcedure(database);
+//        procedures.register(textrankProcedures.computePageRank());
+//        procedures.register(textrankProcedures.compute());
+//
+//        LDAProcedure ldaProcedures = new LDAProcedure(database, processorsManager);
+//        procedures.register(ldaProcedures.lda());
+////        procedures.register(ldaProcedures.topicDistribution());
+//
+//        SearchProcedure searchProcedures = new SearchProcedure(database, processorsManager);
+//        procedures.register(searchProcedures.search());
+//
+//        Word2VecProcedure word2vecProcedures = new Word2VecProcedure(database, word2VecModel, processorsManager);
+//        procedures.register(word2vecProcedures.attachAll());
+//
+//        Executors.newSingleThreadExecutor().execute(queueProcessor);
+//    }
 }

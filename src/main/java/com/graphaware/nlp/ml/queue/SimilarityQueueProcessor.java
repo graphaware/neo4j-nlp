@@ -15,7 +15,7 @@
  */
 package com.graphaware.nlp.ml.queue;
 
-import com.graphaware.nlp.domain.Properties;
+import com.graphaware.nlp.persistence.Properties;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

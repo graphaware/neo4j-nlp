@@ -13,10 +13,10 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.domain;
+package com.graphaware.nlp.persistence;
 
 /**
- * All node properties used in the project.
+ * All node property keys used in the persistence layer.
  */
 public final class Properties {
 

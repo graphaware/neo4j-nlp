@@ -85,7 +85,7 @@ public class AnnotatedText {
     }
 
     public List<Sentence> getSentencesSorted() {
-
+        return new ArrayList<>();
     }
 
     private class FilterQueryTerm {

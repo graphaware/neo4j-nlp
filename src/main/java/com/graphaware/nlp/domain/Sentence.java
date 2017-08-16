@@ -78,6 +78,10 @@ public class Sentence implements Comparable<Sentence> {
         return id;
     }
 
+    public int getSentenceNumber() {
+        return sentenceNumber;
+    }
+
     public void addTagOccurrence(int begin, int end, Tag tag) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");

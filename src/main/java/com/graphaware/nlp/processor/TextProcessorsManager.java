@@ -17,7 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
-import static com.graphaware.nlp.domain.Labels.Pipeline;
+import com.graphaware.nlp.persistence.Labels;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +29,8 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.graphaware.nlp.persistence.Labels.Pipeline;
 
 public class TextProcessorsManager {
 

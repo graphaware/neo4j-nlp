@@ -15,7 +15,7 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-import static com.graphaware.nlp.domain.Labels.Keyword;
+import static com.graphaware.nlp.persistence.Labels.Keyword;
 import static com.graphaware.nlp.persistence.Relationships.DESCRIBES;
 
 import java.util.Arrays;
@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.graphaware.nlp.persistence.Labels;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;

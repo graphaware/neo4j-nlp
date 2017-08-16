@@ -19,6 +19,11 @@ public class PipelineSpecification {
 
     }
 
+    public PipelineSpecification(String name, String textProcessor) {
+        this.name = name;
+        this.textProcessor = textProcessor;
+    }
+
     public String getName() {
         return name;
     }

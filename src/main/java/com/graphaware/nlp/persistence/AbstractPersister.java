@@ -44,15 +44,27 @@ public abstract class AbstractPersister {
     }
 
     public void updateConfiguration(Map<String, Object> configuration) {
-        storeUserConfiguration(configuration);
-        persistenceConfiguration.update(configuration);
+        try (Transaction tx = getDatabase().beginTx()) {
+            storeUserConfiguration(configuration);
+            persistenceConfiguration.update(configuration);
+
+            tx.success();
+        }
+    }
+
+    public void updateConfigurationSetting(String key, Object value) {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Map<String, Object> config = persistenceConfiguration.updateSetting(key, value);
+            storeUserConfiguration(config);
+            tx.success();
+        }
     }
 
     protected GraphDatabaseService getDatabase() {
         return database;
     }
 
-    protected PersistenceConfiguration getPersistenceConfiguration() {
+    protected PersistenceConfiguration configuration() {
         return persistenceConfiguration;
     }
 
@@ -75,16 +87,32 @@ public abstract class AbstractPersister {
     }
 
     private PersistenceConfiguration loadUserConfigurationOrDefault() {
-        if (!graphKeyValueStore.hasKey(KV_CONFIGURATION_KEY)) {
-            return PersistenceConfiguration.defaultConfiguration();
+        PersistenceConfiguration config;
+        try (Transaction tx = getDatabase().beginTx()) {
+            if (!graphKeyValueStore.hasKey(KV_CONFIGURATION_KEY)) {
+                 config = PersistenceConfiguration.defaultConfiguration();
+            } else {
+                config = PersistenceConfiguration.withConfiguration((Map<String, Object>) graphKeyValueStore.get(KV_CONFIGURATION_KEY));
+            }
+            tx.success();
         }
 
-        Map<String, Object> config = (Map<String, Object>) graphKeyValueStore.get(KV_CONFIGURATION_KEY);
-
-        return PersistenceConfiguration.withConfiguration(config);
+        return config;
     }
 
     private void storeUserConfiguration(Map<String, Object> config) {
-        graphKeyValueStore.set(KV_CONFIGURATION_KEY, config);
+        clearConfig();
+        for (String k : config.keySet()) {
+            String kvk = String.format("%s_%s", KV_CONFIGURATION_KEY, k);
+            graphKeyValueStore.set(kvk, config.get(k));
+        }
+    }
+
+    private void clearConfig() {
+        for (String k : graphKeyValueStore.getKeys()) {
+            if (k.startsWith(KV_CONFIGURATION_KEY)) {
+                graphKeyValueStore.remove(k);
+            }
+        }
     }
 }

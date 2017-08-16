@@ -45,10 +45,10 @@ public class StubTextProcessor implements TextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParams) {
-        AnnotatedText annotatedText = new AnnotatedText("at-0");
+        AnnotatedText annotatedText = new AnnotatedText();
         String[] parts = text.split(" ");
         int pos = 0;
-        final Sentence sentence = new Sentence(text, "sentence-0");
+        final Sentence sentence = new Sentence(text, 0);
         for (String token : parts) {
             Tag tag = new Tag(token, "en");
             int begin = pos;

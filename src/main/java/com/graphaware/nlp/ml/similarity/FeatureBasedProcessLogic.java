@@ -19,6 +19,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
 
+import com.graphaware.nlp.persistence.Labels;
 import com.graphaware.nlp.persistence.Relationships;
 import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
 import com.graphaware.nlp.ml.queue.SimilarityItem;

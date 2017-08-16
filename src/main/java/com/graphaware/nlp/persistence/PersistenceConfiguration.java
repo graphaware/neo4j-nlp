@@ -19,6 +19,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class PersistenceConfiguration {
@@ -30,7 +31,7 @@ public class PersistenceConfiguration {
     }
 
     public static PersistenceConfiguration defaultConfiguration() {
-        return new PersistenceConfiguration(Collections.emptyMap());
+        return new PersistenceConfiguration(new HashMap<>());
     }
 
     public static PersistenceConfiguration withConfiguration(Map<String, Object> configuration) {
@@ -64,5 +65,11 @@ public class PersistenceConfiguration {
     public void update(Map<String, Object> map) {
         userProvidedConfiguration.clear();
         userProvidedConfiguration.putAll(map);
+    }
+
+    public Map<String, Object> updateSetting(String key, Object value) {
+        userProvidedConfiguration.put(key, value);
+
+        return userProvidedConfiguration;
     }
 }
