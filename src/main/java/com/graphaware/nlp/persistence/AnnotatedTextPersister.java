@@ -2,12 +2,12 @@ package com.graphaware.nlp.persistence;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.*;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.graphaware.nlp.util.HashFunctions.MD5;
@@ -25,9 +25,37 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         return persist(object, id, false);
     }
 
-    private Node createAnnotatedTextNode(String id) {
+    public Node persist(AnnotatedText object, String id, boolean force) {
+        LOG.info("Start storing annotatedText " + id);
+        Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
+        if (tmpAnnotatedNode == null || force) {
+            final Node annotatedTextNode;
+            if ( tmpAnnotatedNode != null) {
+                annotatedTextNode = tmpAnnotatedNode;
+            } else {
+                annotatedTextNode = createAnnotatedTextNode(id, object);
+
+            }
+            iterateSentencesAndStore(annotatedTextNode, object, id, force);
+            tmpAnnotatedNode = annotatedTextNode;
+        } else {
+            /*
+            * Currently only labels could change so if the AnnotatedText already exist
+            * only the Sentence are updated
+             */
+            object.getSentences().forEach((sentence) -> {
+                storeSentence(sentence, id, force);
+            });
+        }
+
+        LOG.info("end storing annotatedText " + id);
+        return tmpAnnotatedNode;
+    }
+
+    private Node createAnnotatedTextNode(String id, AnnotatedText annotatedText) {
         Node node = database.createNode(configuration().getLabelFor(Labels.AnnotatedText));
         node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
+        node.setProperty(configuration().getPropertyKeyFor(Properties.NUM_TERMS), annotatedText.getTokens().size());
 
         return node;
     }
@@ -136,6 +164,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
                 updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
                 storeSentenceTags(sentence, newSentenceNode, id, force);
                 storeSentenceTagOccurrences(sentence, newSentenceNode, force);
+                storeUniversalDependenciesForSentence(sentence, sentenceNode);
 //              storeTags(database, newSentenceNode, force);
 //              storePhrases(database, newSentenceNode, force);
 //              sentenceNode = newSentenceNode;
@@ -147,6 +176,54 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         }
 
         return sentenceNode;
+    }
+
+    private void storeUniversalDependenciesForSentence(Sentence sentence, Node sentenceNode) {
+        final Map<String, Long> tokenIdsToNodeIds = new HashMap<>();
+        sentence.getTagOccurrences().values().forEach(occurence -> {
+            occurence.forEach(tagOccurrence -> {
+                Node tagOccurrenceNode = getTagOccurrenceInSentence(sentenceNode, tagOccurrence);
+                if (tagOccurrenceNode == null) {
+                    throw new RuntimeException("Expected to find a TagOccurrence node, got null");
+                }
+                tagOccurrence.getPartIds().forEach(tokenId -> {
+                    tokenIdsToNodeIds.put(tokenId, tagOccurrenceNode.getId());
+                });
+            });
+        });
+
+        sentence.getTypedDependencies().forEach(typedDependency -> {
+            if (!tokenIdsToNodeIds.containsKey(typedDependency.getSource()) || !tokenIdsToNodeIds.containsKey(typedDependency.getTarget())) {
+                LOG.info("source: {} or target: {} for typed dependency not found", typedDependency.getSource(), typedDependency.getTarget());
+            }
+
+            Node sourceNode = database.getNodeById(tokenIdsToNodeIds.get(typedDependency.getSource()));
+            Node targetNode = database.getNodeById(tokenIdsToNodeIds.get(typedDependency.getTarget()));
+            relateTypedDependencySourceAndTarget(sourceNode, targetNode, typedDependency);
+        });
+    }
+
+    private void relateTypedDependencySourceAndTarget(Node source, Node target, TypedDependency typedDependency) {
+        RelationshipType relationshipType = RelationshipType.withName(typedDependency.getName().toUpperCase());
+        Relationship relationship = source.createRelationshipTo(target, relationshipType);
+        if (null != typedDependency.getSpecific()) {
+            relationship.setProperty(configuration().getPropertyKeyFor(Properties.DEPENDENCY_SPECIFIC), typedDependency.getSpecific());
+        }
+        if (relationshipType.name().equals("ROOT")) {
+            source.addLabel(configuration().getLabelFor(Labels.Root));
+        }
+    }
+
+    private Node getTagOccurrenceInSentence(Node sentenceNode, PartOfTextOccurrence<Tag> tagOccurrence) {
+        for (Relationship relationship : sentenceNode.getRelationships(configuration().getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE), Direction.OUTGOING)) {
+            Node otherNode = relationship.getEndNode();
+            if (otherNode.getProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_BEGIN)).equals(tagOccurrence.getSpan().first())
+                    && otherNode.getProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_END)).equals(tagOccurrence.getSpan().second())) {
+                return otherNode;
+            }
+        }
+
+        return null;
     }
 
     private void iterateSentencesAndStore(Node annotatedTextNode, AnnotatedText annotatedText, String id, boolean force) {
@@ -172,34 +249,6 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 //                }
 //            });
         });
-    }
-
-    public Node persist(AnnotatedText object, String id, boolean force) {
-        LOG.info("Start storing annotatedText " + id);
-        Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
-        if (tmpAnnotatedNode == null || force) {
-            final Node annotatedTextNode;
-            if ( tmpAnnotatedNode != null) {
-                annotatedTextNode = tmpAnnotatedNode;
-            } else {
-                annotatedTextNode = createAnnotatedTextNode(id);
-                annotatedTextNode.setProperty(configuration().getPropertyKeyFor(Properties.NUM_TERMS), object.getTokens().size());
-
-            }
-            iterateSentencesAndStore(annotatedTextNode, object, id, force);
-            tmpAnnotatedNode = annotatedTextNode;
-        } else {
-            /*
-            * Currently only labels could change so if the AnnotatedText already exist
-            * only the Sentence are updated
-             */
-            object.getSentences().forEach((sentence) -> {
-                storeSentence(sentence, id, force);
-            });
-        }
-
-        LOG.info("end storing annotatedText " + id);
-        return tmpAnnotatedNode;
     }
 
     @Override

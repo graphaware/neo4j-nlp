@@ -37,6 +37,7 @@ public final class Properties {
     public static final String TF = "tf";
     public static final String OCCURRENCE_BEGIN = "startPosition";
     public static final String OCCURRENCE_END = "endPosition";
+    public static final String DEPENDENCY_SPECIFIC = "specific";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

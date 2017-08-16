@@ -7,6 +7,7 @@ import com.graphaware.nlp.persistence.Relationships;
 import com.graphaware.nlp.processor.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -16,6 +17,11 @@ import static org.junit.Assert.*;
 
 public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegrationTest {
 
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        clearDatabase();
+    }
 
     @Test
     public void testAnnotatedTextIsPersisted() {
@@ -32,6 +38,9 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
             assertTrue(annotatedText.hasLabel(Labels.AnnotatedText));
             assertTrue(annotatedText.hasRelationship(Relationships.CONTAINS_SENTENCE));
             assertTrue(annotatedText.hasRelationship(Relationships.FIRST_SENTENCE));
+
+            assertEquals(1L, getDatabase().execute("MATCH (n:Sentence) RETURN count(n) AS c").next().get("c"));
+
             tx.success();
         }
     }
@@ -49,6 +58,13 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     false);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Label.label("TextAnnotation")));
+            tx.success();
+        }
+    }
+
+    private void clearDatabase() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            getDatabase().execute("MATCH (n) DETACH DELETE n");
             tx.success();
         }
     }
