@@ -2,6 +2,8 @@ package com.graphaware.nlp.persistence;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.util.TagUtils;
+import com.graphaware.nlp.util.TypeConverter;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
@@ -90,8 +92,24 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, boolean force) {
         sentence.getTags().forEach(tag -> {
             Node tagNode = getOrCreateTag(tag, force);
+            assignNamedEntityOnTag(tagNode, tag);
+            assignPartOfSpeechOnTag(tagNode, tag);
             relateSentenceToTag(sentenceNode, tagNode, tag.getMultiplicity());
         });
+    }
+
+    private void assignNamedEntityOnTag(Node tagNode, Tag tag) {
+        List<String> namedEntities = tag.getNeAsList();
+        tagNode.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), TypeConverter.convertStringListToArray(namedEntities));
+        namedEntities.forEach(ner -> {
+            String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX) + TagUtils.getNamedEntityValue(ner);
+            tagNode.addLabel(Label.label(labelName));
+        });
+    }
+
+    private void assignPartOfSpeechOnTag(Node tagNode, Tag tag) {
+        List<String> parts = tag.getPosAsList();
+        tagNode.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), TypeConverter.convertStringListToArray(parts));
     }
 
     private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, boolean force) {
@@ -161,15 +179,14 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
                 newSentenceNode = createSentenceNode(sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
             } else {
                 newSentenceNode = sentenceNode;
-                updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
-                storeSentenceTags(sentence, newSentenceNode, id, force);
-                storeSentenceTagOccurrences(sentence, newSentenceNode, force);
-                storeUniversalDependenciesForSentence(sentence, sentenceNode);
-//              storeTags(database, newSentenceNode, force);
 //              storePhrases(database, newSentenceNode, force);
 //              sentenceNode = newSentenceNode;
 //              assignSentimentLabel(sentenceNode);
             }
+            updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
+            storeSentenceTags(sentence, newSentenceNode, id, force);
+            storeSentenceTagOccurrences(sentence, newSentenceNode, force);
+            storeUniversalDependenciesForSentence(sentence, newSentenceNode);
             sentenceNode = newSentenceNode;
         } else {
 //            assignSentimentLabel(sentenceNode);

@@ -126,15 +126,6 @@ public class Sentence implements Comparable<Sentence> {
         return tagOccurrences;
     }
 
-    public List<PartOfTextOccurrence<Tag>> getTagOccurrencesValues() {
-        List<PartOfTextOccurrence<Tag>> values = new ArrayList<>();
-        tagOccurrences.values().forEach(t -> {
-            values.addAll(t);
-        });
-
-        return values;
-    }
-
     public void addPhraseOccurrence(int begin, int end, Phrase phrase) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for phrase: " + phrase.getContent() + ")");
@@ -227,15 +218,6 @@ public class Sentence implements Comparable<Sentence> {
 //        return new Sentence(text, true, id, sentenceNumber);
 //    }
 //
-//    private Node checkIfExist(GraphDatabaseService database, Object id) {
-//        if (id != null) {
-//            ResourceIterator<Node> findNodes = database.findNodes(Labels.Sentence, Properties.PROPERTY_ID, id);
-//            if (findNodes.hasNext()) {
-//                return findNodes.next();
-//            }
-//        }
-//        return null;
-//    }
 //
 //    private void writeObject(ObjectOutputStream s) throws IOException {
 //        s.defaultWriteObject();
@@ -247,93 +229,6 @@ public class Sentence implements Comparable<Sentence> {
 //        this.tags = (Map<String, Tag>)s.readObject();
 //    }
 
-
-//    @Override
-//    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
-//        Node sentenceNode = checkIfExist(database, id);
-//        if (sentenceNode == null || force) {
-//            try (Transaction tx = database.beginTx();) {
-//                Node newSentenceNode;
-//                if (sentenceNode == null)
-//                    newSentenceNode = database.createNode(Sentence);
-//                else
-//                    newSentenceNode = sentenceNode;
-//                newSentenceNode.setProperty(HASH, MD5(sentence));
-//                newSentenceNode.setProperty(PROPERTY_ID, id);
-//                newSentenceNode.setProperty(SENTENCE_NUMBER, sentenceNumber);
-//                if (store) {
-//                    newSentenceNode.setProperty(TEXT, sentence);
-//                }
-//                storeTags(database, newSentenceNode, force);
-//                storePhrases(database, newSentenceNode, force);
-//                sentenceNode = newSentenceNode;
-//                assignSentimentLabel(sentenceNode);
-//                tx.success();
-//            }
-//        } else {
-//            assignSentimentLabel(sentenceNode);
-//        }
-//        return sentenceNode;
-//    }
-
-
-//    private void storeTags(GraphDatabaseService database, Node newSentenceNode, boolean force) {
-//        tags.values().stream().forEach((tag) -> {
-//            Node tagNode = tag.storeOnGraph(database, force);
-//            Relationship hasTagRel = newSentenceNode.createRelationshipTo(tagNode, HAS_TAG);
-//            hasTagRel.setProperty("tf", tag.getMultiplicity());
-//        });
-//
-//        Map<String, Long> tokenIdToTagOccurenceNodeIdMap = new HashMap<>();
-//
-//        tagOccurrences.values().stream().forEach((tagOccurrences) -> {
-//            for (PartOfTextOccurrence<Tag> tagOccurrenceAtPosition: tagOccurrences) {
-//                Node tagNode = tagOccurrenceAtPosition.getElement().getOrCreate(database, force);
-//                Node tagOccurrenceNode = database.createNode(TagOccurrence);
-//                for (String tokenId : tagOccurrenceAtPosition.getPartIds()) {
-//                    tokenIdToTagOccurenceNodeIdMap.put(tokenId, tagOccurrenceNode.getId());
-//                }
-//                tagOccurrenceNode.setProperty(START_POSITION, tagOccurrenceAtPosition.getSpan().first());
-//                tagOccurrenceNode.setProperty(END_POSITION, tagOccurrenceAtPosition.getSpan().second());
-//                newSentenceNode.createRelationshipTo(tagOccurrenceNode, SENTENCE_TAG_OCCURRENCE);
-//                tagOccurrenceNode.createRelationshipTo(tagNode, TAG_OCCURRENCE_TAG);
-//            }
-//        });
-//
-//        typedDependencies.forEach(typedDependency -> {
-////            System.out.println(String.format("processing typed dependency %s-%s-%s", typedDependency.getSource(), typedDependency.getTarget(), typedDependency.getName()));
-//            if (!tokenIdToTagOccurenceNodeIdMap.containsKey(typedDependency.getSource())) {
-//                System.out.println(String.format("could not find reference in map for %s", typedDependency.getSource()));
-//                return;
-//            }
-//
-//            if (!tokenIdToTagOccurenceNodeIdMap.containsKey(typedDependency.getTarget())) {
-//                System.out.println(String.format("could not find reference in map for %s", typedDependency.getTarget()));
-//                return;
-//            }
-//
-//            Node source = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getSource()));
-//            Node target = database.getNodeById(tokenIdToTagOccurenceNodeIdMap.get(typedDependency.getTarget()));
-//            if ((source.getId() == target.getId()) && !typedDependency.getName().equals("ROOT")) {
-//                return;
-//            }
-//            String relType = typedDependency.getName().toUpperCase();
-//            Relationship dependencyRelationship = source.createRelationshipTo(target, RelationshipType.withName(relType));
-//            if (null != typedDependency.getSpecific()) {
-//                dependencyRelationship.setProperty("specific", typedDependency.getSpecific());
-//            }
-//
-//            if (typedDependency.getName().equals("ROOT")) {
-//                source.addLabel(Label.label("ROOT"));
-//            }
-//
-//            System.out.println(String.format("Created relationship from %s to %s with type %s",
-//                    typedDependency.getSource(),
-//                    typedDependency.getTarget(),
-//                    relType));
-//
-//        });
-//    }
 //
 //    private void storePhrases(GraphDatabaseService database, Node newSentenceNode, boolean force) {
 //        if (phraseOccurrences != null) {

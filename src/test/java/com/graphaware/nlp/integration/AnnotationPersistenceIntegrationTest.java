@@ -13,6 +13,8 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
+import java.util.Iterator;
+
 import static org.junit.Assert.*;
 
 public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegrationTest {
@@ -58,6 +60,28 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     false);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Label.label("TextAnnotation")));
+            tx.success();
+        }
+    }
+
+    @Test
+    public void testNamedEntityLabelIsAdded() {
+        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
+        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
+        manager.updateConfigurationSetting(Labels.AnnotatedText.toString(), "TextAnnotation");
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "hello my name is John.",
+                    "123",
+                    specification,
+                    false);
+
+            Iterator<Node> it = getDatabase().findNodes(Label.label("Tag"));
+            assertTrue(it.hasNext());
+            while (it.hasNext()) {
+                Node node = it.next();
+                assertTrue(node.hasLabel(Label.label("NER_Test")));
+            }
             tx.success();
         }
     }

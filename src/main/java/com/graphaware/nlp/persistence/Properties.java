@@ -38,6 +38,9 @@ public final class Properties {
     public static final String OCCURRENCE_BEGIN = "startPosition";
     public static final String OCCURRENCE_END = "endPosition";
     public static final String DEPENDENCY_SPECIFIC = "specific";
+    public static final String NAMED_ENTITY = "ne";
+    public static final String NAMED_ENTITY_PREFIX = "NER_";
+    public static final String PART_OF_SPEECH = "pos";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

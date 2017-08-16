@@ -51,9 +51,11 @@ public class StubTextProcessor implements TextProcessor {
         final Sentence sentence = new Sentence(text, 0);
         for (String token : parts) {
             Tag tag = new Tag(token, "en");
+            tag.setNe(Collections.singletonList("test"));
+            tag.setPos(Collections.singletonList("TESTVB"));
             int begin = pos;
             pos += token.length() + 1;
-            sentence.addTagOccurrence(begin, pos, tag);
+            sentence.addTagOccurrence(begin, pos, sentence.addTag(tag));
         }
         annotatedText.addSentence(sentence);
 

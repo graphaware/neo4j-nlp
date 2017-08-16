@@ -6,11 +6,8 @@
 package com.graphaware.nlp.util;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
-/**
- *
- * @author ale
- */
 public class TypeConverter {
 
     public static byte[] toByteArray(double[] doubleArray) {
@@ -29,5 +26,9 @@ public class TypeConverter {
             doubles[i] = ByteBuffer.wrap(byteArray, i * times, times).getDouble();
         }
         return doubles;
+    }
+
+    public static String[] convertStringListToArray(List<String> list) {
+        return list.toArray(new String[0]);
     }
 }

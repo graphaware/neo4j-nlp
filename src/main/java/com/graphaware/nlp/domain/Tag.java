@@ -15,11 +15,9 @@
  */
 package com.graphaware.nlp.domain;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 public class Tag {
 
@@ -71,11 +69,15 @@ public class Tag {
     }
 
     public List<String> getPosAsList() {
-        return posL;
+        List<String> values =  posL != null ? posL : new ArrayList<>();
+
+        return values.stream().filter(pos -> { return pos != null; }).collect(Collectors.toList());
     }
 
     public List<String> getNeAsList() {
-        return neL;
+        List<String> values =  neL != null ? neL : new ArrayList<>();
+
+        return values.stream().filter(ne -> { return ne != null; }).collect(Collectors.toList());
     }
 
     public String getId() {
@@ -112,15 +114,6 @@ public class Tag {
 //        return tag;
 //    }
 //
-//    private void assignNERLabel(Node node) {
-//        if (neL != null) {
-//            System.out.println("NEL IS " + neL);
-//            neL.stream().filter((ent) -> !(ent == null)).forEach((ent) -> {
-//                System.out.println("assinging : " + ent + " to : " + node.getProperty("value").toString()) ;
-//                node.addLabel(new NERLabel(ent));
-//            });
-//        }
-//    }
 //
 //    private static void checkNodeIsATag(Node tagNode) {
 //        Map<String, Object> allProperties = tagNode.getAllProperties();
@@ -173,33 +166,4 @@ public class Tag {
 //        }
 //        return tagNode;
 //    }
-//
-//    public Node getOrCreate(GraphDatabaseService database, boolean force) {
-//        Node tagNode = database.findNode(Tag, PROPERTY_ID, getId());
-//        if (tagNode != null && !force) {
-//            return tagNode;
-//        }
-//        if (tagNode == null) {
-//            tagNode = database.createNode(Tag);
-//        }
-//        tagNode.setProperty(PROPERTY_ID, getId());
-//        tagNode.setProperty(CONTENT_VALUE, getLemma());
-//        tagNode.setProperty(LANGUAGE, language);
-//
-//        if (neL != null) {
-//            tagNode.setProperty("ne", neL.toArray(new String[neL.size()]));
-//        }
-//        if (posL != null) {
-//            tagNode.setProperty("pos", posL.toArray(new String[posL.size()]));
-//        }
-//
-//        if (properties != null) {
-//            for (Map.Entry<String, Object> property : properties.entrySet()) {
-//                tagNode.setProperty(property.getKey(), property.getValue());
-//            }
-//        }
-//
-//        return tagNode;
-//    }
-
 }
