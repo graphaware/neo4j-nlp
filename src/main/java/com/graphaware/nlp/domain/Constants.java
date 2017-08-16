@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -39,10 +39,6 @@ public final class Constants {
     public static final String LANGUAGE_NA = "n/a";
     public static final String LANGUAGE_EN = "en";
 
-    /**
-     * Private constructor to prevent people from instantiating this class -
-     * it's not meant to be instantiated.
-     */
     private Constants() {
     }
 }

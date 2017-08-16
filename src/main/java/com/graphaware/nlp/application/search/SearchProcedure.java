@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -66,7 +66,7 @@ public class SearchProcedure extends NLPProcedure {
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 String text = (String) input[0];
                 String lang = LanguageManager.getInstance().detectLanguage(text);
-                AnnotatedText annotateText = textProcessor.annotateText(text, 0, 0, lang, false);
+                AnnotatedText annotateText = textProcessor.annotateText(text, "tokenize", lang, null);
                 List<String> tokens = annotateText.getTokens();
                 Map<String, Object> params = new HashMap<>();
                 params.put("tokens", tokens);

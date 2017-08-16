@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -13,12 +13,12 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.domain;
+package com.graphaware.nlp.persistence;
 
 import org.neo4j.graphdb.Label;
 
 /**
- * All labels used in the project.
+ * Default Node labels used in the persistence layer
  */
 public enum Labels implements Label {
     AnnotatedText,
@@ -27,6 +27,8 @@ public enum Labels implements Label {
     Phrase,
     PhraseOccurrence,
     TagOccurrence,
+    Keyword,
+    Root,
     Pipeline,
-    Keyword
+    GA_NLP_Configuration
 }

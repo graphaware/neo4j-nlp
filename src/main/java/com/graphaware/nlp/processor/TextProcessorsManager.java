@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.processor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import static com.graphaware.nlp.domain.Labels.Pipeline;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -28,19 +29,16 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
 public class TextProcessorsManager {
+
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
+    private static final String DEFAULT_TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
 
     private final GraphDatabaseService database;
-    private Map<String, TextProcessor> textProcessors;
+    private final Map<String, TextProcessor> textProcessors = new HashMap<>();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private static final String defaultTextProcessor = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
-    
-    @Autowired
     public TextProcessorsManager(GraphDatabaseService database) {
         this.database = database;
         loadTextProcessors();
@@ -48,26 +46,26 @@ public class TextProcessorsManager {
     }
 
     private void loadTextProcessors() {
-        textProcessors = ServiceLoader.loadInstances(NLPTextProcessor.class);
+        textProcessors.putAll(ServiceLoader.loadInstances(NLPTextProcessor.class));
     }
 
-    public Set<String> getTextProcessors() {
-        return textProcessors.keySet();
-    }
-    
-    
     public TextProcessor getTextProcessor(String name) {
         return textProcessors.get(name);
-    }    
+    }
 
-    public PipelineCreationResult createPipeline(Map<String, Object> inputParams) {
-        String processorName = (String) inputParams.get("textProcessor");
-            if (processorName == null || !textProcessors.containsKey(processorName)) {
+    public Set<String> getTextProcessorNames() {
+        return textProcessors.keySet();
+    }
+
+    public PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
+        String processorName = pipelineSpecification.getTextProcessor();
+        if (processorName == null || !textProcessors.containsKey(processorName)) {
             return new PipelineCreationResult(-1, "Processor class not specified or not existing");
         }
         TextProcessor processor = textProcessors.get(processorName);
         //TODO add catch
-        processor.createPipeline(inputParams);
+        processor.createPipeline(pipelineSpecification);
+
         return new PipelineCreationResult(0, "");
     }
 
@@ -75,25 +73,16 @@ public class TextProcessorsManager {
         try (Transaction tx = database.beginTx()) {
             ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
             pipelineNodes.stream().forEach(pipeline -> {
-                createPipeline(pipeline.getAllProperties());
+                createPipeline(PipelineSpecification.fromMap(pipeline.getAllProperties()));
             });            
             tx.success();
         }
     }
     
-    public void storePipelines(Map<String, Object> inputParams) {
+    public void storePipeline(PipelineSpecification pipelineSpecification) {
         try (Transaction tx = database.beginTx()) {
             Node pipelineNode = database.createNode(Pipeline);
-            inputParams.entrySet().stream().forEach(entry -> {
-                pipelineNode.setProperty(entry.getKey(), entry.getValue());
-            });            
-            tx.success();
-        }
-    }
-    
-    public void removePipeline(Map<String, Object> inputParams) {
-        try (Transaction tx = database.beginTx()) {
-            Node pipelineNode = database.createNode(Pipeline);
+            Map<String, Object> inputParams = mapper.convertValue(pipelineSpecification, Map.class);
             inputParams.entrySet().stream().forEach(entry -> {
                 pipelineNode.setProperty(entry.getKey(), entry.getValue());
             });            
@@ -102,14 +91,19 @@ public class TextProcessorsManager {
     }
 
     public String getDefaultProcessorName() {
-        if (textProcessors==null)
-          return null;
-        if (textProcessors.containsKey(defaultTextProcessor))
-          return defaultTextProcessor; // return the default text processor if it's available
-        if (textProcessors.keySet().size()>0)
-          return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
-        else
-          return null;
+        if (textProcessors.isEmpty()) {
+            return null;
+        }
+
+        if (textProcessors.containsKey(DEFAULT_TEXT_PROCESSOR)) {
+            return DEFAULT_TEXT_PROCESSOR; // return the default text processor if it's available
+        }
+
+        if (textProcessors.keySet().size() >0 ) {
+            return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
+        }
+
+        return null;
     }
 
     public TextProcessor getDefaultProcessor() {
@@ -117,9 +111,12 @@ public class TextProcessorsManager {
     }
 
     public void removePipeline(String processor, String pipeline) {
-        TextProcessor textProcessor = textProcessors.get(processor);
-        if (processor == null)
+        if (!textProcessors.containsKey(processor)) {
             throw new RuntimeException("No text processor with name " + processor + " available");
+        }
+
+        // @todo extract to its own method
+        TextProcessor textProcessor = textProcessors.get(processor);
         textProcessor.removePipeline(pipeline);
         removePipelineNode(processor, pipeline);
     }
@@ -134,6 +131,7 @@ public class TextProcessorsManager {
       }
     }
 
+    // @todo is it really needed ?
     public static class PipelineCreationResult {
         private final int result;
         private final String message;

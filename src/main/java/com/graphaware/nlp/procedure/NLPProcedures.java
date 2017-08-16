@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -38,27 +38,21 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import org.neo4j.kernel.api.exceptions.KernelException;
 
-@Component
 public class NLPProcedures {
 
     private final GraphDatabaseService database;
     private final Procedures procedures;
 
-    @Autowired
     private SimilarityQueueProcessor queueProcessor;
 
-    @Autowired
     private FeatureBasedProcessLogic featureBusinessLogic;
-    
-    @Autowired
+
     private TextProcessorsManager processorsManager;
-    
-    @Autowired
+
     private Word2VecModel word2VecModel;
     
     private NLPConfiguration nlpConfiguration;
 
-    @Autowired
     public NLPProcedures(GraphDatabaseService database, Procedures procedures) {
         this.database = database;
         this.procedures = procedures;
@@ -66,19 +60,11 @@ public class NLPProcedures {
 
     @PostConstruct
     public void init() throws ProcedureException, KernelException {
+
+        // @todo part of those procedures should go to EE version
+        // other procedures are now loaded temporarely in NLPManager before being re-written to official neo4j procedures
         TextProcessorProcedure textProcedures = new TextProcessorProcedure(database, processorsManager);
-        procedures.register(textProcedures.annotate());
-        procedures.register(textProcedures.sentiment());
-        procedures.register(textProcedures.language());
-        procedures.register(textProcedures.filter());
-        procedures.register(textProcedures.train());
-        procedures.register(textProcedures.test());
-        //Managing Processor
-        procedures.register(textProcedures.getProcessors());
-        procedures.register(textProcedures.getPipelines());
-        procedures.register(textProcedures.getPipelineInfos());
-        procedures.register(textProcedures.addPipeline());
-        procedures.register(textProcedures.removePipeline());
+
         
         ConceptProcedure conceptProcedures = new ConceptProcedure(database, processorsManager);
         procedures.register(conceptProcedures.concept());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,8 +15,14 @@
  */
 package com.graphaware.nlp.persistence;
 
-import com.graphaware.nlp.domain.Persistable;
+import org.neo4j.graphdb.Node;
 
-public interface GraphPersistence {
-    public void persistOnGraph(Persistable text, boolean force);
+public interface Persister<T> {
+
+    Node persist(T object, String id);
+
+    T fromNode(Node node);
+
+    boolean exists(String id);
+
 }

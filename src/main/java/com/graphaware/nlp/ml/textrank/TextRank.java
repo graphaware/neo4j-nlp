@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -16,13 +16,12 @@
 package com.graphaware.nlp.ml.textrank;
 
 import static com.graphaware.nlp.domain.Labels.Keyword;
-import static com.graphaware.nlp.domain.Relationships.DESCRIBES;
-import com.graphaware.nlp.util.MapUtil;
+import static com.graphaware.nlp.persistence.Relationships.DESCRIBES;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.neo4j.graphdb.GraphDatabaseService;

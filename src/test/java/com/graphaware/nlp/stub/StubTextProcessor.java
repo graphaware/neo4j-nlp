@@ -2,9 +2,10 @@ package com.graphaware.nlp.stub;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.PipelineInfo;
+import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.processor.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 
 import java.util.*;
@@ -30,8 +31,8 @@ public class StubTextProcessor implements TextProcessor {
     }
 
     @Override
-    public void createPipeline(Map<String, Object> pipelineSpec) {
-        String name = pipelineSpec.get("name").toString();
+    public void createPipeline(PipelineSpecification pipelineSpecification) {
+        String name = pipelineSpecification.getName();
         pipelineInfos.put(name, new PipelineInfo(name, this.getClass().getName(), Collections.emptyMap(), Collections.emptyMap(), 4, Collections.emptyList()));
     }
 
@@ -40,10 +41,12 @@ public class StubTextProcessor implements TextProcessor {
         return false;
     }
 
+
+
     @Override
-    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store) {
+    public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParams) {
         AnnotatedText annotatedText = new AnnotatedText("at-0");
-        String[] parts = text.split("");
+        String[] parts = text.split(" ");
         int pos = 0;
         final Sentence sentence = new Sentence(text, "sentence-0");
         for (String token : parts) {
@@ -55,11 +58,6 @@ public class StubTextProcessor implements TextProcessor {
         annotatedText.addSentence(sentence);
 
         return annotatedText;
-    }
-
-    @Override
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams) {
-        return null;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -16,8 +16,6 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.Labels;
-import com.graphaware.nlp.domain.PipelineInfo;
 import com.graphaware.nlp.domain.Properties;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
@@ -124,7 +122,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                         AnnotatedText annotateText;
                         String pipeline = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
                         TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
-                        annotateText = currentTP.annotateText(text, id, pipeline, lang, store, otherPars);
+                        annotateText = currentTP.annotateText(text, pipeline, lang, otherPars);
                         annotatedText = annotateText.storeOnGraph(database, force);
                     }
                     return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
@@ -186,7 +184,7 @@ public class TextProcessorProcedure extends NLPProcedure {
                     throw new RuntimeException("A filter value needs to be provided");
                 }
                 TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
-                AnnotatedText annotatedText = currentTP.annotateText(text, 0, 0, lang, false);
+                AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer",lang, null);
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
             }
         };
@@ -224,7 +222,7 @@ public class TextProcessorProcedure extends NLPProcedure {
 
             @Override
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-                Set<String> textProcessors = processorManager.getTextProcessors();
+                Set<String> textProcessors = processorManager.getTextProcessorNames();
                 Set<Object[]> result = new HashSet<>();
                 textProcessors.forEach(row -> {
                     result.add(new Object[]{row});
@@ -306,9 +304,9 @@ public class TextProcessorProcedure extends NLPProcedure {
             public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
                 checkIsMap(input[0]);
                 Map<String, Object> inputParams = (Map) input[0];
-                TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(inputParams);
+                TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(PipelineSpecification.fromMap(inputParams));
                 //if succeeded
-                processorManager.storePipelines(inputParams);
+                processorManager.storePipeline(PipelineSpecification.fromMap(inputParams));
                 return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
                     creationResult.getResult() == 0 ? SUCCESS : "Error: " + creationResult.getMessage()
                 }).iterator());

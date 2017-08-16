@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -13,11 +13,27 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.domain;
+package com.graphaware.nlp.persistence;
 
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.RelationshipType;
 
-public interface Persistable {
-    public Node storeOnGraph(GraphDatabaseService graphdb, boolean force);    
+/**
+ * Default RelationshipType used in the persistence layer
+ */
+public enum Relationships implements RelationshipType {
+    CONTAINS_SENTENCE,
+    HAS_TAG,
+    IS_RELATED_TO,
+    SIMILARITY_COSINE,
+    SIMILARITY_COSINE_CN5,
+    FIRST_SENTENCE,
+    NEXT_SENTENCE,
+    HAS_PHRASE,
+    SENTENCE_TAG_OCCURRENCE,
+    TAG_OCCURRENCE_TAG,
+    SENTENCE_PHRASE_OCCURRENCE,
+    PHRASE_OCCURRENCE_PHRASE,
+    REFER_TO,
+    DESCRIBES,
+    ROOT
 }

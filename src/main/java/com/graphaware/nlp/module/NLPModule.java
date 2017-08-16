@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.module;
 
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
@@ -44,17 +45,24 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     private final GraphDatabaseService database;
 
+    private final NLPManager nlpManager;
+
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
         this.nlpMLConfiguration = configuration;
         LOG.info("ConceptNet URL: " + nlpMLConfiguration.getConceptNetUrl());
         this.database = database;
+        this.nlpManager = new NLPManager(database, nlpMLConfiguration);
     }
 
     public NLPConfiguration getNlpMLConfiguration() {
         return nlpMLConfiguration;
     }
-    
+
+    public NLPManager getNlpManager() {
+        return nlpManager;
+    }
+
     @Override
     public void shutdown() {
     }
@@ -65,10 +73,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
             if (node.hasLabel(Label.label("Pipeline"))) {
                 String name = node.getProperty("name").toString();
                 String processor = node.getProperty("textProcessor").toString();
-                Map<String, Object> parameters = new HashMap<>();
-                parameters.put("textProcessor", processor);
-                parameters.put("pipeline", name);
-                database.execute("CALL ga.nlp.removePipeline({params})", Collections.singletonMap("params", parameters));
+                this.nlpManager.getTextProcessorsManager().removePipeline(processor, name);
             }
         });
 

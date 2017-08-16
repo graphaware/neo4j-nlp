@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -16,7 +16,6 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.PipelineInfo;
 import com.graphaware.nlp.domain.Tag;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +26,11 @@ public interface TextProcessor {
 
     public List<PipelineInfo> getPipelineInfos();
     
-    public void createPipeline(Map<String, Object> pipelineSpec);
+    public void createPipeline(PipelineSpecification pipelineSpecification);
     
     public boolean checkPipeline(String name);
 
-    @Deprecated
-    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store);
-
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams);
+    public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
 
     public Tag annotateSentence(String text, String lang);
 

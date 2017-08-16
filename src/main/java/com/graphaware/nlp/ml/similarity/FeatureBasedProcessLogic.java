@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -18,15 +18,13 @@ package com.graphaware.nlp.ml.similarity;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
-import com.graphaware.nlp.domain.Labels;
-import com.graphaware.nlp.domain.Relationships;
+
+import com.graphaware.nlp.persistence.Relationships;
 import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
 import com.graphaware.nlp.ml.queue.SimilarityItem;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
-import com.graphaware.nlp.ml.similarity.CosineSimilarity;
-import com.graphaware.nlp.ml.similarity.Similarity;
-import java.util.Arrays;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

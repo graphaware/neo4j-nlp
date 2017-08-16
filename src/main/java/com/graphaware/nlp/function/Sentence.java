@@ -1,7 +1,7 @@
 package com.graphaware.nlp.function;
 
 import com.graphaware.nlp.domain.Properties;
-import com.graphaware.nlp.domain.Relationships;
+import com.graphaware.nlp.persistence.Relationships;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
