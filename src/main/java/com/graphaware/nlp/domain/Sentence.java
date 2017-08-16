@@ -152,17 +152,10 @@ public class Sentence implements Comparable<Sentence> {
         return null;
     }
 
-    public List<Phrase> getPhraseOccurrence() {
-        List<Phrase> result = new ArrayList<>();
-        phraseOccurrences.values().stream().forEach((phraseList) -> {
-            phraseList.values().stream().forEach((item) -> {
-                result.add(item.getElement());
-            });
-        });
-
-        return result;
-
+    public Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> getPhraseOccurrences() {
+        return phraseOccurrences;
     }
+
 
     public String getSentence() {
         return sentence;

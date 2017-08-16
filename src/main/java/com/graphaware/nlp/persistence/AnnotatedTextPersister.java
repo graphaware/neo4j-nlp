@@ -2,6 +2,7 @@ package com.graphaware.nlp.persistence;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.util.SentenceUtils;
 import com.graphaware.nlp.util.TagUtils;
 import com.graphaware.nlp.util.TypeConverter;
 import org.neo4j.graphdb.*;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.graphaware.nlp.domain.SentimentLabels.*;
+import static com.graphaware.nlp.domain.SentimentLabels.VeryPositive;
 import static com.graphaware.nlp.util.HashFunctions.MD5;
 
 public class AnnotatedTextPersister extends AbstractPersister implements Persister<AnnotatedText> {
@@ -179,17 +182,16 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
                 newSentenceNode = createSentenceNode(sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
             } else {
                 newSentenceNode = sentenceNode;
-//              storePhrases(database, newSentenceNode, force);
-//              sentenceNode = newSentenceNode;
-//              assignSentimentLabel(sentenceNode);
             }
             updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
             storeSentenceTags(sentence, newSentenceNode, id, force);
             storeSentenceTagOccurrences(sentence, newSentenceNode, force);
             storeUniversalDependenciesForSentence(sentence, newSentenceNode);
+            storePhrases(sentence, newSentenceNode, force);
+            assignSentimentLabel(sentence, newSentenceNode);
             sentenceNode = newSentenceNode;
         } else {
-//            assignSentimentLabel(sentenceNode);
+            assignSentimentLabel(sentence, sentenceNode);
         }
 
         return sentenceNode;
@@ -231,6 +233,15 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         }
     }
 
+    private void assignSentimentLabel(Sentence sentence, Node sentenceNode) {
+        int sentiment = sentence.getSentiment();
+        Label sentimentLabel = SentenceUtils.getDefaultLabelForSentimentLevel(sentiment);
+        if (sentimentLabel == null) {
+            return;
+        }
+        sentenceNode.addLabel(configuration().getLabelFor(sentimentLabel));
+    }
+
     private Node getTagOccurrenceInSentence(Node sentenceNode, PartOfTextOccurrence<Tag> tagOccurrence) {
         for (Relationship relationship : sentenceNode.getRelationships(configuration().getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE), Direction.OUTGOING)) {
             Node otherNode = relationship.getEndNode();
@@ -255,17 +266,67 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
                 relatePreviousSentenceToNext(previousSentence, sentenceNode);
             }
             previousSentenceReference.set(sentenceNode);
-
-            //@todo extract this
-//            List<Phrase> phraseOccurrences = sentence.getPhraseOccurrence();
-//            phraseOccurrences.stream().forEach((phrase) -> {
-//                if (phrase.getReference() != null) {
-//                    Node phraseNode = phrase.getOrCreate(database, force);
-//                    Node referredPhraseNode = phrase.getReference().getOrCreate(database, force);
-//                    phraseNode.createRelationshipTo(referredPhraseNode, REFER_TO);
-//                }
-//            });
         });
+    }
+
+    private void storePhrases(Sentence sentence, Node sentenceNode, boolean force) {
+        sentence.getPhraseOccurrences().values().forEach(phraseOccurrenceAtPosition -> {
+            phraseOccurrenceAtPosition.values().forEach(occurrence -> {
+                Node phraseNode = getOrCreatePhrase(occurrence.getElement(), force);
+                relateSentenceToPhrase(sentenceNode, phraseNode);
+                Node phraseOccurrenceNode = createPhraseOccurrence(occurrence);
+                relateSentenceToPhraseOccurrence(sentenceNode, phraseOccurrenceNode);
+                relatePhraseOccurrenceToPhrase(phraseOccurrenceNode, phraseNode);
+            });
+        });
+    }
+
+    private void relateSentenceToPhrase(Node sentenceNode, Node phraseNode) {
+        sentenceNode.createRelationshipTo(phraseNode,
+                configuration().getRelationshipFor(Relationships.HAS_PHRASE));
+    }
+
+    private void relatePhraseOccurrenceToPhrase(Node phraseOccurrenceNode, Node phraseNode) {
+        phraseOccurrenceNode.createRelationshipTo(phraseNode,
+                configuration().getRelationshipFor(Relationships.PHRASE_OCCURRENCE_PHRASE));
+    }
+
+    private void relateSentenceToPhraseOccurrence(Node sentenceNode, Node phraseOccurrenceNode) {
+        sentenceNode.createRelationshipTo(phraseOccurrenceNode,
+                configuration().getRelationshipFor(Relationships.SENTENCE_PHRASE_OCCURRENCE));
+    }
+
+    private Node createPhraseOccurrence(PartOfTextOccurrence<Phrase> occurrence) {
+        Node node = database.createNode(configuration().getLabelFor(Labels.PhraseOccurrence));
+        node.setProperty(configuration().getPropertyKeyFor(Properties.START_POSITION), occurrence.getSpan().first());
+        node.setProperty(configuration().getPropertyKeyFor(Properties.END_POSITION), occurrence.getSpan().second());
+
+        return node;
+    }
+
+    private Node getOrCreatePhrase(Phrase phrase, boolean force) {
+        Node node = database.findNode(configuration().getLabelFor(Labels.Phrase),
+                configuration().getPropertyKeyFor(Properties.CONTENT_VALUE),
+                phrase.getContent()
+        );
+        if (node != null && !force) {
+            return node;
+        }
+
+        if (node == null) {
+            node = database.createNode(configuration().getLabelFor(Labels.Phrase));
+            updatePhrase(phrase, node);
+        } else {
+            updatePhrase(phrase, node);
+        }
+
+        return node;
+    }
+
+    private void updatePhrase(Phrase phrase, Node phraseNode) {
+        phraseNode.setProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE), phrase.getContent());
+        String type = phrase.getType() != null ? phrase.getType() : NLPDefaultValues.PHRASE_TYPE;
+        phraseNode.setProperty(configuration().getPropertyKeyFor(Properties.PHRASE_TYPE), type);
     }
 
     @Override

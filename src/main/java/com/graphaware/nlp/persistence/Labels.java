@@ -30,5 +30,9 @@ public enum Labels implements Label {
     Keyword,
     Root,
     Pipeline,
-    GA_NLP_Configuration
+    Positive,
+    Negative,
+    VeryPositive,
+    VeryNegative,
+    Neutral
 }
