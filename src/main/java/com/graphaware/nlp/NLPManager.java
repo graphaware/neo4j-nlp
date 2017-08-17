@@ -1,19 +1,21 @@
 package com.graphaware.nlp;
 
-import com.graphaware.nlp.conceptnet5.ConceptProcedure;
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.AnnotationRequest;
+import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.AnnotatedTextPersister;
-import com.graphaware.nlp.processor.PipelineSpecification;
-import com.graphaware.nlp.processor.TextProcessorProcedure;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.impl.proc.Procedures;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.logging.Log;
 
 public class NLPManager {
+
+    private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
 
     private final NLPConfiguration nlpConfiguration;
 
@@ -42,10 +44,13 @@ public class NLPManager {
         }
 
         return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(), processorClass,
-                annotationRequest.getPipeline(), annotationRequest.isForce());
+                annotationRequest.getPipeline(), annotationRequest.isForce(), annotationRequest.shouldCheckLanguage());
     }
 
-    public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force) {
+    public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
+        if (checkForLanguage) {
+            checkTextLanguage(text);
+        }
         AnnotatedText annotatedText = textProcessorsManager.getTextProcessor(textProcessor).annotateText(
                 text, pipelineName, "lang", null
         );
@@ -59,6 +64,18 @@ public class NLPManager {
 
     public void updateConfigurationSetting(String key, Object value) {
         persister.updateConfigurationSetting(key, value);
+    }
+
+    private boolean checkTextLanguage(String text) {
+        LanguageManager languageManager = LanguageManager.getInstance();
+        String detectedLanguage = languageManager.detectLanguage(text);
+        if (!languageManager.isTextLanguageSupported(text)) {
+            String msg = String.format("Unsupported language : %s", detectedLanguage);
+            LOG.error(msg);
+            throw new RuntimeException(msg);
+        }
+
+        return true;
     }
 
     private void registerProcedures() {

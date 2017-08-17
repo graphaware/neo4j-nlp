@@ -13,7 +13,7 @@ public abstract class AbstractDSL {
     @Context
     public GraphDatabaseService database;
 
-    public final ObjectMapper mapper = new ObjectMapper();
+    public static ObjectMapper mapper = new ObjectMapper();
 
     protected NLPManager getNLPManager() {
         return getStartedRuntime(database).getModule(NLPModule.class).getNlpManager();

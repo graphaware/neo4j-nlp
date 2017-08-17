@@ -12,16 +12,19 @@ public class AnnotationRequest {
 
     private boolean force;
 
+    private boolean checkLanguage = true;
+
     public AnnotationRequest() {
 
     }
 
-    public AnnotationRequest(String text, Object id, String textProcessor, String pipeline, boolean force) {
+    public AnnotationRequest(String text, Object id, String textProcessor, String pipeline, boolean force, boolean checkLanguage) {
         this.text = text;
         this.id = id;
         this.textProcessor = textProcessor;
         this.pipeline = pipeline;
         this.force = force;
+        this.checkLanguage = checkLanguage;
     }
 
     public String getText() {
@@ -42,5 +45,13 @@ public class AnnotationRequest {
 
     public boolean isForce() {
         return force;
+    }
+
+    public boolean isCheckLanguage() {
+        return checkLanguage;
+    }
+
+    public boolean shouldCheckLanguage() {
+        return checkLanguage;
     }
 }

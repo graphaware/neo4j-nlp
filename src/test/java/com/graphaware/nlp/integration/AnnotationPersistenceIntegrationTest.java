@@ -36,7 +36,8 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "123",
                     StubTextProcessor.class.getName(),
                     "",
-                    false);
+                    false,
+                    true);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Labels.AnnotatedText));
             assertTrue(annotatedText.hasRelationship(Relationships.CONTAINS_SENTENCE));
@@ -58,7 +59,8 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "123",
                     StubTextProcessor.class.getName(),
                     "",
-                    false);
+                    false,
+                    true);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Label.label("TextAnnotation")));
             tx.success();
@@ -75,7 +77,8 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "123",
                     StubTextProcessor.class.getName(),
                     "",
-                    false);
+                    false,
+                    true);
 
             Iterator<Node> it = getDatabase().findNodes(Label.label("Tag"));
             assertTrue(it.hasNext());
@@ -96,7 +99,8 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "123",
                     StubTextProcessor.class.getName(),
                     "",
-                    false);
+                    false,
+                    true);
             tx.success();
         }
 
