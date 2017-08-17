@@ -2,6 +2,7 @@ package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.language.LanguageManager;
@@ -117,5 +118,14 @@ public class NLPManager {
             result.add(processor);
         });
         return result;
+    }
+
+    public Node addPipeline(PipelineSpecification request) {
+        TextProcessorsManager.PipelineCreationResult creationResult = textProcessorsManager.createPipeline(request);
+        if (creationResult.getResult() == 0) {
+            Node storedPipeline = textProcessorsManager.storePipeline(request);
+            return storedPipeline;
+        }
+        return null;
     }
 }

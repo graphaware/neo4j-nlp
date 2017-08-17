@@ -1,13 +1,19 @@
-package com.graphaware.nlp.processor;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.graphaware.nlp.dsl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ * @author ale
+ */
 public class PipelineSpecification {
-
     private String name;
 
     private String textProcessor;
@@ -18,13 +24,13 @@ public class PipelineSpecification {
 
     private long threadNumber;
 
+    public PipelineSpecification() {
+
+    }
+    
     public static PipelineSpecification fromMap(Map<String, Object> map) {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(map, PipelineSpecification.class);
-    }
-
-    public PipelineSpecification() {
-
     }
 
     public PipelineSpecification(String name, String textProcessor) {

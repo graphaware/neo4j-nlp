@@ -17,7 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
-import com.graphaware.nlp.persistence.Labels;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,19 +76,22 @@ public class TextProcessorsManager {
             ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
             pipelineNodes.stream().forEach(pipeline -> {
                 createPipeline(PipelineSpecification.fromMap(pipeline.getAllProperties()));
-            });            
+            });
             tx.success();
         }
     }
-    
-    public void storePipeline(PipelineSpecification pipelineSpecification) {
+
+    public Node storePipeline(PipelineSpecification pipelineSpecification) {
         try (Transaction tx = database.beginTx()) {
             Node pipelineNode = database.createNode(Pipeline);
             Map<String, Object> inputParams = mapper.convertValue(pipelineSpecification, Map.class);
             inputParams.entrySet().stream().forEach(entry -> {
-                pipelineNode.setProperty(entry.getKey(), entry.getValue());
-            });            
+                if (entry.getValue() != null) {
+                    pipelineNode.setProperty(entry.getKey(), entry.getValue());
+                }
+            });
             tx.success();
+            return pipelineNode;
         }
     }
 
@@ -101,7 +104,7 @@ public class TextProcessorsManager {
             return DEFAULT_TEXT_PROCESSOR; // return the default text processor if it's available
         }
 
-        if (textProcessors.keySet().size() >0 ) {
+        if (textProcessors.keySet().size() > 0) {
             return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
         }
 
@@ -124,17 +127,18 @@ public class TextProcessorsManager {
     }
 
     private void removePipelineNode(String processor, String pipeline) throws QueryExecutionException {
-      Map<String, Object> map = new HashMap<>();
-      map.put("textProcessor", processor);
-      map.put("name", pipeline);
-      try (Transaction tx = database.beginTx()) {
-        database.execute("MATCH (n:Pipeline {textProcessor: {textProcessor}, name: {name}}) DELETE n", map);
-        tx.success();
-      }
+        Map<String, Object> map = new HashMap<>();
+        map.put("textProcessor", processor);
+        map.put("name", pipeline);
+        try (Transaction tx = database.beginTx()) {
+            database.execute("MATCH (n:Pipeline {textProcessor: {textProcessor}, name: {name}}) DELETE n", map);
+            tx.success();
+        }
     }
 
     // @todo is it really needed ?
     public static class PipelineCreationResult {
+
         private final int result;
         private final String message;
 
