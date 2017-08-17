@@ -100,17 +100,17 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
             tx.success();
         }
 
-        TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
-        testNLPGraph.assertAnnotatedTextNodesCount(1);
-        testNLPGraph.assertSentenceNodesCount(3);
-        testNLPGraph.assertTagNodesCount(14);
-        testNLPGraph.assertTagWithValueExist("hello");
-        testNLPGraph.assertTagWithValueExist("IBM");
-        testNLPGraph.assertTagWithValueHasNERLabel("name", "NER_Test");
-        testNLPGraph.assertPhraseWithTextExist("hello my name is John");
-        testNLPGraph.assertPhraseOccurrenceForTextHasStartAndEndPosition("hello my name is John", 0, "hello my name is John".length());
-        testNLPGraph.assertSentenceWithIdHasPhraseOccurrenceCount("123_0", 1);
-        testNLPGraph.assertSentenceWithIdHasPhraseWithText("123_0", "hello my name is John");
+        TestNLPGraph tester = new TestNLPGraph(getDatabase());
+        tester.assertAnnotatedTextNodesCount(1);
+        tester.assertSentenceNodesCount(3);
+        tester.assertTagNodesCount(14);
+        tester.assertTagWithValueExist("hello");
+        tester.assertTagWithValueExist("IBM");
+        tester.assertTagWithValueHasNERLabel("name", "NER_Test");
+        tester.assertPhraseWithTextExist("hello my name is John");
+        tester.assertPhraseOccurrenceForTextHasStartAndEndPosition("hello my name is John", 0, "hello my name is John".length());
+        tester.assertSentenceWithIdHasPhraseOccurrenceCount("123_0", 1);
+        tester.assertSentenceWithIdHasPhraseWithText("123_0", "hello my name is John");
     }
 
     private void clearDatabase() {

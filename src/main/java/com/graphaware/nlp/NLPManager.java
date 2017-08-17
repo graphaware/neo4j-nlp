@@ -39,6 +39,10 @@ public class NLPManager {
                 text, pipelineSpecification.getName(), "lang", null
         );
 
+        return persistAnnotatedText(annotatedText, id, force);
+    }
+
+    public Node persistAnnotatedText(AnnotatedText annotatedText, String id, boolean force) {
         return persister.persist(annotatedText, id, force);
     }
 
