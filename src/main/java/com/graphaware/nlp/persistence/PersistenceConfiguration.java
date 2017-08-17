@@ -18,7 +18,6 @@ package com.graphaware.nlp.persistence;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 

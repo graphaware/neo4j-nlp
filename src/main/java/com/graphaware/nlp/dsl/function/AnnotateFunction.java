@@ -10,7 +10,6 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class AnnotateFunction extends AbstractDSL {

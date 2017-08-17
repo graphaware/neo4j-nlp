@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.graphaware.nlp.domain.SentimentLabels.*;
-import static com.graphaware.nlp.domain.SentimentLabels.VeryPositive;
 import static com.graphaware.nlp.util.HashFunctions.MD5;
 
 public class AnnotatedTextPersister extends AbstractPersister implements Persister<AnnotatedText> {

@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
 public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest {
 
     @Before
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
@@ -31,7 +32,8 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute("CALL ga.nlp.getProcessors()");
             while (result.hasNext()) {
-                registeredProcessors.add(result.next().get("class").toString());
+                Map<String, Object> processorInfo = result.next();
+                registeredProcessors.add(processorInfo.get("className").toString());
             }
             tx.success();
         }

@@ -3,10 +3,15 @@ package com.graphaware.nlp;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.AnnotationRequest;
+import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.AnnotatedTextPersister;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -102,5 +107,15 @@ public class NLPManager {
         } catch (Exception e) {
             //
         }
+    }
+
+    public Set<ProcessorsList> getProcessors() {
+        Set<String> textProcessors = textProcessorsManager.getTextProcessorNames();
+        Set<ProcessorsList> result = new HashSet<>();
+        textProcessors.forEach(row -> {
+            ProcessorsList processor = new ProcessorsList(row);
+            result.add(processor);
+        });
+        return result;
     }
 }
