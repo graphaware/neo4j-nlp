@@ -1,6 +1,7 @@
 package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
@@ -31,11 +32,14 @@ public class NLPManager {
 
     private final AnnotatedTextPersister persister;
 
+    private final DynamicConfiguration configuration;
+
     public NLPManager(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
         this.nlpConfiguration = nlpConfiguration;
+        this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager(database);
         this.database = database;
-        this.persister = new AnnotatedTextPersister(database);
+        this.persister = new AnnotatedTextPersister(database, configuration);
         registerProcedures();
     }
 
@@ -68,8 +72,8 @@ public class NLPManager {
         return persister.persist(annotatedText, id, force);
     }
 
-    public void updateConfigurationSetting(String key, Object value) {
-        persister.updateConfigurationSetting(key, value);
+    public DynamicConfiguration getConfiguration() {
+        return configuration;
     }
 
     public List<PipelineInfo> getPipelineInformations() {

@@ -18,6 +18,7 @@ package com.graphaware.nlp.persistence;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.graphaware.common.kv.GraphKeyValueStore;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
@@ -28,44 +29,41 @@ public abstract class AbstractPersister {
 
     private static final String KV_CONFIGURATION_KEY = "GA_NLP_CONFIGURATION";
 
-    private final GraphKeyValueStore graphKeyValueStore;
-
     protected final GraphDatabaseService database;
 
-    private final PersistenceConfiguration persistenceConfiguration;
+    private final DynamicConfiguration configuration;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public AbstractPersister(GraphDatabaseService database) {
+    public AbstractPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration) {
         this.database = database;
-        this.graphKeyValueStore = new GraphKeyValueStore(database);
-        this.persistenceConfiguration = loadUserConfigurationOrDefault();
+        this.configuration = dynamicConfiguration;
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
-
-    public void updateConfiguration(Map<String, Object> configuration) {
-        try (Transaction tx = getDatabase().beginTx()) {
-            storeUserConfiguration(configuration);
-            persistenceConfiguration.update(configuration);
-
-            tx.success();
-        }
-    }
-
-    public void updateConfigurationSetting(String key, Object value) {
-        try (Transaction tx = getDatabase().beginTx()) {
-            Map<String, Object> config = persistenceConfiguration.updateSetting(key, value);
-            storeUserConfiguration(config);
-            tx.success();
-        }
-    }
+//
+//    public void updateConfiguration(Map<String, Object> configuration) {
+//        try (Transaction tx = getDatabase().beginTx()) {
+//            storeUserConfiguration(configuration);
+//            persistenceConfiguration.update(configuration);
+//
+//            tx.success();
+//        }
+//    }
+//
+//    public void updateConfigurationSetting(String key, Object value) {
+//        try (Transaction tx = getDatabase().beginTx()) {
+//            Map<String, Object> config = persistenceConfiguration.updateSetting(key, value);
+//            storeUserConfiguration(config);
+//            tx.success();
+//        }
+//    }
 
     protected GraphDatabaseService getDatabase() {
         return database;
     }
 
-    protected PersistenceConfiguration configuration() {
-        return persistenceConfiguration;
+    protected DynamicConfiguration configuration() {
+        return configuration;
     }
 
     protected ObjectMapper mapper() {
@@ -84,35 +82,5 @@ public abstract class AbstractPersister {
         }
 
         return all.isEmpty() ? null : all.get(0);
-    }
-
-    private PersistenceConfiguration loadUserConfigurationOrDefault() {
-        PersistenceConfiguration config;
-        try (Transaction tx = getDatabase().beginTx()) {
-            if (!graphKeyValueStore.hasKey(KV_CONFIGURATION_KEY)) {
-                 config = PersistenceConfiguration.defaultConfiguration();
-            } else {
-                config = PersistenceConfiguration.withConfiguration((Map<String, Object>) graphKeyValueStore.get(KV_CONFIGURATION_KEY));
-            }
-            tx.success();
-        }
-
-        return config;
-    }
-
-    private void storeUserConfiguration(Map<String, Object> config) {
-        clearConfig();
-        for (String k : config.keySet()) {
-            String kvk = String.format("%s_%s", KV_CONFIGURATION_KEY, k);
-            graphKeyValueStore.set(kvk, config.get(k));
-        }
-    }
-
-    private void clearConfig() {
-        for (String k : graphKeyValueStore.getKeys()) {
-            if (k.startsWith(KV_CONFIGURATION_KEY)) {
-                graphKeyValueStore.remove(k);
-            }
-        }
     }
 }
