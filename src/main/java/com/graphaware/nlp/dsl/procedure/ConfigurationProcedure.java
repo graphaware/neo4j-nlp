@@ -31,6 +31,16 @@ public class ConfigurationProcedure extends AbstractDSL {
         return Stream.of(SingleResult.success());
     }
 
+    @Procedure(name = "ga.nlp.config.setAll", mode = Mode.WRITE)
+    @Description("Set all the given user defined configuration settings")
+    public Stream<SingleResult> setAllConfigValues(@Name("config") Map<String, Object> config) {
+        config.keySet().forEach(k -> {
+            getNLPManager().getConfiguration().update(k, config.get(k));
+        });
+
+        return Stream.of(SingleResult.success());
+    }
+
 
 
 

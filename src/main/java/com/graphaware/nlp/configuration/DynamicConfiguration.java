@@ -78,7 +78,7 @@ public class DynamicConfiguration {
             keyValueStore.set(STORE_KEY + key, value);
             tx.success();
         }
-        loadUserConfigurationOrDefault();
+        loadUserConfiguration();
     }
 
     public void updateInternalSetting(String key, Object value) {
@@ -86,22 +86,11 @@ public class DynamicConfiguration {
             keyValueStore.set(STORE_KEY + SETTING_KEY_PREFIX + key, value);
             tx.success();
         }
-        loadUserConfigurationOrDefault();
+        loadUserConfiguration();
     }
 
-    private void loadUserConfigurationOrDefault() {
+    private void loadUserConfiguration() {
         userProvidedConfiguration = getAllConfigValuesFromStore();
-    }
-
-    private void clearStore() {
-        try (Transaction tx = database.beginTx()) {
-            keyValueStore.getKeys().forEach(k -> {
-                if (k.startsWith(STORE_KEY)) {
-                    keyValueStore.remove(k);
-                }
-            });
-            tx.success();
-        }
     }
 
     public Map<String, Object> getAllConfigValuesFromStore() {
