@@ -30,7 +30,7 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
     public void testStubProcessorIsRegistered() {
         List<String> registeredProcessors = new ArrayList<>();
         try (Transaction tx = getDatabase().beginTx()) {
-            Result result = getDatabase().execute("CALL ga.nlp.getProcessors()");
+            Result result = getDatabase().execute("CALL ga.nlp.processor.getProcessors()");
             while (result.hasNext()) {
                 Map<String, Object> processorInfo = result.next();
                 registeredProcessors.add(processorInfo.get("className").toString());
@@ -47,16 +47,18 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
         customPipeline.put("name", "custom");
         customPipeline.put("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
         try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("CALL ga.nlp.addPipeline({params})", Collections.singletonMap("params", customPipeline));
+            getDatabase().execute("CALL ga.nlp.processor.addPipeline({params})", Collections.singletonMap("params", customPipeline));
             Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({params})", Collections.singletonMap("params", params));
+            Result result = getDatabase().execute("CALL ga.nlp.processor.getPipelineInfos()");
             assertTrue(result.hasNext());
-            while (result.hasNext()) {
+            boolean foundCustom = false;
+            while (result.hasNext() && !foundCustom) {
                 Map<String, Object> record = result.next();
-                Map<String, Object> info = (Map<String, Object>) record.get("result");
-                assertEquals("custom", info.get("name"));
+                if (record.get("name").equals("custom")) {
+                    foundCustom = true;
+                }
             }
-
+            assertTrue(foundCustom);
             tx.success();
         }
 
@@ -67,8 +69,15 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
 
         try (Transaction tx = getDatabase().beginTx()) {
             Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({params})", Collections.singletonMap("params", params));
-            assertFalse(result.hasNext());
+            Result result = getDatabase().execute("CALL ga.nlp.processor.getPipelineInfos()");
+            boolean foundCustom = false;
+            while (result.hasNext() && !foundCustom) {
+                Map<String, Object> record = result.next();
+                if (record.get("name").equals("custom")) {
+                    foundCustom = true;
+                }
+            }
+            assertFalse(foundCustom);
             tx.success();
         }
     }

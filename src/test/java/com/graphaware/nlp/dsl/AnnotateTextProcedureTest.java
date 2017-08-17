@@ -1,13 +1,7 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
-import com.graphaware.nlp.module.NLPConfiguration;
-import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.util.TestNLPGraph;
-import com.graphaware.runtime.GraphAwareRuntime;
-import com.graphaware.runtime.GraphAwareRuntimeFactory;
-import com.graphaware.test.integration.GraphAwareIntegrationTest;
-import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 

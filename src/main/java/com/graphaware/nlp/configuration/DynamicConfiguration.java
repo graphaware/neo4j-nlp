@@ -39,6 +39,7 @@ public class DynamicConfiguration {
     public DynamicConfiguration(GraphDatabaseService database) {
         this.database = database;
         this.keyValueStore = new GraphKeyValueStore(database);
+        loadUserConfiguration();
     }
 
     public Label getLabelFor(Label label) {
