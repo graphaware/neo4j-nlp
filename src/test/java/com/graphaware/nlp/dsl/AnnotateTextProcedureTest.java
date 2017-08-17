@@ -1,5 +1,6 @@
 package com.graphaware.nlp.dsl;
 
+import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.util.TestNLPGraph;
@@ -12,16 +13,7 @@ import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.*;
 
-public class AnnotateTextProcedureTest extends GraphAwareIntegrationTest {
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
-        runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
-        runtime.start();
-        runtime.waitUntilStarted();
-    }
+public class AnnotateTextProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testTextAnnotationViaProcedure() {
@@ -47,5 +39,7 @@ public class AnnotateTextProcedureTest extends GraphAwareIntegrationTest {
             }
         }
     }
+
+
 
 }

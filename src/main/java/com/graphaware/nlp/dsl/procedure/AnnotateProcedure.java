@@ -4,10 +4,8 @@ import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Mode;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.Procedure;
+import com.graphaware.nlp.processor.PipelineInfo;
+import org.neo4j.procedure.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +24,7 @@ public class AnnotateProcedure extends AbstractDSL {
     }
     
     @Procedure(name = "ga.nlp.getProcessors", mode = Mode.READ)
-    @Description("Performs the text annotation and store it into the graph")
+    @Description("Retrieve ")
     public Stream<ProcessorsList> getProcessors() {
         Set<ProcessorsList> result = getNLPManager().getProcessors();
         return result.stream();

@@ -7,11 +7,12 @@ import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.AnnotatedTextPersister;
+import com.graphaware.nlp.processor.PipelineInfo;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
+
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.kernel.impl.proc.Procedures;
@@ -69,6 +70,15 @@ public class NLPManager {
 
     public void updateConfigurationSetting(String key, Object value) {
         persister.updateConfigurationSetting(key, value);
+    }
+
+    public List<PipelineInfo> getPipelineInformations() {
+        List<PipelineInfo> list = new ArrayList<>();
+        for (TextProcessor processor : textProcessorsManager.getTextProcessors().values()) {
+            list.addAll(processor.getPipelineInfos());
+        }
+
+        return list;
     }
 
     private boolean checkTextLanguage(String text) {

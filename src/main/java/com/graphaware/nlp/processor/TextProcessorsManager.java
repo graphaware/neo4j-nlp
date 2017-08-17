@@ -71,6 +71,10 @@ public class TextProcessorsManager {
         return new PipelineCreationResult(0, "");
     }
 
+    public Map<String, TextProcessor> getTextProcessors() {
+        return textProcessors;
+    }
+
     private void loadPipelines() {
         try (Transaction tx = database.beginTx()) {
             ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
