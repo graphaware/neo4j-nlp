@@ -214,6 +214,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         sentence.getTypedDependencies().forEach(typedDependency -> {
             if (!tokenIdsToNodeIds.containsKey(typedDependency.getSource()) || !tokenIdsToNodeIds.containsKey(typedDependency.getTarget())) {
                 LOG.info("source: {} or target: {} for typed dependency not found", typedDependency.getSource(), typedDependency.getTarget());
+                return;
             }
 
             Node sourceNode = database.getNodeById(tokenIdsToNodeIds.get(typedDependency.getSource()));

@@ -44,12 +44,24 @@ public class PipelineSpecification {
         return processingSteps.containsKey(stepName) && processingSteps.get(stepName);
     }
 
+    public boolean hasProcessingStep(String stepName, boolean defaultValue) {
+        if (processingSteps.containsKey(stepName)) {
+            return processingSteps.get(stepName);
+        }
+
+        return defaultValue;
+    }
+
     public void addProcessingStep(String step) {
         processingSteps.put(step, true);
     }
 
     public String getStopwords() {
         return stopwords;
+    }
+
+    public void setStopwords(String stopwords) {
+        this.stopwords = stopwords;
     }
 
     public long getThreadNumber() {

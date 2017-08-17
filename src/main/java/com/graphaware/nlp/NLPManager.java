@@ -2,6 +2,7 @@ package com.graphaware.nlp;
 
 import com.graphaware.nlp.conceptnet5.ConceptProcedure;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.AnnotatedTextPersister;
 import com.graphaware.nlp.processor.PipelineSpecification;
@@ -34,9 +35,19 @@ public class NLPManager {
         return textProcessorsManager;
     }
 
-    public Node annotateTextAndPersist(String text, String id, PipelineSpecification pipelineSpecification, boolean force) {
-        AnnotatedText annotatedText = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor()).annotateText(
-                text, pipelineSpecification.getName(), "lang", null
+    public Node annotateTextAndPersist(AnnotationRequest annotationRequest) {
+        String processorClass = annotationRequest.getTextProcessor() != null ? annotationRequest.getTextProcessor() : textProcessorsManager.getDefaultProcessorName();
+        if (processorClass == null) {
+            throw new RuntimeException("Unable to find a processor for " + processorClass);
+        }
+
+        return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(), processorClass,
+                annotationRequest.getPipeline(), annotationRequest.isForce());
+    }
+
+    public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force) {
+        AnnotatedText annotatedText = textProcessorsManager.getTextProcessor(textProcessor).annotateText(
+                text, pipelineName, "lang", null
         );
 
         return persistAnnotatedText(annotatedText, id, force);

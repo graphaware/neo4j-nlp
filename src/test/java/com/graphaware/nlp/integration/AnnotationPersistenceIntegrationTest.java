@@ -29,13 +29,13 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testAnnotatedTextIsPersisted() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
 
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    specification,
+                    StubTextProcessor.class.getName(),
+                    "",
                     false);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Labels.AnnotatedText));
@@ -51,13 +51,13 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testAnnotatedTextIsPersistedWithCustomLabel() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
         manager.updateConfigurationSetting(Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    specification,
+                    StubTextProcessor.class.getName(),
+                    "",
                     false);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Label.label("TextAnnotation")));
@@ -68,13 +68,13 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testNamedEntityLabelIsAdded() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
         manager.updateConfigurationSetting(Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    specification,
+                    StubTextProcessor.class.getName(),
+                    "",
                     false);
 
             Iterator<Node> it = getDatabase().findNodes(Label.label("Tag"));
@@ -90,12 +90,12 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testMultipleSentencesPersistence() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
         try (Transaction tx = getDatabase().beginTx()) {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
-                    specification,
+                    StubTextProcessor.class.getName(),
+                    "",
                     false);
             tx.success();
         }
