@@ -20,17 +20,17 @@ import java.util.Map;
 
 public class PipelineInfo {
 
-    private final String name;
+    public String name;
 
-    private final String textProcessorClass;
+    public String textProcessorClass;
 
-    private final Map<String, Object> options;
+    public Map<String, Object> options;
 
-    private final Map<String, Boolean> specifications;
+    public Map<String, Boolean> specifications;
 
-    private final int numberOfThreads;
+    public long numberOfThreads;
 
-    private final List<String> stopwords;
+    public List<String> stopwords;
 
     public PipelineInfo(String name, String textProcessorClass, Map<String, Object> options, Map<String, Boolean> specifications, int numberOfThreads, List<String> stopwords) {
         this.name = name;
@@ -57,7 +57,7 @@ public class PipelineInfo {
         return specifications;
     }
 
-    public int getNumberOfThreads() {
+    public long getNumberOfThreads() {
         return numberOfThreads;
     }
 

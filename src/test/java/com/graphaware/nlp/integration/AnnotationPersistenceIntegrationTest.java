@@ -51,7 +51,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testAnnotatedTextIsPersistedWithCustomLabel() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        manager.updateConfigurationSetting(Labels.AnnotatedText.toString(), "TextAnnotation");
+        manager.getConfiguration().update("LABEL_" + Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
@@ -69,7 +69,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     @Test
     public void testNamedEntityLabelIsAdded() {
         NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-        manager.updateConfigurationSetting(Labels.AnnotatedText.toString(), "TextAnnotation");
+        manager.getConfiguration().update("LABEL_" + Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",

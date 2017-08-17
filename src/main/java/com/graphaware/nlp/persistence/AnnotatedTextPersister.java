@@ -1,6 +1,7 @@
 package com.graphaware.nlp.persistence;
 
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.util.SentenceUtils;
 import com.graphaware.nlp.util.TagUtils;
@@ -19,8 +20,12 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 
     private static final Log LOG = LoggerFactory.getLogger(AnnotatedTextPersister.class);
 
+    public AnnotatedTextPersister(GraphDatabaseService database, DynamicConfiguration configuration) {
+        super(database, configuration);
+    }
+
     public AnnotatedTextPersister(GraphDatabaseService database) {
-        super(database);
+        super(database, new DynamicConfiguration(database));
     }
 
     @Override

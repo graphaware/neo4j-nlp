@@ -16,6 +16,17 @@ public class StubTextProcessor implements TextProcessor {
 
     private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
+    public StubTextProcessor() {
+        this.pipelineInfos.put("tokenizer", new PipelineInfo(
+                "tokenizer",
+                StubTextProcessor.class.getName(),
+                Collections.emptyMap(),
+                Collections.singletonMap("tokenize", true),
+                4,
+                Arrays.asList("start", "starter")
+        ));
+    }
+
     @Override
     public List<String> getPipelines() {
         return new ArrayList<>();

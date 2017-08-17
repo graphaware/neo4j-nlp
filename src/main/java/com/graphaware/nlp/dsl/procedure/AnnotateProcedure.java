@@ -5,10 +5,8 @@ import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Mode;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.Procedure;
+import com.graphaware.nlp.processor.PipelineInfo;
+import org.neo4j.procedure.*;
 
 import java.util.Map;
 import java.util.Set;
