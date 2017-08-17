@@ -2,6 +2,7 @@ package com.graphaware.nlp.stub;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Phrase;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
@@ -46,18 +47,25 @@ public class StubTextProcessor implements TextProcessor {
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParams) {
         AnnotatedText annotatedText = new AnnotatedText();
-        String[] parts = text.split(" ");
-        int pos = 0;
-        final Sentence sentence = new Sentence(text, 0);
-        for (String token : parts) {
-            Tag tag = new Tag(token, "en");
-            tag.setNe(Collections.singletonList("test"));
-            tag.setPos(Collections.singletonList("TESTVB"));
-            int begin = pos;
-            pos += token.length() + 1;
-            sentence.addTagOccurrence(begin, pos, sentence.addTag(tag));
+        String[] sentencesSplit = text.split("\\.");
+        int sentenceNumber = 0;
+        for (String stext : sentencesSplit) {
+            String[] parts = stext.split(" ");
+            int pos = 0;
+            final Sentence sentence = new Sentence(stext, sentenceNumber);
+            for (String token : parts) {
+                Tag tag = new Tag(token, "en");
+                tag.setNe(Collections.singletonList("test"));
+                tag.setPos(Collections.singletonList("TESTVB"));
+                int begin = pos;
+                pos += token.length() + 1;
+                sentence.addTagOccurrence(begin, pos, sentence.addTag(tag));
+            }
+            Phrase phrase = new Phrase(stext);
+            sentence.addPhraseOccurrence(0, stext.length(), phrase);
+            annotatedText.addSentence(sentence);
+            sentenceNumber++;
         }
-        annotatedText.addSentence(sentence);
 
         return annotatedText;
     }

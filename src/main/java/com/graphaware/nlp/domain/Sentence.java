@@ -222,22 +222,5 @@ public class Sentence implements Comparable<Sentence> {
 //        this.tags = (Map<String, Tag>)s.readObject();
 //    }
 
-//
-//    private void storePhrases(GraphDatabaseService database, Node newSentenceNode, boolean force) {
-//        if (phraseOccurrences != null) {
-//            phraseOccurrences.values().stream().forEach((phraseOccurrencesAtPosition) -> {
-//                phraseOccurrencesAtPosition.values().stream().forEach((phraseOccurrence) -> {
-//                    Node phraseNode = phraseOccurrence.getElement().storeOnGraph(database, force);
-//                    newSentenceNode.createRelationshipTo(phraseNode, HAS_PHRASE);
-//                    Node phraseOccurrenceNode = database.createNode(PhraseOccurrence);
-//                    phraseOccurrenceNode.setProperty(START_POSITION, phraseOccurrence.getSpan().first());
-//                    phraseOccurrenceNode.setProperty(END_POSITION, phraseOccurrence.getSpan().second());
-//                    newSentenceNode.createRelationshipTo(phraseOccurrenceNode, SENTENCE_PHRASE_OCCURRENCE);
-//                    phraseOccurrenceNode.createRelationshipTo(phraseNode, PHRASE_OCCURRENCE_PHRASE);
-//                    //TODO: Add relationship with tags
-//                });
-//            });
-//        }
-//    }
 
 }

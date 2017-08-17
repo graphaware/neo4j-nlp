@@ -6,6 +6,7 @@ import com.graphaware.nlp.persistence.Labels;
 import com.graphaware.nlp.persistence.Relationships;
 import com.graphaware.nlp.processor.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
+import com.graphaware.nlp.util.TestNLPGraph;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,6 +85,32 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
             }
             tx.success();
         }
+    }
+
+    @Test
+    public void testMultipleSentencesPersistence() {
+        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
+        PipelineSpecification specification = new PipelineSpecification("tokenizer", StubTextProcessor.class.getName());
+        try (Transaction tx = getDatabase().beginTx()) {
+            manager.annotateTextAndPersist(
+                    "hello my name is John. I am working for IBM. I live in Italy",
+                    "123",
+                    specification,
+                    false);
+            tx.success();
+        }
+
+        TestNLPGraph testNLPGraph = new TestNLPGraph(getDatabase());
+        testNLPGraph.assertAnnotatedTextNodesCount(1);
+        testNLPGraph.assertSentenceNodesCount(3);
+        testNLPGraph.assertTagNodesCount(14);
+        testNLPGraph.assertTagWithValueExist("hello");
+        testNLPGraph.assertTagWithValueExist("IBM");
+        testNLPGraph.assertTagWithValueHasNERLabel("name", "NER_Test");
+        testNLPGraph.assertPhraseWithTextExist("hello my name is John");
+        testNLPGraph.assertPhraseOccurrenceForTextHasStartAndEndPosition("hello my name is John", 0, "hello my name is John".length());
+        testNLPGraph.assertSentenceWithIdHasPhraseOccurrenceCount("123_0", 1);
+        testNLPGraph.assertSentenceWithIdHasPhraseWithText("123_0", "hello my name is John");
     }
 
     private void clearDatabase() {
