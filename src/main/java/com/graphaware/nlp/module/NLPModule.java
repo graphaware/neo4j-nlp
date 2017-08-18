@@ -19,17 +19,12 @@ import com.graphaware.nlp.NLPManager;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * {@link com.graphaware.runtime.module.TxDrivenModule} that assigns UUID's to

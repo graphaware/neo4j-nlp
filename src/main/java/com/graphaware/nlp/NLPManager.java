@@ -5,6 +5,7 @@ import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.dsl.AnnotationRequest;
+import com.graphaware.nlp.dsl.FilterRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
@@ -79,17 +80,34 @@ public class NLPManager {
 
     public List<PipelineInfo> getPipelineInformations() {
         List<PipelineInfo> list = new ArrayList<>();
-        for (TextProcessor processor : textProcessorsManager.getTextProcessors().values()) {
+        textProcessorsManager.getTextProcessors().values().forEach((processor) -> {
             list.addAll(processor.getPipelineInfos());
-        }
-
+        });
         return list;
+    }
+
+    public Boolean filter(FilterRequest filterRequest) {
+        String text = filterRequest.getText();
+        if (text == null) {
+            LOG.info("text is null");
+            throw new RuntimeException("text is null or language not supported or unable to detect the language");
+        }
+        checkTextLanguage(text);
+        String lang = LanguageManager.getInstance().detectLanguage(text);
+        String filter = filterRequest.getFilter();
+        if (filter == null) {
+            throw new RuntimeException("A filter value needs to be provided");
+        }
+        TextProcessor currentTP = retrieveTextProcessor(filterRequest.getProcessor(), filterRequest.getPipeline());
+        AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer", lang, null);
+        return annotatedText.filter(filter);
+
     }
 
     private boolean checkTextLanguage(String text) {
         LanguageManager languageManager = LanguageManager.getInstance();
-        String detectedLanguage = languageManager.detectLanguage(text);
         if (!languageManager.isTextLanguageSupported(text)) {
+            String detectedLanguage = languageManager.detectLanguage(text);
             String msg = String.format("Unsupported language : %s", detectedLanguage);
             LOG.error(msg);
             throw new RuntimeException(msg);
@@ -141,5 +159,26 @@ public class NLPManager {
             return storedPipeline;
         }
         return null;
+    }
+
+    private TextProcessor retrieveTextProcessor(String processor, String pipeline) {
+        TextProcessor newTP;
+        if (processor != null && processor.length() > 0) {
+            newTP = textProcessorsManager.getTextProcessor(processor);
+            if (newTP == null) {
+                throw new RuntimeException("Text processor " + processor + " doesn't exist");
+            }
+        } else {
+            newTP = textProcessorsManager.getDefaultProcessor();
+        }
+        if (pipeline != null && pipeline.length() > 0) {
+            if (!newTP.checkPipeline(pipeline)) {
+                throw new RuntimeException("Pipeline with name " + pipeline
+                        + " doesn't exist for processor " + newTP.getClass().getName());
+            }
+        }
+        LOG.info("Using text processor: " + newTP.getClass().getName());
+
+        return newTP;
     }
 }

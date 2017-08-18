@@ -2,10 +2,12 @@ package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.util.TestNLPGraph;
+import java.util.Map;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.*;
+import org.neo4j.graphdb.Result;
 
 public class AnnotateTextProcedureTest extends NLPIntegrationTest {
 
@@ -34,6 +36,18 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
         }
     }
 
-
+    @Test
+    public void testFilter() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            try {
+                Result result = getDatabase().execute("CALL ga.nlp.filter({text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})");
+                assertTrue(result.hasNext());
+                assertTrue((Boolean)result.next().get("result"));
+                tx.success();
+            } catch (RuntimeException e) {
+                assertTrue(e.getMessage(), false);
+            }
+        }
+    }
 
 }
