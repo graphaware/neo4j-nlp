@@ -36,8 +36,8 @@ public class AnnotatedText {
 
     public List<String> getTokens() {
         List<String> result = new ArrayList<>();
-        sentences.stream().forEach((sentence) -> {
-            sentence.getTags().stream().forEach((tag) -> {
+        sentences.forEach((sentence) -> {
+            sentence.getTags().forEach((tag) -> {
                 result.add(tag.getLemma());
             });
         });
@@ -46,8 +46,8 @@ public class AnnotatedText {
 
     public List<Tag> getTags() {
         List<Tag> result = new ArrayList<>();
-        sentences.stream().forEach((sentence) -> {
-            sentence.getTags().stream().forEach((tag) -> {
+        sentences.forEach((sentence) -> {
+            sentence.getTags().forEach((tag) -> {
                 result.add(tag);
             });
         });
@@ -55,14 +55,16 @@ public class AnnotatedText {
     }
 
     public boolean filter(String filterQuery) {
-        Map<String, FilterQueryTerm> filterQueryTerm = getFilterQueryTerms(filterQuery);
+        Map<String, FilterQueryTerm> filterQueryTerms = getFilterQueryTerms(filterQuery);
         List<Tag> tags = getTags();
         for (Tag tag : tags) {
-            FilterQueryTerm query = filterQueryTerm.get(tag.getLemma());
+            String lemma = tag.getLemma();
+            FilterQueryTerm query = filterQueryTerms.get(tag.getLemma().toLowerCase());
             if (query != null && query.evaluate(tag)) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -72,15 +74,11 @@ public class AnnotatedText {
         if (query != null) {
             String[] terms = query.split(",");
             for (String term : terms) {
-                String[] termElement = term.split("/");
-                if (termElement.length == 2) {
-                    result.put(termElement[0], new FilterQueryTerm(termElement[0], termElement[1]));
-                } else {
-                    result.put(termElement[0], new FilterQueryTerm(termElement[0]));
-                }
-
+                FilterQueryTerm filterQueryTerm = new FilterQueryTerm(term);
+                result.put(filterQueryTerm.getValue().toLowerCase(), filterQueryTerm);
             }
         }
+
         return result;
     }
 
@@ -91,23 +89,17 @@ public class AnnotatedText {
     private class FilterQueryTerm {
 
         private final String value;
-        private String NE = null;
+        private final String NE;
 
-        public FilterQueryTerm(String value, String NE) {
-            this.value = value;
-            this.NE = NE;
-        }
+        FilterQueryTerm(String query) {
+            String[] parts = query.split("/");
+            this.value = parts[0];
+            this.NE = parts.length > 1 ? parts[1] : null;
 
-        public FilterQueryTerm(String value) {
-            this.value = value;
         }
 
         public String getValue() {
             return value;
-        }
-
-        public String getNE() {
-            return NE;
         }
 
         private boolean evaluate(Tag tag) {
