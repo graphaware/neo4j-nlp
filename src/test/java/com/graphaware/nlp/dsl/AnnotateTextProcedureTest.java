@@ -13,10 +13,8 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testTextAnnotationViaProcedure() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})");
-            tx.success();
-        }
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
         tester.assertAnnotatedTextNodesCount(1);
@@ -25,29 +23,21 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testExceptionIsThrownWhenLanguageCannotBeDetected() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            try {
-                getDatabase().execute("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc'})");
-                tx.success();
-                assertTrue(false);
-            } catch (RuntimeException e) {
-                assertTrue(true);
-            }
+        try {
+            executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc'})", emptyConsumer());
+            assertFalse(true);
+        } catch (Exception e) {
+            assertTrue(true);
         }
     }
 
     @Test
     public void testFilter() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            try {
-                Result result = getDatabase().execute("CALL ga.nlp.filter({text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})");
-                assertTrue(result.hasNext());
-                assertTrue((Boolean)result.next().get("result"));
-                tx.success();
-            } catch (RuntimeException e) {
-                assertTrue(e.getMessage(), false);
-            }
-        }
+        executeInTransaction("CALL ga.nlp.filter({text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})",
+                (result -> {
+                    assertTrue(result.hasNext());
+                    assertTrue((Boolean)result.next().get("result"));
+                }));
     }
 
 }

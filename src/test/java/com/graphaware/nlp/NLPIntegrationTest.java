@@ -43,4 +43,17 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         }
     }
 
+    protected void clearDb() {
+        executeInTransaction("MATCH (n) DETACH DELETE n", emptyConsumer());
+    }
+
+    protected static Consumer<Result> emptyConsumer() {
+        return new Consumer<Result>() {
+            @Override
+            public void accept(Result result) {
+                //
+            }
+        };
+    }
+
 }
