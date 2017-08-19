@@ -1,7 +1,6 @@
 package com.graphaware.nlp.configuration;
 
 import com.graphaware.common.kv.GraphKeyValueStore;
-import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.dsl.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;

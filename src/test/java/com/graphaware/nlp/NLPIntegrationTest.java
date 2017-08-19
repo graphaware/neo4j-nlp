@@ -1,5 +1,6 @@
 package com.graphaware.nlp;
 
+import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.runtime.GraphAwareRuntime;
@@ -17,6 +18,10 @@ import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
 
 public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
 
+    protected GraphKeyValueStore keyValueStore;
+
+    protected static final String STORE_KEY = "GA__NLP__";
+
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -24,6 +29,7 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         runtime.start();
         runtime.waitUntilStarted();
+        keyValueStore = new GraphKeyValueStore(getDatabase());
     }
 
     protected NLPManager getNLPManager() {
@@ -54,6 +60,16 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
                 //
             }
         };
+    }
+
+    protected boolean checkConfigurationContainsKey(String key) {
+        boolean result;
+        try (Transaction tx = getDatabase().beginTx()) {
+            result = keyValueStore.hasKey(key);
+            tx.success();
+        }
+
+        return result;
     }
 
 }

@@ -16,10 +16,27 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testAddPipeline() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"'})", emptyConsumer());
+        assertTrue(
+                getNLPManager()
+                .getTextProcessorsManager()
+                .getTextProcessor(StubTextProcessor.class.getName())
+                .getPipelines()
+                .contains("custom-1")
+        );
+        assertTrue(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_custom-1"));
+    }
+
+    @Test
     public void removePipelineTest() {
+        clearDb();
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"'})", emptyConsumer());
         assertTrue(getNLPManager().getTextProcessorsManager().getTextProcessor(StubTextProcessor.class.getName()).getPipelines().contains("custom-1"));
         executeInTransaction("CALL ga.nlp.processor.removePipeline('custom-1', '"+StubTextProcessor.class.getName()+"')", emptyConsumer());
         assertFalse(getNLPManager().getTextProcessorsManager().getTextProcessor(StubTextProcessor.class.getName()).getPipelines().contains("custom-1"));
+        assertFalse(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_custom-1"));
     }
+
 }
