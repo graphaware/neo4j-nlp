@@ -41,45 +41,4 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
         assertTrue(registeredProcessors.contains("com.graphaware.nlp.stub.StubTextProcessor"));
     }
 
-    @Test
-    public void testDeletingPipelineNodeDeRegisterItFromProcessor() {
-        Map<String, Object> customPipeline = new HashMap<>();
-        customPipeline.put("name", "custom");
-        customPipeline.put("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("CALL ga.nlp.processor.addPipeline({params})", Collections.singletonMap("params", customPipeline));
-            Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.processor.getPipelineInfos()");
-            assertTrue(result.hasNext());
-            boolean foundCustom = false;
-            while (result.hasNext() && !foundCustom) {
-                Map<String, Object> record = result.next();
-                if (record.get("name").equals("custom")) {
-                    foundCustom = true;
-                }
-            }
-            assertTrue(foundCustom);
-            tx.success();
-        }
-
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("MATCH (n:Pipeline) DETACH DELETE n");
-            tx.success();
-        }
-
-        try (Transaction tx = getDatabase().beginTx()) {
-            Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.processor.getPipelineInfos()");
-            boolean foundCustom = false;
-            while (result.hasNext() && !foundCustom) {
-                Map<String, Object> record = result.next();
-                if (record.get("name").equals("custom")) {
-                    foundCustom = true;
-                }
-            }
-            assertFalse(foundCustom);
-            tx.success();
-        }
-    }
-
 }
