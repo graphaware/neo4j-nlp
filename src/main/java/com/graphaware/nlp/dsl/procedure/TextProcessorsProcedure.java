@@ -28,9 +28,24 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.processor.addPipeline", mode = Mode.WRITE)
     @Description("Add custom pipeline to a Text Processor")
     public Stream<SingleResult> addPipeline(@Name("addPipelineRequest") Map<String, Object> addPipelineRequest) {
-        PipelineSpecification request = mapper.convertValue(addPipelineRequest, PipelineSpecification.class);
-        Node newPipeline = getNLPManager().addPipeline(request);
-        return Stream.of(new SingleResult(newPipeline));
+        try {
+            PipelineSpecification request = mapper.convertValue(addPipelineRequest, PipelineSpecification.class);
+            getNLPManager().addPipeline(request);
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Procedure(name = "ga.nlp.processor.removePipeline", mode = Mode.WRITE)
+    @Description("Remove the given pipeline from the given text processor")
+    public Stream<SingleResult> removePipeline(@Name("pipeline") String pipeline, @Name("textProcessor") String textProcessor) {
+        try {
+            getNLPManager().removePipeline(pipeline, textProcessor);
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
     
     @Procedure("ga.nlp.processor.getPipelineInfos")

@@ -254,65 +254,8 @@ public class TextProcessorProcedure extends NLPProcedure {
 //            }
 //        };
 //    }
-//
-//    public CallableProcedure.BasicProcedure getPipelineInfos() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelineInfos"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
-//                .build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                String textProcessor = (String) inputParams.get(PARAMETER_NAME_TEXT_PROCESSOR);
-//                TextProcessor textProcessorInstance = processorManager.getTextProcessor(textProcessor);
-//                Set<Object[]> result = new HashSet<>();
-//                List<PipelineInfo> pipelines = textProcessorInstance.getPipelineInfos();
-//                if (null == pipelines) {
-//                    System.out.println("getPipelinesInfos RETURN null");
-//                    return Iterators.asRawIterator(result.iterator());
-//                }
-//
-//                for (PipelineInfo pipelineInfo : pipelines) {
-//                    if (null != pipelineInfo) {
-//                        Map<String, Object> info = new HashMap<>();
-//                        info.put("name", pipelineInfo.getName());
-//                        info.put("class", pipelineInfo.getTextProcessorClass());
-//                        info.put("specifications", pipelineInfo.getSpecifications());
-//                        info.put("stopwords", pipelineInfo.getStopwords());
-//
-//                        result.add(new Object[]{info});
-//                    }
-//
-//                }
-//
-//                return Iterators.asRawIterator(result.iterator());
-//            }
-//        };
-//    }
-//
-//    public CallableProcedure.BasicProcedure addPipeline() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("addPipeline"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
-//                .build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                TextProcessorsManager.PipelineCreationResult creationResult = processorManager.createPipeline(PipelineSpecification.fromMap(inputParams));
-//                //if succeeded
-//                processorManager.storePipeline(PipelineSpecification.fromMap(inputParams));
-//                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{
-//                    creationResult.getResult() == 0 ? SUCCESS : "Error: " + creationResult.getMessage()
-//                }).iterator());
-//            }
-//        };
-//    }
+
+
 //
 //    public CallableProcedure.BasicProcedure removePipeline() {
 //        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("removePipeline"))

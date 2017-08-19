@@ -42,7 +42,6 @@ public class NLPManager {
         this.textProcessorsManager = new TextProcessorsManager(database);
         this.database = database;
         this.persister = new AnnotatedTextPersister(database, configuration);
-        registerProcedures();
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -86,6 +85,11 @@ public class NLPManager {
         return list;
     }
 
+    public void removePipeline(String pipeline, String processor) {
+        getTextProcessorsManager().getTextProcessor(processor).removePipeline(pipeline);
+        configuration.removePipeline(pipeline, processor);
+    }
+
     public Boolean filter(FilterRequest filterRequest) {
         String text = filterRequest.getText();
         if (text == null) {
@@ -116,32 +120,6 @@ public class NLPManager {
         return true;
     }
 
-    private void registerProcedures() {
-//        // temporary as procedures should move to official neo procedures
-//        TextProcessorProcedure textProcedures = new TextProcessorProcedure(database, textProcessorsManager);
-//        ConceptProcedure conceptProcedures = new ConceptProcedure(database, textProcessorsManager);
-
-        Procedures procedures = ((GraphDatabaseAPI) database).getDependencyResolver().resolveDependency(Procedures.class);
-
-        try {
-//            procedures.register(conceptProcedures.concept());
-//            procedures.register(textProcedures.annotate());
-//            procedures.register(textProcedures.sentiment());
-//            procedures.register(textProcedures.language());
-//            procedures.register(textProcedures.filter());
-//            procedures.register(textProcedures.train());
-//            procedures.register(textProcedures.test());
-//            //Managing Processor
-//            procedures.register(textProcedures.getProcessors());
-//            procedures.register(textProcedures.getPipelines());
-//            procedures.register(textProcedures.getPipelineInfos());
-//            procedures.register(textProcedures.addPipeline());
-//            procedures.register(textProcedures.removePipeline());
-        } catch (Exception e) {
-            //
-        }
-    }
-
     public Set<ProcessorsList> getProcessors() {
         Set<String> textProcessors = textProcessorsManager.getTextProcessorNames();
         Set<ProcessorsList> result = new HashSet<>();
@@ -152,13 +130,9 @@ public class NLPManager {
         return result;
     }
 
-    public Node addPipeline(PipelineSpecification request) {
-        TextProcessorsManager.PipelineCreationResult creationResult = textProcessorsManager.createPipeline(request);
-        if (creationResult.getResult() == 0) {
-            Node storedPipeline = textProcessorsManager.storePipeline(request);
-            return storedPipeline;
-        }
-        return null;
+    public void addPipeline(PipelineSpecification request) {
+        textProcessorsManager.createPipeline(request);
+        configuration.storeCustomPipeline(request);
     }
 
     private TextProcessor retrieveTextProcessor(String processor, String pipeline) {

@@ -15,13 +15,17 @@
  */
 package com.graphaware.nlp.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
+import com.graphaware.nlp.dsl.PipelineSpecification;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DynamicConfiguration {
@@ -31,10 +35,12 @@ public class DynamicConfiguration {
     private static final String RELATIONSHIP_TYPE_KEY_PREFIX = "RELATIONSHIP_";
     private static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
     private static final String SETTING_KEY_PREFIX = "SETTING_";
+    private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
     
     private final GraphDatabaseService database;
     private final GraphKeyValueStore keyValueStore;
     private Map<String, Object> userProvidedConfiguration;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public DynamicConfiguration(GraphDatabaseService database) {
         this.database = database;
@@ -82,6 +88,49 @@ public class DynamicConfiguration {
         loadUserConfiguration();
     }
 
+    public void storeCustomPipeline(PipelineSpecification pipelineSpecification) {
+        try {
+            String serialized = mapper.writeValueAsString(pipelineSpecification);
+            String key = PIPELINE_KEY_PREFIX + pipelineSpecification.getName();
+            update(key, serialized);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public List<PipelineSpecification> loadCustomPipelines() {
+        List<PipelineSpecification> list = new ArrayList<>();
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(PIPELINE_KEY_PREFIX)) {
+                try {
+                    PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
+                    list.add(pipelineSpecification);
+                } catch (Exception e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+            }
+        });
+
+        return list;
+    }
+
+    public void removePipeline(String name, String textProcessor) {
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(PIPELINE_KEY_PREFIX)) {
+                try {
+                    PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
+                    if (pipelineSpecification.getName().equals(name) && pipelineSpecification.getTextProcessor().equals(textProcessor)) {
+                        removeKey(STORE_KEY + k);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+            }
+        });
+    }
+
     public void updateInternalSetting(String key, Object value) {
         try (Transaction tx = database.beginTx()) {
             keyValueStore.set(STORE_KEY + SETTING_KEY_PREFIX + key, value);
@@ -92,6 +141,15 @@ public class DynamicConfiguration {
 
     private void loadUserConfiguration() {
         userProvidedConfiguration = getAllConfigValuesFromStore();
+    }
+
+    private void removeKey(String key) {
+        try (Transaction tx = database.beginTx()) {
+            if (keyValueStore.hasKey(key)) {
+                keyValueStore.remove(key);
+            }
+            tx.success();
+        }
     }
 
     public Map<String, Object> getAllConfigValuesFromStore() {

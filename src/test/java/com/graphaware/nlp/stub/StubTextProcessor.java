@@ -29,7 +29,7 @@ public class StubTextProcessor implements TextProcessor {
 
     @Override
     public List<String> getPipelines() {
-        return new ArrayList<>();
+        return new ArrayList<>(pipelineInfos.keySet());
     }
 
     @Override
