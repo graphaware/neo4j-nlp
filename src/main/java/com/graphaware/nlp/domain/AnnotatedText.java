@@ -58,7 +58,6 @@ public class AnnotatedText {
         Map<String, FilterQueryTerm> filterQueryTerms = getFilterQueryTerms(filterQuery);
         List<Tag> tags = getTags();
         for (Tag tag : tags) {
-            String lemma = tag.getLemma();
             FilterQueryTerm query = filterQueryTerms.get(tag.getLemma().toLowerCase());
             if (query != null && query.evaluate(tag)) {
                 return true;
