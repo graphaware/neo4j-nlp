@@ -3,7 +3,7 @@ package com.graphaware.nlp.dsl.procedure;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.AnnotationRequest;
 import com.graphaware.nlp.dsl.FilterRequest;
-import com.graphaware.nlp.dsl.result.AnnotationResult;
+import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.*;
@@ -15,10 +15,10 @@ public class AnnotateProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.annotate", mode = Mode.WRITE)
     @Description("Performs the text annotation and store it into the graph")
-    public Stream<AnnotationResult> annotate(@Name("annotationRequest") Map<String, Object> annotationRequest) {
+    public Stream<NodeResult> annotate(@Name("annotationRequest") Map<String, Object> annotationRequest) {
         AnnotationRequest request = mapper.convertValue(annotationRequest, AnnotationRequest.class);
         Node result = getNLPManager().annotateTextAndPersist(request);
-        return Stream.of(new AnnotationResult(result));
+        return Stream.of(new NodeResult(result));
     }
     
     @Procedure(name = "ga.nlp.filter", mode = Mode.WRITE)

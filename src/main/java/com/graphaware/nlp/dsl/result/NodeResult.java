@@ -2,11 +2,11 @@ package com.graphaware.nlp.dsl.result;
 
 import org.neo4j.graphdb.Node;
 
-public class AnnotationResult {
+public class NodeResult {
 
     public Node result;
 
-    public AnnotationResult(Node result) {
+    public NodeResult(Node result) {
         this.result = result;
     }
 }
