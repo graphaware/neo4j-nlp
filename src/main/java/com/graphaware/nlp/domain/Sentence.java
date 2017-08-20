@@ -168,8 +168,6 @@ public class Sentence implements Comparable<Sentence> {
         return this.sentenceNumber - o.sentenceNumber;
     }
 
-    //Currently used only for testing purpose
-    // @todo move to test helper
     public Tag getTagOccurrence(int begin) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");
@@ -182,8 +180,7 @@ public class Sentence implements Comparable<Sentence> {
         }
     }
 
-    //Currently used only for testing purpose
-    // @todo move to test helper
+
     public List<Phrase> getPhraseOccurrence(int begin) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");

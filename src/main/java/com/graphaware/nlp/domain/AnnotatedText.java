@@ -82,7 +82,9 @@ public class AnnotatedText {
     }
 
     public List<Sentence> getSentencesSorted() {
-        return new ArrayList<>();
+        sentences.sort((Sentence o1, Sentence o2) -> o1.compareTo(o2));
+
+        return sentences;
     }
 
     private class FilterQueryTerm {
