@@ -22,7 +22,7 @@ public class AnnotateProcedure extends AbstractDSL {
     }
     
     @Procedure(name = "ga.nlp.filter", mode = Mode.WRITE)
-    @Description("Filter ...")
+    @Description("Boolean filter for text accordingly to complex filter definition")
     public Stream<SingleResult> filter(@Name("filterRequest") Map<String, Object> filterRequest) {
         FilterRequest request = mapper.convertValue(filterRequest, FilterRequest.class);
         Object result = getNLPManager().filter(request);

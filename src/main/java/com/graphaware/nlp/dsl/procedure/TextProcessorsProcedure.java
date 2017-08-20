@@ -12,7 +12,6 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Procedure;
 
 import java.util.stream.Stream;
-import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 
@@ -33,7 +32,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
             getNLPManager().addPipeline(request);
             return Stream.of(SingleResult.success());
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
@@ -44,7 +43,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
             getNLPManager().removePipeline(pipeline, textProcessor);
             return Stream.of(SingleResult.success());
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
     

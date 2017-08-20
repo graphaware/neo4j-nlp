@@ -40,8 +40,4 @@ public class ConfigurationProcedure extends AbstractDSL {
 
         return Stream.of(SingleResult.success());
     }
-
-
-
-
 }

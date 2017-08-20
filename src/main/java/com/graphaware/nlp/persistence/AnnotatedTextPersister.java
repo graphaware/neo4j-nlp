@@ -38,7 +38,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
         if (tmpAnnotatedNode == null || force) {
             final Node annotatedTextNode;
-            if ( tmpAnnotatedNode != null) {
+            if (tmpAnnotatedNode != null) {
                 annotatedTextNode = tmpAnnotatedNode;
             } else {
                 annotatedTextNode = createAnnotatedTextNode(id, object);
@@ -150,7 +150,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         tagOccurrence.createRelationshipTo(tag, configuration().getRelationshipFor(Relationships.TAG_OCCURRENCE_TAG));
     }
 
-    private Node getOrCreateTag(Tag tag, boolean force) {
+    public Node getOrCreateTag(Tag tag, boolean force) {
         Node node = getIfExist(
                 configuration().getLabelFor(Labels.Tag),
                 configuration().getPropertyKeyFor(Properties.PROPERTY_ID),
@@ -159,12 +159,13 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         if (null == node) {
             node = database.createNode(configuration().getLabelFor(Labels.Tag));
             updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
-
+            storeTagParent(node, tag);
             return node;
         }
 
         if (force) {
             updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
+            storeTagParent(node, tag);
         }
 
         return node;
@@ -174,6 +175,18 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
         node.setProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE), language);
         node.setProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE), value);
+    }
+    
+    private void storeTagParent(Node tagNode, Tag tag) {
+        if (tag.getParents() != null) {
+            tag.getParents().stream().forEach((tagRelationship) -> {
+                Node parentTagNode = getOrCreateTag(tag, true);
+                Relationship parentRelationship = tagNode.createRelationshipTo(parentTagNode, 
+                        configuration().getRelationshipFor(Relationships.IS_RELATED_TO));
+                parentRelationship.setProperty("type", tagRelationship.getRelation());
+                parentRelationship.setProperty("weight", tagRelationship.getWeight());
+            });
+        }
     }
 
     private Node storeSentence(Sentence sentence, String id, boolean force) {
@@ -343,5 +356,19 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         return null != getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
     }
 
+    public Tag loadTag(Node tagNode) {
+        checkNodeIsATag(tagNode);
+        Tag tag = new Tag(String.valueOf(tagNode.getProperty(Properties.CONTENT_VALUE)),
+                String.valueOf(tagNode.getProperty(Properties.LANGUAGE)));
+        return tag;
+    }
+
+    private void checkNodeIsATag(Node tagNode) {
+        Map<String, Object> allProperties = tagNode.getAllProperties();
+        assert (tagNode.hasLabel(configuration().getLabelFor(Labels.Tag)));
+        assert (allProperties.containsKey(Properties.PROPERTY_ID));
+        assert (allProperties.containsKey(Properties.CONTENT_VALUE));
+        assert (allProperties.containsKey(Properties.LANGUAGE));
+    }
 
 }

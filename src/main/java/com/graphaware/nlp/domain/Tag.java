@@ -18,6 +18,7 @@ package com.graphaware.nlp.domain;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
+import org.neo4j.graphdb.RelationshipType;
 
 public class Tag {
 
@@ -106,7 +107,7 @@ public class Tag {
         }
         properties.put(key, value);
     }
-
+    
 //    public static Tag createTag(Node tagNode) {
 //        checkNodeIsATag(tagNode);
 //        Tag tag = new Tag(String.valueOf(tagNode.getProperty(CONTENT_VALUE)),
@@ -166,4 +167,8 @@ public class Tag {
 //        }
 //        return tagNode;
 //    }
+
+    public Collection<TagParentRelation> getParents() {
+        return parents;
+    }
 }

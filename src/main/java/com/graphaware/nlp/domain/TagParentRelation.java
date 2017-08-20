@@ -15,6 +15,8 @@
  */
 package com.graphaware.nlp.domain;
 
+import org.neo4j.graphdb.RelationshipType;
+
 public class TagParentRelation {
     private Tag parent;
     private String relation;
