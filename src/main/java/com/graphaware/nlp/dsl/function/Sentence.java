@@ -1,4 +1,4 @@
-package com.graphaware.nlp.function;
+package com.graphaware.nlp.dsl.function;
 
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
