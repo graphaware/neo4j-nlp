@@ -2,8 +2,8 @@ package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPConfiguration;
-import com.graphaware.nlp.persistence.Labels;
-import com.graphaware.nlp.persistence.Relationships;
+import com.graphaware.nlp.persistence.constants.Labels;
+import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;

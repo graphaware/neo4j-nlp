@@ -1,8 +1,27 @@
-package com.graphaware.nlp.persistence;
+/*
+ * Copyright (c) 2013-2017 GraphAware
+ *
+ * This file is part of the GraphAware Framework.
+ *
+ * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of
+ * the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+package com.graphaware.nlp.persistence.persisters;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.persistence.PersistenceRegistry;
+import com.graphaware.nlp.persistence.constants.Labels;
+import com.graphaware.nlp.persistence.constants.Properties;
+import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.util.SentenceUtils;
 import com.graphaware.nlp.util.TagUtils;
 import com.graphaware.nlp.util.TypeConverter;
@@ -20,19 +39,11 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 
     private static final Log LOG = LoggerFactory.getLogger(AnnotatedTextPersister.class);
 
-    public AnnotatedTextPersister(GraphDatabaseService database, DynamicConfiguration configuration) {
-        super(database, configuration);
-    }
-
-    public AnnotatedTextPersister(GraphDatabaseService database) {
-        super(database, new DynamicConfiguration(database));
+    public AnnotatedTextPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
+        super(database, dynamicConfiguration, registry);
     }
 
     @Override
-    public Node persist(AnnotatedText object, String id) {
-        return persist(object, id, false);
-    }
-
     public Node persist(AnnotatedText object, String id, boolean force) {
         LOG.info("Start storing annotatedText " + id);
         Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
@@ -68,20 +79,6 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         return node;
     }
 
-    private Node createSentenceNode(String id, int sentenceNumber, String hash, String text) {
-        Node node = database.createNode(configuration().getLabelFor(Labels.Sentence));
-        updateSentenceNode(node, id, sentenceNumber, hash, text);
-
-        return node;
-    }
-
-    private void updateSentenceNode(Node node, String id, int sentenceNumber, String hash, String text) {
-        node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER), sentenceNumber);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.HASH), hash);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.TEXT), text);
-    }
-
     private void relateSentenceToAnnotatedText(Node sentence, Node annotatedText, boolean isFirstSentence) {
         annotatedText.createRelationshipTo(
                 sentence,
@@ -97,7 +94,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 
     private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, boolean force) {
         sentence.getTags().forEach(tag -> {
-            Node tagNode = getOrCreateTag(tag, force);
+            Node tagNode = getPersister(Tag.class).getOrCreate(tag, id, force);
             assignNamedEntityOnTag(tagNode, tag);
             assignPartOfSpeechOnTag(tagNode, tag);
             relateSentenceToTag(sentenceNode, tagNode, tag.getMultiplicity());
@@ -121,7 +118,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, boolean force) {
         sentence.getTagOccurrences().values().forEach(occurrence -> {
             for (PartOfTextOccurrence<Tag> tagAtPosition : occurrence) {
-                Node tagNode = getOrCreateTag(tagAtPosition.getElement(), force);
+                Node tagNode = getPersister(Tag.class).getOrCreate(tagAtPosition.getElement(), null, force);
                 Node tagOccurrenceNode = createTagOccurrenceNode(tagAtPosition);
                 relateTagOccurrenceToTag(tagOccurrenceNode, tagNode);
                 relateSentenceToTagOccurrence(sentenceNode, tagOccurrenceNode);
@@ -150,56 +147,17 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         tagOccurrence.createRelationshipTo(tag, configuration().getRelationshipFor(Relationships.TAG_OCCURRENCE_TAG));
     }
 
-    public Node getOrCreateTag(Tag tag, boolean force) {
-        Node node = getIfExist(
-                configuration().getLabelFor(Labels.Tag),
-                configuration().getPropertyKeyFor(Properties.PROPERTY_ID),
-                tag.getId());
-
-        if (null == node) {
-            node = database.createNode(configuration().getLabelFor(Labels.Tag));
-            updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
-            storeTagParent(node, tag);
-            return node;
-        }
-
-        if (force) {
-            updateTag(node, tag.getId(), tag.getLemma(), tag.getLanguage());
-            storeTagParent(node, tag);
-        }
-
-        return node;
-    }
-
-    private void updateTag(Node node, String id, String value, String language) {
-        node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE), language);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE), value);
-    }
-    
-    private void storeTagParent(Node tagNode, Tag tag) {
-        if (tag.getParents() != null) {
-            tag.getParents().stream().forEach((tagRelationship) -> {
-                Node parentTagNode = getOrCreateTag(tag, true);
-                Relationship parentRelationship = tagNode.createRelationshipTo(parentTagNode, 
-                        configuration().getRelationshipFor(Relationships.IS_RELATED_TO));
-                parentRelationship.setProperty("type", tagRelationship.getRelation());
-                parentRelationship.setProperty("weight", tagRelationship.getWeight());
-            });
-        }
-    }
-
     private Node storeSentence(Sentence sentence, String id, boolean force) {
         String sentenceId = String.format("%s_%s", id, sentence.getSentenceNumber());
         Node sentenceNode = getIfExist(configuration().getLabelFor(Labels.Sentence), configuration().getPropertyKeyFor(Properties.PROPERTY_ID), sentenceId);
         if (sentenceNode == null || force) {
             Node newSentenceNode;
             if (sentenceNode == null) {
-                newSentenceNode = createSentenceNode(sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
+                newSentenceNode = getPersister(Sentence.class).getOrCreate(sentence, id, force);
             } else {
                 newSentenceNode = sentenceNode;
             }
-            updateSentenceNode(newSentenceNode, sentenceId, sentence.getSentenceNumber(), MD5(sentence.getSentence()), sentence.getSentence());
+            getPersister(Sentence.class).update(newSentenceNode, sentence, id);
             storeSentenceTags(sentence, newSentenceNode, id, force);
             storeSentenceTagOccurrences(sentence, newSentenceNode, force);
             storeUniversalDependenciesForSentence(sentence, newSentenceNode);
@@ -356,19 +314,13 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         return null != getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
     }
 
-    public Tag loadTag(Node tagNode) {
-        checkNodeIsATag(tagNode);
-        Tag tag = new Tag(String.valueOf(tagNode.getProperty(Properties.CONTENT_VALUE)),
-                String.valueOf(tagNode.getProperty(Properties.LANGUAGE)));
-        return tag;
+    @Override
+    public Node getOrCreate(AnnotatedText object, String id, boolean force) {
+        return null;
     }
 
-    private void checkNodeIsATag(Node tagNode) {
-        Map<String, Object> allProperties = tagNode.getAllProperties();
-        assert (tagNode.hasLabel(configuration().getLabelFor(Labels.Tag)));
-        assert (allProperties.containsKey(Properties.PROPERTY_ID));
-        assert (allProperties.containsKey(Properties.CONTENT_VALUE));
-        assert (allProperties.containsKey(Properties.LANGUAGE));
-    }
+    @Override
+    public void update(Node node, AnnotatedText object, String id) {
 
+    }
 }

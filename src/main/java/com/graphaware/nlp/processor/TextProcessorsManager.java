@@ -30,7 +30,7 @@ import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.graphaware.nlp.persistence.Labels.Pipeline;
+import static com.graphaware.nlp.persistence.constants.Labels.Pipeline;
 
 public class TextProcessorsManager {
 

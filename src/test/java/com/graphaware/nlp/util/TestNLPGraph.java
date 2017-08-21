@@ -39,6 +39,7 @@ public class TestNLPGraph {
     public void assertSentenceWithIdHasPhraseOccurrenceCount(String id, long count) {
         executeInTransaction("MATCH (n:Sentence) WHERE n.id = {id} " +
                 "RETURN size((n)-[:SENTENCE_PHRASE_OCCURRENCE]->()) AS c", Collections.singletonMap("id", id), (result -> {
+                    assertTrue(result.hasNext());
                     assertEquals(count, result.next().get("c"));
         }));
     }

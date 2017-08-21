@@ -12,14 +12,14 @@ import com.graphaware.nlp.dsl.FilterRequest;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
-import com.graphaware.nlp.module.NLPModule;
-import com.graphaware.nlp.persistence.AnnotatedTextPersister;
-import com.graphaware.nlp.persistence.Labels;
+import com.graphaware.nlp.persistence.PersistenceRegistry;
+import com.graphaware.nlp.persistence.persisters.AnnotatedTextPersister;
+import com.graphaware.nlp.persistence.constants.Labels;
+import com.graphaware.nlp.persistence.persisters.Persister;
+import com.graphaware.nlp.persistence.persisters.TagPersister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import com.graphaware.runtime.GraphAwareRuntime;
-import com.graphaware.runtime.RuntimeRegistry;
 
 import java.util.*;
 
@@ -42,9 +42,10 @@ public class NLPManager {
 
     private final GraphDatabaseService database;
 
-    private final AnnotatedTextPersister persister;
-
     private final DynamicConfiguration configuration;
+
+    private final PersistenceRegistry persistenceRegistry;
+
     private ConceptNet5Importer conceptnet5Importer;
 
     public NLPManager(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
@@ -52,11 +53,15 @@ public class NLPManager {
         this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager(database);
         this.database = database;
-        this.persister = new AnnotatedTextPersister(database, configuration);
+        this.persistenceRegistry = new PersistenceRegistry(database, configuration);
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
         return textProcessorsManager;
+    }
+
+    public Persister getPersister(Class clazz) {
+        return persistenceRegistry.getPersister(clazz);
     }
 
     public Node annotateTextAndPersist(AnnotationRequest annotationRequest) {
@@ -81,7 +86,7 @@ public class NLPManager {
     }
 
     public Node persistAnnotatedText(AnnotatedText annotatedText, String id, boolean force) {
-        return persister.persist(annotatedText, id, force);
+        return getPersister(annotatedText.getClass()).persist(annotatedText, id, force);
     }
 
     public DynamicConfiguration getConfiguration() {
@@ -195,7 +200,7 @@ public class NLPManager {
             TextProcessor processor = retrieveTextProcessor(request.getProcessor(), null);
             List<Tag> tags = new ArrayList<>();
             while (tagsIterator.hasNext()) {
-                Tag tag = persister.loadTag(tagsIterator.next());
+                Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());
                 if (splitTags) {
                     List<Tag> annotateTags = processor.annotateTags(tag.getLemma(), lang);
                     if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
@@ -218,7 +223,7 @@ public class NLPManager {
 
             conceptTags.stream().forEach((newTag) -> {
                 if (newTag != null) {
-                    persister.getOrCreateTag(newTag, false);
+                    getPersister(Tag.class).getOrCreate(newTag, null, false);
                 }
             });
             if (annotatedNode != null) {
@@ -238,6 +243,14 @@ public class NLPManager {
 
     }
 
+    public ConceptNet5Importer getImporter() {
+        if (conceptnet5Importer == null) {
+            String url = nlpConfiguration.getConceptNetUrl();
+            this.conceptnet5Importer = new ConceptNet5Importer.Builder(url).build();
+        }
+        return conceptnet5Importer;
+    }
+
     private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedNode.getId());
@@ -246,13 +259,5 @@ public class NLPManager {
                 + "where id(n) = {id} return t", params);
         ResourceIterator<Node> tags = queryRes.columnAs("t");
         return tags;
-    }
-    
-    public ConceptNet5Importer getImporter() {
-        if (conceptnet5Importer == null) {
-            String url = nlpConfiguration.getConceptNetUrl();
-            this.conceptnet5Importer = new ConceptNet5Importer.Builder(url).build();
-        }
-        return conceptnet5Importer;
     }
 }

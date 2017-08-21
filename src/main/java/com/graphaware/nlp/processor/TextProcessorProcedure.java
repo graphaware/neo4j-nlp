@@ -15,32 +15,8 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.persistence.Properties;
-import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.procedure.NLPProcedure;
-import com.graphaware.nlp.util.GenericModelParameters;
-import com.graphaware.nlp.util.OptionalNLPParameters;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-import org.neo4j.collection.RawIterator;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.MultipleFoundException;
-import org.neo4j.graphdb.Node;
-import org.neo4j.helpers.collection.Iterators;
-import org.neo4j.kernel.api.exceptions.ProcedureException;
-import org.neo4j.kernel.api.proc.CallableProcedure;
-import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.neo4j.procedure.Mode;
+
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
 public class TextProcessorProcedure extends NLPProcedure {

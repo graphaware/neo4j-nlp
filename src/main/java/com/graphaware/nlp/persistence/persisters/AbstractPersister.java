@@ -13,12 +13,13 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.persistence;
+package com.graphaware.nlp.persistence.persisters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.persistence.PersistenceRegistry;
 import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
@@ -27,36 +28,20 @@ import java.util.Map;
 
 public abstract class AbstractPersister {
 
-    private static final String KV_CONFIGURATION_KEY = "GA_NLP_CONFIGURATION";
-
     protected final GraphDatabaseService database;
 
     private final DynamicConfiguration configuration;
 
+    private final PersistenceRegistry registry;
+
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public AbstractPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration) {
+    public AbstractPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
         this.database = database;
         this.configuration = dynamicConfiguration;
+        this.registry = registry;
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
-//
-//    public void updateConfiguration(Map<String, Object> configuration) {
-//        try (Transaction tx = getDatabase().beginTx()) {
-//            storeUserConfiguration(configuration);
-//            persistenceConfiguration.update(configuration);
-//
-//            tx.success();
-//        }
-//    }
-//
-//    public void updateConfigurationSetting(String key, Object value) {
-//        try (Transaction tx = getDatabase().beginTx()) {
-//            Map<String, Object> config = persistenceConfiguration.updateSetting(key, value);
-//            storeUserConfiguration(config);
-//            tx.success();
-//        }
-//    }
 
     protected GraphDatabaseService getDatabase() {
         return database;
@@ -68,6 +53,10 @@ public abstract class AbstractPersister {
 
     protected ObjectMapper mapper() {
         return mapper;
+    }
+
+    protected Persister getPersister(Class clazz) {
+        return registry.getPersister(clazz);
     }
 
     protected Node getIfExist(Label label, String key, Object value) {

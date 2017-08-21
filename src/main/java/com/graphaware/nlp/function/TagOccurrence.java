@@ -1,6 +1,6 @@
 package com.graphaware.nlp.function;
 
-import com.graphaware.nlp.persistence.Relationships;
+import com.graphaware.nlp.persistence.constants.Relationships;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;

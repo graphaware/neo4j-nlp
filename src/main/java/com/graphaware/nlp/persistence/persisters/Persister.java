@@ -13,16 +13,20 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.persistence;
+package com.graphaware.nlp.persistence.persisters;
 
 import org.neo4j.graphdb.Node;
 
 public interface Persister<T> {
 
-    Node persist(T object, String id);
+    Node persist(T object, String id, boolean force);
 
     T fromNode(Node node);
 
     boolean exists(String id);
+
+    Node getOrCreate(T object, String id, boolean force);
+
+    void update(Node node, T object, String id);
 
 }

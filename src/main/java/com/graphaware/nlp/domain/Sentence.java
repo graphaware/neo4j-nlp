@@ -15,6 +15,8 @@
  */
 package com.graphaware.nlp.domain;
 
+import com.graphaware.nlp.util.HashFunctions;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -196,6 +198,10 @@ public class Sentence implements Comparable<Sentence> {
         } else {
             return new ArrayList<>();
         }
+    }
+
+    public String hash() {
+        return HashFunctions.MD5(sentence);
     }
 
 //    public static Sentence load(Node sentenceNode) {

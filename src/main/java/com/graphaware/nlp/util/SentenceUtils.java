@@ -15,7 +15,7 @@
  */
 package com.graphaware.nlp.util;
 
-import com.graphaware.nlp.persistence.Labels;
+import com.graphaware.nlp.persistence.constants.Labels;
 import org.neo4j.graphdb.Label;
 
 public class SentenceUtils {
