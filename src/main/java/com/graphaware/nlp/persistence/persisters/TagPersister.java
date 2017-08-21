@@ -6,10 +6,14 @@ import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
+import com.graphaware.nlp.util.TagUtils;
+import com.graphaware.nlp.util.TypeConverter;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import java.util.List;
 import java.util.Map;
 
 public class TagPersister extends AbstractPersister implements Persister<Tag> {
@@ -54,6 +58,9 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             storeTagParent(node, tag);
         }
 
+        assignNamedEntityOnTag(node, tag);
+        assignPartOfSpeechOnTag(node, tag);
+
         return node;
     }
 
@@ -62,6 +69,20 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), tag.getId());
         node.setProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE), tag.getLanguage());
         node.setProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE), tag.getLemma());
+    }
+
+    private void assignNamedEntityOnTag(Node tagNode, Tag tag) {
+        List<String> namedEntities = tag.getNeAsList();
+        tagNode.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), TypeConverter.convertStringListToArray(namedEntities));
+        namedEntities.forEach(ner -> {
+            String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX) + TagUtils.getNamedEntityValue(ner);
+            tagNode.addLabel(Label.label(labelName));
+        });
+    }
+
+    private void assignPartOfSpeechOnTag(Node tagNode, Tag tag) {
+        List<String> parts = tag.getPosAsList();
+        tagNode.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), TypeConverter.convertStringListToArray(parts));
     }
 
     private void storeTagParent(Node tagNode, Tag tag) {
