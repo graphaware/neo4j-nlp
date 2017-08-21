@@ -129,6 +129,26 @@ public class TextProcessorsManager {
         textProcessor.removePipeline(pipeline);
         removePipelineNode(processor, pipeline);
     }
+    public TextProcessor retrieveTextProcessor(String processor, String pipeline) {
+        TextProcessor newTP;
+        if (processor != null && processor.length() > 0) {
+            newTP = getTextProcessor(processor);
+            if (newTP == null) {
+                throw new RuntimeException("Text processor " + processor + " doesn't exist");
+            }
+        } else {
+            newTP = getDefaultProcessor();
+        }
+        if (pipeline != null && pipeline.length() > 0) {
+            if (!newTP.checkPipeline(pipeline)) {
+                throw new RuntimeException("Pipeline with name " + pipeline
+                        + " doesn't exist for processor " + newTP.getClass().getName());
+            }
+        }
+        LOG.info("Using text processor: " + newTP.getClass().getName());
+
+        return newTP;
+    }
 
     private void removePipelineNode(String processor, String pipeline) throws QueryExecutionException {
         Map<String, Object> map = new HashMap<>();

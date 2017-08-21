@@ -13,38 +13,11 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.conceptnet5;
+package com.graphaware.nlp.enrich.conceptnet5;
 
-import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
-import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.procedure.NLPProcedure;
-import com.graphaware.nlp.processor.TextProcessor;
-import com.graphaware.nlp.processor.TextProcessorsManager;
-import com.graphaware.runtime.GraphAwareRuntime;
-import com.graphaware.runtime.RuntimeRegistry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import org.neo4j.collection.RawIterator;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.graphdb.Result;
-import org.neo4j.helpers.collection.Iterators;
-import org.neo4j.kernel.api.exceptions.ProcedureException;
-import org.neo4j.kernel.api.proc.CallableProcedure;
-import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
-import org.neo4j.procedure.Mode;
 
 public class ConceptProcedure extends NLPProcedure {
 //

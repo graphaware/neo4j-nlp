@@ -15,7 +15,7 @@
  */
 package com.graphaware.nlp.dsl;
 
-import static com.graphaware.nlp.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
+import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
 import java.util.Arrays;
 import java.util.List;
 import org.neo4j.graphdb.Node;

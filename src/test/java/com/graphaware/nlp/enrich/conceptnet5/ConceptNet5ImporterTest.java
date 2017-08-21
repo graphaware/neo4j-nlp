@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.graphaware.nlp.conceptnet5;
+package com.graphaware.nlp.enrich.conceptnet5;
 
 import org.junit.After;
 import org.junit.AfterClass;

@@ -15,28 +15,8 @@
  */
 package com.graphaware.nlp.procedure;
 
-import com.graphaware.nlp.application.search.SearchProcedure;
-import com.graphaware.nlp.conceptnet5.ConceptProcedure;
-import com.graphaware.nlp.ml.lda.LDAProcedure;
 //import com.graphaware.nlp.ml.lda.LDAProcedure;
-import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
-import com.graphaware.nlp.processor.TextProcessorProcedure;
-import com.graphaware.nlp.ml.similarity.SimilarityProcedure;
-import com.graphaware.nlp.ml.textrank.TextRankProcedure;
-import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
-import com.graphaware.nlp.ml.word2vec.Word2VecModel;
-import com.graphaware.nlp.ml.word2vec.Word2VecProcedure;
-import com.graphaware.nlp.module.NLPConfiguration;
-import com.graphaware.nlp.processor.TextProcessorsManager;
-import java.util.concurrent.Executors;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.kernel.api.exceptions.ProcedureException;
-import org.neo4j.kernel.impl.proc.Procedures;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import org.neo4j.kernel.api.exceptions.KernelException;
 
 public class NLPProcedures {
 //
