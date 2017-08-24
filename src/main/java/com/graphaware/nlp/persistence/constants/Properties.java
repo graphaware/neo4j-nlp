@@ -41,6 +41,7 @@ public final class Properties {
     public static final String NAMED_ENTITY = "ne";
     public static final String NAMED_ENTITY_PREFIX = "NER_";
     public static final String PART_OF_SPEECH = "pos";
+    public static final String LAST_TX_ID = "lastTxId";
 
     /**
      * Private constructor to prevent people from instantiating this class - it's not meant to be instantiated.

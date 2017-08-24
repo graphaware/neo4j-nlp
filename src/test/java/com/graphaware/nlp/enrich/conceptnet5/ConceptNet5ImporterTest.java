@@ -5,12 +5,18 @@
  */
 package com.graphaware.nlp.enrich.conceptnet5;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Result;
+import org.neo4j.graphdb.Transaction;
 
 /**
  *
@@ -46,7 +52,7 @@ public class ConceptNet5ImporterTest {
 
         removedParenthesis = importer.removeParenthesis("(en)" + test);
         assertEquals("(en)" + test, removedParenthesis);
-        
+
         removedParenthesis = importer.removeParenthesis(test);
         assertEquals(test, removedParenthesis);
     }

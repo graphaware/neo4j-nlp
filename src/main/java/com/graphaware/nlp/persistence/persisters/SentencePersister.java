@@ -19,26 +19,22 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     @Override
-    public Node persist(Sentence sentence, String id, boolean force) {
+    public Node persist(Sentence sentence, String id, String txId) {
         String sentenceId = String.format("%s_%s", id, sentence.getSentenceNumber());
         Node sentenceNode = getIfExist(configuration().getLabelFor(Labels.Sentence), configuration().getPropertyKeyFor(Properties.PROPERTY_ID), sentenceId);
-        if (sentenceNode == null || force) {
-            Node newSentenceNode;
-            if (sentenceNode == null) {
-                newSentenceNode = getOrCreate(sentence, id, force);
-            } else {
-                newSentenceNode = sentenceNode;
-            }
-            getPersister(Sentence.class).update(newSentenceNode, sentence, id);
-            storeSentenceTags(sentence, newSentenceNode, id, force);
-            storeSentenceTagOccurrences(sentence, newSentenceNode, force);
-            storeUniversalDependenciesForSentence(sentence, newSentenceNode);
-            storePhrases(sentence, newSentenceNode, force);
-            assignSentimentLabel(sentence, newSentenceNode);
-            sentenceNode = newSentenceNode;
+        Node newSentenceNode;
+        if (sentenceNode == null) {
+            newSentenceNode = getOrCreate(sentence, id, txId);
         } else {
-            assignSentimentLabel(sentence, sentenceNode);
+            newSentenceNode = sentenceNode;
         }
+        getPersister(Sentence.class).update(newSentenceNode, sentence, id);
+        storeSentenceTags(sentence, newSentenceNode, id, txId);
+        storeSentenceTagOccurrences(sentence, newSentenceNode, txId);
+        storeUniversalDependenciesForSentence(sentence, newSentenceNode);
+        storePhrases(sentence, newSentenceNode, txId);
+        assignSentimentLabel(sentence, newSentenceNode);
+        sentenceNode = newSentenceNode;
 
         return sentenceNode;
     }
@@ -54,7 +50,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     @Override
-    public Node getOrCreate(Sentence sentence, String id, boolean force) {
+    public Node getOrCreate(Sentence sentence, String id, String txId) {
         Node node = database.createNode(configuration().getLabelFor(Labels.Sentence));
         update(node, sentence, id);
 
@@ -69,9 +65,9 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         node.setProperty(configuration().getPropertyKeyFor(Properties.TEXT), sentence.getSentence());
     }
 
-    private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, boolean force) {
+    private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, String txId) {
         sentence.getTags().forEach(tag -> {
-            Node tagNode = getPersister(Tag.class).getOrCreate(tag, id, force);
+            Node tagNode = getPersister(Tag.class).getOrCreate(tag, id, txId);
             relateSentenceToTag(sentenceNode, tagNode, tag.getMultiplicity());
         });
     }
@@ -81,10 +77,10 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         rel.setProperty(configuration().getPropertyKeyFor(Properties.TF), multiplicity);
     }
 
-    private void storePhrases(Sentence sentence, Node sentenceNode, boolean force) {
+    private void storePhrases(Sentence sentence, Node sentenceNode, String txId) {
         sentence.getPhraseOccurrences().values().forEach(phraseOccurrenceAtPosition -> {
             phraseOccurrenceAtPosition.values().forEach(occurrence -> {
-                Node phraseNode = getOrCreatePhrase(occurrence.getElement(), force);
+                Node phraseNode = getOrCreatePhrase(occurrence.getElement(), txId);
                 relateSentenceToPhrase(sentenceNode, phraseNode);
                 Node phraseOccurrenceNode = createPhraseOccurrence(occurrence);
                 relateSentenceToPhraseOccurrence(sentenceNode, phraseOccurrenceNode);
@@ -93,10 +89,10 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         });
     }
 
-    private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, boolean force) {
+    private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, String txId) {
         sentence.getTagOccurrences().values().forEach(occurrence -> {
             for (PartOfTextOccurrence<Tag> tagAtPosition : occurrence) {
-                Node tagNode = getPersister(Tag.class).getOrCreate(tagAtPosition.getElement(), null, force);
+                Node tagNode = getPersister(Tag.class).getOrCreate(tagAtPosition.getElement(), null, txId);
                 Node tagOccurrenceNode = createTagOccurrenceNode(tagAtPosition);
                 relateTagOccurrenceToTag(tagOccurrenceNode, tagNode);
                 relateSentenceToTagOccurrence(sentenceNode, tagOccurrenceNode);
@@ -201,14 +197,11 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         return node;
     }
 
-    private Node getOrCreatePhrase(Phrase phrase, boolean force) {
+    private Node getOrCreatePhrase(Phrase phrase, String txId) {
         Node node = database.findNode(configuration().getLabelFor(Labels.Phrase),
                 configuration().getPropertyKeyFor(Properties.CONTENT_VALUE),
                 phrase.getContent()
         );
-        if (node != null && !force) {
-            return node;
-        }
 
         if (node == null) {
             node = database.createNode(configuration().getLabelFor(Labels.Phrase));

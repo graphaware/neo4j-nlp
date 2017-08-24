@@ -93,7 +93,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
             conceptTags.stream().forEach((newTag) -> {
                 if (newTag != null) {
-                    getPersister(Tag.class).getOrCreate(newTag, null, false);
+                    getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
                 }
             });
             if (annotatedNode != null) {
@@ -127,7 +127,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
         params.put("id", annotatedNode.getId());
         Result queryRes = getDatabase().execute("MATCH (n)-[*..2]->"
                 + "(t:" + getConfiguration().getLabelFor(Labels.Tag) + ") "
-                + "where id(n) = {id} return t", params);
+                + "where id(n) = {id} return distinct t", params);
         ResourceIterator<Node> tags = queryRes.columnAs("t");
         return tags;
     }

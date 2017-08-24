@@ -23,7 +23,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     @Override
-    public Node persist(Tag object, String id, boolean force) {
+    public Node persist(Tag object, String id, String txId) {
         return null;
     }
 
@@ -40,7 +40,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     @Override
-    public Node getOrCreate(Tag tag, String id, boolean force) {
+    public Node getOrCreate(Tag tag, String id, String txId) {
         Node node = getIfExist(
                 configuration().getLabelFor(configuration().getLabelFor(Labels.Tag)),
                 configuration().getPropertyKeyFor(configuration().getPropertyKeyFor(Properties.PROPERTY_ID)),
@@ -48,19 +48,15 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
 
         if (null == node) {
             node = database.createNode(configuration().getLabelFor(Labels.Tag));
-            update(node, tag, null);
-            storeTagParent(node, tag);
-            return node;
         }
 
-        if (force) {
-            update(node, tag, null);
-            storeTagParent(node, tag);
+        if (!checkSameTransaction(node, txId)) {
+            setLastTransaction(node, txId);
+            update(node, tag, tag.getId());
+            storeTagParent(node, tag, txId);
+            assignNamedEntityOnTag(node, tag);
+            assignPartOfSpeechOnTag(node, tag);
         }
-
-        assignNamedEntityOnTag(node, tag);
-        assignPartOfSpeechOnTag(node, tag);
-
         return node;
     }
 
@@ -85,10 +81,11 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         tagNode.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), TypeConverter.convertStringListToArray(parts));
     }
 
-    private void storeTagParent(Node tagNode, Tag tag) {
+    private void storeTagParent(Node tagNode, Tag tag, String txId) {
         if (tag.getParents() != null) {
             tag.getParents().stream().forEach((tagRelationship) -> {
-                Node parentTagNode = getOrCreate(tag, null,true);
+                Tag parent = tagRelationship.getParent();
+                Node parentTagNode = getOrCreate(parent, parent.getId(), txId);
                 Relationship parentRelationship = tagNode.createRelationshipTo(parentTagNode,
                         configuration().getRelationshipFor(Relationships.IS_RELATED_TO));
                 //@todo mode type and weight to config constants
@@ -104,5 +101,14 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         assert (allProperties.containsKey(configuration().getPropertyKeyFor(Properties.PROPERTY_ID)));
         assert (allProperties.containsKey(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE)));
         assert (allProperties.containsKey(configuration().getPropertyKeyFor(Properties.LANGUAGE)));
+    }
+    
+    private boolean checkSameTransaction(Node tagNode, String txId) {
+        String nodeTxId = (String)tagNode.getProperty(configuration().getPropertyKeyFor(Properties.LAST_TX_ID), null);
+        return nodeTxId != null ? nodeTxId.equalsIgnoreCase(txId) : false;
+    }
+
+    private void setLastTransaction(Node node, String txId) {
+        node.setProperty(configuration().getPropertyKeyFor(Properties.LAST_TX_ID), txId);
     }
 }

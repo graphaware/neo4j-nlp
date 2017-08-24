@@ -19,13 +19,13 @@ import org.neo4j.graphdb.Node;
 
 public interface Persister<T> {
 
-    Node persist(T object, String id, boolean force);
+    Node persist(T object, String id, String txId);
 
     T fromNode(Node node);
 
     boolean exists(String id);
 
-    Node getOrCreate(T object, String id, boolean force);
+    Node getOrCreate(T object, String id, String txId);
 
     void update(Node node, T object, String id);
 

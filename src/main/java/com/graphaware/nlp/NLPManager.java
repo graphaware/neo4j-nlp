@@ -76,11 +76,11 @@ public class NLPManager {
                 text, pipelineName, "lang", null
         );
 
-        return persistAnnotatedText(annotatedText, id, force);
+        return persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
     }
 
-    public Node persistAnnotatedText(AnnotatedText annotatedText, String id, boolean force) {
-        return getPersister(annotatedText.getClass()).persist(annotatedText, id, force);
+    public Node persistAnnotatedText(AnnotatedText annotatedText, String id, String txId) {
+        return getPersister(annotatedText.getClass()).persist(annotatedText, id, txId);
     }
 
     public DynamicConfiguration getConfiguration() {

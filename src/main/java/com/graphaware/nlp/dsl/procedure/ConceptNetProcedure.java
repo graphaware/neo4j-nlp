@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
+import java.util.List;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
@@ -33,7 +34,7 @@ public class ConceptNetProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.concept.import", mode = Mode.WRITE)
     @Description("Performs the text annotation and store it into the graph")
     public Stream<NodeResult> annotate(@Name("conceptRequest") Map<String, Object> conceptRequest) {
-        ConceptRequest request = mapper.convertValue(conceptRequest, ConceptRequest.class);
+        ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
         ConceptNet5Enricher enricher = (ConceptNet5Enricher) getNLPManager().getEnricher(ConceptNet5Enricher.ENRICHER_NAME);
         Node result = enricher.importConcept(request);
         return Stream.of(new NodeResult(result));

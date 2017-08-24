@@ -18,6 +18,7 @@ package com.graphaware.nlp.dsl;
 import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.neo4j.graphdb.Node;
 
 public class ConceptRequest {
@@ -26,23 +27,26 @@ public class ConceptRequest {
     private final static String DEFAULT_LANGUAGE = "en";
     private final static boolean DEFAULT_SPLIT_TAG = false;
     private final static boolean DEFAULT_FILTER_BY_LANGUAGE = true;
-    public  final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
+    public final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
 
     private int depth = DEFAULT_DEPTH;
     private String language = DEFAULT_LANGUAGE;
+    private String processor;
     private boolean splitTag = DEFAULT_SPLIT_TAG;
     private boolean filterByLanguage = DEFAULT_FILTER_BY_LANGUAGE;
     private List<String> admittedRelationships = Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP);
     private List<String> admittedPos = DEFAULT_ADMITTED_POS;
     
+    private Node annotatedNode;
+    private Node tag;
 
     public ConceptRequest() {
     }
-    
-    
+
     public void setDepth(int depth) {
         this.depth = depth;
     }
+
     public int getDepth() {
         return depth;
     }
@@ -61,7 +65,7 @@ public class ConceptRequest {
 
     public void setSplitTag(boolean splitTag) {
         this.splitTag = splitTag;
-    }    
+    }
 
     public boolean isFilterByLanguage() {
         return filterByLanguage;
@@ -88,16 +92,52 @@ public class ConceptRequest {
     }
 
     public Node getAnnotatedNode() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return annotatedNode;
+    }
+
+    public void setAnnotatedNode(Node annotatedNode) {
+        this.annotatedNode = annotatedNode;
     }
 
     public Node getTag() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return tag;
+    }
+
+    public void setTag(Node tag) {
+        this.tag = tag;
     }
 
     public String getProcessor() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return processor;
+    }
+
+    public void setProcessor(String processor) {
+        this.processor = processor;
     }
     
-    
+    public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
+        ConceptRequest request = new ConceptRequest();
+        request.setAnnotatedNode((Node)conceptRequest.get("node"));
+        request.setTag((Node)conceptRequest.get("tag"));
+        if (conceptRequest.containsKey("admittedPos")) {
+            request.setAdmittedPos((List<String>)conceptRequest.get("admittedPos"));
+        }
+        if (conceptRequest.containsKey("admittedPos")) {
+            request.setAdmittedRelationships((List<String>)conceptRequest.get("admittedRelationships"));
+        }
+        if (conceptRequest.containsKey("depth")) {
+            request.setDepth(((Long)conceptRequest.get("depth")).intValue());
+        }
+        if (conceptRequest.containsKey("language")) {
+            request.setLanguage((String)conceptRequest.get("language"));
+        }
+        if (conceptRequest.containsKey("splitTag")) {
+            request.setSplitTag((Boolean)conceptRequest.get("splitTag"));
+        }
+        if (conceptRequest.containsKey("filterByLanguage")) {
+            request.setFilterByLanguage((Boolean)conceptRequest.get("filterByLanguage"));
+        }
+        request.setProcessor((String)conceptRequest.get("processor"));
+        return request;
+    }
 }

@@ -27,7 +27,6 @@ import org.neo4j.logging.Log;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-
 public class AnnotatedTextPersister extends AbstractPersister implements Persister<AnnotatedText> {
 
     private static final Log LOG = LoggerFactory.getLogger(AnnotatedTextPersister.class);
@@ -37,28 +36,18 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     }
 
     @Override
-    public Node persist(AnnotatedText annotatedText, String id, boolean force) {
+    public Node persist(AnnotatedText annotatedText, String id, String txId) {
         LOG.info("Start storing annotatedText " + id);
         Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
-        if (tmpAnnotatedNode == null || force) {
-            final Node annotatedTextNode;
-            if (tmpAnnotatedNode != null) {
-                annotatedTextNode = tmpAnnotatedNode;
-            } else {
-                annotatedTextNode = getOrCreate(annotatedText, id, force);
-
-            }
-            iterateSentencesAndStore(annotatedTextNode, annotatedText, id, force);
-            tmpAnnotatedNode = annotatedTextNode;
+        final Node annotatedTextNode;
+        if (tmpAnnotatedNode != null) {
+            annotatedTextNode = tmpAnnotatedNode;
         } else {
-            /*
-            * Currently only labels could change so if the AnnotatedText already exist
-            * only the Sentence are updated
-             */
-            annotatedText.getSentences().forEach((sentence) -> {
-                getPersister(Sentence.class).persist(sentence, id, force);
-            });
+            annotatedTextNode = getOrCreate(annotatedText, id, txId);
+
         }
+        iterateSentencesAndStore(annotatedTextNode, annotatedText, id, txId);
+        tmpAnnotatedNode = annotatedTextNode;
 
         LOG.info("end storing annotatedText " + id);
         return tmpAnnotatedNode;
@@ -75,7 +64,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     }
 
     @Override
-    public Node getOrCreate(AnnotatedText annotatedText, String id, boolean force) {
+    public Node getOrCreate(AnnotatedText annotatedText, String id, String txId) {
         Node node = database.createNode(configuration().getLabelFor(Labels.AnnotatedText));
         node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
         node.setProperty(configuration().getPropertyKeyFor(Properties.NUM_TERMS), annotatedText.getTokens().size());
@@ -88,11 +77,11 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 
     }
 
-    private void iterateSentencesAndStore(Node annotatedTextNode, AnnotatedText annotatedText, String id, boolean force) {
+    private void iterateSentencesAndStore(Node annotatedTextNode, AnnotatedText annotatedText, String id, String txId) {
         final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
         annotatedText.getSentences().sort((Sentence o1, Sentence o2) -> o1.compareTo(o2));
         annotatedText.getSentences().forEach((sentence) -> {
-            Node sentenceNode = getPersister(Sentence.class).persist(sentence, id, force);
+            Node sentenceNode = getPersister(Sentence.class).persist(sentence, id, txId);
             Node previousSentence = previousSentenceReference.get();
             boolean isFirstSentence = previousSentence == null;
             relateSentenceToAnnotatedText(sentenceNode, annotatedTextNode, isFirstSentence);
