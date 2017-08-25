@@ -198,4 +198,8 @@ public class ConceptNet5Importer {
             return new ConceptNet5Importer(this);
         }
     }
+
+    public ConceptNet5Client getClient() {
+        return client;
+    }
 }

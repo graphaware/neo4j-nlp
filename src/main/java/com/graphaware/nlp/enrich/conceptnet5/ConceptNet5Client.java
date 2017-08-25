@@ -81,4 +81,8 @@ public class ConceptNet5Client {
         }
         return value;
     }
+
+    public String getConceptNet5EndPoint() {
+        return conceptNet5EndPoint;
+    }
 }

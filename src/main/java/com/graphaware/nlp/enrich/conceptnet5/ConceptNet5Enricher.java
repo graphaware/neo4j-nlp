@@ -19,6 +19,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
     private static final Log LOG = LoggerFactory.getLogger(ConceptNet5Enricher.class);
     private static final String DEFAULT_CONCEPTNET_URL = "http://api.conceptnet.io";
+    private static final String CONFIG_KEY_URL = "CONCEPT_NET_5_URL";
 
     private static final String RELATIONSHIP_IS_RELATED_TO_SUB_TAG = "subTag";
 
@@ -113,13 +114,28 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
     }
 
-    public ConceptNet5Importer getImporter() {
-        if (conceptnet5Importer == null) {
-            // @todo move url to config settings
-            String url = DEFAULT_CONCEPTNET_URL;
+    private ConceptNet5Importer getImporter() {
+        if (conceptnet5Importer == null || importerShouldBeReloaded()) {
+            String url = getConceptNetUrl();
             this.conceptnet5Importer = new ConceptNet5Importer.Builder(url).build();
         }
         return conceptnet5Importer;
+    }
+
+    public String getConceptNetUrl() {
+        String urlFromConfigOrDefault = getConfiguration().getSettingValueFor(CONFIG_KEY_URL).toString();
+
+        return urlFromConfigOrDefault.equals(CONFIG_KEY_URL)
+                ? DEFAULT_CONCEPTNET_URL
+                : urlFromConfigOrDefault;
+    }
+
+    public ConceptNet5Importer getConceptnet5Importer() {
+        return conceptnet5Importer;
+    }
+
+    private boolean importerShouldBeReloaded() {
+        return !conceptnet5Importer.getClient().getConceptNet5EndPoint().equals(getConceptNetUrl());
     }
 
     private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
