@@ -13,6 +13,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +51,8 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             node = database.createNode(configuration().getLabelFor(Labels.Tag));
         }
 
+
+
         if (!checkSameTransaction(node, txId)) {
             setLastTransaction(node, txId);
             update(node, tag, tag.getId());
@@ -86,11 +89,24 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             tag.getParents().stream().forEach((tagRelationship) -> {
                 Tag parent = tagRelationship.getParent();
                 Node parentTagNode = getOrCreate(parent, parent.getId(), txId);
-                Relationship parentRelationship = tagNode.createRelationshipTo(parentTagNode,
-                        configuration().getRelationshipFor(Relationships.IS_RELATED_TO));
+                long sourceId = tagNode.getId();
+                long targetId = parentTagNode.getId();
                 //@todo mode type and weight to config constants
-                parentRelationship.setProperty("type", tagRelationship.getRelation());
-                parentRelationship.setProperty("weight", tagRelationship.getWeight());
+                String query = String.format("MATCH (source:`%s`), (target:`%s`) " +
+                        "WHERE id(source) = {source} AND id(target) = {target} " +
+                        "MERGE (source)-[r:`%s` {%s: {type} }]->(target) " +
+                        "ON CREATE SET r.%s = {weight} ",
+                        configuration().getLabelFor(Labels.Tag),
+                        configuration().getLabelFor(Labels.Tag),
+                        Relationships.IS_RELATED_TO,
+                        "type",
+                        "weight");
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("source", sourceId);
+                parameters.put("target", targetId);
+                parameters.put("type", tagRelationship.getRelation());
+                parameters.put("weight", tagRelationship.getWeight());
+                getDatabase().execute(query, parameters);
             });
         }
     }
@@ -104,7 +120,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
     
     private boolean checkSameTransaction(Node tagNode, String txId) {
-        String nodeTxId = (String)tagNode.getProperty(configuration().getPropertyKeyFor(Properties.LAST_TX_ID), null);
+        String nodeTxId = (String) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.LAST_TX_ID), null);
         return nodeTxId != null ? nodeTxId.equalsIgnoreCase(txId) : false;
     }
 

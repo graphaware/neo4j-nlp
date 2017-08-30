@@ -96,6 +96,16 @@ public class TestNLPGraph {
         }));
     }
 
+    public void assertTagHasRelatedTag(String original, String target) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("original", original);
+        params.put("target", target);
+        executeInTransaction("MATCH (n:Tag {value: {original} })-[:IS_RELATED_TO]-(t:Tag {value: {target} }) RETURN n, t", params,
+                (result -> {
+                    assertTrue(result.hasNext());
+                }));
+    }
+
     public void assertTagWithValueExist(String value) {
         executeInTransaction("MATCH (n:Tag) WHERE n.value = {value} RETURN n",
                 Collections.singletonMap("value", value),

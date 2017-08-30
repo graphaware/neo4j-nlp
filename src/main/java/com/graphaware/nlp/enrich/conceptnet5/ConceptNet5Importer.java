@@ -74,7 +74,7 @@ public class ConceptNet5Importer {
 //    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, String... admittedRelations) {
 //        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
 //    }
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS) {
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS, int limit) {
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         word = removeParenthesis(word);
@@ -82,9 +82,9 @@ public class ConceptNet5Importer {
         try {
             ConceptNet5EdgeResult values;
             if (admittedRelations.size() > 1) {
-                values = client.getValues(word, lang);
+                values = client.getValues(word, lang, limit);
             } else if (admittedRelations.size() == 1) {
-                values = client.queryByStart(word, admittedRelations.get(0), lang);
+                values = client.queryByStart(word, admittedRelations.get(0), lang, limit);
             } else {
                 throw new RuntimeException("Admitted relations is empty");
             }
@@ -106,15 +106,16 @@ public class ConceptNet5Importer {
                                 || posList.isEmpty()
                                 || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
                             if (depth > 1) {
-                                importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS);
+                                importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit);
                             }
                             source.addParent(concept.getRel(), annotateTag, concept.getWeight());
                             res.add(annotateTag);
+                            res.add(source);
                         }
                     } else {
-//                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
-//                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
-//                        res.add(annotateTag);
+                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
+                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
+                        res.add(annotateTag);
                     }
                 }
             });

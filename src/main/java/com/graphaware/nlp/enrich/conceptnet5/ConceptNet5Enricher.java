@@ -88,7 +88,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
                 }
             }
             tags.stream().forEach((tag) -> {
-                conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos));
+                conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit()));
                 conceptTags.add(tag);
             });
 

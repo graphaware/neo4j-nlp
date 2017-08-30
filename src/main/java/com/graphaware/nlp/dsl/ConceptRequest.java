@@ -28,6 +28,7 @@ public class ConceptRequest {
     private final static boolean DEFAULT_SPLIT_TAG = false;
     private final static boolean DEFAULT_FILTER_BY_LANGUAGE = true;
     public final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
+    private static final int DEFAULT_RESULTS_LIMIT = 100;
 
     private int depth = DEFAULT_DEPTH;
     private String language = DEFAULT_LANGUAGE;
@@ -36,6 +37,7 @@ public class ConceptRequest {
     private boolean filterByLanguage = DEFAULT_FILTER_BY_LANGUAGE;
     private List<String> admittedRelationships = Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP);
     private List<String> admittedPos = DEFAULT_ADMITTED_POS;
+    private int resultsLimit = DEFAULT_RESULTS_LIMIT;
     
     private Node annotatedNode;
     private Node tag;
@@ -114,7 +116,15 @@ public class ConceptRequest {
     public void setProcessor(String processor) {
         this.processor = processor;
     }
-    
+
+    public int getResultsLimit() {
+        return resultsLimit;
+    }
+
+    public void setResultsLimit(int resultsLimit) {
+        this.resultsLimit = resultsLimit;
+    }
+
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
         ConceptRequest request = new ConceptRequest();
         request.setAnnotatedNode((Node)conceptRequest.get("node"));
@@ -136,6 +146,9 @@ public class ConceptRequest {
         }
         if (conceptRequest.containsKey("filterByLanguage")) {
             request.setFilterByLanguage((Boolean)conceptRequest.get("filterByLanguage"));
+        }
+        if (conceptRequest.containsKey("limit")) {
+            request.setResultsLimit((int) conceptRequest.get("limit"));
         }
         request.setProcessor((String)conceptRequest.get("processor"));
         return request;

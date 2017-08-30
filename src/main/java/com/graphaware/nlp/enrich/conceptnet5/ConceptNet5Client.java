@@ -47,8 +47,8 @@ public class ConceptNet5Client {
         cfg.getClasses().add(JacksonJsonProvider.class);
     }
 
-    public ConceptNet5EdgeResult getValues(String concept, String lang) {
-        String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept + "?limit=100";
+    public ConceptNet5EdgeResult getValues(String concept, String lang, int limit) {
+        String url = conceptNet5EndPoint + "/c/" + lang + "/" + concept + "?limit=" + limit;
         ConceptNet5EdgeResult value;
         try {
             value = cache.get(url, () -> cachedUrl(url));
@@ -69,8 +69,8 @@ public class ConceptNet5Client {
         return result;
     }
 
-    public ConceptNet5EdgeResult queryByStart(String concept, String rel, String lang) {
-        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&start=/c/" + lang + "/" + concept + "&limit=100";
+    public ConceptNet5EdgeResult queryByStart(String concept, String rel, String lang, int limit) {
+        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&start=/c/" + lang + "/" + concept + "&limit=" + limit;
         ConceptNet5EdgeResult value;
         try {
             value = cache.get(url, () -> cachedUrl(url));
