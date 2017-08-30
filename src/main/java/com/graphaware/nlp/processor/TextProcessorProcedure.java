@@ -60,30 +60,6 @@ public class TextProcessorProcedure extends NLPProcedure {
 //    }
 //
 //
-//    public CallableProcedure.BasicProcedure sentiment() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("sentiment"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                Node annotatedNode = (Node) inputParams.get(PARAMETER_NAME_ANNOTATED_TEXT);
-//
-//                // extract optional parameters
-//                Map<String, String> otherParams = extractOptionalParameters(inputParams);
-//
-//                AnnotatedText annotatedText = AnnotatedText.load(annotatedNode);
-//                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
-//                annotatedText = currentTP.sentiment(annotatedText, otherParams);
-//                annotatedText.storeOnGraph(database, false);
-//                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedNode}).iterator());
-//            }
-//        };
-//    }
-//
 
 //
 //    public CallableProcedure.BasicProcedure train() {
