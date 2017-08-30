@@ -190,24 +190,6 @@ public class TextProcessorProcedure extends NLPProcedure {
 //        };
 //    }
 //
-//    public CallableProcedure.BasicProcedure getProcessors() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getProcessors"))
-//                .mode(Mode.WRITE)
-//                .out(PARAMETER_NAME_OUTPUT_TP_CLASS, Neo4jTypes.NTString)
-//                .build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                Set<String> textProcessors = processorManager.getTextProcessorNames();
-//                Set<Object[]> result = new HashSet<>();
-//                textProcessors.forEach(row -> {
-//                    result.add(new Object[]{row});
-//                });
-//                return Iterators.asRawIterator(result.iterator());
-//            }
-//        };
-//    }
-//
 //    public CallableProcedure.BasicProcedure getPipelines() {
 //        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelines"))
 //                .mode(Mode.WRITE)

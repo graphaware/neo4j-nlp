@@ -47,9 +47,9 @@ public class TextProcessorsProcedure extends AbstractDSL {
         }
     }
     
-    @Procedure("ga.nlp.processor.getPipelineInfos")
+    @Procedure("ga.nlp.processor.getPipelines")
     @Description("Returns the pipeline informations")
-    public Stream<PipelineInfo> getPipelineInfos() {
-        return getNLPManager().getPipelineInformations().stream();
+    public Stream<PipelineInfo> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
+        return getNLPManager().getPipelineInformations(pipelineName).stream();
     }
 }

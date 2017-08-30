@@ -50,7 +50,7 @@ public class StubTextProcessor implements TextProcessor {
 
     @Override
     public boolean checkPipeline(String name) {
-        return false;
+        return pipelineInfos.containsKey(name);
     }
 
 

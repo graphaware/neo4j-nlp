@@ -87,10 +87,14 @@ public class NLPManager {
         return configuration;
     }
 
-    public List<PipelineInfo> getPipelineInformations() {
+    public List<PipelineInfo> getPipelineInformations(String pipelineName) {
         List<PipelineInfo> list = new ArrayList<>();
         textProcessorsManager.getTextProcessors().values().forEach((processor) -> {
-            list.addAll(processor.getPipelineInfos());
+            processor.getPipelineInfos().forEach(pipelineInfo -> {
+                if (pipelineName.equals("") || pipelineInfo.getName().equals(pipelineName)) {
+                    list.add(pipelineInfo);
+                }
+            });
         });
         return list;
     }
