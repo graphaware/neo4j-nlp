@@ -110,7 +110,6 @@ public class ConceptNet5Importer {
                             }
                             source.addParent(concept.getRel(), annotateTag, concept.getWeight());
                             res.add(annotateTag);
-                            res.add(source);
                         }
                     } else {
                         Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
