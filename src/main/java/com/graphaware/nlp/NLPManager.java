@@ -13,6 +13,7 @@ import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
+import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
@@ -120,6 +121,20 @@ public class NLPManager {
         AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer", lang, null);
         return annotatedText.filter(filter);
 
+    }
+
+    public void applySentiment(Node node, String textProcessor) {
+        TextProcessor processor = textProcessor.equals("")
+                ? getTextProcessorsManager().getDefaultProcessor()
+                : getTextProcessorsManager().getTextProcessor(textProcessor);
+
+        AnnotatedText annotatedText = (AnnotatedText) getPersister(AnnotatedText.class).fromNode(node);
+        processor.sentiment(annotatedText);
+        getPersister(AnnotatedText.class).persist(
+                annotatedText,
+                node.getProperty(configuration.getPropertyKeyFor(Properties.PROPERTY_ID)).toString(),
+                String.valueOf(System.currentTimeMillis())
+        );
     }
 
     private boolean checkTextLanguage(String text) {

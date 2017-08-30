@@ -16,9 +16,12 @@
 package com.graphaware.nlp.domain;
 
 import java.util.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotatedText {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotatedText.class);

@@ -17,6 +17,8 @@ package com.graphaware.nlp.persistence.constants;
 
 import org.neo4j.graphdb.Label;
 
+import java.util.Arrays;
+
 /**
  * Default Node labels used in the persistence layer
  */
@@ -34,5 +36,26 @@ public enum Labels implements Label {
     Negative,
     VeryPositive,
     VeryNegative,
-    Neutral
+    Neutral;
+
+
+    public static boolean contains(String label) {
+        for (Labels l : Labels.values()) {
+            if (l.name().equals(label)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isSentimentLabel(String label) {
+        return Arrays.asList(
+                VeryNegative.name(),
+                Negative.name(),
+                Neutral.name(),
+                Positive.name(),
+                VeryPositive.name()
+        ).contains(label);
+    }
 }

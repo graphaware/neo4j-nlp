@@ -55,7 +55,17 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
 
     @Override
     public AnnotatedText fromNode(Node node) {
-        return mapper().convertValue(node.getAllProperties(), AnnotatedText.class);
+        if (!node.hasLabel(configuration().getLabelFor(Labels.AnnotatedText))) {
+            throw new RuntimeException("Expected an " + configuration().getLabelFor(Labels.AnnotatedText) + " node.");
+        }
+        AnnotatedText annotatedText = mapper().convertValue(node.getAllProperties(), AnnotatedText.class);
+
+        node.getRelationships(configuration().getRelationshipFor(Relationships.CONTAINS_SENTENCE), Direction.OUTGOING).forEach(relationship -> {
+            Sentence sentence = (Sentence) getPersister(Sentence.class).fromNode(relationship.getEndNode());
+            annotatedText.addSentence(sentence);
+        });
+
+        return annotatedText;
     }
 
     @Override

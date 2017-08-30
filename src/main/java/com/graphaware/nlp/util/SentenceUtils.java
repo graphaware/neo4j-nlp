@@ -18,6 +18,8 @@ package com.graphaware.nlp.util;
 import com.graphaware.nlp.persistence.constants.Labels;
 import org.neo4j.graphdb.Label;
 
+import static com.graphaware.nlp.persistence.constants.Labels.*;
+
 public class SentenceUtils {
 
     public static Label getDefaultLabelForSentimentLevel(int level) {
@@ -35,5 +37,22 @@ public class SentenceUtils {
         }
 
         return null;
+    }
+
+    public static int getSentimentLevelForLabel(Label label) {
+        switch (Labels.valueOf(label.name())) {
+            case VeryPositive:
+                return 4;
+            case Positive:
+                return 3;
+            case Neutral:
+                return 2;
+            case Negative:
+                return 1;
+            case VeryNegative:
+                return 0;
+        }
+
+        throw new IllegalArgumentException("Unrecognized label");
     }
 }

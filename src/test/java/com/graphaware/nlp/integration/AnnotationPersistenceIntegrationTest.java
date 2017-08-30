@@ -1,6 +1,7 @@
 package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.domain.SentimentLabels;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
@@ -114,6 +115,31 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
         tester.assertPhraseOccurrenceForTextHasStartAndEndPosition("hello my name is John", 0, "hello my name is John".length());
         tester.assertSentenceWithIdHasPhraseOccurrenceCount("123_0", 1);
         tester.assertSentenceWithIdHasPhraseWithText("123_0", "hello my name is John");
+    }
+
+    @Test
+    public void testSentimentLabelCanBeAddedOnExistingSentence() {
+        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
+        try (Transaction tx = getDatabase().beginTx()) {
+            manager.annotateTextAndPersist(
+                    "hello my name is John. I am working for IBM. I live in Italy",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    "",
+                    false,
+                    true);
+            tx.success();
+        }
+
+        try (Transaction tx = getDatabase().beginTx()) {
+            getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
+                manager.applySentiment(node, StubTextProcessor.class.getName());
+            });
+            tx.success();
+        }
+
+        TestNLPGraph tester = new TestNLPGraph(getDatabase());
+        tester.assertSentenceWithIdHasSentimentLabel("123_0", SentimentLabels.VeryPositive.toString());
     }
 
     private void clearDatabase() {

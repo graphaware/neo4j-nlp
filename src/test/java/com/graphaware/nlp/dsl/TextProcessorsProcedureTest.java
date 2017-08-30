@@ -12,7 +12,7 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testGetPipelineInformationsProcedure() {
-        executeInTransaction("CALL ga.nlp.processor.getPipelineInfos", (result -> {
+        executeInTransaction("CALL ga.nlp.processor.getPipelines", (result -> {
             assertTrue(result.hasNext());
         }));
     }

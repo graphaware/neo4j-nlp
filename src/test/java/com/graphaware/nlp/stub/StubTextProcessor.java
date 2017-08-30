@@ -102,8 +102,12 @@ public class StubTextProcessor implements TextProcessor {
     }
 
     @Override
-    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams) {
-        return null;
+    public AnnotatedText sentiment(AnnotatedText annotatedText) {
+        annotatedText.getSentences().forEach(sentence -> {
+            sentence.setSentiment(4);
+        });
+
+        return annotatedText;
     }
 
     @Override

@@ -60,34 +60,6 @@ public class TextProcessorProcedure extends NLPProcedure {
 //    }
 //
 //
-//
-//    public CallableProcedure.BasicProcedure filter() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("filter"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTBoolean).build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
-//                String lang = LanguageManager.getInstance().detectLanguage(text);
-//                if (text == null || !LanguageManager.getInstance().isTextLanguageSupported(text)) {
-//                    LOG.info("text is null or language not supported or unable to detect the language");
-//                    return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
-//                }
-//                String filter = (String) inputParams.get(PARAMETER_NAME_FILTER);
-//                if (filter == null) {
-//                    throw new RuntimeException("A filter value needs to be provided");
-//                }
-//                TextProcessor currentTP = retrieveTextProcessor(inputParams, "");
-//                AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer",lang, null);
-//                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText.filter(filter)}).iterator());
-//            }
-//        };
-//    }
-//
 //    public CallableProcedure.BasicProcedure sentiment() {
 //        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("sentiment"))
 //                .mode(Mode.WRITE)

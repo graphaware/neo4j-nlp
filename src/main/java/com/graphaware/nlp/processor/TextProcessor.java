@@ -41,7 +41,7 @@ public interface TextProcessor {
 
     public boolean checkLemmaIsValid(String value);
 
-    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams);
+    public AnnotatedText sentiment(AnnotatedText annotatedText);
 
     public void removePipeline(String pipeline);
 

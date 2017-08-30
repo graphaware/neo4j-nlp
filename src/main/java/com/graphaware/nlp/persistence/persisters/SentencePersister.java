@@ -28,7 +28,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         } else {
             newSentenceNode = sentenceNode;
         }
-        getPersister(Sentence.class).update(newSentenceNode, sentence, id);
+        update(newSentenceNode, sentence, id);
         storeSentenceTags(sentence, newSentenceNode, id, txId);
         storeSentenceTagOccurrences(sentence, newSentenceNode, txId);
         storeUniversalDependenciesForSentence(sentence, newSentenceNode);
@@ -41,7 +41,20 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
 
     @Override
     public Sentence fromNode(Node node) {
-        return null;
+        Map<String, Object> properties = node.getAllProperties();
+        String sentence = properties.get(configuration().getPropertyKeyFor(Properties.TEXT)).toString();
+        int sentenceNumber = (int) properties.get(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER));
+
+        final Sentence sentenceO = new Sentence(sentence, sentenceNumber);
+
+        node.getLabels().forEach(label -> {
+            if (Labels.contains(label.name()) &&Labels.isSentimentLabel(label.name())) {
+                sentenceO.setSentiment(SentenceUtils.getSentimentLevelForLabel(label));
+            }
+        });
+
+        return sentenceO;
+
     }
 
     @Override
