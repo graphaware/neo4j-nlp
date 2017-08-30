@@ -59,85 +59,7 @@ public class TextProcessorProcedure extends NLPProcedure {
 //        }
 //    }
 //
-//    public CallableProcedure.BasicProcedure annotate() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("annotate"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTNode).build()) {
 //
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//
-//                try {
-//                    checkIsMap(input[0]);
-//                    Map<String, Object> inputParams = (Map) input[0];
-//                    String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
-//                    if (text == null) {
-//                        LOG.info("Text is null.");
-//                        return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
-//                    }
-//                    boolean checkForLanguage = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_LANGUAGE_CHECK, true);
-//                    LOG.info("Annotating Text: " + text);
-//                    String lang = LanguageManager.getInstance().detectLanguage(text);
-//                    if (checkForLanguage && !LanguageManager.getInstance().isTextLanguageSupported(text)) {
-//                        LOG.info("Language not supported or unable to detect the language. Detected language: " + lang);
-//                        return Iterators.asRawIterator(Collections.<Object[]>emptyIterator());
-//                    }
-//                    Object id = inputParams.get(PARAMETER_NAME_ID);
-//                    if (id == null) {
-//                        LOG.error("Node ID with key " + PARAMETER_NAME_ID + " is null!");
-//                    }
-//                    Node annotatedText = checkIfExist(id);
-//                    boolean store = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_STORE_TEXT, true);
-//                    boolean force = (Boolean) inputParams.getOrDefault(PARAMETER_NAME_FORCE, false);
-//
-//                    // optional parameters
-//                    Map<String, String> otherPars = extractOptionalParameters(inputParams);
-//
-//                    if (annotatedText == null || force) {
-//                        AnnotatedText annotateText;
-//                        String pipeline = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, "");
-//                        TextProcessor currentTP = retrieveTextProcessor(inputParams, pipeline);
-//                        annotateText = currentTP.annotateText(text, pipeline, lang, otherPars);
-//                        annotatedText = annotateText.storeOnGraph(database, force);
-//                    }
-//                    return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{annotatedText}).iterator());
-//                } catch (Exception ex) {
-//                    LOG.error("Error while annotating", ex);
-//                    throw ex;
-//                }
-//            }
-//
-//            private Node checkIfExist(Object id) {
-//                if (id != null) {
-//                    try {
-//                        return database.findNode(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
-//                    } catch (MultipleFoundException e) {
-//                        LOG.warn("Multiple AnnotatedText nodes found for id " + id);
-//                        throw new RuntimeException(e);
-//                    }
-//                }
-//                return null;
-//            }
-//        };
-//    }
-//
-//    public CallableProcedure.BasicProcedure language() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("language"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString).build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                String text = (String) inputParams.get(PARAMETER_NAME_TEXT);
-//                String language = LanguageManager.getInstance().detectLanguage(text);
-//                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{language}).iterator());
-//            }
-//        };
-//    }
 //
 //    public CallableProcedure.BasicProcedure filter() {
 //        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("filter"))
@@ -190,55 +112,7 @@ public class TextProcessorProcedure extends NLPProcedure {
 //        };
 //    }
 //
-//    public CallableProcedure.BasicProcedure getPipelines() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("getPipelines"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
-//                .build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//                String textProcessor = (String) inputParams.get(PARAMETER_NAME_TEXT_PROCESSOR);
-//                TextProcessor textProcessorInstance = processorManager.getTextProcessor(textProcessor);
-//                Set<Object[]> result = new HashSet<>();
-//                List<String> pipelines = textProcessorInstance.getPipelines();
-//                pipelines.forEach(row -> {
-//                    result.add(new Object[]{row});
-//                });
-//                return Iterators.asRawIterator(result.iterator());
-//            }
-//        };
-//    }
 
-
-//
-//    public CallableProcedure.BasicProcedure removePipeline() {
-//        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("removePipeline"))
-//                .mode(Mode.WRITE)
-//                .in(PARAMETER_NAME_INPUT, Neo4jTypes.NTMap)
-//                .out(PARAMETER_NAME_INPUT_OUTPUT, Neo4jTypes.NTString)
-//                .build()) {
-//
-//            @Override
-//            public RawIterator<Object[], ProcedureException> apply(Context ctx, Object[] input) throws ProcedureException {
-//                checkIsMap(input[0]);
-//                Map<String, Object> inputParams = (Map) input[0];
-//
-//                String processor = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, ""));
-//                if (processor.length() > 0) {
-//                    String pipeline = ((String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PIPELINE, ""));
-//                    if (pipeline.length() == 0) {
-//                        throw new RuntimeException("You need to specify a pipeline");
-//                    }
-//                    processorManager.removePipeline(processor, pipeline);
-//                }
-//                return Iterators.asRawIterator(Collections.<Object[]>singleton(new Object[]{SUCCESS}).iterator());
-//            }
-//        };
-//    }
 //
 //    public CallableProcedure.BasicProcedure train() {
 //        return new CallableProcedure.BasicProcedure(procedureSignature(getProcedureName("train"))
@@ -346,35 +220,4 @@ public class TextProcessorProcedure extends NLPProcedure {
 //        };
 //    }
 //
-//    private Map<String, String> extractOptionalParameters(Map<String, Object> input) {
-//        Map<String, String> otherPars = new HashMap<String, String>();
-//        if (input.containsKey(OptionalNLPParameters.CUSTOM_PROJECT)) {
-//            otherPars.put(OptionalNLPParameters.CUSTOM_PROJECT, String.valueOf(input.get(OptionalNLPParameters.CUSTOM_PROJECT)));
-//        }
-//        if (input.containsKey(OptionalNLPParameters.SENTIMENT_PROB_THR)) {
-//            otherPars.put(OptionalNLPParameters.SENTIMENT_PROB_THR, String.valueOf(input.get(OptionalNLPParameters.SENTIMENT_PROB_THR)));
-//        }
-//        return otherPars;
-//    }
-//
-//    private TextProcessor retrieveTextProcessor(Map<String, Object> inputParams, String pipeline) {
-//        TextProcessor newTP = this.textProcessor; // default processor
-//        String newTPName = this.defaultTextProcessorName;
-//        String processor = (String) inputParams.getOrDefault(PARAMETER_NAME_TEXT_PROCESSOR, "");
-//        if (processor.length() > 0) {
-//            newTPName = processor;
-//            newTP = processorManager.getTextProcessor(processor);
-//            if (newTP == null) {
-//                throw new RuntimeException("Text processor " + processor + " doesn't exist");
-//            }
-//        }
-//        if (pipeline.length() > 0) {
-//            if (!newTP.checkPipeline(pipeline)) {
-//                throw new RuntimeException("Pipeline with name " + pipeline + " doesn't exist for processor " + processor);
-//            }
-//        }
-//        LOG.info("Using text processor: " + newTPName);
-//
-//        return newTP;
-//    }
 }
