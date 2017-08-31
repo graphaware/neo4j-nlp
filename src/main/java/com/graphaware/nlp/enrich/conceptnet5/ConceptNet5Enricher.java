@@ -44,72 +44,67 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     }
 
     public Node importConcept(ConceptRequest request) {
-        try {
-            List<Tag> conceptTags = new ArrayList<>();
-            Node annotatedNode = request.getAnnotatedNode();
-            Node tagToBeAnnotated = null;
-            if (annotatedNode == null) {
-                tagToBeAnnotated = request.getTag();
-            }
-            int depth = request.getDepth();
-            String lang = request.getLanguage();
-            Boolean splitTags = request.isSplitTag();
-            Boolean filterByLang = request.isFilterByLanguage();
-            List<String> admittedRelationships = request.getAdmittedRelationships();
-            List<String> admittedPos = request.getAdmittedPos();
-            Iterator<Node> tagsIterator;
-            if (annotatedNode != null) {
-                tagsIterator = getAnnotatedTextTags(annotatedNode);
-            } else if (tagToBeAnnotated != null) {
-                List<Node> proc = new ArrayList<>();
-                proc.add(tagToBeAnnotated);
-                tagsIterator = proc.iterator();
-            } else {
-                throw new RuntimeException("You need to specify or an annotated text or a list of tags");
-            }
+        List<Tag> conceptTags = new ArrayList<>();
+        Node annotatedNode = request.getAnnotatedNode();
+        Node tagToBeAnnotated = null;
+        if (annotatedNode == null) {
+            tagToBeAnnotated = request.getTag();
+        }
+        int depth = request.getDepth();
+        String lang = request.getLanguage();
+        Boolean splitTags = request.isSplitTag();
+        Boolean filterByLang = request.isFilterByLanguage();
+        List<String> admittedRelationships = request.getAdmittedRelationships();
+        List<String> admittedPos = request.getAdmittedPos();
+        Iterator<Node> tagsIterator;
+        if (annotatedNode != null) {
+            tagsIterator = getAnnotatedTextTags(annotatedNode);
+        } else if (tagToBeAnnotated != null) {
+            List<Node> proc = new ArrayList<>();
+            proc.add(tagToBeAnnotated);
+            tagsIterator = proc.iterator();
+        } else {
+            throw new RuntimeException("You need to specify or an annotated text or a list of tags");
+        }
 
-            TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), null);
-            List<Tag> tags = new ArrayList<>();
-            while (tagsIterator.hasNext()) {
-                Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());
-                if (splitTags) {
-                    List<Tag> annotateTags = processor.annotateTags(tag.getLemma(), lang);
-                    if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
-                        tags.add(tag);
-                    } else {
-                        annotateTags.forEach((newTag) -> {
-                            tags.add(newTag);
-                            tag.addParent(RELATIONSHIP_IS_RELATED_TO_SUB_TAG, newTag, 0.0f);
-                        });
-                        conceptTags.add(tag);
-                    }
-                } else {
+        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), null);
+        List<Tag> tags = new ArrayList<>();
+        while (tagsIterator.hasNext()) {
+            Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());
+            if (splitTags) {
+                List<Tag> annotateTags = processor.annotateTags(tag.getLemma(), lang);
+                if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
                     tags.add(tag);
+                } else {
+                    annotateTags.forEach((newTag) -> {
+                        tags.add(newTag);
+                        tag.addParent(RELATIONSHIP_IS_RELATED_TO_SUB_TAG, newTag, 0.0f);
+                    });
+                    conceptTags.add(tag);
                 }
-            }
-            tags.stream().forEach((tag) -> {
-                conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit()));
-                conceptTags.add(tag);
-            });
-
-            conceptTags.stream().forEach((newTag) -> {
-                if (newTag != null) {
-                    getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
-                }
-            });
-            if (annotatedNode != null) {
-                return annotatedNode;
             } else {
+                tags.add(tag);
+            }
+        }
+        tags.stream().forEach((tag) -> {
+            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit()));
+            conceptTags.add(tag);
+        });
+
+        conceptTags.stream().forEach((newTag) -> {
+            if (newTag != null) {
+                getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
+            }
+        });
+        if (annotatedNode != null) {
+            return annotatedNode;
+        } else {
 //                        Set<Object[]> result = new HashSet<>();
 //                        conceptTags.stream().forEach((item) -> {
 //                            result.add(new Object[]{item});
 //                        });
 //                        return Iterators.asRawIterator(result.iterator());
-                return tagToBeAnnotated;
-            }
-        } catch (Exception ex) {
-            LOG.error("error!!!! ", ex);
-            throw new RuntimeException("Error while importing from concept net 5", ex);
+            return tagToBeAnnotated;
         }
 
     }

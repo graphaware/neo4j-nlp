@@ -31,8 +31,8 @@ import org.neo4j.procedure.Procedure;
 
 public class ConceptNetProcedure extends AbstractDSL {
    
-    @Procedure(name = "ga.nlp.concept.import", mode = Mode.WRITE)
-    @Description("Performs the text annotation and store it into the graph")
+    @Procedure(name = "ga.nlp.enrich.concept", mode = Mode.WRITE)
+    @Description("Enrich text knowledge with ConceptNet5")
     public Stream<NodeResult> annotate(@Name("conceptRequest") Map<String, Object> conceptRequest) {
         ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
         ConceptNet5Enricher enricher = (ConceptNet5Enricher) getNLPManager().getEnricher(ConceptNet5Enricher.ENRICHER_NAME);
