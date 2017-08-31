@@ -44,6 +44,7 @@ public class TextProcessorsManager {
     public TextProcessorsManager(GraphDatabaseService database) {
         this.database = database;
         loadTextProcessors();
+        initiateTextProcessors();
         loadPipelines();
     }
 
@@ -59,11 +60,16 @@ public class TextProcessorsManager {
         });
 
         loadedInstances.keySet().forEach(k -> {
-            System.out.println(k);
             TextProcessor textProcessor = loadedInstances.get(k);
             if (textProcessor.getAlias() != null && textProcessors.containsKey(k)) {
                 textProcessors.put(textProcessor.getAlias(), textProcessor);
             }
+        });
+    }
+
+    private void initiateTextProcessors() {
+        textProcessors.values().forEach(textProcessor -> {
+            textProcessor.init();
         });
     }
 

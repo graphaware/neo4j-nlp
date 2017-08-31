@@ -65,8 +65,6 @@ public class ServiceLoader {
 
         loadedClass.entrySet().forEach(entry -> {
             try {
-                System.out.println(entry.getKey());
-                System.out.println(entry.getValue().getName());
                 LOG.info("Loading text processor: " + entry.getKey() + " with class: " + entry.getValue().getName());
                 Class<T> cls = entry.getValue();
                 Constructor<T> constructor = cls.getConstructor();
