@@ -22,6 +22,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface TextProcessor {
+
+    public void init();
+
+    public String getAlias();
+
+    public String override();
     
     public List<String> getPipelines();
 

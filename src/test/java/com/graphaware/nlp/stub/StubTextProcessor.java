@@ -14,9 +14,18 @@ import java.util.*;
 @NLPTextProcessor(name = "StubTextProcessor")
 public class StubTextProcessor implements TextProcessor {
 
-    private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
+    @Override
+    public String getAlias() {
+        return null;
+    }
 
-    public StubTextProcessor() {
+    @Override
+    public String override() {
+        return null;
+    }
+
+    @Override
+    public void init() {
         this.pipelineInfos.put("tokenizer", new PipelineInfo(
                 "tokenizer",
                 StubTextProcessor.class.getName(),
@@ -26,6 +35,8 @@ public class StubTextProcessor implements TextProcessor {
                 Arrays.asList("start", "starter")
         ));
     }
+
+    private final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
     @Override
     public List<String> getPipelines() {

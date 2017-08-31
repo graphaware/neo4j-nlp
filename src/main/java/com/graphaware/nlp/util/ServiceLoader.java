@@ -65,6 +65,8 @@ public class ServiceLoader {
 
         loadedClass.entrySet().forEach(entry -> {
             try {
+                System.out.println(entry.getKey());
+                System.out.println(entry.getValue().getName());
                 LOG.info("Loading text processor: " + entry.getKey() + " with class: " + entry.getValue().getName());
                 Class<T> cls = entry.getValue();
                 Constructor<T> constructor = cls.getConstructor();
@@ -72,8 +74,11 @@ public class ServiceLoader {
                 result.put(entry.getKey(), newInstance);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 LOG.error("Error while initializing " + entry.getKey() + ". Continuing");
+                ex.printStackTrace();
             }
         });
+
+
 
         return result;
     }
