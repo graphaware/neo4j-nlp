@@ -26,7 +26,7 @@ public class PipelineSpecification {
 
     private Map<String, Boolean> processingSteps = new HashMap<>();
 
-    private String stopwords;
+    private String stopWords;
 
     private long threadNumber;
 
@@ -68,12 +68,12 @@ public class PipelineSpecification {
         processingSteps.put(step, true);
     }
 
-    public String getStopwords() {
-        return stopwords;
+    public String getStopWords() {
+        return stopWords;
     }
 
-    public void setStopwords(String stopwords) {
-        this.stopwords = stopwords;
+    public void setStopWords(String stopWords) {
+        this.stopWords = stopWords;
     }
 
     public long getThreadNumber() {

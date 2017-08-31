@@ -33,20 +33,23 @@ import org.slf4j.LoggerFactory;
 public class NLPModule extends BaseTxDrivenModule<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NLPModule.class);
-
-    public static final String DEFAULT_MODULE_ID = "NLP";
     
     private final NLPConfiguration nlpMLConfiguration;
 
     private final GraphDatabaseService database;
 
-    private final NLPManager nlpManager;
+    private NLPManager nlpManager;
 
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
         this.nlpMLConfiguration = configuration;
         LOG.info("ConceptNet URL: " + nlpMLConfiguration.getConceptNetUrl());
         this.database = database;
+    }
+
+    @Override
+    public void initialize(GraphDatabaseService database) {
+        super.initialize(database);
         this.nlpManager = new NLPManager(database, nlpMLConfiguration);
     }
 
@@ -58,20 +61,10 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
         return nlpManager;
     }
 
-    @Override
-    public void shutdown() {
-    }
+
 
     @Override
     public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
-        itd.getAllDeletedNodes().forEach((Node node) -> {
-            if (node.hasLabel(Label.label("Pipeline"))) {
-                String name = node.getProperty("name").toString();
-                String processor = node.getProperty("textProcessor").toString();
-                this.nlpManager.getTextProcessorsManager().removePipeline(processor, name);
-            }
-        });
-
         return null;
     }
 

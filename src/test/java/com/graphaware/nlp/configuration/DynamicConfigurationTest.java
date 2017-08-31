@@ -25,7 +25,7 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
     public void testConfigurationCanStoreAndRetrievePipelines() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PipelineSpecification specification = new PipelineSpecification("custom", StubTextProcessor.class.getName());
-        specification.setStopwords("hello,hihi");
+        specification.setStopWords("hello,hihi");
         specification.setThreadNumber(4);
         configuration.storeCustomPipeline(specification);
 
@@ -39,13 +39,13 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
     public void testConfigurationCanLoadCustomPipelineAsObject() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PipelineSpecification specification = new PipelineSpecification("custom", StubTextProcessor.class.getName());
-        specification.setStopwords("hello,hihi");
+        specification.setStopWords("hello,hihi");
         specification.setThreadNumber(4);
         configuration.storeCustomPipeline(specification);
 
         PipelineSpecification pipelineSpecification = configuration.loadCustomPipelines().get(0);
         assertEquals(specification.getName(), pipelineSpecification.getName());
-        assertEquals(specification.getStopwords(), pipelineSpecification.getStopwords());
+        assertEquals(specification.getStopWords(), pipelineSpecification.getStopWords());
         assertEquals(specification.getTextProcessor(), pipelineSpecification.getTextProcessor());
         assertEquals(specification.getThreadNumber(), pipelineSpecification.getThreadNumber());
     }
@@ -54,7 +54,7 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
     public void testConfigurationCanRemovePipeline() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PipelineSpecification specification = new PipelineSpecification("custom", StubTextProcessor.class.getName());
-        specification.setStopwords("hello,hihi");
+        specification.setStopWords("hello,hihi");
         specification.setThreadNumber(4);
         configuration.storeCustomPipeline(specification);
 

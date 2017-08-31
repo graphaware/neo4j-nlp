@@ -47,12 +47,12 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"'})", emptyConsumer());
         executeInTransaction("CALL ga.nlp.processor.getPipelines", (result -> {
             assertTrue(result.hasNext());
-            assertEquals(2, result.stream().count());
+            assertEquals(4, result.stream().count());
         }));
 
         executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
             assertTrue(result.hasNext());
-            assertEquals(1, result.stream().count());
+            assertEquals(2, result.stream().count());
         }));
 
         executeInTransaction("CALL ga.nlp.processor.getPipelines('not-exist')", (result -> {

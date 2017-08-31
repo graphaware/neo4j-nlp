@@ -16,7 +16,7 @@ public class StubTextProcessor implements TextProcessor {
 
     @Override
     public String getAlias() {
-        return null;
+        return "stub";
     }
 
     @Override

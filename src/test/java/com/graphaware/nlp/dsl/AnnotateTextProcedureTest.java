@@ -60,6 +60,13 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testAnnotateWithProcessorAlias() {
+        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'stub'})", (result -> {
+            assertTrue(result.hasNext());
+        }));
+    }
+
+    @Test
     public void testFilter() {
         executeInTransaction("CALL ga.nlp.filter({text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})",
                 (result -> {

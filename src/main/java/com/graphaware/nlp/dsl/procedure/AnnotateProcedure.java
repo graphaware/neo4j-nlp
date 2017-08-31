@@ -16,9 +16,14 @@ public class AnnotateProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.annotate", mode = Mode.WRITE)
     @Description("Performs the text annotation and store it into the graph")
     public Stream<NodeResult> annotate(@Name("annotationRequest") Map<String, Object> annotationRequest) {
-        AnnotationRequest request = mapper.convertValue(annotationRequest, AnnotationRequest.class);
-        Node result = getNLPManager().annotateTextAndPersist(request);
-        return Stream.of(new NodeResult(result));
+        try {
+            AnnotationRequest request = mapper.convertValue(annotationRequest, AnnotationRequest.class);
+            Node result = getNLPManager().annotateTextAndPersist(request);
+            return Stream.of(new NodeResult(result));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
     
     @Procedure(name = "ga.nlp.filter", mode = Mode.WRITE)
