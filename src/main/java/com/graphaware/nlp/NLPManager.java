@@ -1,6 +1,7 @@
 package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.PipelineSpecification;
@@ -10,6 +11,9 @@ import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
+import com.graphaware.nlp.event.EventDispatcher;
+import com.graphaware.nlp.event.TextAnnotationEvent;
+import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
 import com.graphaware.nlp.ml.textrank.TextRankProcessor;
@@ -23,6 +27,7 @@ import com.graphaware.nlp.processor.TextProcessorsManager;
 
 import java.util.*;
 
+import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
@@ -48,6 +53,10 @@ public class NLPManager {
 
     private final EnrichmentRegistry enrichmentRegistry;
 
+    private final Map<Class, NLPExtension> extensions = new HashMap<>();
+
+    private final EventDispatcher eventDispatcher;
+
     public NLPManager(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
         this.nlpConfiguration = nlpConfiguration;
         this.configuration = new DynamicConfiguration(database);
@@ -57,6 +66,9 @@ public class NLPManager {
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.pageRankProcessor = new PageRankProcessor(database);
         this.textRankProcessor = new TextRankProcessor(database);
+        this.eventDispatcher = new EventDispatcher();
+        loadExtensions();
+        registerEventListeners();
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -85,7 +97,11 @@ public class NLPManager {
                 text, pipelineName, "lang", null
         );
 
-        return persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
+        Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
+        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id);
+        eventDispatcher.notify(Events.POST_TEXT_ANNOTATION, event);
+
+        return annotatedNode;
     }
 
     public Node persistAnnotatedText(AnnotatedText annotatedText, String id, String txId) {
@@ -94,6 +110,10 @@ public class NLPManager {
 
     public DynamicConfiguration getConfiguration() {
         return configuration;
+    }
+
+    public EventDispatcher getEventDispatcher() {
+        return eventDispatcher;
     }
 
     public List<PipelineInfo> getPipelineInformations(String pipelineName) {
@@ -189,5 +209,28 @@ public class NLPManager {
 
     public TextRankProcessor getTextRankProcessor() {
         return textRankProcessor;
+    }
+
+    public NLPExtension getExtension(Class clazz) {
+        if (extensions.containsKey(clazz)) {
+            return extensions.get(clazz);
+        }
+
+        return null;
+    }
+
+    private void loadExtensions() {
+        Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
+
+        extensionMap.keySet().forEach(k -> {
+            NLPExtension e = extensionMap.get(k);
+            extensions.put(e.getClass(), extensionMap.get(k));
+        });
+    }
+
+    private void registerEventListeners() {
+        extensions.values().forEach(e -> {
+            e.registerEventListeners(eventDispatcher);
+        });
     }
 }
