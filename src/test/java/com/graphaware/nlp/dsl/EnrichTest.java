@@ -48,7 +48,7 @@ public class EnrichTest extends NLPIntegrationTest {
             assertEquals(resultNode.getProperty("id"), id);
             Result tags = getDatabase().execute(
                     "MATCH (a:AnnotatedText) with a "
-                    + "CALL ga.nlp.concept.import({node:a, depth: 2}) YIELD result\n"
+                    + "CALL ga.nlp.enrich.concept({node:a, depth: 2}) YIELD result\n"
                     + "return result;", params);
             assertTrue(tags.hasNext());
 
