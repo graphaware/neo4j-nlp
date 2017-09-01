@@ -12,6 +12,7 @@ import com.graphaware.nlp.enrich.EnrichmentRegistry;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
+import com.graphaware.nlp.ml.textrank.TextRankProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -36,6 +37,8 @@ public class NLPManager {
     private final TextProcessorsManager textProcessorsManager;
     
     private final PageRankProcessor pageRankProcessor;
+    
+    private final TextRankProcessor textRankProcessor;
 
     private final GraphDatabaseService database;
 
@@ -53,6 +56,7 @@ public class NLPManager {
         this.persistenceRegistry = new PersistenceRegistry(database, configuration);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.pageRankProcessor = new PageRankProcessor(database);
+        this.textRankProcessor = new TextRankProcessor(database);
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -181,5 +185,9 @@ public class NLPManager {
 
     public PageRankProcessor getPageRankProcessor() {
         return pageRankProcessor;
+    }
+
+    public TextRankProcessor getTextRankProcessor() {
+        return textRankProcessor;
     }
 }
