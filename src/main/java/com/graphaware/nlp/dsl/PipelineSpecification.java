@@ -20,6 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PipelineSpecification {
+
+    private static final long DEFAULT_THREAD_NUMBER = 4;
+
     private String name;
 
     private String textProcessor;
@@ -35,8 +38,13 @@ public class PipelineSpecification {
     }
     
     public static PipelineSpecification fromMap(Map<String, Object> map) {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(map, PipelineSpecification.class);
+        PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(), map.get("textProcessor").toString());
+        pipelineSpecification.setThreadNumber(map.containsKey("threadNumber") ? ((Number) map.get("threadNumber")).longValue() : DEFAULT_THREAD_NUMBER);
+        if (map.containsKey("processingSteps")) {
+            pipelineSpecification.setProcessingSteps((Map) map.get("processingSteps"));
+        }
+
+        return pipelineSpecification;
     }
 
     public PipelineSpecification(String name, String textProcessor) {
@@ -82,5 +90,9 @@ public class PipelineSpecification {
 
     public void setThreadNumber(long threadNumber) {
         this.threadNumber = threadNumber;
+    }
+
+    public void setProcessingSteps(Map<String, Boolean> processingSteps) {
+        this.processingSteps = processingSteps;
     }
 }
