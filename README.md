@@ -38,8 +38,9 @@ From the [GraphAware plugins directory](https://products.graphaware.com), downlo
 
 and copy them in the `plugins` directory of Neo4j.
 
-```
+
 `plugins/` directory example :
+
 ```
 -rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-1.0-SNAPSHOT.jar
 -rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.1.3.47.jar
