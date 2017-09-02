@@ -25,6 +25,23 @@ Available in EE only
 * Entity Merging
 * Conversational Features (questions generation and user intent understanding)
 
+| | Community Edition | Enterprise Edition |
+| --- | :---: | :---: |
+| Text information Extraction | ✔ | ✔ |
+| ConceptNet5 Enricher | ✔ | ✔ |
+| Keyword Extraction | ✔ | ✔ |
+| Topics Extraction | ✔ | ✔ |
+| Similarity Computation | ✔ | ✔ |
+| Apache Spark Binding for Distributed Algorithms | | ✔ |
+| User Interface | | ✔ |
+| OpenIE | | ✔ |
+| Entity Merging | | ✔ |
+| Questions generator | | ✔ |
+| Conversational Features | | ✔ |
+
+
+
+
 ## Installation
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
