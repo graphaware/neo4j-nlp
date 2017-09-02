@@ -215,7 +215,7 @@ public class NLPManager {
     public TextRankProcessor getTextRankProcessor() {
         return textRankProcessor;
     }
-    
+
     public NLPExtension getExtension(Class clazz) {
         if (extensions.containsKey(clazz)) {
             return extensions.get(clazz);

@@ -2,10 +2,11 @@
 
 This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
-The main module, this module, provide a *Domain Specific Language* built atop stored procedures and functions making
+The main module, this module, provide a **Domain Specific Language** built atop stored procedures and functions making
 your Natural Language Processing workflow a breeze and a fluent API for concrete processors implementations.
 
-Two NLP processor implementations are available, respectively [OpenNLP](https://
+Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
+[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
 
 It comes in 2 versions, Community (open-sourced) and Enterprise with the following NLP features :
 
