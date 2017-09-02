@@ -15,8 +15,6 @@
  */
 package com.graphaware.nlp.event;
 
-import com.graphaware.nlp.Events;
-
 import java.util.*;
 import java.util.function.Consumer;
 

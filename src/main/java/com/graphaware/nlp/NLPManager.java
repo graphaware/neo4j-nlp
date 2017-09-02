@@ -15,10 +15,8 @@ import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
-import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
 import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
 import com.graphaware.nlp.ml.similarity.SimilarityProcess;
-import com.graphaware.nlp.ml.textrank.TextRankProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -43,10 +41,6 @@ public class NLPManager {
 
     private final TextProcessorsManager textProcessorsManager;
     
-    private final PageRankProcessor pageRankProcessor;
-    
-    private final TextRankProcessor textRankProcessor;
-    
     private final SimilarityProcess similarityProcess;
 
     private final GraphDatabaseService database;
@@ -68,8 +62,6 @@ public class NLPManager {
         this.database = database;
         this.persistenceRegistry = new PersistenceRegistry(database, configuration);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
-        this.pageRankProcessor = new PageRankProcessor(database);
-        this.textRankProcessor = new TextRankProcessor(database);
         this.eventDispatcher = new EventDispatcher();
         this.similarityProcess = new SimilarityProcess(new FeatureBasedProcessLogic(database));
         loadExtensions();
@@ -82,6 +74,10 @@ public class NLPManager {
 
     public Persister getPersister(Class clazz) {
         return persistenceRegistry.getPersister(clazz);
+    }
+
+    public GraphDatabaseService getDatabase() {
+        return database;
     }
 
     public Node annotateTextAndPersist(AnnotationRequest annotationRequest) {
@@ -104,7 +100,7 @@ public class NLPManager {
 
         Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
         TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id);
-        eventDispatcher.notify(Events.POST_TEXT_ANNOTATION, event);
+        eventDispatcher.notify(NLPEvents.POST_TEXT_ANNOTATION, event);
 
         return annotatedNode;
     }
@@ -208,14 +204,6 @@ public class NLPManager {
         return registry;
     }
 
-    public PageRankProcessor getPageRankProcessor() {
-        return pageRankProcessor;
-    }
-
-    public TextRankProcessor getTextRankProcessor() {
-        return textRankProcessor;
-    }
-
     public NLPExtension getExtension(Class clazz) {
         if (extensions.containsKey(clazz)) {
             return extensions.get(clazz);
@@ -229,6 +217,7 @@ public class NLPManager {
 
         extensionMap.keySet().forEach(k -> {
             NLPExtension e = extensionMap.get(k);
+            e.setNLPManager(this);
             extensions.put(e.getClass(), extensionMap.get(k));
         });
     }

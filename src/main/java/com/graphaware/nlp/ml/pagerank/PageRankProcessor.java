@@ -1,12 +1,26 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2013-2017 GraphAware
+ *
+ * This file is part of the GraphAware Framework.
+ *
+ * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of
+ * the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 package com.graphaware.nlp.ml.pagerank;
 
+import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
+import com.graphaware.nlp.event.EventDispatcher;
+import com.graphaware.nlp.extension.AbstractExtension;
+import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
@@ -15,18 +29,14 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author ale
- */
-public class PageRankProcessor {
+@NLPModuleExtension(name = "PageRankProcessor")
+public class PageRankProcessor extends AbstractExtension implements NLPExtension {
 
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
 
-    private final GraphDatabaseService database;
+    @Override
+    public void registerEventListeners(EventDispatcher eventDispatcher) {
 
-    public PageRankProcessor(GraphDatabaseService database) {
-        this.database = database;
     }
 
     public SingleResult process(PageRankRequest request) {
@@ -37,7 +47,7 @@ public class PageRankProcessor {
         double damp = request.getDamp();
         double threshold = request.getThreshold();
 
-        PageRank pagerank = new PageRank(database);
+        PageRank pagerank = new PageRank(getDatabase());
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences = pagerank.processGraph(nodeType, relType, relWeight);
         if (coOccurrences.isEmpty()) {
             return SingleResult.fail();

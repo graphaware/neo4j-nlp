@@ -4,6 +4,7 @@ import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import org.neo4j.graphdb.GraphDatabaseService;
 
 public abstract class AbstractExtension implements NLPExtension {
 
@@ -24,5 +25,9 @@ public abstract class AbstractExtension implements NLPExtension {
 
     protected TextProcessorsManager getTextProcessorsManager() {
         return nlpManager.getTextProcessorsManager();
+    }
+
+    protected GraphDatabaseService getDatabase() {
+        return nlpManager.getDatabase();
     }
 }

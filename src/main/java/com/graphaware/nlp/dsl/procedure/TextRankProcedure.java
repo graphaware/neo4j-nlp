@@ -20,6 +20,8 @@ import com.graphaware.nlp.dsl.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import com.graphaware.nlp.ml.textrank.TextRankProcessor;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -31,6 +33,7 @@ public class TextRankProcedure extends AbstractDSL {
     @Description("PageRank procedure")
     public Stream<SingleResult> computePageRank(@Name("pageRankRequest") Map<String, Object> pageRankRequest) {
         TextRankRequest request = TextRankRequest.fromMap(pageRankRequest);
-        return Stream.of(getNLPManager().getTextRankProcessor().process(request));
+        TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+        return Stream.of(processor.process(request));
     }
 }

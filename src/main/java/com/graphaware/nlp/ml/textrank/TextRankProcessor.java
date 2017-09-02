@@ -15,26 +15,30 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
+
+import com.graphaware.nlp.event.EventDispatcher;
+import com.graphaware.nlp.extension.AbstractExtension;
+import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TextRankProcessor {
+@NLPModuleExtension(name = "TextRankProcessor")
+public class TextRankProcessor extends AbstractExtension implements NLPExtension {
 
     private static final Logger LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
-    private final GraphDatabaseService database;
-
-    public TextRankProcessor(GraphDatabaseService database) {
-        this.database = database;
+    @Override
+    public void registerEventListeners(EventDispatcher eventDispatcher) {
     }
 
     public SingleResult process(TextRankRequest request) {
 
-        TextRank textrank = new TextRank(database);
+        TextRank textrank = new TextRank(getDatabase());
 
         if (request.getStopWords() != null 
                 && !request.getStopWords().isEmpty()) {

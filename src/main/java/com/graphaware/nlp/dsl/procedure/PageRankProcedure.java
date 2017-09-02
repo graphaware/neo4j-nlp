@@ -21,6 +21,8 @@ import com.graphaware.nlp.dsl.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -32,6 +34,7 @@ public class PageRankProcedure extends AbstractDSL {
     @Description("PageRank procedure")
     public Stream<SingleResult> computePageRank(@Name("pageRankRequest") Map<String, Object> pageRankRequest) {
         PageRankRequest request = mapper.convertValue(pageRankRequest, PageRankRequest.class);
-        return Stream.of(getNLPManager().getPageRankProcessor().process(request));
+        PageRankProcessor processor = (PageRankProcessor) getNLPManager().getExtension(PageRankProcessor.class);
+        return Stream.of(processor.process(request));
     }
 }

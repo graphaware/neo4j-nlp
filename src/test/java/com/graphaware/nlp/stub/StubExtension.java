@@ -1,7 +1,8 @@
 package com.graphaware.nlp.stub;
 
-import com.graphaware.nlp.Events;
+import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
+import com.graphaware.nlp.event.DefaultEvent;
 import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.AbstractExtension;
@@ -16,12 +17,13 @@ public class StubExtension extends AbstractExtension implements NLPExtension {
 
     @Override
     public void registerEventListeners(EventDispatcher eventDispatcher) {
-        eventDispatcher.registerListener(Events.POST_TEXT_ANNOTATION, (event) -> {
-            someValue = ((TextAnnotationEvent) event).getId();
+        eventDispatcher.registerListener(StubEvents.HELLO, (event) -> {
+            someValue = ((DefaultEvent) event).getValue();
         });
 
-        eventDispatcher.registerListener(Events.POST_TEXT_ANNOTATION, (event) -> {
+        eventDispatcher.registerListener(NLPEvents.POST_TEXT_ANNOTATION, (event) -> {
             addEventLabel(((TextAnnotationEvent) event).getAnnotatedNode());
+            someValue = ((TextAnnotationEvent) event).getId();
         });
     }
 

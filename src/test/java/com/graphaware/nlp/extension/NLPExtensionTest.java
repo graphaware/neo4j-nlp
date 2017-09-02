@@ -1,9 +1,10 @@
 package com.graphaware.nlp.extension;
 
-import com.graphaware.nlp.Events;
+import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.event.DefaultEvent;
 import com.graphaware.nlp.event.EventDispatcher;
+import com.graphaware.nlp.stub.StubEvents;
 import com.graphaware.nlp.stub.StubExtension;
 import com.graphaware.nlp.util.ServiceLoader;
 import org.junit.Test;
@@ -16,10 +17,7 @@ public class NLPExtensionTest {
     @Test
     public void testServiceLoaderCanLoadExtensions() {
         Map<String, NLPExtension> loadedExtensions = ServiceLoader.loadInstances(NLPModuleExtension.class);
-        assertEquals(1, loadedExtensions.size());
-        loadedExtensions.keySet().forEach(k -> {
-            assertEquals(StubExtension.class.getName(), k);
-        });
+        assertFalse(loadedExtensions.size() == 0);
     }
 
     @Test
@@ -29,10 +27,9 @@ public class NLPExtensionTest {
         loadedExtensions.values().forEach(nlpExtension -> {
             nlpExtension.registerEventListeners(dispatcher);
         });
-        dispatcher.notify(Events.POST_TEXT_ANNOTATION, new DefaultEvent("hello you"));
-        loadedExtensions.values().forEach(nlpExtension -> {
-            assertEquals("hello you", ((StubExtension) nlpExtension).getSomeValue());
-        });
+        dispatcher.notify(StubEvents.HELLO, new DefaultEvent("hello you"));
+        NLPExtension nlpExtension = loadedExtensions.get(StubExtension.class.getName());
+        assertEquals("hello you", ((StubExtension) nlpExtension).getSomeValue());
     }
 
 }
