@@ -15,10 +15,6 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-/**
- *
- * @author ale
- */
 public class CoOccurrenceItem {
     private final long source;
     private final long destination;

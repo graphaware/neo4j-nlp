@@ -18,13 +18,13 @@ package com.graphaware.nlp.ml.textrank;
 import static com.graphaware.nlp.persistence.constants.Labels.Keyword;
 import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.persistence.constants.Labels;
+import com.graphaware.nlp.persistence.constants.Properties;
+import com.graphaware.nlp.persistence.constants.Relationships;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
@@ -35,11 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-@Component
 public class TextRank {
 
     private static final Logger LOG = LoggerFactory.getLogger(TextRank.class);
     private final GraphDatabaseService database;
+    private final DynamicConfiguration configuration;
     private boolean removeStopWords;
     private boolean directionMatters;
     private boolean respectSentences;
@@ -49,8 +49,9 @@ public class TextRank {
     private List<String> admittedPOSs;
     private Map<Long, String> idToValue = new HashMap<>();
 
-    public TextRank(GraphDatabaseService database) {
+    public TextRank(GraphDatabaseService database, DynamicConfiguration configuration) {
         this.database = database;
+        this.configuration = configuration;
         this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few", "best", "worst");
         this.removeStopWords = false;
         this.directionMatters = true;
@@ -58,6 +59,7 @@ public class TextRank {
         this.useTfIdfWeights = false;
         this.cooccurrenceWindow = 2;
         this.admittedPOSs = Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"); // "Unknown" because we want to keep tags that have unknown POS
+
     }
 
     public void setStopwords(String stopwords) {
@@ -90,19 +92,30 @@ public class TextRank {
         params.put("id", annotatedText.getId());
         params.put("relType", relType);
         params.put("relWeight", relWeight);
+        params.put("pos", Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"));
         try (Transaction tx = database.beginTx();) {
-            database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
-                    + "WHERE a.id = {id} \n"
-                    + "WITH s, to\n"
-                    + "ORDER BY s.sentenceNumber, to.startPosition\n"
-                    + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-                    + "WHERE size(t.value) > 2 AND ANY (p in t.pos where p in ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJR', 'JJS'] )\n" // only nouns and adjectives
-                    + "WITH s, collect(t) as tags\n"
-                    + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-                    + "WITH s, tags[i] as tag1, tags[i+1] as tag2\n"
-                    + "MERGE (tag1)-[c:" + relType + "]-(tag2)\n"
-                    + "ON CREATE SET c.weight = 1\n"
-                    + "ON MATCH SET c.weight = c.weight + 1\n",
+            database.execute(String.format("MATCH (a:`%s`)-[:`%s`]->(s:`%s`)-[:`%s`]->(to:`%s`)\n"
+                            + "WHERE a.id = {id} \n"
+                            + "WITH s, to\n"
+                            + "ORDER BY s.`%s`, to.`%s`\n"
+                            + "MATCH (to)-[:`%s`]->(t:`%s`)\n"
+                            + "WHERE size(t.value) > 2 AND ANY (p IN t.pos WHERE p IN {pos})\n" // only nouns and adjectives
+                            + "WITH s, collect(t) as tags\n"
+                            + "UNWIND range(0, size(tags) - 2, 1) as i\n"
+                            + "WITH s, tags[i] as tag1, tags[i+1] as tag2\n"
+                            + "MERGE (tag1)-[c:`" + relType + "`]-(tag2)\n"
+                            + "ON CREATE SET c.weight = 1\n"
+                            + "ON MATCH SET c.weight = c.weight + 1\n",
+                    configuration.getLabelFor(Labels.AnnotatedText),
+                    configuration.getRelationshipFor(Relationships.CONTAINS_SENTENCE),
+                    configuration.getLabelFor(Labels.Sentence),
+                    configuration.getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE),
+                    configuration.getLabelFor(Labels.TagOccurrence),
+                    configuration.getPropertyKeyFor(Properties.SENTENCE_NUMBER),
+                    configuration.getPropertyKeyFor(Properties.START_POSITION),
+                    configuration.getRelationshipFor(Relationships.TAG_OCCURRENCE_TAG),
+                    configuration.getLabelFor(Labels.Tag)
+                    ),
                     params);
             tx.success();
         } catch (Exception e) {
@@ -209,10 +222,17 @@ public class TextRank {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedID);
         try (Transaction tx = database.beginTx();) {
-            database.execute("MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)\n"
-                    + "WHERE a.id = {id}\n"
-                    + "MATCH (s)-[:HAS_TAG]->(:Tag)-[co:" + relType + "]->(:Tag)\n"
-                    + "DELETE co",
+            database.execute(String.format("MATCH (a:`%s`)-[:`%s`]->(s:`%s`)\n"
+                            + "WHERE a.id = {id}\n"
+                            + "MATCH (s)-[:`%s`]->(:`%s`)-[co:`" + relType + "`]->(:`%s`)\n"
+                            + "DELETE co",
+                    configuration.getLabelFor(Labels.AnnotatedText),
+                    configuration.getRelationshipFor(Relationships.CONTAINS_SENTENCE),
+                    configuration.getLabelFor(Labels.Sentence),
+                    configuration.getRelationshipFor(Relationships.HAS_TAG),
+                    configuration.getLabelFor(Labels.Tag),
+                    configuration.getLabelFor(Labels.Tag)
+                    ),
                     params);
             tx.success();
         } catch (Exception e) {
@@ -244,7 +264,7 @@ public class TextRank {
         params.put("nodeList", topx);
         Result res = database.execute(
                 "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
-                + "WHERE id(a) = {id} and id(node) in {nodeList}\n"
+                + "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
                 + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId\n"
                 + "ORDER BY sP asc",
                 params);
@@ -350,13 +370,13 @@ public class TextRank {
         String query = "MATCH (doc:AnnotatedText)\n"
             + "WITH count(doc) as documentsCount\n"
             + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[ht:HAS_TAG]->(t:Tag)\n"
-            + "WHERE id(a) = " + annotatedText.getId() + "\n"
+            + "WHERE id(a) = {id} \n"
             + "WITH t, sum(ht.tf) as tf, documentsCount\n"
             + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[:HAS_TAG]->(t)\n"
             + "RETURN id(t) as tag, t.value as tagVal, tf, count(distinct a) as docCountForTag, documentsCount\n";
 
         try (Transaction tx = database.beginTx();) {
-            Result res = database.execute(query);
+            Result res = database.execute(query, Collections.singletonMap("id", annotatedText.getId()));
             while (res != null && res.hasNext()) {
                 Map<String, Object> next = res.next();
                 Long tag = (Long) next.get("tag");
