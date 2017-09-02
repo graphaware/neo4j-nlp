@@ -17,7 +17,6 @@ package com.graphaware.nlp.ml.word2vec;
 
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.ml.similarity.*;
-import com.graphaware.nlp.procedure.NLPProcedure;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 import org.neo4j.procedure.Mode;
 
-public class Word2VecProcedure extends NLPProcedure {
+public class Word2VecProcedure {
 //
 //    private static final String PARAMETER_NAME_ANNOTATED_TEXT = "node";
 //    private static final String PARAMETER_NAME_TAG = "tag";

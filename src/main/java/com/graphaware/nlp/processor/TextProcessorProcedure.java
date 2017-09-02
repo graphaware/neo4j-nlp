@@ -15,11 +15,10 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.graphaware.nlp.procedure.NLPProcedure;
 
 import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
 
-public class TextProcessorProcedure extends NLPProcedure {
+public class TextProcessorProcedure {
 //
 //    private static final Logger LOG = LoggerFactory.getLogger(TextProcessorProcedure.class);
 //    public static final String SUCCESS = "success";
