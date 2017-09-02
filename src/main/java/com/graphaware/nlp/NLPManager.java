@@ -32,28 +32,50 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 
-public class NLPManager {
+public final class NLPManager {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
 
+    private static NLPManager instance = null;
 
-    private final NLPConfiguration nlpConfiguration;
+    private NLPConfiguration nlpConfiguration;
 
-    private final TextProcessorsManager textProcessorsManager;
+    private TextProcessorsManager textProcessorsManager;
 
-    private final GraphDatabaseService database;
+    private GraphDatabaseService database;
 
-    private final DynamicConfiguration configuration;
+    private DynamicConfiguration configuration;
 
-    private final PersistenceRegistry persistenceRegistry;
+    private PersistenceRegistry persistenceRegistry;
 
-    private final EnrichmentRegistry enrichmentRegistry;
+    private EnrichmentRegistry enrichmentRegistry;
 
     private final Map<Class, NLPExtension> extensions = new HashMap<>();
 
-    private final EventDispatcher eventDispatcher;
+    private EventDispatcher eventDispatcher;
 
-    public NLPManager(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
+    private boolean initialized = false;
+
+    private NLPManager() {
+        super();
+    }
+
+    public static NLPManager getInstance() {
+        if (NLPManager.instance == null) {
+            synchronized (NLPManager.class) {
+                if (NLPManager.instance == null) {
+                    NLPManager.instance = new NLPManager();
+                }
+            }
+        }
+
+        return NLPManager.instance;
+    }
+
+    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
+        if (initialized) {
+            return;
+        }
         this.nlpConfiguration = nlpConfiguration;
         this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager(database);
@@ -63,6 +85,7 @@ public class NLPManager {
         this.eventDispatcher = new EventDispatcher();
         loadExtensions();
         registerEventListeners();
+        initialized = true;
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -214,7 +237,6 @@ public class NLPManager {
 
         extensionMap.keySet().forEach(k -> {
             NLPExtension e = extensionMap.get(k);
-            e.setNLPManager(this);
             extensions.put(e.getClass(), extensionMap.get(k));
         });
     }

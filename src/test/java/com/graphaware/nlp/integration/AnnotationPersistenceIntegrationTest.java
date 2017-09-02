@@ -20,16 +20,19 @@ import static org.junit.Assert.*;
 
 public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegrationTest {
 
+    private static NLPManager manager;
+
+
     @Before
     public void setUp() throws Exception {
         super.setUp();
         clearDatabase();
+        manager = NLPManager.getInstance();
+        manager.init(getDatabase(), NLPConfiguration.defaultConfiguration());
     }
 
     @Test
     public void testAnnotatedTextIsPersisted() {
-        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
-
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
@@ -51,7 +54,6 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
 
     @Test
     public void testAnnotatedTextIsPersistedWithCustomLabel() {
-        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
         manager.getConfiguration().update("LABEL_" + Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
@@ -69,7 +71,6 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
 
     @Test
     public void testNamedEntityLabelIsAdded() {
-        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
         manager.getConfiguration().update("LABEL_" + Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
@@ -92,7 +93,6 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
 
     @Test
     public void testMultipleSentencesPersistence() {
-        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
         try (Transaction tx = getDatabase().beginTx()) {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
@@ -119,7 +119,6 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
 
     @Test
     public void testSentimentLabelCanBeAddedOnExistingSentence() {
-        NLPManager manager = new NLPManager(getDatabase(), NLPConfiguration.defaultConfiguration());
         try (Transaction tx = getDatabase().beginTx()) {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
