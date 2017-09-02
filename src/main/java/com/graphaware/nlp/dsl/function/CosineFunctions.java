@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.graphaware.nlp.ml.similarity;
+package com.graphaware.nlp.dsl.function;
 
+import com.graphaware.nlp.ml.similarity.CosineSimilarity;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

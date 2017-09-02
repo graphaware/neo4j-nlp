@@ -12,6 +12,8 @@ import com.graphaware.nlp.enrich.EnrichmentRegistry;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
+import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
+import com.graphaware.nlp.ml.similarity.SimilarityProcess;
 import com.graphaware.nlp.ml.textrank.TextRankProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
@@ -39,6 +41,8 @@ public class NLPManager {
     private final PageRankProcessor pageRankProcessor;
     
     private final TextRankProcessor textRankProcessor;
+    
+    private final SimilarityProcess similarityProcess;
 
     private final GraphDatabaseService database;
 
@@ -57,6 +61,7 @@ public class NLPManager {
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.pageRankProcessor = new PageRankProcessor(database);
         this.textRankProcessor = new TextRankProcessor(database);
+        this.similarityProcess = new SimilarityProcess(new FeatureBasedProcessLogic(database));
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -189,5 +194,9 @@ public class NLPManager {
 
     public TextRankProcessor getTextRankProcessor() {
         return textRankProcessor;
+    }
+
+    public SimilarityProcess getSimilarityProcess() {
+        return similarityProcess;
     }
 }

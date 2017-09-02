@@ -30,17 +30,13 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
 public class SimilarityQueueProcessor implements Runnable {
 
     private final BlockingQueue<SimilarityItemProcessEntry> queue;
     private final GraphDatabaseService database;
     private static final Logger LOG = LoggerFactory.getLogger(SimilarityQueueProcessor.class);
 
-    @Autowired
     public SimilarityQueueProcessor(GraphDatabaseService database) {
         this.queue = new LinkedBlockingQueue<>();
         this.database = database;
@@ -97,6 +93,5 @@ public class SimilarityQueueProcessor implements Runnable {
     public void offer(SimilarityItemProcessEntry similarityItemProcessEntry) {
         queue.offer(similarityItemProcessEntry);
     }
-
 
 }
