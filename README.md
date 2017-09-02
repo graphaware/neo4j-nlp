@@ -10,20 +10,7 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 It comes in 2 versions, Community (open-sourced) and Enterprise with the following NLP features :
 
-Available in CE and EE
-
-* Text information extraction (tokenization, lemmification, named entity recognition and universal dependencies)
-* Information enrichment (conceptnet5 implementation)
-* Keywords and Topics extraction (word2vec and textrank algorithms)
-* Similarity computation
-
-Available in EE only
-
-* User Interface
-* Apache Spark binding for distributed algorithms computation
-* Information Extraction (openIE)
-* Entity Merging
-* Conversational Features (questions generation and user intent understanding)
+## Feature Matrix
 
 | | Community Edition | Enterprise Edition |
 | --- | :---: | :---: |
@@ -38,7 +25,6 @@ Available in EE only
 | Entity Merging | | ✔ |
 | Questions generator | | ✔ |
 | Conversational Features | | ✔ |
-
 
 
 
