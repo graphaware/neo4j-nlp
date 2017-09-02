@@ -13,34 +13,16 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.event;
+package com.graphaware.nlp.annotation;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import org.neo4j.graphdb.Node;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class TextAnnotationEvent implements Event {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface NLPModuleExtension {
 
-    private final Node annotatedNode;
-
-    private final AnnotatedText annotatedText;
-
-    private final String id;
-
-    public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id) {
-        this.annotatedNode = annotatedNode;
-        this.annotatedText = annotatedText;
-        this.id = id;
-    }
-
-    public Node getAnnotatedNode() {
-        return annotatedNode;
-    }
-
-    public AnnotatedText getAnnotatedText() {
-        return annotatedText;
-    }
-
-    public String getId() {
-        return id;
-    }
+    String name();
 }

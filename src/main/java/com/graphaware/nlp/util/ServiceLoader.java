@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.util;
 
+import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.processor.TextProcessor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -32,6 +33,28 @@ public class ServiceLoader {
 
     private static Reflections reflections;
     private static final Logger LOG = LoggerFactory.getLogger(ServiceLoader.class);
+
+    public static NLPExtension loadNLPExtension(String extensionClazz) {
+        NLPExtension extension;
+        try {
+            @SuppressWarnings("unchecked")
+            Class<? extends NLPExtension> clazz = (Class<? extends NLPExtension>) Class
+                    .forName(extensionClazz);
+            NLPExtension classInstance = clazz.newInstance();
+
+            if (classInstance instanceof TextProcessor) {
+                extension = (NLPExtension) classInstance;
+                //datumSerializer.configure(filterContext);
+            } else {
+                throw new IllegalArgumentException(extensionClazz
+                        + " is not an NLP Extension");
+            }
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+            LOG.error("Could not instantiate event filter.", e);
+            throw new RuntimeException("Could not instantiate event filter.", e);
+        }
+        return extension;
+    }
 
     public static TextProcessor loadTextProcessor(String processorClazz) {
         TextProcessor processor;
