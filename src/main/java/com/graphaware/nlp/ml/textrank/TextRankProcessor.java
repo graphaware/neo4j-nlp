@@ -32,10 +32,6 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
     private static final Logger LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
-    @Override
-    public void registerEventListeners(EventDispatcher eventDispatcher) {
-    }
-
     public SingleResult process(TextRankRequest request) {
 
         TextRank textrank = new TextRank(getDatabase());

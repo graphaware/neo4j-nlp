@@ -16,7 +16,7 @@ import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
-import com.graphaware.nlp.ml.similarity.SimilarityProcess;
+import com.graphaware.nlp.ml.similarity.SimilarityProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -40,8 +40,6 @@ public class NLPManager {
     private final NLPConfiguration nlpConfiguration;
 
     private final TextProcessorsManager textProcessorsManager;
-    
-    private final SimilarityProcess similarityProcess;
 
     private final GraphDatabaseService database;
 
@@ -63,7 +61,6 @@ public class NLPManager {
         this.persistenceRegistry = new PersistenceRegistry(database, configuration);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
-        this.similarityProcess = new SimilarityProcess(new FeatureBasedProcessLogic(database));
         loadExtensions();
         registerEventListeners();
     }
@@ -226,9 +223,5 @@ public class NLPManager {
         extensions.values().forEach(e -> {
             e.registerEventListeners(eventDispatcher);
         });
-    }
-
-    public SimilarityProcess getSimilarityProcess() {
-        return similarityProcess;
     }
 }

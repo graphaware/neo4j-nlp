@@ -34,11 +34,6 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
 
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
 
-    @Override
-    public void registerEventListeners(EventDispatcher eventDispatcher) {
-
-    }
-
     public SingleResult process(PageRankRequest request) {
         String nodeType = request.getNodeType();
         String relType = request.getRelationshipType();

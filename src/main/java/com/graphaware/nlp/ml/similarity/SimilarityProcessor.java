@@ -19,23 +19,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.graphaware.nlp.annotation.NLPModuleExtension;
+import com.graphaware.nlp.event.EventDispatcher;
+import com.graphaware.nlp.extension.AbstractExtension;
+import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimilarityProcess {
+@NLPModuleExtension(name = "SimilarityProcessor")
+public class SimilarityProcessor extends AbstractExtension implements NLPExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcess.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcessor.class);
 
-    private final FeatureBasedProcessLogic featureBusinessLogic;
+    private FeatureBasedProcessLogic featureBusinessLogic;
     private final static String PARAMETER_NAME_QUERY = "query";
     private final static String PARAMETER_RELATIONSHIP_TYPE = "relationshipType";
 
     //private static final Boolean PARAMETER_NAME_ADJ_ADV = "adjectives_adverbs";
-    public SimilarityProcess(FeatureBasedProcessLogic featureBusinessLogic) {
-        this.featureBusinessLogic = featureBusinessLogic;
+
+
+    @Override
+    public void postLoaded() {
+        featureBusinessLogic = new FeatureBasedProcessLogic(getDatabase());
     }
-    
 
     public int compute(List<Node> input, String query, String relationshipType, Long depth) {
         int processed;
