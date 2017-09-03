@@ -8,6 +8,7 @@ import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
@@ -24,11 +25,18 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
 
 
     @Before
+    @Override
     public void setUp() throws Exception {
+        resetSingleton();
         super.setUp();
         clearDatabase();
         manager = NLPManager.getInstance();
         manager.init(getDatabase(), NLPConfiguration.defaultConfiguration());
+    }
+    private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
+       Field instance = NLPManager.class.getDeclaredField("instance");
+       instance.setAccessible(true);
+       instance.set(null, null);
     }
 
     @Test
