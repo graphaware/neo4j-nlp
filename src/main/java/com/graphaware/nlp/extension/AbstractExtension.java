@@ -9,27 +9,24 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 public abstract class AbstractExtension implements NLPExtension {
 
-    protected NLPManager nlpManager;
-
-    @Override
-    public void setNLPManager(NLPManager nlpManager) {
-        this.nlpManager = nlpManager;
+    protected NLPManager getNLPManager() {
+        return NLPManager.getInstance();
     }
 
     protected DynamicConfiguration configuration() {
-        return nlpManager.getConfiguration();
+        return getNLPManager().getConfiguration();
     }
 
     protected Persister getPersister(Class clazz) {
-        return nlpManager.getPersister(clazz);
+        return getNLPManager().getPersister(clazz);
     }
 
     protected TextProcessorsManager getTextProcessorsManager() {
-        return nlpManager.getTextProcessorsManager();
+        return getNLPManager().getTextProcessorsManager();
     }
 
     protected GraphDatabaseService getDatabase() {
-        return nlpManager.getDatabase();
+        return getNLPManager().getDatabase();
     }
 
     @Override

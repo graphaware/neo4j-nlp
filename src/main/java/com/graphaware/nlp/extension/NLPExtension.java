@@ -7,7 +7,5 @@ public interface NLPExtension {
 
     void registerEventListeners(EventDispatcher eventDispatcher);
 
-    void setNLPManager(NLPManager nlpManager);
-
     void postLoaded();
 }

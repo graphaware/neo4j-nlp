@@ -34,7 +34,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
     public SingleResult process(TextRankRequest request) {
 
-        TextRank textrank = new TextRank(getDatabase());
+        TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
 
         if (request.getStopWords() != null 
                 && !request.getStopWords().isEmpty()) {

@@ -43,14 +43,14 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
         this.nlpMLConfiguration = configuration;
-        LOG.info("ConceptNet URL: " + nlpMLConfiguration.getConceptNetUrl());
         this.database = database;
     }
 
     @Override
     public void initialize(GraphDatabaseService database) {
         super.initialize(database);
-        this.nlpManager = new NLPManager(database, nlpMLConfiguration);
+        nlpManager = NLPManager.getInstance();
+        nlpManager.init(database, nlpMLConfiguration);
     }
 
     public NLPConfiguration getNlpMLConfiguration() {
@@ -60,8 +60,6 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public NLPManager getNlpManager() {
         return nlpManager;
     }
-
-
 
     @Override
     public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
