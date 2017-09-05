@@ -70,7 +70,7 @@ public class TextRankTest extends NLPIntegrationTest {
             int trueCount = 0;
             while (result!=null && result.hasNext()) {
                 Map<String, Object> next = result.next();
-                String tag = (String) next.get("value");
+                String tag = next.get("value").toString();
                 totCount++;
                 if (tag.split(" ").length > 1)
                     totCount_phrases++;

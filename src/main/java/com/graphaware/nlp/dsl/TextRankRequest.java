@@ -20,7 +20,7 @@ public class TextRankRequest {
 
     //private final static String PARAMETER_NAME_QUERY = "query";
     private final static String PARAMETER_ANNOTATED_TEXT = "annotatedText";
-    private final static String PARAMETER_ITERATIONS = "iter";
+    private final static String PARAMETER_ITERATIONS = "iterations";
     private final static String PARAMETER_DAMPING_FACTOR = "damp";
     private final static String PARAMETER_DAMPING_THRESHOLD = "threshold";
     private final static String PARAMETER_STOPWORDS = "stopwords";
