@@ -17,14 +17,12 @@ package com.graphaware.nlp.persistence.persisters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public abstract class AbstractPersister {
 
