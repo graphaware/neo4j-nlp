@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
@@ -30,15 +31,21 @@ public class PageRank {
 
     private static final Logger LOG = LoggerFactory.getLogger(PageRank.class);
 
-    private Map<Long, Double> nodeWeights;
     protected final GraphDatabaseService database;
+    private Map<Long, Double> nodeWeights;
+    private boolean directionsMatter;
 
     public PageRank(GraphDatabaseService database) {
         this.database = database;
+        this.directionsMatter = true;
     }
 
     public void setNodeWeights(Map<Long, Double> w) {
         this.nodeWeights = w;
+    }
+
+    public void respectDirections(boolean respectDirections) {
+        this.directionsMatter = respectDirections;
     }
 
     public Map<Long, Double> run(Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, int iter, double dampFactor, double threshold) {
@@ -68,7 +75,6 @@ public class PageRank {
                             internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt)); // with relationship weights
                             //internalSum.addAndGet(((1.0d * coOccurrentTags.get(nodeIdExt).getCount()) / totalWeightSum) * pagerank.get(nodeIdInt) * nodeWInt); // with relationship & node weights
                         });
-                //double newPrValue = (1 - dampFactor) + dampFactor * internalSum.get(); // this PR is not probability (PR values don't add up to 1)
                 double newPrValue = (1 - dampFactor) / nNodes + dampFactor * internalSum.get(); // PR is a probability (PR values add up to 1)
 
                 // PageRank with node weights
@@ -103,14 +109,14 @@ public class PageRank {
                 Long tag1 = (Long) next.get("node1");
                 Long tag2 = (Long) next.get("node2");
                 double w = 1.; //not used
-                Node rel = (Node) next.get("rel");
+                Relationship rel = (Relationship) next.get("rel");
                 if (weightProperties != null
                         && rel.hasProperty(weightProperties)) {
                     w = (double) rel.getProperty(weightProperties);
-                } else {
-                    w = 1.;
                 }
-                addTagToCoOccurrence(results, tag1, tag2);
+                addTagToCoOccurrence(results, tag1, tag2, w);
+                if (!directionsMatter)
+                    addTagToCoOccurrence(results, tag2, tag1, w);
             }
             tx.success();
         } catch (Exception e) {
@@ -130,7 +136,7 @@ public class PageRank {
         }
     }
 
-    private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long tag1, Long tag2) {
+    private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long tag1, Long tag2, double w) {
         Map<Long, CoOccurrenceItem> mapTag1;
         if (!results.containsKey(tag1)) {
             mapTag1 = new HashMap<>();
@@ -139,9 +145,10 @@ public class PageRank {
             mapTag1 = results.get(tag1);
         }
         if (mapTag1.containsKey(tag2)) {
-            mapTag1.get(tag2).incCount();
+            mapTag1.get(tag2).incCountBy(w);
         } else {
             mapTag1.put(tag2, new CoOccurrenceItem(tag1, tag2));
+            mapTag1.get(tag2).setCount(w);
         }
     }
 
@@ -182,24 +189,3 @@ public class PageRank {
     }
 
 }
-/*
-create (at:AnnotatedText {id: "test118"})-[:TestRel]->(d:Test {value: "D"})
-merge (d)-[:Related_to]->(a:Test {value: "A"})<-[:TestRel]-(at)
-merge (d)-[:Related_to]->(b:Test {value: "B"})<-[:TestRel]-(at)
-merge (at)-[:TestRel]->(e:Test {value: "E"})-[:Related_to]->(b)
-merge (e)-[:Related_to]->(d)
-merge (e)-[:Related_to]->(f:Test {value: "F"})<-[:TestRel]-(at)
-merge (f)-[:Related_to]->(e)
-merge (f)-[:Related_to]->(b)
-merge (b)-[:Related_to]->(c:Test {value: "C"})<-[:TestRel]-(at)
-merge (c)-[:Related_to]->(b)
-
-merge (at)-[:TestRel]->(g:Test {value: "G"})-[:Related_to]->(b)
-merge (at)-[:TestRel]->(h:Test {value: "H"})-[:Related_to]->(b)
-merge (at)-[:TestRel]->(i:Test {value: "I"})-[:Related_to]->(b)
-merge (g)-[:Related_to]->(e)
-merge (h)-[:Related_to]->(e)
-merge (i)-[:Related_to]->(e)
-merge (at)-[:TestRel]->(j:Test {value: "J"})-[:Related_to]->(e)
-merge (at)-[:TestRel]->(k:Test {value: "K"})-[:Related_to]->(e)
- */

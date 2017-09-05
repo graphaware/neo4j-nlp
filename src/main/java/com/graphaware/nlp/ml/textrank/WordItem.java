@@ -15,38 +15,30 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-public class CoOccurrenceItem {
-    private final long source;
-    private final long destination;
-    private double count;
+/**
+ *
+ * @author vla
+ */
+public class WordItem {
+    private final int startPosition;
+    private final int endPosition;
+    private final String word;
 
-    public CoOccurrenceItem(long source, long destination) {
-        this.source = source;
-        this.destination = destination;
-        this.count = 1.;
+    public WordItem(int start, int end, String word) {
+        this.startPosition = start;
+        this.endPosition = end;
+        this.word = word;
     }
     
-    public long getSource() {
-        return source;
+    public int getStart() {
+        return this.startPosition;
     }
 
-    public long getDestination() {
-        return destination;
+    public int getEnd() {
+        return this.endPosition;
     }
 
-    public double getCount() {
-        return count;
-    }
-    
-    public void incCount() {
-        this.count++;
-    }
-
-    public void incCountBy(double val) {
-        this.count += val;
-    }
-
-    public void setCount(double val) {
-        this.count = val;
+    public String getWord() {
+        return this.word;
     }
 }
