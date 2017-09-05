@@ -71,7 +71,6 @@ public class TextRankTest extends NLPIntegrationTest {
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute(
                 "MATCH (k:Keyword)-[:DESCRIBES]->(a:AnnotatedText)\n"
-                + "WHERE a.id = " + annIdStr + "\n"
                 + "RETURN k.id AS id, k.value AS value\n");
             int totCount  = 0;
             int totCount_phrases = 0;
@@ -110,7 +109,7 @@ public class TextRankTest extends NLPIntegrationTest {
         String content = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("exported.cypher").toURI())));
         List<String> queries = ImportUtils.getImportQueriesFromApocExport(content);
         queries.forEach(q -> {
-            System.out.println(q);
+//            System.out.println(q);
             executeInTransaction(q, (result -> {
                 //
             }));
