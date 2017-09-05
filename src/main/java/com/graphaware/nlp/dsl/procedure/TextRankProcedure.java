@@ -30,10 +30,17 @@ import org.neo4j.procedure.Procedure;
 public class TextRankProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
-    @Description("PageRank procedure")
-    public Stream<SingleResult> computePageRank(@Name("pageRankRequest") Map<String, Object> pageRankRequest) {
-        TextRankRequest request = TextRankRequest.fromMap(pageRankRequest);
+    @Description("TextRank procedure")
+    public Stream<SingleResult> computeTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+        TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
         TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
         return Stream.of(processor.process(request));
+    }
+
+    @Procedure(name = "ga.nlp.ml.textRank.postprocess", mode = Mode.WRITE)
+    @Description("TextRank post-processing procedure")
+    public Stream<SingleResult> textRankPostprocess() {
+        TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+        return Stream.of(processor.postprocess());
     }
 }

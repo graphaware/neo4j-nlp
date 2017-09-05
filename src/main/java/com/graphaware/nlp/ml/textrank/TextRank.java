@@ -45,6 +45,7 @@ public class TextRank {
     private boolean directionsMatter;
     private boolean respectSentences;
     private boolean useTfIdfWeights;
+    private boolean useDependencies;
     private int cooccurrenceWindow;
     private List<String> stopWords;
     private List<String> admittedPOSs;
@@ -58,6 +59,7 @@ public class TextRank {
         this.directionsMatter = false;
         this.respectSentences = false;
         this.useTfIdfWeights = false;
+        this.useDependencies = false;
         this.cooccurrenceWindow = 2;
         this.admittedPOSs = Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"); // "Unknown" because we want to keep tags that have unknown POS
 
@@ -79,8 +81,13 @@ public class TextRank {
     public void respectSentences(boolean val) {
         this.respectSentences = val;
     }
+
     public void useTfIdfWeights(boolean val) {
         this.useTfIdfWeights = val;
+    }
+
+    public void useDependencies(boolean val) {
+        this.useDependencies = val;
     }
 
     public void setCooccurrenceWindow(int val) {
@@ -224,8 +231,8 @@ public class TextRank {
             int endPosition = ((Number) next.get("eP")).intValue();
 
             List<String> rel_tags = iterableToList( (Iterable<String>) next.get("rel_tags") );
-            List<Integer> rel_tos = iterableToList( (Iterable<Integer>) next.get("rel_tos") );
-            List<Integer> rel_toe = iterableToList( (Iterable<Integer>) next.get("rel_toe") );
+            List<Number> rel_tos = iterableToList( (Iterable<Number>) next.get("rel_tos") );
+            List<Number> rel_toe = iterableToList( (Iterable<Number>) next.get("rel_toe") );
             List<WordItem> rel_dep = new ArrayList<>();
             for (int i=0; i<rel_tags.size(); i++)  {
                 rel_dep.add(new WordItem(
@@ -251,7 +258,7 @@ public class TextRank {
             if (startPosition - prev_eP <= 1 && dependencies.containsKey(prev_tag)) {
                 List<WordItem> merged = new ArrayList<>(dependencies.get(prev_tag));
                 merged.retainAll(rel_dep); // 'merged' now contains only elements that are shared between the two lists
-                if (merged.size() > 0 || dependencies.get(prev_tag).stream().filter(wi -> wi.getWord().equals(tagVal)).count() > 0) {
+                if (merged.size() > 0 || dependencies.get(prev_tag).stream().filter(wi -> wi.getWord().equals(tagVal)).count() > 0 || !useDependencies) {
                     keyphrase.put(startPosition, tagVal);
                     dependencies.put(tagVal, rel_dep);
                 }
@@ -306,6 +313,29 @@ public class TextRank {
         return true;
     }
 
+    public boolean postprocess() {
+        // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
+        String query = "match (k:Keyword)\n"
+            + "where size(split(k.value, \" \")) > 1\n"
+            + "with k, split(k.value, \" \") as ks_orig\n"
+            + "match (k2:Keyword)\n"
+            + "where size(split(k2.value, \" \")) > size(ks_orig)\n"
+            + "with ks_orig, k2, k, split(k2.value, \" \") as ks_check\n"
+            + "where all(el in ks_orig where el in ks_check)\n"
+            + "match (k2)-[:DESCRIBES]->(a:AnnotatedText)\n"
+            + "merge (k)-[r:DESCRIBES]->(a)";
+
+        try (Transaction tx = database.beginTx();) { 
+            database.execute(query);
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while running TextRank post-processing: ", e);
+            return false;
+        }
+
+        return true;
+    }
+
     private void addKeyphraseToResults(Map<Integer, String> keyphrase, Map<String, List<WordItem>> dependencies, long prev_eP, String lang, Map<String, Integer> results) {
         if (keyphrase == null || keyphrase.size() < 2)
             return;
@@ -316,7 +346,6 @@ public class TextRank {
         }
         missing_words.removeAll(keyphrase.values());
         missing_words.stream()
-            //.filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) <= 1 || (wi.getStart() - prev_eP) <= 1).count() > 0 ) // don't use `<=` only - the left hand side can be negative!
             .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0 )
             .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
 
@@ -400,6 +429,7 @@ public class TextRank {
         for (Relationship r: itr) {
             if (r.getEndNode().equals(annotatedText)) {
                 rel = r;
+                break;
             }
         }
         if (rel == null)

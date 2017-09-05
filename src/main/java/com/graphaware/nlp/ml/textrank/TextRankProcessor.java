@@ -42,6 +42,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrank.respectDirections(request.isRespectDirections());
         textrank.respectSentences(request.isRespectSentences());
         textrank.useTfIdfWeights(request.isUseTfIdfWeights());
+        textrank.useDependencies(request.isUseDependencies());
         textrank.setCooccurrenceWindow(request.getCooccurrenceWindow());
 
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(request.getNode());
@@ -57,6 +58,15 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
         LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed.");
 
+        return SingleResult.success();
+    }
+
+    public SingleResult postprocess() {
+        LOG.info("Starting TextRank post-processing ...");
+        TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
+        if (!textrank.postprocess())
+            return SingleResult.fail();
+        LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
     }
 }

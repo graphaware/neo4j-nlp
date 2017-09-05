@@ -28,6 +28,7 @@ public class TextRankRequest {
     private final static String PARAMETER_RESPECT_DIRECTIONS = "respectDirections";
     private final static String PARAMETER_RESPECT_SENTENCES = "respectSentences";
     private final static String PARAMETER_USE_TFIDF_WEIGHTS = "useTfIdfWeights";
+    private final static String PARAMETER_USE_DEPENDENCIES = "useDependencies";
     private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
 
     private Node node;
@@ -38,6 +39,7 @@ public class TextRankRequest {
     private boolean respectDirections;
     private boolean respectSentences;
     private boolean useTfIdfWeights;
+    private boolean useDependencies;
     private int cooccurrenceWindow;    
     private String stopWords;    
 
@@ -48,6 +50,7 @@ public class TextRankRequest {
     private static final boolean DEFAULT_RESPECT_DIRECTIONS = false;
     private static final boolean DEFAULT_RESPECT_SENTENCES = false;
     private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
+    private static final boolean DEFAULT_USE_DEPENDENCIES = false;
     private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
 
     public static TextRankRequest fromMap(Map<String, Object> textRankRequest) {
@@ -63,6 +66,7 @@ public class TextRankRequest {
         result.setRespectDirections((boolean) textRankRequest.getOrDefault(PARAMETER_RESPECT_DIRECTIONS, DEFAULT_RESPECT_DIRECTIONS));
         result.setRespectSentences((boolean) textRankRequest.getOrDefault(PARAMETER_RESPECT_SENTENCES, DEFAULT_RESPECT_SENTENCES));
         result.setUseTfIdfWeights((boolean) textRankRequest.getOrDefault(PARAMETER_USE_TFIDF_WEIGHTS, DEFAULT_USE_TFIDF_WEIGHTS));
+        result.setUseDependencies((boolean) textRankRequest.getOrDefault(PARAMETER_USE_DEPENDENCIES, DEFAULT_USE_DEPENDENCIES));
         result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
 
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
@@ -133,6 +137,14 @@ public class TextRankRequest {
 
     public void setUseTfIdfWeights(boolean useTfIdfWeights) {
         this.useTfIdfWeights = useTfIdfWeights;
+    }
+
+    public boolean isUseDependencies() {
+        return useDependencies;
+    }
+
+    public void setUseDependencies(boolean useDependencies) {
+        this.useDependencies = useDependencies;
     }
 
     public int getCooccurrenceWindow() {
