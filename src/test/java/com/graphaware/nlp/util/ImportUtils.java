@@ -6,7 +6,7 @@ import java.util.List;
 public class ImportUtils {
 
     public static List<String> getImportQueriesFromApocExport(String content) {
-        String[] parts = content.split("\n");
+        String[] parts = content.split(";\n");
         return Arrays.asList(parts);
     }
 

@@ -13,15 +13,20 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.procedure.textrank;
+package com.graphaware.nlp.ml.textrank;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 //import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.ml.textrank.TextRank;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import com.graphaware.nlp.util.ImportUtils;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,8 +34,6 @@ import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
-//import org.neo4j.kernel.internal.GraphDatabaseAPI;
-//import org.neo4j.kernel.impl.proc.Procedures;
 
 public class TextRankTest extends NLPIntegrationTest {
 
@@ -41,7 +44,7 @@ public class TextRankTest extends NLPIntegrationTest {
      * Test of TextRank procedure of class TextRank.
      */
     @Test
-    public void testTextRank() {
+    public void testTextRank() throws Exception {
         createGraph();
 
         // run TextRank
@@ -52,7 +55,7 @@ public class TextRankTest extends NLPIntegrationTest {
             ResourceIterator<Object> rowIterator = result.columnAs("result");
             assertTrue(rowIterator.hasNext());
             assertTrue("TextRank didn't return SUCCESS. Return value = " + (String)result.next().get("result"), ((String)result.next().get("result")).toLowerCase().equals("success"));*/
-            Result result = getDatabase().execute("match (a:AnnotatedText {id: " + annIdStr + "}) return a");
+            Result result = getDatabase().execute("match (a:AnnotatedText) return a");
             assertTrue("TextRank: didn't find AnnotatedText (error in graph initialization).", result.hasNext());
             if (!result.hasNext())
                 return;
@@ -62,9 +65,6 @@ public class TextRankTest extends NLPIntegrationTest {
             boolean res = textrank.evaluate(annText, coOccurrence, 30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res);
             tx.success();
-        } catch (Exception e) {
-            assertTrue("TextRank failed: " + e.getMessage(), false);
-            return;
         }
 
         // evaluate results
@@ -101,7 +101,23 @@ public class TextRankTest extends NLPIntegrationTest {
 
     }
 
-    private void createGraph() {
+    @Test
+    public void testCreate() throws Exception {
+        createGraph();
+    }
+
+    private void createGraph() throws Exception {
+        String content = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("exported.cypher").toURI())));
+        List<String> queries = ImportUtils.getImportQueriesFromApocExport(content);
+        queries.forEach(q -> {
+            System.out.println(q);
+            executeInTransaction(q, (result -> {
+                //
+            }));
+        });
+    }
+
+    private void createGraphOld() {
         // use this query to create a string for creating graph below
         /*match (l:Lesson)-[:HAS_ANNOTATED_TEXT]->(a:AnnotatedText) where l.name=1760 
         match (a)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t:Tag)

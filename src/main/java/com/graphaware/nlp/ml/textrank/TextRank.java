@@ -220,15 +220,18 @@ public class TextRank {
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             long tagId = (long) next.get("tagId");
-            int startPosition = (int) next.get("sP");
-            int endPosition = (int) next.get("eP");
+            int startPosition = ((Number) next.get("sP")).intValue();
+            int endPosition = ((Number) next.get("eP")).intValue();
 
             List<String> rel_tags = iterableToList( (Iterable<String>) next.get("rel_tags") );
             List<Integer> rel_tos = iterableToList( (Iterable<Integer>) next.get("rel_tos") );
             List<Integer> rel_toe = iterableToList( (Iterable<Integer>) next.get("rel_toe") );
             List<WordItem> rel_dep = new ArrayList<>();
             for (int i=0; i<rel_tags.size(); i++)  {
-                rel_dep.add(new WordItem(rel_tos.get(i), rel_toe.get(i), rel_tags.get(i)));
+                rel_dep.add(new WordItem(
+                        ((Number) rel_tos.get(i)).intValue(),
+                        ((Number) rel_toe.get(i)).intValue(),
+                        rel_tags.get(i)));
             }
             
             String tag = (String) next.get("tag");
