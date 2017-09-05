@@ -77,7 +77,7 @@ public class TextRankTest extends NLPIntegrationTest {
             int trueCount = 0;
             while (result!=null && result.hasNext()) {
                 Map<String, Object> next = result.next();
-                String tag = (String) next.get("value");
+                String tag = next.get("value").toString();
                 totCount++;
                 if (tag.split(" ").length > 1)
                     totCount_phrases++;
@@ -85,7 +85,7 @@ public class TextRankTest extends NLPIntegrationTest {
                     trueCount++;
                 //assertTrue("Found unexpected keyword: " + tag, expectedKeywords.contains(tag));
             }
-            //assertEquals("Some keywords are missing.", expectedKeywords.size(), trueCount);
+//            assertEquals("Some keywords are missing.", expectedKeywords.size(), trueCount);
             assertTrue("TextRank evaluation: didn't find any keywords!", totCount > 0);
             assertTrue("TextRank evaluation: didn't find any keyphrases!", totCount_phrases > 0);
             assertTrue("TextRank evaluation: didn't find any expected keyword!", trueCount > 0);

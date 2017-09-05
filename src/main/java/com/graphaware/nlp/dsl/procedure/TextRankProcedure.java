@@ -32,8 +32,12 @@ public class TextRankProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
     @Description("PageRank procedure")
     public Stream<SingleResult> computePageRank(@Name("pageRankRequest") Map<String, Object> pageRankRequest) {
-        TextRankRequest request = TextRankRequest.fromMap(pageRankRequest);
-        TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
-        return Stream.of(processor.process(request));
+        try {
+            TextRankRequest request = TextRankRequest.fromMap(pageRankRequest);
+            TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+            return Stream.of(processor.process(request));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
