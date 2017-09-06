@@ -44,6 +44,8 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrank.useTfIdfWeights(request.isUseTfIdfWeights());
         textrank.useDependencies(request.isUseDependencies());
         textrank.setCooccurrenceWindow(request.getCooccurrenceWindow());
+        textrank.setMaxSingleKeywords(request.getMaxSingleKeywords());
+        textrank.setKeywordLabel(request.getKeywordLabel());
 
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(request.getNode());
         boolean res = textrank.evaluate(request.getNode(), 
@@ -61,9 +63,10 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         return SingleResult.success();
     }
 
-    public SingleResult postprocess() {
+    public SingleResult postprocess(TextRankRequest request) {
         LOG.info("Starting TextRank post-processing ...");
         TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
+        textrank.setKeywordLabel(request.getKeywordLabel());
         if (!textrank.postprocess())
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");

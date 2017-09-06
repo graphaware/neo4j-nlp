@@ -41,4 +41,18 @@ public class WordItem {
     public String getWord() {
         return this.word;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!WordItem.class.isAssignableFrom(obj.getClass())) {
+            return false;
+        }
+        final WordItem other = (WordItem) obj;
+        if (!(this.word.equals(other.getWord()) && this.startPosition == other.getStart()))
+            return false;
+        return true;
+    }
 }

@@ -30,6 +30,8 @@ public class TextRankRequest {
     private final static String PARAMETER_USE_TFIDF_WEIGHTS = "useTfIdfWeights";
     private final static String PARAMETER_USE_DEPENDENCIES = "useDependencies";
     private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
+    private final static String PARAMETER_MAX_SINGLE_KEYWORDS = "maxSinglewordKeywords";
+    private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
 
     private Node node;
     private int iterations;
@@ -40,7 +42,9 @@ public class TextRankRequest {
     private boolean respectSentences;
     private boolean useTfIdfWeights;
     private boolean useDependencies;
-    private int cooccurrenceWindow;    
+    private int cooccurrenceWindow;
+    private int maxSingles;
+    private String keywordLabel;
     private String stopWords;    
 
     private static final int DEFAULT_ITERATIONS = 30;
@@ -52,6 +56,8 @@ public class TextRankRequest {
     private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
     private static final boolean DEFAULT_USE_DEPENDENCIES = false;
     private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
+    private static final int DEFAULT_MAX_SINGLE_KEYWORDS = 15;
+    private static final String DEFAULT_KEYWORD_LABEL = "Keyword";
 
     public static TextRankRequest fromMap(Map<String, Object> textRankRequest) {
         if (!textRankRequest.containsKey(PARAMETER_ANNOTATED_TEXT)) {
@@ -68,6 +74,8 @@ public class TextRankRequest {
         result.setUseTfIdfWeights((boolean) textRankRequest.getOrDefault(PARAMETER_USE_TFIDF_WEIGHTS, DEFAULT_USE_TFIDF_WEIGHTS));
         result.setUseDependencies((boolean) textRankRequest.getOrDefault(PARAMETER_USE_DEPENDENCIES, DEFAULT_USE_DEPENDENCIES));
         result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
+        result.setMaxSingleKeywords(((Number) textRankRequest.getOrDefault(PARAMETER_MAX_SINGLE_KEYWORDS, DEFAULT_MAX_SINGLE_KEYWORDS)).intValue());
+        result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
 
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
             result.setStopWords((String) textRankRequest.get(PARAMETER_STOPWORDS));
@@ -153,6 +161,22 @@ public class TextRankRequest {
 
     public void setCooccurrenceWindow(int cooccurrenceWindow) {
         this.cooccurrenceWindow = cooccurrenceWindow;
+    }
+
+    public int getMaxSingleKeywords() {
+        return maxSingles;
+    }
+
+    public void setMaxSingleKeywords(int n) {
+        this.maxSingles = n;
+    }
+
+    public String getKeywordLabel() {
+        return keywordLabel;
+    }
+
+    public void setKeywordLabel(String label) {
+        this.keywordLabel = label;
     }
 
     public String getStopWords() {
