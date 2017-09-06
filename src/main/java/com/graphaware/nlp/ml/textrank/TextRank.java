@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-import static com.graphaware.nlp.persistence.constants.Labels.Keyword;
 import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
 
 import java.util.*;
@@ -32,6 +31,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -47,26 +47,33 @@ public class TextRank {
     private boolean useTfIdfWeights;
     private boolean useDependencies;
     private int cooccurrenceWindow;
-    private List<String> stopWords;
+    private int maxSingles;
+    private Label keywordLabel;
+    private Set<String> stopWords;
     private List<String> admittedPOSs;
     private Map<Long, String> idToValue = new HashMap<>();
 
     public TextRank(GraphDatabaseService database, DynamicConfiguration configuration) {
         this.database = database;
         this.configuration = configuration;
-        this.stopWords = Arrays.asList("new", "old", "large", "big", "small", "many", "few", "best", "worst");
+        this.stopWords = new HashSet<>(Arrays.asList("new", "old", "large", "big", "small", "many", "few", "best", "worst"));
         this.removeStopWords = false;
         this.directionsMatter = false;
         this.respectSentences = false;
         this.useTfIdfWeights = false;
         this.useDependencies = false;
         this.cooccurrenceWindow = 2;
+        this.maxSingles = 15;
+        this.keywordLabel = Label.label("Keyword");
         this.admittedPOSs = Arrays.asList("NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"); // "Unknown" because we want to keep tags that have unknown POS
 
     }
 
     public void setStopwords(String stopwords) {
-        this.stopWords = Arrays.asList(stopwords.split(",")).stream().map(str -> str.trim().toLowerCase()).collect(Collectors.toList());
+        if (stopwords.split(",").length > 0 && stopwords.split(",")[0].equals("+")) // if the stopwords list starts with "+,....", append the list to the default 'stopWords' set
+            this.stopWords.addAll( Arrays.asList(stopwords.split(",")).stream().filter(str -> !str.equals("+")).map(str -> str.trim().toLowerCase()).collect(Collectors.toSet()) );
+        else
+            this.stopWords = Arrays.asList(stopwords.split(",")).stream().map(str -> str.trim().toLowerCase()).collect(Collectors.toSet());
         this.removeStopWords = true;
     }
 
@@ -92,6 +99,14 @@ public class TextRank {
 
     public void setCooccurrenceWindow(int val) {
         this.cooccurrenceWindow = val;
+    }
+
+    public void setMaxSingleKeywords(int val) {
+        this.maxSingles = val;
+    }
+
+    public void setKeywordLabel(String lab) {
+        this.keywordLabel = Label.label(lab);
     }
 
     public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
@@ -193,14 +208,18 @@ public class TextRank {
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
 
         int n_oneThird = (int) (pageRanks.size()/3.0f);
-        n_oneThird = n_oneThird > 30 ? 30 : n_oneThird;
+        //n_oneThird = n_oneThird > 30 ? 30 : n_oneThird;
         List<Long> topThird = getTopX(pageRanks, n_oneThird);
-        List<Long> top_singles = getTopX(pageRanks, n_oneThird > 10 ? 10 : n_oneThird);
 
         //pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
         //    .forEach(en -> LOG.info(idToValue.get(en.getKey()) + ": " + en.getValue()));
         //LOG.info("Sum of PageRanks = " + pageRanks.values().stream().mapToDouble(Number::doubleValue).sum());
         LOG.info("Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
+
+        // if the use of dependencies is required, check that they actually exist; if not, behave like `useDependencies` was set to false
+        if (useDependencies) {
+            useDependencies = checkDependencies(annotatedText);
+        }
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
@@ -235,6 +254,9 @@ public class TextRank {
             List<Number> rel_toe = iterableToList( (Iterable<Number>) next.get("rel_toe") );
             List<WordItem> rel_dep = new ArrayList<>();
             for (int i=0; i<rel_tags.size(); i++)  {
+                String t = rel_tags.get(i);
+                if (removeStopWords && stopWords.stream().anyMatch(str -> str.equals(t)))
+                    continue;
                 rel_dep.add(new WordItem(
                         ((Number) rel_tos.get(i)).intValue(),
                         ((Number) rel_toe.get(i)).intValue(),
@@ -254,7 +276,7 @@ public class TextRank {
             }
 
             keywords.put(tag, pageRanks.get(tagId));
-            
+
             if (startPosition - prev_eP <= 1 && dependencies.containsKey(prev_tag)) {
                 List<WordItem> merged = new ArrayList<>(dependencies.get(prev_tag));
                 merged.retainAll(rel_dep); // 'merged' now contains only elements that are shared between the two lists
@@ -277,8 +299,11 @@ public class TextRank {
         addKeyphraseToResults(keyphrase, dependencies, prev_eP, lang, results);
 
         // Next: include into final result top-x single words
-        keywords.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(n_oneThird > 10 ? 10 : n_oneThird)
+        int n_oneThird_singles = n_oneThird > maxSingles ? maxSingles : n_oneThird;
+        keywords.entrySet().stream()
+                .filter(en -> !(removeStopWords && stopWords.stream().anyMatch(str -> str.equals(en.getKey().split("_")[0]))))
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(n_oneThird_singles)
                 .forEach(en -> {
                     results.put(en.getKey(), 1);
                     LOG.debug(en.getKey());
@@ -287,27 +312,25 @@ public class TextRank {
         LOG.info("--- Results: ");
         results.keySet().stream().map((key) -> {
             if (key.split("_").length > 2) {
-                LOG.warn("Tag " + key + " has more than 1 underscore symbols, newly created Keyword node might be wrong");
+                LOG.warn("Tag " + key + " has more than 1 underscore symbols, newly created " + keywordLabel.name() + " node might be wrong");
             }
             return key;
         }).forEachOrdered((key) -> {
             String val = key.split("_")[0];
-            if (!(removeStopWords && stopWords.stream().anyMatch(str -> str.equals(val)))) {
-                Node newNode;
-                ResourceIterator<Node> findNodes = database.findNodes(Keyword, "id", key);
-                if (findNodes.hasNext()) {
-                    newNode = findNodes.next();
-                } else {
-                    newNode = database.createNode(Keyword);
-                    newNode.setProperty("id", key);
-                    newNode.setProperty("value", val);
-                }
-                if (newNode != null) {
-                    Relationship rel = mergeRelationship(annotatedText, newNode);
-                    rel.setProperty("count", results.get(key)); // override existing property
-                }
-                LOG.info(val);
+            Node newNode;
+            ResourceIterator<Node> findNodes = database.findNodes(keywordLabel, "id", key);
+            if (findNodes.hasNext()) {
+                newNode = findNodes.next();
+            } else {
+                newNode = database.createNode(keywordLabel);
+                newNode.setProperty("id", key);
+                newNode.setProperty("value", val);
             }
+            if (newNode != null) {
+                Relationship rel = mergeRelationship(annotatedText, newNode);
+                rel.setProperty("count", results.get(key)); // override existing property
+            }
+            LOG.info(val);
         });
 
         return true;
@@ -315,10 +338,10 @@ public class TextRank {
 
     public boolean postprocess() {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
-        String query = "match (k:Keyword)\n"
+        String query = "match (k:" + keywordLabel.name() + ")\n"
             + "where size(split(k.value, \" \")) > 1\n"
             + "with k, split(k.value, \" \") as ks_orig\n"
-            + "match (k2:Keyword)\n"
+            + "match (k2:" + keywordLabel.name() + ")\n"
             + "where size(split(k2.value, \" \")) > size(ks_orig)\n"
             + "with ks_orig, k2, k, split(k2.value, \" \") as ks_check\n"
             + "where all(el in ks_orig where el in ks_check)\n"
@@ -340,14 +363,16 @@ public class TextRank {
         if (keyphrase == null || keyphrase.size() < 2)
             return;
         // append dependency word if it's missing
-        List<WordItem> missing_words = new ArrayList<>();
-        for (String key: dependencies.keySet()) {
-            missing_words.addAll(dependencies.get(key));
+        if (useDependencies) {
+            List<WordItem> missing_words = new ArrayList<>();
+            for (String key: dependencies.keySet()) {
+                missing_words.addAll(dependencies.get(key));
+            }
+            missing_words.removeAll(keyphrase.values());
+            missing_words.stream()
+                .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0 )
+                .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
         }
-        missing_words.removeAll(keyphrase.values());
-        missing_words.stream()
-            .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0 )
-            .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
 
         // store keyphrase into 'results'
         String key = keyphrase.entrySet().stream()
@@ -421,6 +446,21 @@ public class TextRank {
             newList.add(obj);
         }
         return newList;
+    }
+
+    private boolean checkDependencies(Node annotatedText) {
+        try {
+            Result res = database.execute("MATCH (n:AnnotatedText) WHERE id(n) = " + annotatedText.getId() + "\n"
+                + "MATCH (n)-[:CONTAINS_SENTENCE]->(s)-[:SENTENCE_TAG_OCCURRENCE]->(sot:TagOccurrence)-[r]->(other:TagOccurrence)\n"
+                + "WHERE type(r) IN [\"AMOD\",\"COMPOUND\"]\n"
+                + "RETURN count(r) as c"
+            );
+            if (res.hasNext() && ((Number) res.next().get("c")).intValue() > 0)
+                return true;
+        } catch (Exception e) {
+            LOG.error("checkDependencies() exception: " + e);
+        }
+        return false;
     }
 
     private Relationship mergeRelationship(Node annotatedText, Node newNode) {
