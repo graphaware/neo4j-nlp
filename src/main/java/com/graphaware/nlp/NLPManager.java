@@ -120,6 +120,7 @@ public final class NLPManager {
 
         Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
         TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id);
+        annotatedText.setText(text);
         eventDispatcher.notify(NLPEvents.POST_TEXT_ANNOTATION, event);
 
         return annotatedNode;

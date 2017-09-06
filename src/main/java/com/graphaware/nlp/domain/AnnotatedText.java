@@ -27,6 +27,8 @@ public class AnnotatedText {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotatedText.class);
     private static final long serialVersionUID = -1L;
 
+    private String text;
+
     private List<Sentence> sentences = new ArrayList<>();
 
     public List<Sentence> getSentences() {
@@ -45,6 +47,14 @@ public class AnnotatedText {
             });
         });
         return result;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 
     public List<Tag> getTags() {
@@ -115,94 +125,4 @@ public class AnnotatedText {
         }
 
     }
-//
-//    private void writeObject(ObjectOutputStream s) throws IOException {
-//        s.defaultWriteObject();
-//        s.writeInt(sentences.size());
-//        for (Sentence sentence : sentences)
-//            s.writeObject(sentence);
-//    }
-//
-//    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-//        s.defaultReadObject();
-//        int sentencesSize = s.readInt();
-//        this.sentences = new HashSet<>();
-//        for (int i = 0; i < sentencesSize; i++) {
-//            addSentence((Sentence)s.readObject());
-//        }
-//    }
-
-//    public static AnnotatedText load(Node node) {
-//        Object id = node.getProperty(Properties.PROPERTY_ID);
-//        AnnotatedText result = new AnnotatedText();
-//        result.node = node;
-//        Iterable<Relationship> relationships = node.getRelationships(CONTAINS_SENTENCE);
-//        for (Relationship rel : relationships) {
-//            Node sentenceNode = rel.getOtherNode(node);
-//            Sentence sentence = Sentence.load(sentenceNode);
-//            result.addSentence(sentence);
-//        }
-//        return result;
-//    }
-//
-//    private Node checkIfExist(GraphDatabaseService database, Object id) {
-//        if (id != null) {
-//            ResourceIterator<Node> findNodes = database.findNodes(Labels.AnnotatedText, Properties.PROPERTY_ID, id);
-//            if (findNodes.hasNext()) {
-//                return findNodes.next();
-//            }
-//        }
-//        return null;
-//    }
-
-
-//    @Override
-//    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
-//        LOG.info("Start storing annotatedText " + id);
-//        Node tmpAnnotatedNode = checkIfExist(database, id);
-//        if (tmpAnnotatedNode == null || force) {
-//            final Node annotatedTextNode;
-//            if ( tmpAnnotatedNode != null)
-//                annotatedTextNode = tmpAnnotatedNode;
-//            else
-//                annotatedTextNode = database.createNode(AnnotatedText);
-//            annotatedTextNode.setProperty(Properties.PROPERTY_ID, id);
-//            annotatedTextNode.setProperty(Properties.NUM_TERMS, getTokens().size());
-//            final AtomicReference<Node> previousSentenceReference = new AtomicReference<>();
-//            sentences.sort((Sentence o1, Sentence o2) -> o1.compareTo(o2));
-//
-//            sentences.stream().forEach((sentence) -> {
-//                Node sentenceNode = sentence.storeOnGraph(database, force);
-//                annotatedTextNode.createRelationshipTo(sentenceNode, CONTAINS_SENTENCE);
-//                Node previousSentence = previousSentenceReference.get();
-//                if (previousSentence == null) {
-//                    annotatedTextNode.createRelationshipTo(sentenceNode, FIRST_SENTENCE);
-//                } else {
-//                    previousSentence.createRelationshipTo(sentenceNode, NEXT_SENTENCE);
-//                }
-//                previousSentenceReference.set(sentenceNode);
-//                List<Phrase> phraseOccurrences = sentence.getPhraseOccurrence();
-//                phraseOccurrences.stream().forEach((phrase) -> {
-//                    if (phrase.getReference() != null) {
-//                        Node phraseNode = phrase.getOrCreate(database, force);
-//                        Node referredPhraseNode = phrase.getReference().getOrCreate(database, force);
-//                        phraseNode.createRelationshipTo(referredPhraseNode, REFER_TO);
-//                    }
-//                });
-//            });
-//            tmpAnnotatedNode = annotatedTextNode;
-//        } else {
-//            /*
-//            * Currently only labels could change so if the AnnotatedText already exist
-//            * only the Sentence are updated
-//             */
-//            sentences.stream().forEach((sentence) -> {
-//                sentence.storeOnGraph(database, force);
-//            });
-//        }
-//        node = tmpAnnotatedNode;
-//        LOG.info("end storing annotatedText " + id);
-//        return tmpAnnotatedNode;
-//    }
-
 }
