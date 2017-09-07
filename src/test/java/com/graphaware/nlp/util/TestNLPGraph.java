@@ -115,6 +115,12 @@ public class TestNLPGraph {
         }));
     }
 
+    public void assertTagWithIdExist(String id) {
+        executeInTransaction("MATCH (n:Tag) WHERE n.id = {id} RETURN n", Collections.singletonMap("id", id), (result -> {
+            assertTrue(result.hasNext());
+        }));
+    }
+
     public void assertPhraseOccurrenceNodesCount(long count) {
         assertNodesCount("PhraseOccurrence", count);
     }

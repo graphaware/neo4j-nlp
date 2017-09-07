@@ -111,11 +111,9 @@ public final class NLPManager {
     }
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
-        if (checkForLanguage) {
-            checkTextLanguage(text);
-        }
+        String lang = checkTextLanguage(text, checkForLanguage);
         AnnotatedText annotatedText = textProcessorsManager.getTextProcessor(textProcessor).annotateText(
-                text, pipelineName, "lang", null
+                text, pipelineName, lang, null
         );
 
         Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
@@ -161,7 +159,7 @@ public final class NLPManager {
             LOG.info("text is null");
             throw new RuntimeException("text is null or language not supported or unable to detect the language");
         }
-        checkTextLanguage(text);
+        checkTextLanguage(text, false);
         String lang = LanguageManager.getInstance().detectLanguage(text);
         String filter = filterRequest.getFilter();
         if (filter == null) {
@@ -187,16 +185,16 @@ public final class NLPManager {
         );
     }
 
-    private boolean checkTextLanguage(String text) {
+    private String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
-        if (!languageManager.isTextLanguageSupported(text)) {
-            String detectedLanguage = languageManager.detectLanguage(text);
+        String detectedLanguage = languageManager.detectLanguage(text);
+        if (!languageManager.isTextLanguageSupported(text) && failIfUnsupported) {
             String msg = String.format("Unsupported language : %s", detectedLanguage);
             LOG.error(msg);
             throw new RuntimeException(msg);
         }
 
-        return true;
+        return detectedLanguage;
     }
 
     public Set<ProcessorsList> getProcessors() {

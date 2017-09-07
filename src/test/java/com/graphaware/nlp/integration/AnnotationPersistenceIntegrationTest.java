@@ -78,6 +78,56 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
     }
 
     @Test
+    public void testLanguageIsCorrectlyDetectedAndStored() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "Barack Obama is born in Hawaii. He is our president.",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    "",
+                    false,
+                    true);
+            tx.success();
+        }
+
+        TestNLPGraph test = new TestNLPGraph(getDatabase());
+        test.assertTagWithIdExist("Barack_en");
+        test.assertTagWithIdExist("born_en");
+    }
+
+    @Test
+    public void testLanguageIsDefaultedToNAWhenCheckLanguageIsFalseAndLanguageCouldNotBeDetected() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "Barack Obama is born in Hawaii.",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    "",
+                    false,
+                    false);
+            tx.success();
+        }
+
+        TestNLPGraph test = new TestNLPGraph(getDatabase());
+        test.assertTagWithIdExist("Barack_n/a");
+        test.assertTagWithIdExist("born_n/a");
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testExceptionIsThrownWhenCheckLanguageIsTrueAndLanguageCouldNotBeDetected() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "Barack Obama is born in Hawaii.",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    "",
+                    false,
+                    true);
+            tx.success();
+        }
+    }
+
+    @Test
     public void testNamedEntityLabelIsAdded() {
         manager.getConfiguration().update("LABEL_" + Labels.AnnotatedText.toString(), "TextAnnotation");
         try (Transaction tx = getDatabase().beginTx()) {
