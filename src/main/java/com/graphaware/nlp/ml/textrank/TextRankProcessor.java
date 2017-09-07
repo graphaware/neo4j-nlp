@@ -17,6 +17,7 @@ package com.graphaware.nlp.ml.textrank;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.TextRankRequest;
+import com.graphaware.nlp.dsl.TextRankPostprocessRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 
@@ -63,7 +64,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         return SingleResult.success();
     }
 
-    public SingleResult postprocess(TextRankRequest request) {
+    public SingleResult postprocess(TextRankPostprocessRequest request) {
         LOG.info("Starting TextRank post-processing ...");
         TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
         textrank.setKeywordLabel(request.getKeywordLabel());
