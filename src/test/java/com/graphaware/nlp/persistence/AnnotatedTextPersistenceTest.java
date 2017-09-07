@@ -35,6 +35,21 @@ public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
         test.assertTagWithValueHasPos("reports", "NNS");
     }
 
+    @Test
+    public void testAnnotatedTextWithSameTagInSameTextGotDifferentPOS() {
+        clearDb();
+        TestNLPGraph test = new TestNLPGraph(getDatabase());
+        AnnotatedText annotatedText = createAnnotatedTextWithSameTagInSameTextWithDifferentPos();
+        try (Transaction tx = getDatabase().beginTx()) {
+            getNLPManager().getPersister(AnnotatedText.class).persist(annotatedText, "test", "1");
+            tx.success();
+        }
+        test.assertTagWithValueHasPos("cool", "cool0");
+        test.assertTagWithValueHasPos("cool", "cool1");
+        test.assertTagWithValueHasNE("cool", "NER_Cool0");
+        test.assertTagWithValueHasNE("cool", "NER_Cool1");
+    }
+
     private AnnotatedText createAnnotatedTextFor(String text, String expectedTokenForPOS, String expectedPOS) {
         AnnotatedText annotatedText = new AnnotatedText();
         annotatedText.setText(text);
@@ -52,6 +67,27 @@ public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
             annotatedText.addSentence(sentence);
         }
 
+        return annotatedText;
+    }
+
+    private AnnotatedText createAnnotatedTextWithSameTagInSameTextWithDifferentPos() {
+        AnnotatedText annotatedText = new AnnotatedText();
+        AtomicInteger inc = new AtomicInteger();
+        for (String s : "Hello my name is cool. And I am cool.".split("\\.")) {
+            Sentence sentence = new Sentence(s, inc.get());
+            for (String token : s.split(" ")) {
+                Tag tag = new Tag(token, "en");
+                if (token.equals("cool")) {
+                    int v = inc.get();
+                    System.out.println("adding " + v);
+                    tag.setPos(Collections.singletonList("cool" + v));
+                    tag.setNe(Collections.singletonList("NER_Cool" + v));
+                }
+                sentence.addTagOccurrence(0, 20, sentence.addTag(tag));
+            }
+            inc.incrementAndGet();
+            annotatedText.addSentence(sentence);
+        }
         return annotatedText;
     }
 }

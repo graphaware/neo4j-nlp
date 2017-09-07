@@ -13,10 +13,7 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TagPersister extends AbstractPersister implements Persister<Tag> {
 
@@ -52,14 +49,51 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             node = database.createNode(configuration().getLabelFor(Labels.Tag));
         }
 
-        if (!checkSameTransaction(node, txId)) {
-            setLastTransaction(node, txId);
-            update(node, tag, tag.getId());
-            storeTagParent(node, tag, txId);
+        if (shouldBeUpdated(tag, node)) {
             assignNamedEntityOnTag(node, tag);
             assignPartOfSpeechOnTag(node, tag);
         }
+
+        if (!checkSameTransaction(node, txId)) {
+            update(node, tag, tag.getId());
+            assignNamedEntityOnTag(node, tag);
+            assignPartOfSpeechOnTag(node, tag);
+            setLastTransaction(node, txId);
+            storeTagParent(node, tag, txId);
+        }
         return node;
+    }
+
+    private boolean shouldBeUpdated(Tag tag, Node tagNode) {
+        if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH))) {
+            String[] pos = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
+            if (tag.getPosAsList().size() != pos.length) {
+                return true;
+            }
+            List<String> original = Arrays.asList(pos);
+
+            for (String s : tag.getPosAsList()) {
+                if (!original.contains(s)) {
+                    return true;
+                }
+            }
+        }
+
+        if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY))) {
+            String[] pos = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
+            if (tag.getNeAsList().size() != pos.length) {
+                return true;
+            }
+            List<String> original = Arrays.asList(pos);
+
+            for (String s : tag.getNeAsList()) {
+                if (!original.contains(s)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -73,15 +107,14 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         List<String> allNEs = new ArrayList<>();
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY))) {
             String[] nes = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
-            for (String s : nes) {
-                allNEs.add(s);
-            }
+            allNEs.addAll(Arrays.asList(nes));
         }
-        for (String ne : tag.getNeAsList()) {
-            if (!allNEs.contains(ne)) {
-                allNEs.add(ne);
-            }
-        }
+
+        tag.getNeAsList()
+                .stream()
+                .filter(n -> !allNEs.contains(n))
+                .forEach(allNEs::add);
+
         tagNode.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), TypeConverter.convertStringListToArray(allNEs));
         allNEs.forEach(ner -> {
             String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX) + TagUtils.getNamedEntityValue(ner);
@@ -93,15 +126,13 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         List<String> allPos = new ArrayList<>();
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH))) {
             String[] posV = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
-            for (String s : posV) {
-                allPos.add(s);
-            }
+            allPos.addAll(Arrays.asList(posV));
         }
-        for (String pos : tag.getPosAsList()) {
-            if (!allPos.contains(pos)) {
-                allPos.add(pos);
-            }
-        }
+        tag.getPosAsList()
+                .stream()
+                .filter(t -> !allPos.contains(t))
+                .forEach(allPos::add);
+
         tagNode.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), TypeConverter.convertStringListToArray(allPos));
     }
 
