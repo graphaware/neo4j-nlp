@@ -20,10 +20,8 @@ import com.graphaware.nlp.dsl.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 
-import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
