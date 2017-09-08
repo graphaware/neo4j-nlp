@@ -84,10 +84,9 @@ public class TextProcessorsManager {
     public PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
         String processorName = pipelineSpecification.getTextProcessor();
         if (processorName == null || !textProcessors.containsKey(processorName)) {
-            return new PipelineCreationResult(-1, "Processor class not specified or not existing");
+            throw new RuntimeException("Processor " + processorName + " does not exist");
         }
         TextProcessor processor = textProcessors.get(processorName);
-        //TODO add catch
         processor.createPipeline(pipelineSpecification);
 
         return new PipelineCreationResult(0, "");

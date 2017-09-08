@@ -31,6 +31,14 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         assertTrue(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_custom-1"));
     }
 
+    @Test(expected = RuntimeException.class)
+    public void testAddPipelineOnNonExistentProcessorShouldFail() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'non-exist', textProcessor:'non-processor'})", (result) -> {
+            //
+        });
+    }
+
     @Test
     public void removePipelineTest() {
         clearDb();
