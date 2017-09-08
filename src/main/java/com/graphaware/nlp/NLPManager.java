@@ -116,8 +116,9 @@ public final class NLPManager {
                 text, pipelineName, lang, null
         );
 
-        Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
-        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id);
+        String txId = String.valueOf(System.currentTimeMillis());
+        Node annotatedNode = persistAnnotatedText(annotatedText, id, txId);
+        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId);
         annotatedText.setText(text);
         eventDispatcher.notify(NLPEvents.POST_TEXT_ANNOTATION, event);
 
@@ -236,6 +237,7 @@ public final class NLPManager {
 
         extensionMap.keySet().forEach(k -> {
             NLPExtension e = extensionMap.get(k);
+            e.postLoaded();
             extensions.put(e.getClass(), extensionMap.get(k));
         });
     }

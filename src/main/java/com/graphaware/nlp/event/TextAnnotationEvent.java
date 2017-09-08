@@ -26,10 +26,13 @@ public class TextAnnotationEvent implements Event {
 
     private final String id;
 
-    public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id) {
+    private final String txId;
+
+    public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id, String txId) {
         this.annotatedNode = annotatedNode;
         this.annotatedText = annotatedText;
         this.id = id;
+        this.txId = txId;
     }
 
     public Node getAnnotatedNode() {
@@ -42,5 +45,9 @@ public class TextAnnotationEvent implements Event {
 
     public String getId() {
         return id;
+    }
+
+    public String getTxId() {
+        return txId;
     }
 }

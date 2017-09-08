@@ -15,7 +15,9 @@
  */
 package com.graphaware.nlp.module;
 
+import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.event.DatabaseTransactionEvent;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
@@ -63,6 +65,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     @Override
     public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
+        getNlpManager().getEventDispatcher().notify(NLPEvents.TRANSACTION_BEFORE_COMMIT, new DatabaseTransactionEvent(itd));
         return null;
     }
 
