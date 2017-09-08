@@ -18,14 +18,12 @@ package com.graphaware.nlp.ml.pagerank;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import java.util.Map;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,5 +56,10 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
         pagerank.storeOnGraph(pageranks, nodeType);
 
         return SingleResult.success();
+    }
+
+    @Override
+    public void postLoaded() {
+        
     }
 }

@@ -15,8 +15,6 @@ import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
-import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
-import com.graphaware.nlp.ml.similarity.SimilarityProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -235,8 +233,9 @@ public final class NLPManager {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 
         extensionMap.keySet().forEach(k -> {
-            NLPExtension e = extensionMap.get(k);
-            extensions.put(e.getClass(), extensionMap.get(k));
+            NLPExtension extension = extensionMap.get(k);
+            extension.postLoaded();
+            extensions.put(extension.getClass(), extensionMap.get(k));
         });
     }
 

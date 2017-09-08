@@ -28,6 +28,10 @@ public abstract class AbstractExtension implements NLPExtension {
     protected GraphDatabaseService getDatabase() {
         return getNLPManager().getDatabase();
     }
+    
+    protected DynamicConfiguration getConfiguration() {
+        return getNLPManager().getConfiguration();
+    }
 
     @Override
     public void registerEventListeners(EventDispatcher eventDispatcher) {
@@ -35,7 +39,5 @@ public abstract class AbstractExtension implements NLPExtension {
     }
 
     @Override
-    public void postLoaded() {
-
-    }
+    public abstract void postLoaded();
 }

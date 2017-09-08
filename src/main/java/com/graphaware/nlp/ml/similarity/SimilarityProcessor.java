@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Node;

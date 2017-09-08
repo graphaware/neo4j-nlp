@@ -10,13 +10,11 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  *
  * @author ale
  */
-@Component
 public class Word2VecModel {
     private static final Logger LOG = LoggerFactory.getLogger(Word2VecModel.class);
 
@@ -29,10 +27,9 @@ public class Word2VecModel {
 
     public Word2VecModel() {
         models = new HashMap<>();
-        loadModels();
     }
 
-    protected final void loadModels() {
+    protected final void init() {
         List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(WORD2VEC_SOURCE_DIRECTORY, WORD2VEC_DEST_DIRECTORY);
         if (modelsName != null && modelsName.size() > 0) {
             modelsName.forEach((modelName) -> {
