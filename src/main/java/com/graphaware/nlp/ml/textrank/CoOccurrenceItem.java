@@ -18,12 +18,12 @@ package com.graphaware.nlp.ml.textrank;
 public class CoOccurrenceItem {
     private final long source;
     private final long destination;
-    private int count;
+    private double count;
 
     public CoOccurrenceItem(long source, long destination) {
         this.source = source;
         this.destination = destination;
-        this.count = 1;
+        this.count = 1.;
     }
     
     public long getSource() {
@@ -34,11 +34,19 @@ public class CoOccurrenceItem {
         return destination;
     }
 
-    public int getCount() {
+    public double getCount() {
         return count;
     }
     
     public void incCount() {
         this.count++;
+    }
+
+    public void incCountBy(double val) {
+        this.count += val;
+    }
+
+    public void setCount(double val) {
+        this.count = val;
     }
 }

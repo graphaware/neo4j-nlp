@@ -14,6 +14,7 @@ public class PageRankRequest {
     private static final long DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
     private static final double DEFAULT_THRESHOLD = 0.0001;
+    private static final boolean DEFAULT_RESPECT_DIRECTIONS = true;
     private static final String DEFAULT_NODE_TYPE = "Tag";
     private static final String DEFAULT_CO_OCCURRENCE_RELATIONTHIP = "CO_OCCURRENCE";
     private static final String DEFAULT_WEIGHT_PROPERTY = "weight";
@@ -24,6 +25,7 @@ public class PageRankRequest {
     private Long iteration = DEFAULT_ITERATIONS;
     private Double damp = DEFAULT_DUMPING_FACTOR;
     private Double threshold = DEFAULT_THRESHOLD;
+    private Boolean respectDirections = DEFAULT_RESPECT_DIRECTIONS;
     
     public PageRankRequest() {
     }
@@ -74,5 +76,13 @@ public class PageRankRequest {
 
     public void setThreshold(Double threshold) {
         this.threshold = threshold;
+    }
+
+    public Boolean getRespectDirections() {
+        return respectDirections;
+    }
+
+    public void setRespectDirections(Boolean dirs) {
+        this.respectDirections = dirs;
     }
 }

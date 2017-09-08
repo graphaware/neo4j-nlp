@@ -41,8 +41,10 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
         int iter = request.getIteration().intValue();
         double damp = request.getDamp();
         double threshold = request.getThreshold();
+        boolean respectDirections = request.getRespectDirections();
 
         PageRank pagerank = new PageRank(getDatabase());
+        pagerank.respectDirections(respectDirections);
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences = pagerank.processGraph(nodeType, relType, relWeight);
         if (coOccurrences.isEmpty()) {
             return SingleResult.fail();

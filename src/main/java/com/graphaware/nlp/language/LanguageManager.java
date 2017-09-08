@@ -87,6 +87,7 @@ public class LanguageManager {
                 return lang.get().getLanguage();
             }
         }
+
         return LANGUAGE_NA;
     }
     

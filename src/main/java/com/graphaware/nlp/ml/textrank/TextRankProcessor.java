@@ -42,7 +42,10 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrank.respectDirections(request.isRespectDirections());
         textrank.respectSentences(request.isRespectSentences());
         textrank.useTfIdfWeights(request.isUseTfIdfWeights());
+        textrank.useDependencies(request.isUseDependencies());
         textrank.setCooccurrenceWindow(request.getCooccurrenceWindow());
+        textrank.setMaxSingleKeywords(request.getMaxSingleKeywords());
+        textrank.setKeywordLabel(request.getKeywordLabel());
 
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(request.getNode());
         boolean res = textrank.evaluate(request.getNode(), 
@@ -57,6 +60,16 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
         LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed.");
 
+        return SingleResult.success();
+    }
+
+    public SingleResult postprocess(TextRankRequest request) {
+        LOG.info("Starting TextRank post-processing ...");
+        TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
+        textrank.setKeywordLabel(request.getKeywordLabel());
+        if (!textrank.postprocess())
+            return SingleResult.fail();
+        LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
     }
 }

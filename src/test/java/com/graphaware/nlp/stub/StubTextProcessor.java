@@ -76,7 +76,7 @@ public class StubTextProcessor implements TextProcessor {
             int pos = 0;
             final Sentence sentence = new Sentence(stext, sentenceNumber);
             for (String token : parts) {
-                Tag tag = new Tag(token, "en");
+                Tag tag = new Tag(token, lang);
                 tag.setNe(Collections.singletonList("test"));
                 tag.setPos(Collections.singletonList("TESTVB"));
                 int begin = pos;

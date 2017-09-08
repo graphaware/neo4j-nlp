@@ -30,10 +30,26 @@ import org.neo4j.procedure.Procedure;
 public class TextRankProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
-    @Description("PageRank procedure")
-    public Stream<SingleResult> computePageRank(@Name("pageRankRequest") Map<String, Object> pageRankRequest) {
-        TextRankRequest request = TextRankRequest.fromMap(pageRankRequest);
-        TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
-        return Stream.of(processor.process(request));
+    @Description("TextRank procedure")
+    public Stream<SingleResult> computeTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+        try {
+            TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
+            TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+            return Stream.of(processor.process(request));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.ml.textRank.postprocess", mode = Mode.WRITE)
+    @Description("TextRank post-processing procedure")
+    public Stream<SingleResult> textRankPostprocess(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+        try {
+            TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
+            TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+            return Stream.of(processor.postprocess(request));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -15,10 +15,15 @@
  */
 package com.graphaware.nlp.event;
 
+import com.graphaware.common.log.LoggerFactory;
+import org.neo4j.logging.Log;
+
 import java.util.*;
 import java.util.function.Consumer;
 
 public class EventDispatcher {
+
+    private static final Log LOG = LoggerFactory.getLogger(EventDispatcher.class);
 
     private static final int DEFAULT_PRIORITY = 100;
     private final Map<Events, SortedMap<Integer, List<Consumer>>> listeners = new HashMap<>();
@@ -40,6 +45,7 @@ public class EventDispatcher {
     }
 
     public void notify(Events eventName, Event event) {
+        LOG.info("Notifying listeners for event {}", eventName.toString());
         if (!listeners.containsKey(eventName)) {
             return;
         }
