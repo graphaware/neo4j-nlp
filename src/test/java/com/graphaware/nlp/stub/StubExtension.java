@@ -35,8 +35,4 @@ public class StubExtension extends AbstractExtension implements NLPExtension {
         node.addLabel(Label.label("Event"));
     }
 
-    @Override
-    public void postLoaded() {
-        
-    }
 }

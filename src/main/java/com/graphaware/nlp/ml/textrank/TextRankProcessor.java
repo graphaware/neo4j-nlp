@@ -72,8 +72,4 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
     }
-
-    @Override
-    public void postLoaded() {
-    }
 }

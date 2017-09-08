@@ -39,5 +39,7 @@ public abstract class AbstractExtension implements NLPExtension {
     }
 
     @Override
-    public abstract void postLoaded();
+    public void postLoaded() {
+        
+    }
 }

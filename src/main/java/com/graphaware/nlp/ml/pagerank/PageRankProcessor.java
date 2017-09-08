@@ -57,9 +57,4 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
 
         return SingleResult.success();
     }
-
-    @Override
-    public void postLoaded() {
-        
-    }
 }
