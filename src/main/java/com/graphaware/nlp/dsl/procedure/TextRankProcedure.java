@@ -17,6 +17,7 @@ package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.TextRankRequest;
+import com.graphaware.nlp.dsl.TextRankPostprocessRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -45,7 +46,7 @@ public class TextRankProcedure extends AbstractDSL {
     @Description("TextRank post-processing procedure")
     public Stream<SingleResult> textRankPostprocess(@Name("textRankRequest") Map<String, Object> textRankRequest) {
         try {
-            TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
+            TextRankPostprocessRequest request = TextRankPostprocessRequest.fromMap(textRankRequest);
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
             return Stream.of(processor.postprocess(request));
         } catch (Exception e) {

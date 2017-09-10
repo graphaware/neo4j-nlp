@@ -37,6 +37,8 @@ public class TextRankRequest {
     private final static String PARAMETER_USE_DEPENDENCIES = "useDependencies";
     private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
     private final static String PARAMETER_MAX_SINGLE_KEYWORDS = "maxSinglewordKeywords";
+    private final static String PARAMETER_PHRASES_TOPX = "topXWordsForPhrases";
+    private final static String PARAMETER_SINGLES_TOPX = "topXSinglewordKeywords";
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
 
     private Node node;
@@ -50,6 +52,8 @@ public class TextRankRequest {
     private boolean useDependencies;
     private int cooccurrenceWindow;
     private int maxSingles;
+    private double phrases_topx;
+    private double singles_topx;
     private String keywordLabel;
     private String stopWords;    
 
@@ -62,7 +66,9 @@ public class TextRankRequest {
     private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
     private static final boolean DEFAULT_USE_DEPENDENCIES = false;
     private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
-    private static final int DEFAULT_MAX_SINGLE_KEYWORDS = 15;
+    private static final int DEFAULT_MAX_SINGLE_KEYWORDS = 50;
+    private static final double DEFAULT_PHRASES_TOPX = 1.0f/3;
+    private static final double DEFAULT_SINGLES_TOPX = 1.0f/5;
     private static final String DEFAULT_KEYWORD_LABEL = "Keyword";
 
     public static TextRankRequest fromMap(Map<String, Object> textRankRequest) {
@@ -81,6 +87,8 @@ public class TextRankRequest {
         result.setUseDependencies((boolean) textRankRequest.getOrDefault(PARAMETER_USE_DEPENDENCIES, DEFAULT_USE_DEPENDENCIES));
         result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
         result.setMaxSingleKeywords(((Number) textRankRequest.getOrDefault(PARAMETER_MAX_SINGLE_KEYWORDS, DEFAULT_MAX_SINGLE_KEYWORDS)).intValue());
+        result.setTopXWordsForPhrases(((Number) textRankRequest.getOrDefault(PARAMETER_PHRASES_TOPX, DEFAULT_PHRASES_TOPX)).doubleValue());
+        result.setTopXSinglewordKeywords(((Number) textRankRequest.getOrDefault(PARAMETER_SINGLES_TOPX, DEFAULT_SINGLES_TOPX)).doubleValue());
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
 
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
@@ -175,6 +183,22 @@ public class TextRankRequest {
 
     public void setMaxSingleKeywords(int n) {
         this.maxSingles = n;
+    }
+
+    public double getTopXWordsForPhrases() {
+        return this.phrases_topx;
+    }
+
+    public void setTopXWordsForPhrases(double n) {
+        this.phrases_topx = n;
+    }
+
+    public double getTopXSinglewordKeywords() {
+        return this.singles_topx;
+    }
+
+    public void setTopXSinglewordKeywords(double n) {
+        this.singles_topx = n;
     }
 
     public String getKeywordLabel() {
