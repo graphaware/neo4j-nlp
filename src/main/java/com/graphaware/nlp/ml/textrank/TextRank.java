@@ -48,6 +48,8 @@ public class TextRank {
     private boolean useDependencies;
     private int cooccurrenceWindow;
     private int maxSingles;
+    private double phrases_topx_words;
+    private double singles_topx_words;
     private Label keywordLabel;
     private Set<String> stopWords;
     private List<String> admittedPOSs;
@@ -103,6 +105,14 @@ public class TextRank {
 
     public void setMaxSingleKeywords(int val) {
         this.maxSingles = val;
+    }
+
+    public void setTopXWordsForPhrases(double val) {
+        this.phrases_topx_words = val;
+    }
+
+    public void setTopXSinglewordKeywords(double val) {
+        this.singles_topx_words = val;
     }
 
     public void setKeywordLabel(String lab) {
@@ -213,12 +223,12 @@ public class TextRank {
             pageRank.setNodeWeights( initializeNodeWeights_TfIdf(annotatedText, coOccurrence) );
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
 
-        int n_oneThird = (int) (pageRanks.size()/3.0f);
-        //n_oneThird = n_oneThird > 30 ? 30 : n_oneThird;
+        int n_oneThird = (int) (pageRanks.size() * phrases_topx_words);
         List<Long> topThird = getTopX(pageRanks, n_oneThird);
 
-        int n_oneThird_singles = n_oneThird > maxSingles ? maxSingles : n_oneThird;
-        List<Long> topSingles = getTopX(pageRanks, n_oneThird_singles);
+        int n_topx_singles = (int) (pageRanks.size() * singles_topx_words);
+        n_topx_singles = n_topx_singles > maxSingles ? maxSingles : n_topx_singles;
+        List<Long> topSingles = getTopX(pageRanks, n_topx_singles);
 
         //pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
         //    .forEach(en -> LOG.info(idToValue.get(en.getKey()) + ": " + en.getValue()));
@@ -240,7 +250,7 @@ public class TextRank {
                 "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
                 + "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
                 + "OPTIONAL MATCH (to)-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-                + "WHERE not exists(t2.pos) or (t2.pos in {posList})\n"
+                + "WHERE not exists(t2.pos) or any(p in t2.pos where p in {posList})\n"
                 + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
                     + "collect(t2.value) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe\n"
                 + "ORDER BY sP asc",

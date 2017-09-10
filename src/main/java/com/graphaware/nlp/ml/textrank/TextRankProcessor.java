@@ -46,6 +46,8 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrank.useDependencies(request.isUseDependencies());
         textrank.setCooccurrenceWindow(request.getCooccurrenceWindow());
         textrank.setMaxSingleKeywords(request.getMaxSingleKeywords());
+        textrank.setTopXWordsForPhrases(request.getTopXWordsForPhrases());
+        textrank.setTopXSinglewordKeywords(request.getTopXSinglewordKeywords());
         textrank.setKeywordLabel(request.getKeywordLabel());
 
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(request.getNode());
