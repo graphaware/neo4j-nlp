@@ -75,48 +75,48 @@ public class ConceptNet5Importer {
 //        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
 //    }
     public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS, int limit) {
+        if (null == admittedRelations || admittedRelations.isEmpty()) {
+            throw new RuntimeException("Admitted Relationships is empty");
+        }
         List<Tag> res = new CopyOnWriteArrayList<>();
         String word = source.getLemma().toLowerCase().replace(" ", "_");
         word = removeParenthesis(word);
         word = removeApices(word);
+        final String finalWord = word;
         try {
-            ConceptNet5EdgeResult values;
-            if (admittedRelations.size() > 1) {
-                values = client.getValues(word, lang, limit);
-            } else if (admittedRelations.size() == 1) {
-                values = client.queryByStart(word, admittedRelations.get(0), lang, limit);
-            } else {
-                throw new RuntimeException("Admitted relations is empty");
-            }
-            values.getEdges().stream().forEach((concept) -> {
-                if (checkAdmittedRelations(concept, admittedRelations)
-                        && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
-                        && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
-                    
-                    if (concept.getStart().equalsIgnoreCase(source.getLemma()) &&
-                            !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
-                        String value = concept.getEnd();
-                        value = removeApices(value);
-                        value = removeParenthesis(value);
-                        Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor);
-                        List<String> posList = annotateTag.getPosAsList();
-                        if (admittedPOS == null
-                                || admittedPOS.isEmpty()
-                                || posList == null
-                                || posList.isEmpty()
-                                || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
-                            if (depth > 1) {
-                                importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit);
+            admittedRelations.forEach(rel -> {
+                ConceptNet5EdgeResult values;
+                values = client.queryByStart(finalWord, rel, lang, limit);
+                values.getEdges().stream().forEach((concept) -> {
+                    if (checkAdmittedRelations(concept, admittedRelations)
+                            && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
+                            && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
+
+                        if (concept.getStart().equalsIgnoreCase(source.getLemma()) &&
+                                !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
+                            String value = concept.getEnd();
+                            value = removeApices(value);
+                            value = removeParenthesis(value);
+                            Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor);
+                            List<String> posList = annotateTag.getPosAsList();
+                            if (admittedPOS == null
+                                    || admittedPOS.isEmpty()
+                                    || posList == null
+                                    || posList.isEmpty()
+                                    || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
+                                if (depth > 1) {
+                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit);
+                                }
+                                source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                                res.add(annotateTag);
                             }
-                            source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                        } else {
+                            Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
+                            annotateTag.addParent(concept.getRel(), source, concept.getWeight());
                             res.add(annotateTag);
                         }
-                    } else {
-                        Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
-                        annotateTag.addParent(concept.getRel(), source, concept.getWeight());
-                        res.add(annotateTag);
                     }
-                }
+                });
             });
 
         } catch (Exception ex) {
