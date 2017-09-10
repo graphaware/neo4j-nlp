@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2013-2017 GraphAware
+ *
+ * This file is part of the GraphAware Framework.
+ *
+ * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details. You should have received a copy of
+ * the GNU General Public License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
 package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
@@ -15,8 +30,6 @@ import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
-import com.graphaware.nlp.ml.similarity.FeatureBasedProcessLogic;
-import com.graphaware.nlp.ml.similarity.SimilarityProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -116,8 +129,9 @@ public final class NLPManager {
                 text, pipelineName, lang, null
         );
 
-        Node annotatedNode = persistAnnotatedText(annotatedText, id, String.valueOf(System.currentTimeMillis()));
-        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id);
+        String txId = String.valueOf(System.currentTimeMillis());
+        Node annotatedNode = persistAnnotatedText(annotatedText, id, txId);
+        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId);
         annotatedText.setText(text);
         eventDispatcher.notify(NLPEvents.POST_TEXT_ANNOTATION, event);
 
@@ -235,8 +249,9 @@ public final class NLPManager {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 
         extensionMap.keySet().forEach(k -> {
-            NLPExtension e = extensionMap.get(k);
-            extensions.put(e.getClass(), extensionMap.get(k));
+            NLPExtension extension = extensionMap.get(k);
+            extension.postLoaded();
+            extensions.put(extension.getClass(), extensionMap.get(k));
         });
     }
 

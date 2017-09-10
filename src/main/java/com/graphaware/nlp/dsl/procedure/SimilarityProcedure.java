@@ -32,7 +32,7 @@ public class SimilarityProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.similarity.cosine", mode = Mode.WRITE)
     @Description("Compute similarity between Annotated Text")
-    public Stream<SingleResult> applySentiment(@Name("input") List<Node> input, 
+    public Stream<SingleResult> similarity(@Name("input") List<Node> input, 
             @Name("depth") Long depth,
             @Name("query") String query,
             @Name("relationshipType") String relationshipType) {

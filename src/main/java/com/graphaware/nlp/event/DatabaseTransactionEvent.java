@@ -13,22 +13,19 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.processor;
+package com.graphaware.nlp.event;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
 
-public abstract class AbstractTextProcessor implements TextProcessor{
-    //    private static final String PUNCT_REGEX_PATTERN = "\\p{Punct}";
-    protected static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
-    private final Pattern patternCheck;
-    public AbstractTextProcessor() {
-        patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
+public class DatabaseTransactionEvent implements Event {
+
+    private final ImprovedTransactionData transactionData;
+
+    public DatabaseTransactionEvent(ImprovedTransactionData transactionData) {
+        this.transactionData = transactionData;
     }
 
-    @Override
-    public boolean checkLemmaIsValid(String value) {
-        Matcher match = patternCheck.matcher(value);
-        return match.find();
+    public ImprovedTransactionData getTransactionData() {
+        return transactionData;
     }
 }

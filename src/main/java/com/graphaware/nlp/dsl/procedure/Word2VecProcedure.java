@@ -16,8 +16,11 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.dsl.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import org.neo4j.graphdb.Node;
+
+import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
+import java.util.Map;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -25,14 +28,15 @@ import org.neo4j.procedure.Procedure;
 
 import java.util.stream.Stream;
 
-public class SentimentProcedure extends AbstractDSL {
+public class Word2VecProcedure extends AbstractDSL {
 
-    @Procedure(name = "ga.nlp.sentiment", mode = Mode.WRITE)
-    @Description("Apply sentiment extraction on the given annotated text")
-    public Stream<SingleResult> applySentiment(@Name("annotatedText") Node annotatedText, @Name(value = "textProcessor", defaultValue = "") String textProcessor) {
-        getNLPManager().applySentiment(annotatedText, textProcessor);
-
-        return Stream.of(SingleResult.success());
+    @Procedure(name = "ga.nlp.ml.word2vec.attach", mode = Mode.WRITE)
+    @Description("For each tag attach the related word2vec value")
+    public Stream<SingleResult> applySentiment(@Name("input") Map<String, Object> word2VecRequest) {
+        Word2VecRequest request = Word2VecRequest.fromMap(word2VecRequest);
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        int processed = word2VecProcessor.attach(request);
+        return Stream.of(new SingleResult(processed));
     }
 
 }

@@ -15,10 +15,6 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-/**
- *
- * @author vla
- */
 public class WordItem {
     private final int startPosition;
     private final int endPosition;

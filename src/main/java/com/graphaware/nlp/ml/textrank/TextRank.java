@@ -21,9 +21,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.graphaware.nlp.configuration.DynamicConfiguration;
-import com.graphaware.nlp.persistence.constants.Labels;
-import com.graphaware.nlp.persistence.constants.Properties;
-import com.graphaware.nlp.persistence.constants.Relationships;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.ResourceIterator;
@@ -34,7 +31,6 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 public class TextRank {
 
