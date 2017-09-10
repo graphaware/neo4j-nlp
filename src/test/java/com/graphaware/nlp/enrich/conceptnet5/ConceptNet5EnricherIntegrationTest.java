@@ -13,6 +13,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
@@ -70,6 +71,63 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
         tester.assertTagHasRelatedTag("kill", "death");
     }
 
+    @Test
+    public void testRequestWithRelationshipsConstraintDoNotGetThem() {
+        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
+        PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as the eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+            //
+        }));
+
+        try (Transaction tx = getDatabase().beginTx()) {
+            getDatabase().findNodes(Label.label("Tag")).stream().forEach(node -> {
+                ConceptRequest request = new ConceptRequest();
+                request.setTag(node);
+                request.setLanguage("en");
+                request.setDepth(2);
+                request.setProcessor(StubTextProcessor.class.getName());
+                request.setAdmittedRelationships(Arrays.asList("IsA","PartOf"));
+                request.setFilterByLanguage(true);
+                request.setSplitTag(false);
+
+                enricher.importConcept(request);
+
+                tx.success();
+            });
+        }
+
+        executeInTransaction("MATCH (n)-[r:IS_RELATED_TO]->() WHERE r.type = 'AtLocation' RETURN n, r", (result -> {
+            assertFalse(result.hasNext());
+        }) );
+        debugTagsRelations();
+    }
+
+    @Test
+    public void testConceptEnrichmentWithRelConstraintViaProcedure() {
+        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
+        PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+            //
+        }));
+        executeInTransaction("MATCH (n:Tag) CALL ga.nlp.enrich.concept({tag: n, depth: 2, language: 'en', admittedRelationships:['IsA','PartOf']}) YIELD result return result" , (result -> {
+            assertTrue(result.hasNext());
+        }));
+
+        executeInTransaction("MATCH (n)-[r:IS_RELATED_TO]->() WHERE r.type = 'AtLocation' RETURN n, r", (result -> {
+            assertFalse(result.hasNext());
+        }) );
+
+        debugTagsRelations();
+    }
+
+
+
     private void createTagConstraint() {
         executeInTransaction("CREATE CONSTRAINT ON (t:Tag) ASSERT t.id IS UNIQUE;", (result -> {
         }));
@@ -81,6 +139,7 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
                 node.getRelationships(RelationshipType.withName("IS_RELATED_TO")).forEach(relationship -> {
                     System.out.println(node.getAllProperties());
                     System.out.println(relationship.getOtherNode(node).getAllProperties());
+                    System.out.println(relationship.getProperty("type"));
                 });
 
             });
