@@ -1,9 +1,14 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.util.NodeProxy;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 public class ConceptNetProcedureTest extends NLPIntegrationTest {
 

@@ -132,7 +132,7 @@ public class ConceptRequest {
         if (conceptRequest.containsKey("admittedPos")) {
             request.setAdmittedPos((List<String>)conceptRequest.get("admittedPos"));
         }
-        if (conceptRequest.containsKey("admittedPos")) {
+        if (conceptRequest.containsKey("admittedRelationships")) {
             request.setAdmittedRelationships((List<String>)conceptRequest.get("admittedRelationships"));
         }
         if (conceptRequest.containsKey("depth")) {
