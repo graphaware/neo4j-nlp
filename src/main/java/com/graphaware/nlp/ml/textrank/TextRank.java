@@ -258,6 +258,7 @@ public class TextRank {
         }
 
         // First: merge neighboring words into phrases
+        long prev_tagId = -1;
         long prev_eP = -1000;
         String prev_tag = "";
         String lang = "";
@@ -313,7 +314,8 @@ public class TextRank {
                     dependencies.put(tagVal, rel_dep);
                 }
             } else {
-                addKeyphraseToResults(keyphrase, dependencies, prev_eP, lang, results);
+                if (keyphrase.size() > 1 || topSingles.contains(prev_tagId)) // we handle single-word keywords later on, but try dependencies to recover key phrase, if possible
+                    addKeyphraseToResults(keyphrase, dependencies, prev_eP, lang, results);
 
                 keyphrase.clear();
                 keyphrase.put(startPosition, tagVal);
@@ -322,8 +324,10 @@ public class TextRank {
             }
             prev_eP = endPosition;
             prev_tag = tagVal;
+            prev_tagId = tagId;
         }
-        addKeyphraseToResults(keyphrase, dependencies, prev_eP, lang, results);
+        if (keyphrase.size() > 1 || topSingles.contains(prev_tagId)) // we handle single-word keywords later on, but try dependencies to recover key phrase, if possible
+            addKeyphraseToResults(keyphrase, dependencies, prev_eP, lang, results);
 
         // post-process phrases: need to recover `count_total` of all keyphrases
         results.entrySet().stream()
@@ -336,7 +340,7 @@ public class TextRank {
                     });
             });
 
-        // Next: include into final result top-x single words
+        // Next: include into final result top-x _single_ words
         single_keywords.entrySet().stream()
                 .filter(en -> !(removeStopWords && stopWords.stream().anyMatch(str -> str.equals(en.getValue().getRawKeyword()))))
                 .forEach(en -> {
@@ -369,6 +373,8 @@ public class TextRank {
                     newNode = database.createNode(keywordLabel);
                     newNode.setProperty("id", en.getKey());
                     newNode.setProperty("value", val);
+                    newNode.setProperty("keywordsList", en.getValue().getListOfWords());
+                    newNode.setProperty("numTerms", en.getValue().getNWords());
                 }
                 if (newNode != null) {
                     Relationship rel = mergeRelationship(annotatedText, newNode);
@@ -385,11 +391,11 @@ public class TextRank {
     public boolean postprocess() {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
         String query = "match (k:" + keywordLabel.name() + ")\n"
-            + "where size(split(k.value, \" \")) > 1\n"
-            + "with k, split(k.value, \" \") as ks_orig\n"
+            + "where k.numTerms > 1\n"
+            + "with k, k.keywordsList as ks_orig\n"
             + "match (k2:" + keywordLabel.name() + ")\n"
-            + "where size(split(k2.value, \" \")) > size(ks_orig) and not exists( (k)-[:DESCRIBES]->(:AnnotatedText)<-[:DESCRIBES]-(k2) )\n"
-            + "with ks_orig, k, k2, split(k2.value, \" \") as ks_check\n"
+            + "where k2.numTerms > k.numTerms and not exists( (k)-[:DESCRIBES]->(:AnnotatedText)<-[:DESCRIBES]-(k2) )\n"
+            + "with ks_orig, k, k2, k2.keywordsList as ks_check\n"
             + "where all(el in ks_orig where el in ks_check)\n"
             + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
             + "MERGE (k)-[rNew:DESCRIBES]->(a)\n"
@@ -407,10 +413,10 @@ public class TextRank {
 
         // add HAS_SUBGROUP relationships between keywords, ex.: (station) -[HAS_SUBGROUP]-> (space station) -[HAS_SUBGROUP]-> (international space station)
         query = "match (k:" + keywordLabel.name() + ")\n"
-            + "with k, split(k.value, \" \") as ks_orig\n"
+            + "with k, k.keywordsList as ks_orig\n"
             + "match (k2:" + keywordLabel.name() + ")\n"
-            + "where size(split(k2.value, \" \")) > size(ks_orig)\n"
-            + "with ks_orig, k, k2, split(k2.value, \" \") as ks_check\n"
+            + "where k2.numTerms > k.numTerms\n"
+            + "with ks_orig, k, k2, k2.keywordsList as ks_check\n"
             + "where all(el in ks_orig where el in ks_check)\n"
             + "MERGE (k)-[r:HAS_SUBGROUP]->(k2)";
 
@@ -427,8 +433,9 @@ public class TextRank {
     }
 
     private void addKeyphraseToResults(Map<Integer, String> keyphrase, Map<String, List<WordItem>> dependencies, long prev_eP, String lang, Map<String, KeywordItem> results) {
-        if (keyphrase == null || keyphrase.size() < 2)
+        if (keyphrase == null) // || keyphrase.size() < 2)
             return;
+
         // append dependency word if it's missing
         if (useDependencies) {
             List<WordItem> missing_words = new ArrayList<>();
@@ -440,6 +447,10 @@ public class TextRank {
                 .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0 )
                 .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
         }
+
+        // we handle single-word keywords later on, so skip if `keyphrase` is not a phrase
+        if (keyphrase.size() < 2)
+            return;
 
         // create keyphrase from a list of words
         String key = keyphrase.entrySet().stream()

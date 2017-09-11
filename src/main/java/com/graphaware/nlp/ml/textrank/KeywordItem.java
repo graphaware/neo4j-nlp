@@ -22,6 +22,7 @@ package com.graphaware.nlp.ml.textrank;
 public class KeywordItem {
     private final String keyword;
     private final String keyword_noLangInfo;
+    private final String[] keywords_arr;
     private final int n_words;
     private int count_exactMatch;
     private int count_total;
@@ -29,7 +30,8 @@ public class KeywordItem {
     public KeywordItem(String word) {
         this.keyword = word;
         this.keyword_noLangInfo = word.split("_")[0];
-        this.n_words = word.split(" ").length;
+        this.keywords_arr = keyword_noLangInfo.split(" ");
+        this.n_words = keywords_arr.length;
         this.count_exactMatch = 1;
         this.count_total = 1;
     }
@@ -40,6 +42,10 @@ public class KeywordItem {
 
     public String getRawKeyword() {
         return this.keyword_noLangInfo;
+    }
+
+    public String[] getListOfWords() {
+        return this.keywords_arr;
     }
 
     public int getNWords() {
