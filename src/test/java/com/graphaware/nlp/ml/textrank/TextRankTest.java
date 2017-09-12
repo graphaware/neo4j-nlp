@@ -17,8 +17,6 @@ package com.graphaware.nlp.ml.textrank;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 //import com.graphaware.nlp.extension.AbstractExtension;
-import com.graphaware.nlp.ml.textrank.TextRank;
-import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,9 +26,7 @@ import java.util.Map;
 
 import com.graphaware.nlp.util.ImportUtils;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -53,9 +49,11 @@ public class TextRankTest extends NLPIntegrationTest {
             if (!result.hasNext())
                 return;
             Node annText = (Node) result.next().get("a");
-            TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
-            Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(annText);
-            boolean res = textrank.evaluate(annText, coOccurrence, 30, 0.85, 0.0001);
+            TextRank textrank = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration())
+                    .setTopXSinglewordKeywords(1.0f/5)
+                    .setTopXWordsForPhrases(1.0f/3)
+                    .build();
+            boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res);
             tx.success();
         }

@@ -13,27 +13,23 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.ml.textrank;
+package com.graphaware.nlp.domain;
 
-/**
- *
- * @author vla
- */
-public class KeywordItem {
+public class Keyword {
     private final String keyword;
-    private final String keyword_noLangInfo;
-    private final String[] keywords_arr;
-    private final int n_words;
-    private int count_exactMatch;
-    private int count_total;
+    private final String keywordNoLangInfo;
+    private final String[] keywordsArray;
+    private final int wordsCount;
+    private int exactMatch;
+    private int total;
 
-    public KeywordItem(String word) {
+    public Keyword(String word) {
         this.keyword = word;
-        this.keyword_noLangInfo = word.split("_")[0];
-        this.keywords_arr = keyword_noLangInfo.split(" ");
-        this.n_words = keywords_arr.length;
-        this.count_exactMatch = 1;
-        this.count_total = 1;
+        this.keywordNoLangInfo = word.split("_")[0];
+        this.keywordsArray = keywordNoLangInfo.split(" ");
+        this.wordsCount = keywordsArray.length;
+        this.exactMatch = 1;
+        this.total = 1;
     }
     
     public String getKeyword() {
@@ -41,55 +37,55 @@ public class KeywordItem {
     }
 
     public String getRawKeyword() {
-        return this.keyword_noLangInfo;
+        return this.keywordNoLangInfo;
     }
 
     public String[] getListOfWords() {
-        return this.keywords_arr;
+        return this.keywordsArray;
     }
 
-    public int getNWords() {
-        return this.n_words;
+    public int getWordsCount() {
+        return this.wordsCount;
     }
 
     public int getExactMatchCount() {
-        return this.count_exactMatch;
+        return this.exactMatch;
     }
 
     public void incExactMatchCount() {
-        this.count_exactMatch++;
+        this.exactMatch++;
     }
 
     public void incExactMatchCountBy(int val) {
-        this.count_exactMatch += val;
+        this.exactMatch += val;
     }
 
     public int getTotalCount() {
-        return this.count_total;
+        return this.total;
     }
 
     public void incTotalCount() {
-        this.count_total++;
+        this.total++;
     }
 
     public void incTotalCountBy(int val) {
-        this.count_total += val;
+        this.total += val;
     }
 
     public void incCounts() {
-        this.count_exactMatch++;
-        this.count_total++;
+        this.exactMatch++;
+        this.total++;
     }
 
     public void incCountsBy(int val) {
-        this.count_exactMatch += val;
-        this.count_total += val;
+        this.exactMatch += val;
+        this.total += val;
     }
 
-    public boolean contains(KeywordItem ki) {
+    public boolean contains(Keyword ki) {
         if (ki == null)
             return false;
-        return keyword_noLangInfo.contains(ki.getRawKeyword());
+        return keywordNoLangInfo.contains(ki.getRawKeyword());
     }
 
     @Override
@@ -97,10 +93,10 @@ public class KeywordItem {
         if (obj == null) {
             return false;
         }
-        if (!KeywordItem.class.isAssignableFrom(obj.getClass())) {
+        if (!Keyword.class.isAssignableFrom(obj.getClass())) {
             return false;
         }
-        final KeywordItem other = (KeywordItem) obj;
+        final Keyword other = (Keyword) obj;
         if ( !this.keyword.equals(other.getKeyword()) )
             return false;
         return true;
