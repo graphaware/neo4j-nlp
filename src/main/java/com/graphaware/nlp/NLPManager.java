@@ -18,6 +18,7 @@ package com.graphaware.nlp;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
@@ -203,6 +204,11 @@ public final class NLPManager {
     private String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
         String detectedLanguage = languageManager.detectLanguage(text);
+
+        if (!languageManager.isTextLanguageSupported(text) && configuration.hasSettingValue(SettingsConstants.FALLBACK_LANGUAGE)) {
+            return configuration.getSettingValueFor(SettingsConstants.FALLBACK_LANGUAGE).toString();
+        }
+
         if (!languageManager.isTextLanguageSupported(text) && failIfUnsupported) {
             String msg = String.format("Unsupported language : %s", detectedLanguage);
             LOG.error(msg);

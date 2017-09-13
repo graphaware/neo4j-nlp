@@ -80,6 +80,10 @@ public class DynamicConfiguration {
         return userProvidedConfiguration.get(SETTING_KEY_PREFIX + key);
     }
 
+    public boolean hasSettingValue(String key) {
+        return userProvidedConfiguration.containsKey(SETTING_KEY_PREFIX + key);
+    }
+
     public void update(String key, Object value) {
         try (Transaction tx = database.beginTx()) {
             keyValueStore.set(STORE_KEY + key, value);

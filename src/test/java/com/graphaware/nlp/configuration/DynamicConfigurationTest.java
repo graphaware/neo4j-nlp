@@ -85,6 +85,7 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         specification.setThreadNumber(4);
         try (Transaction tx = getDatabase().beginTx()) {
             keyValueStore.set("GA__NLP__PIPELINE_custom", mapper.writeValueAsString(specification));
+            keyValueStore.set("GA__NLP__SETTING_fallbackLanguage", "en");
             tx.success();
         }
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
@@ -93,6 +94,8 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         runtime.waitUntilStarted();
         assertTrue(getStartedRuntime(getDatabase()).getModule(NLPModule.class).getNlpManager().getTextProcessorsManager()
         .getTextProcessor(StubTextProcessor.class.getName()).getPipelines().contains("custom"));
+        assertTrue(getStartedRuntime(getDatabase()).getModule(NLPModule.class).getNlpManager().getConfiguration()
+        .hasSettingValue(SettingsConstants.FALLBACK_LANGUAGE));
     }
 
     private void clearDb() {
