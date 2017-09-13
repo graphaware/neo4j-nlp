@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -112,7 +111,7 @@ public class PageRank {
                 Relationship rel = (Relationship) next.get("rel");
                 if (weightProperties != null
                         && rel.hasProperty(weightProperties)) {
-                    w = (double) rel.getProperty(weightProperties);
+                    w = (int) rel.getProperty(weightProperties);
                 }
                 addTagToCoOccurrence(results, tag1, tag2, w);
                 if (!directionsMatter)

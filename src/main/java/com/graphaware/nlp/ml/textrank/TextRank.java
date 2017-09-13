@@ -48,9 +48,11 @@ public class TextRank {
             + "ORDER BY to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
             + "WHERE size(t.value) > 2\n"
-            + "WITH collect(t) as tags\n"
+            + "WITH collect(t) as tags, collect(to) as tagsPosition\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+            + "tagsPosition[i].startPosition as sourceStartPosition, "
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, "
             + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
 
     private static final String COOCCURRENCE_QUERY_BY_SENTENCE
@@ -60,10 +62,12 @@ public class TextRank {
             + "ORDER BY s.sentenceNumber, to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
             + "WHERE size(t.value) > 2\n"
-            + "WITH s, collect(t) as tags\n"
+            + "WITH s, collect(t) as tags, collect(to) as tagsPosition\n"
             + "ORDER BY s.sentenceNumber\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+            + "tagsPosition[i].startPosition as sourceStartPosition, "
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, "
             + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
@@ -125,11 +129,14 @@ public class TextRank {
 
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
         Long previous1 = -1L;
+        int previous1Start = -1;
         int nSkips = 1;
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
             Long tag1 = (Long) next.get("tag1");
             Long tag2 = (Long) next.get("tag2");
+            int tag1Start = ((Long) next.get("sourceStartPosition")).intValue();
+            int tag2Start = ((Long) next.get("destinationStartPosition")).intValue();
             List<String> pos1 = Arrays.asList(((String) next.get("pos1")).split(","));
             List<String> pos2 = Arrays.asList(((String) next.get("pos2")).split(","));
 
@@ -140,18 +147,18 @@ public class TextRank {
             // fill tag co-occurrences (adjacency matrix)
             //   * window of words N = 2 (i.e. neighbours only => both neighbours must pass cleaning requirements)
             if (bPOS1 && bPOS2) {
-                addTagToCoOccurrence(results, tag1, tag2);
+                addTagToCoOccurrence(results, tag1, tag1Start, tag2, tag2Start);
                 if (!directionsMatter) { // when direction of co-occurrence relationships is not important
-                    addTagToCoOccurrence(results, tag2, tag1);
+                    addTagToCoOccurrence(results, tag2, tag2Start, tag1, tag1Start);
                 }
                 //LOG.info("Adding co-occurrence: " + (String) next.get("tag1_val") + " -> " + (String) next.get("tag2_val"));
                 nSkips = 1;
             } //   * window of words N > 2
             else if (bPOS2) { // after possibly skipping some words, we arrived to a tag2 that complies with cleaning requirements
                 if (nSkips < cooccurrenceWindow) {
-                    addTagToCoOccurrence(results, previous1, tag2);
+                    addTagToCoOccurrence(results, previous1, previous1Start, tag2, tag2Start);
                     if (!directionsMatter) {
-                        addTagToCoOccurrence(results, tag2, previous1);
+                        addTagToCoOccurrence(results, tag2, tag2Start, previous1, previous1Start);
                     }
                     //LOG.info("  window N=" + (n_skips+1) + " co-occurrence: " + idToValue.get(previous1) + " -> " + (String) next.get("tag2_val"));
                 }
@@ -160,6 +167,7 @@ public class TextRank {
                 nSkips++;
                 if (bPOS1) {
                     previous1 = tag1;
+                    previous1Start = tag1Start;
                 }
             }
 
@@ -170,18 +178,21 @@ public class TextRank {
         return results;
     }
 
-    private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long tag1, Long tag2) {
+    private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long source, int sourceStartPosition, Long destination, int destinationStartPosition) {
         Map<Long, CoOccurrenceItem> mapTag1;
-        if (!results.containsKey(tag1)) {
+        if (!results.containsKey(source)) {
             mapTag1 = new HashMap<>();
-            results.put(tag1, mapTag1);
+            results.put(source, mapTag1);
         } else {
-            mapTag1 = results.get(tag1);
+            mapTag1 = results.get(source);
         }
-        if (mapTag1.containsKey(tag2)) {
-            mapTag1.get(tag2).incCount();
+
+        if (mapTag1.containsKey(destination)) {
+            CoOccurrenceItem ccEntry = mapTag1.get(destination);
+            ccEntry.incCount();
+            ccEntry.addPositions(sourceStartPosition, destinationStartPosition);
         } else {
-            mapTag1.put(tag2, new CoOccurrenceItem(tag1, tag2));
+            mapTag1.put(destination, new CoOccurrenceItem(source, sourceStartPosition, destination, destinationStartPosition));
         }
     }
 
@@ -243,18 +254,22 @@ public class TextRank {
         Map<String, Keyword> results = new HashMap<>();
         keywordsEntry.entrySet().stream().forEach((entry) -> {
             long tagId = entry.getKey();
-            Map<String, Keyword> localResults = findRelatedKeywordAndMerge(tagId, coOccurrence, keywordsEntry);
-            if (localResults.size() > 0) {
-                localResults.entrySet().stream().forEach((item) -> {
-                    if (results.containsKey(item.getKey())) {
-                        results.get(item.getKey()).incTotalCountBy(item.getValue().getTotalCount());
-                    } else {
-                        results.put(item.getKey(), item.getValue());
-                    }
-                });
-            } else {
-                addToResults(entry.getValue().get(0).getValue(), results);
-            }
+            Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrence.get(tagId), tagId);
+            entry.getValue().stream().forEach((keywordOccurrence) -> {
+                Map<String, Keyword> localResults = findRelatedKeywordAndMerge(mapStartId.get(keywordOccurrence.startPosition), keywordOccurrence, keywordsEntry);
+                if (localResults.size() > 0) {
+                    localResults.entrySet().stream().forEach((item) -> {
+                        if (results.containsKey(item.getKey())) {
+                            results.get(item.getKey()).incTotalCountBy(item.getValue().getTotalCount());
+                        } else {
+                            results.put(item.getKey(), item.getValue());
+                        }
+                    });
+                } else {
+                    addToResults(keywordOccurrence.getValue(), results);
+                }
+            });
+
         });
         /*
         // First: merge neighboring words into phrases
@@ -366,37 +381,38 @@ public class TextRank {
         return true;
     }
 
-    private Map<String, Keyword> findRelatedKeywordAndMerge(long tagId, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence, Map<Long, List<KeywordExtractedItem>> keywords) {
+    private Map<String, Keyword> findRelatedKeywordAndMerge(Set<Long> coOccurrence, KeywordExtractedItem keywordOccurrence, Map<Long, List<KeywordExtractedItem>> keywords) {
         Map<String, Keyword> results = new HashMap<>();
+        if (coOccurrence == null) {
+            return results;
+        }
         AtomicBoolean found = new AtomicBoolean(false);
-        List<KeywordExtractedItem> value = keywords.get(tagId);
-        coOccurrence.get(tagId).entrySet().stream()
-                .filter((ccEntry) -> ccEntry.getKey() != tagId)
-                .filter((ccEntry) -> keywords.containsKey(ccEntry.getKey()))
-                .forEach((ccEntry) -> {
-                    String relValue = keywords.get(ccEntry.getKey()).get(0).getValue();
-                    String currValue = value.get(0).getValue();
-                    if (ccEntry.getValue().getSource() == tagId) {
-                        if (!useDependencies || value.get(0).getRelatedTags().contains(relValue.split("_")[0])) {
-                            Map<String, Keyword> relatedValues = new HashMap<>(); //findRelatedKeywordAndMerge(ccEntry.getKey(), coOccurrence, keywords);
-                            if (relatedValues.size() > 0) {
-                                relatedValues.keySet().stream().forEach((item) -> {
-                                    addToResults(currValue.split("_")[0] + " " + item, results);
-                                });
-                            } else {
-                                addToResults(currValue.split("_")[0] + " " + relValue, results);
-                            }
-                            found.set(true);
-                        }
-                    }
-                    /*else {
+        Iterator<Long> iterator = coOccurrence.stream()
+                .filter((ccEntry) -> keywords.containsKey(ccEntry)).iterator();
+        while (iterator.hasNext()) {
+            Long ccEntry = iterator.next();
+            String relValue = keywords.get(ccEntry).get(0).getValue();
+            String currValue = keywordOccurrence.getValue();
+            //della entry (pair) mi faccio dare il valore di destinazione e verifico se 
+            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
+                Map<String, Keyword> relatedValues = new HashMap();//findRelatedKeywordAndMerge(ccEntry.getKey(), coOccurrence, keywords);
+                if (relatedValues.size() > 0) {
+                    relatedValues.keySet().stream().forEach((item) -> {
+                        addToResults(currValue.split("_")[0] + " " + item, results);
+                    });
+                } else {
+                    addToResults(currValue.split("_")[0] + " " + relValue, results);
+                }
+                found.set(true);
+            }
+            /*else {
 //                        if (!useDependencies || keywords.get(ccEntry.getKey()).get(0).getRelatedTags().contains(currValue.split("_")[0])) {
 //                            addToResults(relValue.split("_")[0] + " " + currValue, results);
 //                            found.set(true);
 //                        }
 //                    }*/
-                });
 
+        }
         return results;
     }
 
@@ -405,7 +421,8 @@ public class TextRank {
             if (results.containsKey(res)) {
                 results.get(res).incTotalCount();
             } else {
-                results.put(res, new Keyword(res));
+                final Keyword keyword = new Keyword(res);
+                results.put(res, keyword);
             }
         }
     }
@@ -601,6 +618,24 @@ public class TextRank {
             rel = newNode.createRelationshipTo(annotatedText, DESCRIBES);
         }
         return rel;
+    }
+
+    private Map<Integer, Set<Long>> createThisMapping(Map<Long, CoOccurrenceItem> coOccorrence, long tagId) {
+        Map<Integer, Set<Long>> result = new HashMap<>();
+        coOccorrence.entrySet().stream().forEach((entry) -> {
+            if (entry.getValue().getSource() == tagId) {
+                entry.getValue().getSourceStartingPositions()
+                        .forEach((pairStartingPoint) -> {
+                            if (pairStartingPoint.first() < pairStartingPoint.second()) {
+                                if (!result.containsKey(pairStartingPoint.first())) {
+                                    result.put(pairStartingPoint.first(), new TreeSet());
+                                }
+                                result.get(pairStartingPoint.first()).add(entry.getValue().getDestination());
+                            }
+                        });
+            }
+        });
+        return result;
     }
 
     public static class Builder {
