@@ -30,7 +30,7 @@ public class TextRankRequest {
     private final static String PARAMETER_DAMPING_FACTOR = "damp";
     private final static String PARAMETER_DAMPING_THRESHOLD = "threshold";
     private final static String PARAMETER_STOPWORDS = "stopwords";
-    private final static String PARAMETER_DO_STOPWORDS = "removeStopWords";
+    private final static String PARAMETER_DO_STOPWORDS = "removeStopwords";
     private final static String PARAMETER_RESPECT_DIRECTIONS = "respectDirections";
     private final static String PARAMETER_RESPECT_SENTENCES = "respectSentences";
     private final static String PARAMETER_USE_TFIDF_WEIGHTS = "useTfIdfWeights";

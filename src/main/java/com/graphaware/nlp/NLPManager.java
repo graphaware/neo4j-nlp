@@ -105,8 +105,8 @@ public final class NLPManager {
         return textProcessorsManager;
     }
 
-    public Persister getPersister(Class clazz) {
-        return persistenceRegistry.getPersister(clazz);
+    public <T extends Persister> T getPersister(Class clazz) {
+        return (T) persistenceRegistry.getPersister(clazz);
     }
 
     public GraphDatabaseService getDatabase() {

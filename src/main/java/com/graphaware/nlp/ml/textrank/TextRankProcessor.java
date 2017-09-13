@@ -19,7 +19,6 @@ import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.request.TextRankRequest;
 import com.graphaware.nlp.dsl.request.TextRankPostprocessRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import java.util.Map;
 
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
@@ -33,44 +32,36 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
     public SingleResult process(TextRankRequest request) {
 
-        TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
-
+        TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
         if (request.getStopWords() != null 
                 && !request.getStopWords().isEmpty()) {
-            textrank.setStopwords(request.getStopWords());
+            textrankBuilder.setStopwords(request.getStopWords());
         }
-        textrank.removeStopWords(request.isDoStopwords());
-        textrank.respectDirections(request.isRespectDirections());
-        textrank.respectSentences(request.isRespectSentences());
-        textrank.useTfIdfWeights(request.isUseTfIdfWeights());
-        textrank.useDependencies(request.isUseDependencies());
-        textrank.setCooccurrenceWindow(request.getCooccurrenceWindow());
-        textrank.setMaxSingleKeywords(request.getMaxSingleKeywords());
-        textrank.setTopXWordsForPhrases(request.getTopXWordsForPhrases());
-        textrank.setTopXSinglewordKeywords(request.getTopXSinglewordKeywords());
-        textrank.setKeywordLabel(request.getKeywordLabel());
-
-        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = textrank.createCooccurrences(request.getNode());
-        boolean res = textrank.evaluate(request.getNode(), 
-                coOccurrence, 
+        textrankBuilder.removeStopWords(request.isDoStopwords())
+                .respectDirections(request.isRespectDirections())
+                .respectSentences(request.isRespectSentences())
+                .useTfIdfWeights(request.isUseTfIdfWeights())
+                .useDependencies(request.isUseDependencies())
+                .setCooccurrenceWindow(request.getCooccurrenceWindow())
+                .setMaxSingleKeywords(request.getMaxSingleKeywords())
+                .setTopXWordsForPhrases(request.getTopXWordsForPhrases())
+                .setTopXSinglewordKeywords(request.getTopXSinglewordKeywords())
+                .setKeywordLabel(request.getKeywordLabel());
+        
+        TextRank textRank = textrankBuilder.build();
+        boolean res = textRank.evaluate(request.getNode(), 
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());
-
-        if (!res) {
-            return SingleResult.fail();
-        }
-
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed.");
-
-        return SingleResult.success();
+        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Res: " + res);
+        return res ? SingleResult.success() : SingleResult.fail();
     }
 
     public SingleResult postprocess(TextRankPostprocessRequest request) {
         LOG.info("Starting TextRank post-processing ...");
-        TextRank textrank = new TextRank(getDatabase(), getNLPManager().getConfiguration());
-        textrank.setKeywordLabel(request.getKeywordLabel());
-        if (!textrank.postprocess())
+        TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
+        textrankBuilder.setKeywordLabel(request.getKeywordLabel());
+        if (!textrankBuilder.build().postprocess())
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();

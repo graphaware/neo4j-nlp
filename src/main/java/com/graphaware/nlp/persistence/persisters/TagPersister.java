@@ -86,10 +86,8 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             }
             List<String> original = Arrays.asList(pos);
 
-            for (String s : tag.getPosAsList()) {
-                if (!original.contains(s)) {
-                    return true;
-                }
+            if (tag.getPosAsList().stream().anyMatch((s) -> (!original.contains(s)))) {
+                return true;
             }
         }
 
