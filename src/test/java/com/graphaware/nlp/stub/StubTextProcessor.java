@@ -14,6 +14,8 @@ import java.util.*;
 @NLPTextProcessor(name = "StubTextProcessor")
 public class StubTextProcessor implements TextProcessor {
 
+    private String lastPipelineUsed = "";
+
     @Override
     public String getAlias() {
         return "stub";
@@ -68,6 +70,7 @@ public class StubTextProcessor implements TextProcessor {
 
     @Override
     public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParams) {
+        this.lastPipelineUsed = pipelineName;
         AnnotatedText annotatedText = new AnnotatedText();
         String[] sentencesSplit = text.split("\\.");
         int sentenceNumber = 0;
@@ -134,5 +137,9 @@ public class StubTextProcessor implements TextProcessor {
     @Override
     public String test(String project, String alg, String model, String file, String lang) {
         return null;
+    }
+
+    public String getLastPipelineUsed() {
+        return lastPipelineUsed;
     }
 }

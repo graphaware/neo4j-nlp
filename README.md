@@ -68,7 +68,8 @@ Note: both concrete text processors are quite greedy - you will need to dedicate
 
 The text extraction phase is done with a Natural Language Processing pipeline, each pipeline has a list of enabled components.
 
-The `tokenizer` component is common to every pipeline and will perform the following :
+For example, the basic `tokenizer` pipeline has the following components :
+
 
 * Sentence Segmentation
 * Tokenization

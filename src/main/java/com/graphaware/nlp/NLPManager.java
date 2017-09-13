@@ -125,7 +125,7 @@ public final class NLPManager {
         String pipeline = getPipeline(pipelineName);
         TextProcessor processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
         AnnotatedText annotatedText = processor.annotateText(
-                text, pipelineName, lang, null
+                text, pipeline, lang, null
         );
 
         String txId = String.valueOf(System.currentTimeMillis());
