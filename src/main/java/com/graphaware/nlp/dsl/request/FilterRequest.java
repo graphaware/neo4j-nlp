@@ -13,60 +13,58 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl;
+package com.graphaware.nlp.dsl.request;
 
-public class AnnotationRequest {
-
+public class FilterRequest {
+    
     private String text;
-
-    private Object id;
-
-    private String textProcessor;
-
+    private String filter;
+    private String processor;
     private String pipeline;
 
-    private boolean force;
-
-    private boolean checkLanguage = true;
-
-    public AnnotationRequest() {
-
+    public FilterRequest() {
     }
 
-    public AnnotationRequest(String text, Object id, String textProcessor, String pipeline, boolean force, boolean checkLanguage) {
+    
+    public FilterRequest(String text, String filter, String processor, String pipeline) {
         this.text = text;
-        this.id = id;
-        this.textProcessor = textProcessor;
+        this.filter = filter;
+        this.processor = processor;
         this.pipeline = pipeline;
-        this.force = force;
-        this.checkLanguage = checkLanguage;
     }
 
     public String getText() {
         return text;
     }
 
-    public String getId() {
-        return String.valueOf(id);
+    public void setText(String text) {
+        this.text = text;
     }
 
-    public String getTextProcessor() {
-        return textProcessor;
+    public String getFilter() {
+        return filter;
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
+    }
+
+    public String getProcessor() {
+        return processor;
+    }
+
+    public void setProcessor(String processor) {
+        this.processor = processor;
     }
 
     public String getPipeline() {
         return pipeline;
     }
 
-    public boolean isForce() {
-        return force;
+    public void setPipeline(String pipeline) {
+        this.pipeline = pipeline;
     }
-
-    public boolean isCheckLanguage() {
-        return checkLanguage;
-    }
-
-    public boolean shouldCheckLanguage() {
-        return checkLanguage;
-    }
+    
+    
+    
 }

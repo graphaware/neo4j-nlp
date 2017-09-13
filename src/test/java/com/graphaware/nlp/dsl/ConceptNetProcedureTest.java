@@ -1,9 +1,11 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.util.NodeProxy;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

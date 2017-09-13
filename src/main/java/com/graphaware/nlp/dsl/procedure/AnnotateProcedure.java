@@ -16,8 +16,8 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.dsl.AnnotationRequest;
-import com.graphaware.nlp.dsl.FilterRequest;
+import com.graphaware.nlp.dsl.request.AnnotationRequest;
+import com.graphaware.nlp.dsl.request.FilterRequest;
 import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import org.neo4j.graphdb.Node;

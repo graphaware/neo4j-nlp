@@ -16,7 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.dsl.Word2VecRequest;
+import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;

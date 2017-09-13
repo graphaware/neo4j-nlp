@@ -16,8 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import static com.graphaware.nlp.dsl.AbstractDSL.mapper;
-import com.graphaware.nlp.dsl.PageRankRequest;
+import com.graphaware.nlp.dsl.request.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 import java.util.stream.Stream;

@@ -17,7 +17,7 @@ package com.graphaware.nlp.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
 import java.util.HashMap;
 import java.util.Map;

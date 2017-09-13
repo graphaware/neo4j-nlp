@@ -16,7 +16,7 @@
 package com.graphaware.nlp.ml.pagerank;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.dsl.PageRankRequest;
+import com.graphaware.nlp.dsl.request.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;

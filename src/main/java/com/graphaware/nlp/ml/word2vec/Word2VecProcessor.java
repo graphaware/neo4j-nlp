@@ -18,7 +18,7 @@ package com.graphaware.nlp.ml.word2vec;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.dsl.Word2VecRequest;
+import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.persistence.constants.Labels;

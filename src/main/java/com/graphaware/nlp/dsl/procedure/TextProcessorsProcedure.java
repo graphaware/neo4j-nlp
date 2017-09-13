@@ -16,8 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import static com.graphaware.nlp.dsl.AbstractDSL.mapper;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.processor.PipelineInfo;

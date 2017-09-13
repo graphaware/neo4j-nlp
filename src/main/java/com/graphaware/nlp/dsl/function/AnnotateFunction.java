@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;

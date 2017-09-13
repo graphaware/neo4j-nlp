@@ -13,58 +13,60 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl;
+package com.graphaware.nlp.dsl.request;
 
-public class FilterRequest {
-    
+public class AnnotationRequest {
+
     private String text;
-    private String filter;
-    private String processor;
+
+    private Object id;
+
+    private String textProcessor;
+
     private String pipeline;
 
-    public FilterRequest() {
+    private boolean force;
+
+    private boolean checkLanguage = true;
+
+    public AnnotationRequest() {
+
     }
 
-    
-    public FilterRequest(String text, String filter, String processor, String pipeline) {
+    public AnnotationRequest(String text, Object id, String textProcessor, String pipeline, boolean force, boolean checkLanguage) {
         this.text = text;
-        this.filter = filter;
-        this.processor = processor;
+        this.id = id;
+        this.textProcessor = textProcessor;
         this.pipeline = pipeline;
+        this.force = force;
+        this.checkLanguage = checkLanguage;
     }
 
     public String getText() {
         return text;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public String getId() {
+        return String.valueOf(id);
     }
 
-    public String getFilter() {
-        return filter;
-    }
-
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    public String getProcessor() {
-        return processor;
-    }
-
-    public void setProcessor(String processor) {
-        this.processor = processor;
+    public String getTextProcessor() {
+        return textProcessor;
     }
 
     public String getPipeline() {
         return pipeline;
     }
 
-    public void setPipeline(String pipeline) {
-        this.pipeline = pipeline;
+    public boolean isForce() {
+        return force;
     }
-    
-    
-    
+
+    public boolean isCheckLanguage() {
+        return checkLanguage;
+    }
+
+    public boolean shouldCheckLanguage() {
+        return checkLanguage;
+    }
 }
