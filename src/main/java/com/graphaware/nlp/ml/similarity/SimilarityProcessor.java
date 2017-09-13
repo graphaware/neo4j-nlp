@@ -15,17 +15,17 @@
  */
 package com.graphaware.nlp.ml.similarity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @NLPModuleExtension(name = "SimilarityProcessor")
 public class SimilarityProcessor extends AbstractExtension implements NLPExtension {

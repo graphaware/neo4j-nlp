@@ -17,6 +17,10 @@ package com.graphaware.nlp.util;
 
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.processor.TextProcessor;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -25,9 +29,6 @@ import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ServiceLoader {
 

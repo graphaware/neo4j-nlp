@@ -18,23 +18,20 @@ package com.graphaware.nlp.ml.word2vec;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.dsl.Word2VecRequest;
+import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @NLPModuleExtension(name = "Word2VecProcessor")
 public class Word2VecProcessor extends AbstractExtension implements NLPExtension {

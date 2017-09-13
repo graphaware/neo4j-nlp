@@ -17,7 +17,8 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
+
 import java.util.List;
 import java.util.Map;
 

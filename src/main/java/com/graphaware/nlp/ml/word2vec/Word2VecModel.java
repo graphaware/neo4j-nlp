@@ -15,11 +15,12 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Word2VecModel {
     private static final Logger LOG = LoggerFactory.getLogger(Word2VecModel.class);

@@ -16,19 +16,18 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import static com.graphaware.nlp.dsl.AbstractDSL.mapper;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.processor.PipelineInfo;
-import java.util.Map;
-import java.util.Set;
 import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Procedure;
-
-import java.util.stream.Stream;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
+import org.neo4j.procedure.Procedure;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class TextProcessorsProcedure extends AbstractDSL {
 

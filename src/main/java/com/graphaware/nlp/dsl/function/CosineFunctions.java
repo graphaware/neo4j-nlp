@@ -16,18 +16,15 @@
 package com.graphaware.nlp.dsl.function;
 
 import com.graphaware.nlp.ml.similarity.CosineSimilarity;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
 
-/**
- *
- * @author ale
- */
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public class CosineFunctions {
 
     @UserFunction

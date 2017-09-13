@@ -1,8 +1,8 @@
 package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.SentimentLabels;
-import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
@@ -126,6 +126,24 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     true);
             tx.success();
         }
+    }
+
+    @Test
+    public void testAnnotationWillUseExistentFallbackLanguageIfCheckLanguageIsFalseAndNoLanguageIsDetected() {
+        manager.getConfiguration().updateInternalSetting(SettingsConstants.FALLBACK_LANGUAGE, "en");
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "Barack Obama is born in Hawaii.",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    "",
+                    false,
+                    false);
+            tx.success();
+        }
+        TestNLPGraph test = new TestNLPGraph(getDatabase());
+        test.assertTagWithIdExist("Barack_en");
+        test.assertTagWithIdExist("born_en");
     }
 
     @Test

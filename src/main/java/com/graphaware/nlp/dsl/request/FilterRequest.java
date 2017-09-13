@@ -13,9 +13,15 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl;
+package com.graphaware.nlp.dsl.request;
 
-public class FilterRequest {
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static com.graphaware.nlp.dsl.request.RequestConstants.*;
+
+public class FilterRequest extends AbstractProcedureRequest {
     
     private String text;
     private String filter;
@@ -31,6 +37,31 @@ public class FilterRequest {
         this.filter = filter;
         this.processor = processor;
         this.pipeline = pipeline;
+    }
+
+    @Override
+    public List<String> validMapKeys() {
+        return Arrays.asList(
+                TEXT_KEY,
+                FILTER_KEY,
+                TEXT_PROCESSOR_KEY,
+                PIPELINE_KEY
+        );
+    }
+
+    @Override
+    public List<String> mandatoryKeys() {
+        return Arrays.asList(
+                TEXT_KEY,
+                FILTER_KEY
+        );
+    }
+
+    public static FilterRequest fromMap(Map<String, Object> map) {
+        FilterRequest request = mapper.convertValue(map, FilterRequest.class);
+        request.validateMap(map);
+
+        return request;
     }
 
     public String getText() {

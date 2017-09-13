@@ -19,7 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.ResourceIterator;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -16,16 +16,17 @@
 package com.graphaware.nlp.ml.pagerank;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.dsl.PageRankRequest;
+import com.graphaware.nlp.dsl.request.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 @NLPModuleExtension(name = "PageRankProcessor")
 public class PageRankProcessor extends AbstractExtension implements NLPExtension {

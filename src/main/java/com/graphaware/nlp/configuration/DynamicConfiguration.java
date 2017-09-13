@@ -17,7 +17,7 @@ package com.graphaware.nlp.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
-import com.graphaware.nlp.dsl.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -78,6 +78,10 @@ public class DynamicConfiguration {
         }
 
         return userProvidedConfiguration.get(SETTING_KEY_PREFIX + key);
+    }
+
+    public boolean hasSettingValue(String key) {
+        return userProvidedConfiguration.containsKey(SETTING_KEY_PREFIX + key);
     }
 
     public void update(String key, Object value) {

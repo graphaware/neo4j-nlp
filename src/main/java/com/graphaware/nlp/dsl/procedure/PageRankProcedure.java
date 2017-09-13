@@ -16,17 +16,16 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import static com.graphaware.nlp.dsl.AbstractDSL.mapper;
-import com.graphaware.nlp.dsl.PageRankRequest;
+import com.graphaware.nlp.dsl.request.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import java.util.Map;
-import java.util.stream.Stream;
-
 import com.graphaware.nlp.ml.pagerank.PageRankProcessor;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class PageRankProcedure extends AbstractDSL {
 

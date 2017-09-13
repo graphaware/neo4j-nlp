@@ -18,7 +18,7 @@ package com.graphaware.nlp.enrich.conceptnet5;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.dsl.ConceptRequest;
+import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.enrich.AbstractEnricher;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.persistence.PersistenceRegistry;

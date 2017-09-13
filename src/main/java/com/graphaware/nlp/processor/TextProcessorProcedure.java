@@ -16,8 +16,6 @@
 package com.graphaware.nlp.processor;
 
 
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
-
 public class TextProcessorProcedure {
 //
 //    private static final Logger LOG = LoggerFactory.getLogger(TextProcessorProcedure.class);

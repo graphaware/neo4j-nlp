@@ -2,14 +2,13 @@ package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
-import com.graphaware.nlp.dsl.ConceptRequest;
+import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphdb.Transaction;
 

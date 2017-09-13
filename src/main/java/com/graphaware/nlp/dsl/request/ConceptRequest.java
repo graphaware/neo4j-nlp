@@ -13,15 +13,18 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl;
+package com.graphaware.nlp.dsl.request;
 
-import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
+import org.neo4j.graphdb.Node;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.neo4j.graphdb.Node;
 
-public class ConceptRequest {
+import static com.graphaware.nlp.dsl.request.RequestConstants.*;
+import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
+
+public class ConceptRequest extends AbstractProcedureRequest {
 
     private final static int DEFAULT_DEPTH = 2;
     private final static String DEFAULT_LANGUAGE = "en";
@@ -43,6 +46,22 @@ public class ConceptRequest {
     private Node tag;
 
     public ConceptRequest() {
+    }
+
+    @Override
+    public List<String> validMapKeys() {
+        return Arrays.asList(
+                NODE_KEY,
+                TAG_KEY,
+                DEPTH_KEY,
+                SPLIT_TAGS_KEY,
+                FILTER_BY_LANGUAGE_KEY,
+                ADMITTED_PART_OF_SPEECH_KEY,
+                ADMITTED_RELATIONSHIPS_KEY,
+                LIMIT_KEY,
+                TEXT_PROCESSOR_KEY,
+                LANGUAGE_KEY
+        );
     }
 
     public void setDepth(int depth) {
@@ -126,31 +145,35 @@ public class ConceptRequest {
     }
 
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
+
         ConceptRequest request = new ConceptRequest();
-        request.setAnnotatedNode((Node)conceptRequest.get("node"));
-        request.setTag((Node)conceptRequest.get("tag"));
-        if (conceptRequest.containsKey("admittedPos")) {
-            request.setAdmittedPos((List<String>)conceptRequest.get("admittedPos"));
+        request.validateMap(conceptRequest);
+        request.validateRequestHasKeyOrOtherKey(NODE_KEY, TAG_KEY, conceptRequest);
+
+        request.setAnnotatedNode((Node) conceptRequest.get(NODE_KEY));
+        request.setTag((Node) conceptRequest.get(TAG_KEY));
+        if (conceptRequest.containsKey(ADMITTED_PART_OF_SPEECH_KEY)) {
+            request.setAdmittedPos((List<String>) conceptRequest.get(ADMITTED_PART_OF_SPEECH_KEY));
         }
-        if (conceptRequest.containsKey("admittedRelationships")) {
-            request.setAdmittedRelationships((List<String>)conceptRequest.get("admittedRelationships"));
+        if (conceptRequest.containsKey(ADMITTED_RELATIONSHIPS_KEY)) {
+            request.setAdmittedRelationships((List<String>) conceptRequest.get(ADMITTED_RELATIONSHIPS_KEY));
         }
-        if (conceptRequest.containsKey("depth")) {
-            request.setDepth(((Long)conceptRequest.get("depth")).intValue());
+        if (conceptRequest.containsKey(DEPTH_KEY)) {
+            request.setDepth(((Long) conceptRequest.get(DEPTH_KEY)).intValue());
         }
-        if (conceptRequest.containsKey("language")) {
-            request.setLanguage((String)conceptRequest.get("language"));
+        if (conceptRequest.containsKey(LANGUAGE_KEY)) {
+            request.setLanguage((String) conceptRequest.get(LANGUAGE_KEY));
         }
-        if (conceptRequest.containsKey("splitTag")) {
-            request.setSplitTag((Boolean)conceptRequest.get("splitTag"));
+        if (conceptRequest.containsKey(SPLIT_TAGS_KEY)) {
+            request.setSplitTag((Boolean) conceptRequest.get(SPLIT_TAGS_KEY));
         }
-        if (conceptRequest.containsKey("filterByLanguage")) {
-            request.setFilterByLanguage((Boolean)conceptRequest.get("filterByLanguage"));
+        if (conceptRequest.containsKey(FILTER_BY_LANGUAGE_KEY)) {
+            request.setFilterByLanguage((Boolean) conceptRequest.get(FILTER_BY_LANGUAGE_KEY));
         }
-        if (conceptRequest.containsKey("limit")) {
-            request.setResultsLimit((int) conceptRequest.get("limit"));
+        if (conceptRequest.containsKey(LIMIT_KEY)) {
+            request.setResultsLimit( (int) conceptRequest.get(LIMIT_KEY));
         }
-        request.setProcessor((String)conceptRequest.get("processor"));
+        request.setProcessor((String) conceptRequest.get(TEXT_PROCESSOR_KEY));
         return request;
     }
 }

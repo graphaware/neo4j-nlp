@@ -13,9 +13,15 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl;
+package com.graphaware.nlp.dsl.request;
 
-public class AnnotationRequest {
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static com.graphaware.nlp.dsl.request.RequestConstants.*;
+
+public class AnnotationRequest extends AbstractProcedureRequest {
 
     private String text;
 
@@ -40,6 +46,33 @@ public class AnnotationRequest {
         this.pipeline = pipeline;
         this.force = force;
         this.checkLanguage = checkLanguage;
+    }
+
+    @Override
+    public List<String> validMapKeys() {
+        return Arrays.asList(
+                ID_KEY,
+                TEXT_PROCESSOR_KEY,
+                TEXT_KEY,
+                PIPELINE_KEY,
+                FORCE_KEY,
+                CHECK_LANGUAGE_KEY
+        );
+    }
+
+    @Override
+    public List<String> mandatoryKeys() {
+        return Arrays.asList(
+                TEXT_KEY,
+                ID_KEY
+        );
+    }
+
+    public static AnnotationRequest fromMap(Map<String, Object> map) {
+        AnnotationRequest request = mapper.convertValue(map, AnnotationRequest.class);
+        request.validateMap(map);
+
+        return request;
     }
 
     public String getText() {

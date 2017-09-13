@@ -18,10 +18,11 @@ package com.graphaware.nlp;
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.dsl.PipelineSpecification;
-import com.graphaware.nlp.dsl.AnnotationRequest;
-import com.graphaware.nlp.dsl.FilterRequest;
+import com.graphaware.nlp.dsl.request.AnnotationRequest;
+import com.graphaware.nlp.dsl.request.FilterRequest;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
@@ -37,13 +38,12 @@ import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-
-import java.util.*;
-
 import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
+
+import java.util.*;
 
 public final class NLPManager {
 
@@ -99,6 +99,7 @@ public final class NLPManager {
         loadExtensions();
         registerEventListeners();
         initialized = true;
+        registerPipelinesFromConfig();
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -202,6 +203,11 @@ public final class NLPManager {
     private String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
         String detectedLanguage = languageManager.detectLanguage(text);
+
+        if (!languageManager.isTextLanguageSupported(text) && configuration.hasSettingValue(SettingsConstants.FALLBACK_LANGUAGE)) {
+            return configuration.getSettingValueFor(SettingsConstants.FALLBACK_LANGUAGE).toString();
+        }
+
         if (!languageManager.isTextLanguageSupported(text) && failIfUnsupported) {
             String msg = String.format("Unsupported language : %s", detectedLanguage);
             LOG.error(msg);
@@ -258,6 +264,12 @@ public final class NLPManager {
     private void registerEventListeners() {
         extensions.values().forEach(e -> {
             e.registerEventListeners(eventDispatcher);
+        });
+    }
+
+    private void registerPipelinesFromConfig() {
+        configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
+            textProcessorsManager.createPipeline(pipelineSpecification);
         });
     }
 }

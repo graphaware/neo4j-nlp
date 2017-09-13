@@ -17,16 +17,15 @@ package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import java.util.List;
-
 import com.graphaware.nlp.ml.similarity.SimilarityProcessor;
+import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.List;
 import java.util.stream.Stream;
-import org.neo4j.graphdb.Node;
 
 public class SimilarityProcedure extends AbstractDSL {
 

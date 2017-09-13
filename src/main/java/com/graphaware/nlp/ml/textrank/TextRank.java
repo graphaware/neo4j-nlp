@@ -16,25 +16,19 @@
 package com.graphaware.nlp.ml.textrank;
 
 import com.graphaware.nlp.NLPManager;
-import com.graphaware.nlp.domain.Keyword;
-import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
-import java.util.concurrent.atomic.AtomicBoolean;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
 
 public class TextRank {
 

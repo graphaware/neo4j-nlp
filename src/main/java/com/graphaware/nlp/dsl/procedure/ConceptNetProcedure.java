@@ -16,18 +16,17 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.dsl.ConceptRequest;
+import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.dsl.result.NodeResult;
-import java.util.Map;
-import java.util.stream.Stream;
-
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
-import java.util.List;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class ConceptNetProcedure extends AbstractDSL {
    

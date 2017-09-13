@@ -20,11 +20,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.persistence.persisters.AnnotatedTextPersister;
-import com.graphaware.nlp.persistence.persisters.KeywordPersister;
-import com.graphaware.nlp.persistence.persisters.Persister;
-import com.graphaware.nlp.persistence.persisters.SentencePersister;
-import com.graphaware.nlp.persistence.persisters.TagPersister;
+import com.graphaware.nlp.persistence.persisters.*;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 import java.util.HashMap;
