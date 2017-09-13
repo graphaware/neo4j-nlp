@@ -16,4 +16,5 @@ public final class RequestConstants {
     public static final String PIPELINE_KEY = "pipeline";
     public static final String ID_KEY = "id";
     public static final String FORCE_KEY = "force";
+    public static final String FILTER_KEY = "filter";
 }
