@@ -32,7 +32,7 @@ public class AnnotateProcedure extends AbstractDSL {
     @Description("Performs the text annotation and store it into the graph")
     public Stream<NodeResult> annotate(@Name("annotationRequest") Map<String, Object> annotationRequest) {
         try {
-            AnnotationRequest request = mapper.convertValue(annotationRequest, AnnotationRequest.class);
+            AnnotationRequest request = AnnotationRequest.fromMap(annotationRequest);
             Node result = getNLPManager().annotateTextAndPersist(request);
             return Stream.of(new NodeResult(result));
         } catch (Exception e) {

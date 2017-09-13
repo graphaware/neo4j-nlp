@@ -1,5 +1,6 @@
 package com.graphaware.nlp.dsl.request;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.util.ProcedureRequestUtils;
 
 import java.util.Arrays;
@@ -7,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractProcedureRequest implements ProcedureRequest {
+
+    protected static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public List<String> mandatoryKeys() {
@@ -21,6 +24,8 @@ public abstract class AbstractProcedureRequest implements ProcedureRequest {
                 throw new RuntimeException(String.format("Invalid request parameter '%s', maybe you meant '%s' instead ?", key, v));
             }
         });
+
+        validateRequestHasMandatoryKeys(mandatoryKeys(), map);
     }
 
     protected void validateRequestHasMandatoryKeys(List<String> keys, Map<String, Object> map) {

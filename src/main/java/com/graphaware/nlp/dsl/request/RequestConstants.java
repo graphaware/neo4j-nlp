@@ -13,4 +13,7 @@ public final class RequestConstants {
     public static final String FILTER_BY_LANGUAGE_KEY = "filterByLanguage";
     public static final String LIMIT_KEY = "limit";
     public static final String TEXT_PROCESSOR_KEY = "textProcessor";
+    public static final String PIPELINE_KEY = "pipeline";
+    public static final String ID_KEY = "id";
+    public static final String FORCE_KEY = "force";
 }

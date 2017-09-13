@@ -23,7 +23,7 @@ import org.neo4j.graphdb.Node;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 
-public class ConceptRequest extends AbstractProcedureRequest implements ProcedureRequest {
+public class ConceptRequest extends AbstractProcedureRequest {
 
     private final static int DEFAULT_DEPTH = 2;
     private final static String DEFAULT_LANGUAGE = "en";
