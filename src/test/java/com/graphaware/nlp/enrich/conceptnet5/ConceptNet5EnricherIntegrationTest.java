@@ -29,7 +29,7 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
     public void testConceptNetUrlIsConfigurable() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager());
         assertEquals("http://api.conceptnet.io", enricher.getConceptNetUrl());
 
         configuration.updateInternalSetting("CONCEPT_NET_5_URL", "http://localhost:8001");
@@ -40,7 +40,7 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
     public void testTagsCanBeEnrichedWithConceptNet5() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager());
 
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
@@ -74,7 +74,7 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
     public void testRequestWithRelationshipsConstraintDoNotGetThem() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager());
 
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as the eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
@@ -108,7 +108,7 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
     public void testConceptEnrichmentWithRelConstraintViaProcedure() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager(getDatabase()));
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager());
 
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {

@@ -4,13 +4,13 @@
  * This file is part of the GraphAware Framework.
  *
  * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
- * the GNU General Public License as published by the Free Software Foundation, either
+ * the GNU General License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details. You should have received a copy of
- * the GNU General Public License along with this program.  If not, see
+ * See the GNU General License for more details. You should have received a copy of
+ * the GNU General License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
 package com.graphaware.nlp.processor;
@@ -24,36 +24,38 @@ import java.util.Map;
 
 public interface TextProcessor {
 
-    public void init();
+    String DEFAULT_PIPELINE = "tokenizer";
 
-    public String getAlias();
+    void init();
 
-    public String override();
-    
-    public List<String> getPipelines();
+    String getAlias();
 
-    public List<PipelineInfo> getPipelineInfos();
-    
-    public void createPipeline(PipelineSpecification pipelineSpecification);
-    
-    public boolean checkPipeline(String name);
+    String override();
 
-    public AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
+    List<String> getPipelines();
 
-    public Tag annotateSentence(String text, String lang);
+    List<PipelineInfo> getPipelineInfos();
 
-    public Tag annotateTag(String text, String lang);
-    
-    public List<Tag> annotateTags(String text, String lang);
+    void createPipeline(PipelineSpecification pipelineSpecification);
 
-    public boolean checkLemmaIsValid(String value);
+    boolean checkPipeline(String name);
 
-    public AnnotatedText sentiment(AnnotatedText annotatedText);
+    AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
 
-    public void removePipeline(String pipeline);
+    Tag annotateSentence(String text, String lang);
 
-    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
+    Tag annotateTag(String text, String lang);
 
-    public String test(String project, String alg, String model, String file, String lang);
+    List<Tag> annotateTags(String text, String lang);
+
+    boolean checkLemmaIsValid(String value);
+
+    AnnotatedText sentiment(AnnotatedText annotatedText);
+
+    void removePipeline(String pipeline);
+
+    String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
+
+    String test(String project, String alg, String model, String file, String lang);
 
 }

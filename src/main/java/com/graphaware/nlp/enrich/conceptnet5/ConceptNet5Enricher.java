@@ -25,6 +25,7 @@ import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import com.graphaware.nlp.util.ProcessorUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
@@ -82,7 +83,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
             throw new RuntimeException("You need to specify or an annotated text or a list of tags");
         }
 
-        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), null);
+        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), TextProcessor.DEFAULT_PIPELINE);
         List<Tag> tags = new ArrayList<>();
         while (tagsIterator.hasNext()) {
             Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());

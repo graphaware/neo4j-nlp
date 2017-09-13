@@ -6,6 +6,7 @@ import com.graphaware.nlp.domain.SentimentLabels;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
@@ -47,7 +48,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "hello my name is John.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             assertEquals("123", annotatedText.getProperty("id").toString());
@@ -69,7 +70,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "hello my name is John.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             assertEquals("123", annotatedText.getProperty("id").toString());
@@ -85,7 +86,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "Barack Obama is born in Hawaii. He is our president.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             tx.success();
@@ -103,7 +104,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "Barack Obama is born in Hawaii.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     false);
             tx.success();
@@ -121,7 +122,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "Barack Obama is born in Hawaii.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             tx.success();
@@ -136,7 +137,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "Barack Obama is born in Hawaii.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     false);
             tx.success();
@@ -154,7 +155,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "hello my name is John.",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
 
@@ -175,7 +176,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             tx.success();
@@ -201,7 +202,7 @@ public class AnnotationPersistenceIntegrationTest extends EmbeddedDatabaseIntegr
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
                     StubTextProcessor.class.getName(),
-                    "",
+                    TextProcessor.DEFAULT_PIPELINE,
                     false,
                     true);
             tx.success();
