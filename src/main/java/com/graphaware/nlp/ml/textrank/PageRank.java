@@ -112,7 +112,7 @@ public class PageRank {
                 Relationship rel = (Relationship) next.get("rel");
                 if (weightProperties != null
                         && rel.hasProperty(weightProperties)) {
-                    w = (double) rel.getProperty(weightProperties);
+                    w = (int) rel.getProperty(weightProperties);
                 }
                 addTagToCoOccurrence(results, tag1, tag2, w);
                 if (!directionsMatter)

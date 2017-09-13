@@ -15,15 +15,25 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import com.graphaware.common.util.Pair;
+import java.util.ArrayList;
+import java.util.List;
+
 public class CoOccurrenceItem {
     private final long source;
     private final long destination;
     private double count;
-
+    private final List<Pair<Integer, Integer>> occurrence;
+    
     public CoOccurrenceItem(long source, long destination) {
+        this(source, 0, destination, 0);
+    }
+    public CoOccurrenceItem(long source, int sourceStartPosition, long destination, int destinationStartingPosition) {
         this.source = source;
         this.destination = destination;
-        this.count = 1.;
+        this.count = 1;
+        this.occurrence = new ArrayList<>();
+        this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartingPosition));
     }
     
     public long getSource() {
@@ -49,4 +59,12 @@ public class CoOccurrenceItem {
     public void setCount(double val) {
         this.count = val;
     }
+    
+    public void addPositions(int sourceStartPosition, int destinationStartingPosition) {
+        this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartingPosition));
+    }
+
+    public List<Pair<Integer, Integer>> getSourceStartingPositions() {
+        return occurrence;
+    }    
 }
