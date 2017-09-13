@@ -99,6 +99,7 @@ public final class NLPManager {
         loadExtensions();
         registerEventListeners();
         initialized = true;
+        registerPipelinesFromConfig();
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -258,6 +259,12 @@ public final class NLPManager {
     private void registerEventListeners() {
         extensions.values().forEach(e -> {
             e.registerEventListeners(eventDispatcher);
+        });
+    }
+
+    private void registerPipelinesFromConfig() {
+        configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
+            textProcessorsManager.createPipeline(pipelineSpecification);
         });
     }
 }

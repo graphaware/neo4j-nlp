@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.processor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
@@ -23,9 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +36,11 @@ public class TextProcessorsManager {
 
     private final GraphDatabaseService database;
     private final Map<String, TextProcessor> textProcessors = new HashMap<>();
-    private final ObjectMapper mapper = new ObjectMapper();
 
     public TextProcessorsManager(GraphDatabaseService database) {
         this.database = database;
         loadTextProcessors();
         initiateTextProcessors();
-        loadPipelines();
     }
 
     private void loadTextProcessors() {
@@ -89,35 +84,13 @@ public class TextProcessorsManager {
         TextProcessor processor = textProcessors.get(processorName);
         processor.createPipeline(pipelineSpecification);
 
+        LOG.info("Created pipeline " + pipelineSpecification.getName() + " for processor " + processorName);
+
         return new PipelineCreationResult(0, "");
     }
 
     public Map<String, TextProcessor> getTextProcessors() {
         return textProcessors;
-    }
-
-    private void loadPipelines() {
-        try (Transaction tx = database.beginTx()) {
-            ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
-            pipelineNodes.stream().forEach(pipeline -> {
-                createPipeline(PipelineSpecification.fromMap(pipeline.getAllProperties()));
-            });
-            tx.success();
-        }
-    }
-
-    public Node storePipeline(PipelineSpecification pipelineSpecification) {
-        try (Transaction tx = database.beginTx()) {
-            Node pipelineNode = database.createNode(Pipeline);
-            Map<String, Object> inputParams = mapper.convertValue(pipelineSpecification, Map.class);
-            inputParams.entrySet().stream().forEach(entry -> {
-                if (entry.getValue() != null) {
-                    pipelineNode.setProperty(entry.getKey(), entry.getValue());
-                }
-            });
-            tx.success();
-            return pipelineNode;
-        }
     }
 
     public String getDefaultProcessorName() {
