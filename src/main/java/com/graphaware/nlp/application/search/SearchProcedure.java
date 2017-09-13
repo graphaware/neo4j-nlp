@@ -15,31 +15,6 @@
  */
 package com.graphaware.nlp.application.search;
 
-import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.language.LanguageManager;
-import com.graphaware.nlp.processor.TextProcessor;
-import com.graphaware.nlp.processor.TextProcessorsManager;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.neo4j.collection.RawIterator;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Result;
-import org.neo4j.helpers.collection.Iterators;
-import org.neo4j.kernel.api.exceptions.ProcedureException;
-import org.neo4j.kernel.api.proc.CallableProcedure;
-import org.neo4j.kernel.api.proc.Neo4jTypes;
-import org.neo4j.kernel.api.proc.ProcedureSignature;
-import org.neo4j.kernel.api.proc.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import static org.neo4j.kernel.api.proc.ProcedureSignature.procedureSignature;
-import org.neo4j.procedure.Mode;
-
 public class SearchProcedure {
 
 //    private static final Logger LOG = LoggerFactory.getLogger(SearchProcedure.class);

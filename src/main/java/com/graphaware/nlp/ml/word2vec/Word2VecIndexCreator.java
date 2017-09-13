@@ -17,11 +17,6 @@
 package com.graphaware.nlp.ml.word2vec;
 
 import com.graphaware.nlp.util.TypeConverter;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.lucene.analysis.Analyzer;
@@ -36,6 +31,12 @@ import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Word2VecIndexCreator {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);

@@ -18,8 +18,6 @@ package com.graphaware.nlp.util;
 import com.graphaware.nlp.persistence.constants.Labels;
 import org.neo4j.graphdb.Label;
 
-import static com.graphaware.nlp.persistence.constants.Labels.*;
-
 public class SentenceUtils {
 
     public static Label getDefaultLabelForSentimentLevel(int level) {

@@ -17,14 +17,15 @@ package com.graphaware.nlp.ml.similarity;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
-
+import com.graphaware.nlp.ml.queue.SimilarityItem;
+import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
+import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
-import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
-import com.graphaware.nlp.ml.queue.SimilarityItem;
-import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
+import org.neo4j.graphdb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,14 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.graphdb.Result;
-import org.neo4j.graphdb.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
 
 public class FeatureBasedProcessLogic {
 

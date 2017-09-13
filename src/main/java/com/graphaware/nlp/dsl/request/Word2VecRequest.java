@@ -15,8 +15,9 @@
  */
 package com.graphaware.nlp.dsl.request;
 
-import java.util.Map;
 import org.neo4j.graphdb.Node;
+
+import java.util.Map;
 
 public class Word2VecRequest {
 

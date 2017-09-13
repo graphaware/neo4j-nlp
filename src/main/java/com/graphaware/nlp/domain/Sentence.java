@@ -17,12 +17,7 @@ package com.graphaware.nlp.domain;
 
 import com.graphaware.nlp.util.HashFunctions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 public class Sentence implements Comparable<Sentence> {
     

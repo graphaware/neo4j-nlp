@@ -16,16 +16,16 @@
 package com.graphaware.nlp.ml.textrank;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class PageRank {
 

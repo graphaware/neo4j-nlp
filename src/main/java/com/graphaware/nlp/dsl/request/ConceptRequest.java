@@ -15,13 +15,14 @@
  */
 package com.graphaware.nlp.dsl.request;
 
-import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
+import org.neo4j.graphdb.Node;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.neo4j.graphdb.Node;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
+import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_ADMITTED_RELATIONSHIP;
 
 public class ConceptRequest extends AbstractProcedureRequest {
 

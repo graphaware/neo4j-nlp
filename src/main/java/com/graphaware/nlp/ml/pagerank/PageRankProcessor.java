@@ -23,9 +23,10 @@ import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 @NLPModuleExtension(name = "PageRankProcessor")
 public class PageRankProcessor extends AbstractExtension implements NLPExtension {

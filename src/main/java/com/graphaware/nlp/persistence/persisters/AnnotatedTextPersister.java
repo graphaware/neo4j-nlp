@@ -17,12 +17,15 @@ package com.graphaware.nlp.persistence.persisters;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
-import com.graphaware.nlp.domain.*;
+import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 
 import java.util.concurrent.atomic.AtomicReference;

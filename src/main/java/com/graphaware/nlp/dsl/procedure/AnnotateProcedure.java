@@ -21,7 +21,10 @@ import com.graphaware.nlp.dsl.request.FilterRequest;
 import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import org.neo4j.graphdb.Node;
-import org.neo4j.procedure.*;
+import org.neo4j.procedure.Description;
+import org.neo4j.procedure.Mode;
+import org.neo4j.procedure.Name;
+import org.neo4j.procedure.Procedure;
 
 import java.util.Map;
 import java.util.stream.Stream;

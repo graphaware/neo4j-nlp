@@ -15,8 +15,9 @@
  */
 package com.graphaware.nlp.enrich.conceptnet5;
 
-import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConceptNet5EdgeResult {

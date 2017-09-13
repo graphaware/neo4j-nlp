@@ -20,9 +20,9 @@ import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
@@ -38,13 +38,12 @@ import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-
-import java.util.*;
-
 import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
+
+import java.util.*;
 
 public final class NLPManager {
 

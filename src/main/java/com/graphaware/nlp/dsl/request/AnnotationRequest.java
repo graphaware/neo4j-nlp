@@ -15,8 +15,6 @@
  */
 package com.graphaware.nlp.dsl.request;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;

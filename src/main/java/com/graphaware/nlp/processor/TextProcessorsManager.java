@@ -18,16 +18,15 @@ package com.graphaware.nlp.processor;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.graphaware.nlp.persistence.constants.Labels.Pipeline;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class TextProcessorsManager {
 
