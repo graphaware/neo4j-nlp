@@ -38,6 +38,7 @@ import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -91,7 +92,7 @@ public final class NLPManager {
         }
         this.nlpConfiguration = nlpConfiguration;
         this.configuration = new DynamicConfiguration(database);
-        this.textProcessorsManager = new TextProcessorsManager(database);
+        this.textProcessorsManager = new TextProcessorsManager();
         this.database = database;
         this.persistenceRegistry = new PersistenceRegistry(database, configuration);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
@@ -115,19 +116,16 @@ public final class NLPManager {
     }
 
     public Node annotateTextAndPersist(AnnotationRequest annotationRequest) {
-        String processorClass = annotationRequest.getTextProcessor() != null ? annotationRequest.getTextProcessor() : textProcessorsManager.getDefaultProcessorName();
-        if (processorClass == null) {
-            throw new RuntimeException("Unable to find a processor for " + processorClass);
-        }
-
-        return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(), processorClass,
+        return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(), annotationRequest.getTextProcessor(),
                 annotationRequest.getPipeline(), annotationRequest.isForce(), annotationRequest.shouldCheckLanguage());
     }
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
         String lang = checkTextLanguage(text, checkForLanguage);
-        AnnotatedText annotatedText = textProcessorsManager.getTextProcessor(textProcessor).annotateText(
-                text, pipelineName, lang, null
+        String pipeline = getPipeline(pipelineName);
+        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
+        AnnotatedText annotatedText = processor.annotateText(
+                text, pipeline, lang, null
         );
 
         String txId = String.valueOf(System.currentTimeMillis());
@@ -170,17 +168,11 @@ public final class NLPManager {
 
     public Boolean filter(FilterRequest filterRequest) {
         String text = filterRequest.getText();
-        if (text == null) {
-            LOG.info("text is null");
-            throw new RuntimeException("text is null or language not supported or unable to detect the language");
-        }
         checkTextLanguage(text, false);
         String lang = LanguageManager.getInstance().detectLanguage(text);
         String filter = filterRequest.getFilter();
-        if (filter == null) {
-            throw new RuntimeException("A filter value needs to be provided");
-        }
-        TextProcessor currentTP = textProcessorsManager.retrieveTextProcessor(filterRequest.getProcessor(), filterRequest.getPipeline());
+        String pipeline = getPipeline(filterRequest.getPipeline());
+        TextProcessor currentTP = textProcessorsManager.retrieveTextProcessor(filterRequest.getProcessor(), pipeline);
         AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer", lang, null);
         return annotatedText.filter(filter);
 
@@ -269,7 +261,17 @@ public final class NLPManager {
 
     private void registerPipelinesFromConfig() {
         configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
-            textProcessorsManager.createPipeline(pipelineSpecification);
+            // Check that the text processor exist, it can happen that the configuration
+            // hold a reference to a processor that is not more registered, in order to avoid
+            // this method to fail completely for valid pipelines, we just do not register
+            // possible legacy pipelines
+            if (textProcessorsManager.getTextProcessorNames().contains(pipelineSpecification.getTextProcessor())) {
+                textProcessorsManager.createPipeline(pipelineSpecification);
+            }
         });
+    }
+
+    private String getPipeline(String pipelineName) {
+        return ProcessorUtils.getPipeline(pipelineName, configuration);
     }
 }

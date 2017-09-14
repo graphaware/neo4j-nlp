@@ -2,11 +2,9 @@
 
 This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
-The main module, this module, provide a **Domain Specific Language** built atop stored procedures and functions making
-your Natural Language Processing workflow a breeze and a fluent API for concrete processors implementations.
-
-Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
-[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
+The main module, this module, provide a common interface for underlying text processors as well as a
+**Domain Specific Language** built atop stored procedures and functions making your Natural Language Processing
+workflow developer friendly.
 
 It comes in 2 versions, Community (open-sourced) and Enterprise with the following NLP features :
 
@@ -21,11 +19,13 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | Similarity Computation | ✔ | ✔ |
 | Apache Spark Binding for Distributed Algorithms | | ✔ |
 | User Interface | | ✔ |
-| OpenIE | | ✔ |
+| ML Prediction capalities | | ✔ |
 | Entity Merging | | ✔ |
 | Questions generator | | ✔ |
 | Conversational Features | | ✔ |
 
+Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
+[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
 
 
 ## Installation
@@ -58,9 +58,63 @@ Append the following configuration in the `neo4j.conf` file in the `config/` dir
 Start or restart your Neo4j database.
 
 
-Note: both implementations (especially StanfordNLP) are quite greedy - you will need at least 4 gigabytes of RAM dedicated to Neo4j.
+Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
 
 ## Getting Started
+
+### Text extraction
+
+#### Pipelines and components
+
+The text extraction phase is done with a Natural Language Processing pipeline, each pipeline has a list of enabled components.
+
+For example, the basic `tokenizer` pipeline has the following components :
+
+
+* Sentence Segmentation
+* Tokenization
+* StopWords Removal
+* Stemming
+* Part Of Speech Tagging
+* Named Entity Recognition
+
+
+##### Example
+
+Let's take the following text as example :
+
+```
+Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
+and the police had spent hours trying to connect with the gunman and end the situation without further violence.
+But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
+wall to end the bloody standoff.
+```
+
+**Simulate your original corpus**
+
+Create a node with the text, this node will represent your original corpus or knowledge graph :
+
+```
+CREATE (n:News)
+SET n.text = "Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
+and the police had spent hours trying to connect with the gunman and end the situation without further violence.
+But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
+wall to end the bloody standoff.";
+```
+
+**Perform the text information extraction**
+
+The extraction is done via the `annotate` procedure which is the entry point to text information extraction
+
+```
+MATCH (n:News)
+CALL ga.nlp.annotate({text: n.text, id: id(n)})
+YIELD result
+MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
+RETURN result
+```
+
+
 
 List of procedures available:
 
@@ -71,10 +125,7 @@ This is an example of usage:
 
 ```
 #Add a new node with the text (not mandatory)
-CREATE (news:News {text:"Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
-    and the police had spent hours trying to connect with the gunman and end the situation without further violence.
-    But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
-    wall to end the bloody standoff."}) 
+CREATE (news:News {text:""})
 RETURN news;
 
 #Annotate the news

@@ -84,6 +84,14 @@ public class DynamicConfiguration {
         return userProvidedConfiguration.containsKey(SETTING_KEY_PREFIX + key);
     }
 
+    public void removeSettingValue(String key) {
+        String k = SETTING_KEY_PREFIX + key;
+        if (userProvidedConfiguration.containsKey(k)) {
+            removeKey( STORE_KEY + k);
+            userProvidedConfiguration.remove(k);
+        }
+    }
+
     public void update(String key, Object value) {
         try (Transaction tx = database.beginTx()) {
             keyValueStore.set(STORE_KEY + key, value);

@@ -15,20 +15,26 @@
  */
 package com.graphaware.nlp.processor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class AbstractTextProcessor implements TextProcessor{
-    //    private static final String PUNCT_REGEX_PATTERN = "\\p{Punct}";
-    protected static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
-    private final Pattern patternCheck;
-    public AbstractTextProcessor() {
-        patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
-    }
+
+    public static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
+
+    protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
+
+    protected final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
 
     @Override
     public boolean checkLemmaIsValid(String value) {
         Matcher match = patternCheck.matcher(value);
         return match.find();
+    }
+
+    public static String getPunctRegexPattern() {
+        return PUNCT_REGEX_PATTERN;
     }
 }
