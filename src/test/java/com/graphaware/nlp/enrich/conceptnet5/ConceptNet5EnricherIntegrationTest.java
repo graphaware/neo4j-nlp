@@ -125,6 +125,30 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
         debugTagsRelations();
     }
 
+    @Test
+    public void testConceptWorksAfterImmediateRemoval() {
+        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
+        PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, configuration, new TextProcessorsManager());
+
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+            //
+        }));
+        executeInTransaction("MATCH (n:Tag) CALL ga.nlp.enrich.concept({tag: n, depth: 2, language: 'en', admittedRelationships:['IsA','PartOf']}) YIELD result return result" , (result -> {
+            assertTrue(result.hasNext());
+        }));
+        executeInTransaction("MATCH (n)-[r:IS_RELATED_TO]->(x) DELETE r", (result -> { }));
+        executeInTransaction("MATCH (n:Tag) WHERE size((n)--()) = 0 DELETE n", (result -> { }));
+        executeInTransaction("MATCH (n:Tag) CALL ga.nlp.enrich.concept({tag: n, depth: 2, language: 'en', admittedRelationships:['IsA','PartOf']}) YIELD result return result" , (result -> {
+            assertTrue(result.hasNext());
+        }));
+        executeInTransaction("MATCH (n)-[r:IS_RELATED_TO]->(x) RETURN r", (result -> {
+            assertTrue(result.hasNext());
+        }));
+
+    }
+
 
 
     private void createTagConstraint() {
