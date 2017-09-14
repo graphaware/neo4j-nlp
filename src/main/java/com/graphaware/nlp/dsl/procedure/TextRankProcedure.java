@@ -27,8 +27,12 @@ import org.neo4j.procedure.Procedure;
 
 import java.util.Map;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TextRankProcedure extends AbstractDSL {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TextRankProcedure.class);
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
     @Description("TextRank procedure")
@@ -38,7 +42,7 @@ public class TextRankProcedure extends AbstractDSL {
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
             return Stream.of(processor.process(request));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.error("ERROR in TextRank", e);
             throw new RuntimeException(e);
         }
     }
@@ -51,6 +55,7 @@ public class TextRankProcedure extends AbstractDSL {
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
             return Stream.of(processor.postprocess(request));
         } catch (Exception e) {
+            LOG.error("ERROR in TextRank", e);
             throw new RuntimeException(e);
         }
     }
