@@ -66,7 +66,7 @@ public class TextRank {
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
             + "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
-            + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
+            + "OPTIONAL MATCH (to)-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
             + "WHERE not exists(t2.pos) or any(p in t2.pos where p in {posList})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
             + "collect(t2.value) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe\n"
@@ -248,13 +248,12 @@ public class TextRank {
         Map<String, Keyword> results = new HashMap<>();
         keywordsEntry.entrySet().stream().forEach((entry) -> {
             long tagId = entry.getKey();
-            Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrence.get(tagId), tagId);
             entry.getValue().stream().forEach((keywordOccurrence) -> {
-                Map<String, Keyword> localResults = findRelatedKeywordAndMerge(mapStartId.get(keywordOccurrence.startPosition), keywordOccurrence, keywordsEntry);
+                Map<String, Keyword> localResults = findRelatedKeywordAndMerge(tagId, keywordOccurrence, coOccurrence, keywordsEntry);
                 if (localResults.size() > 0) {
                     localResults.entrySet().stream().forEach((item) -> {
                         if (results.containsKey(item.getKey())) {
-                            results.get(item.getKey()).incTotalCountBy(item.getValue().getTotalCount());
+                            results.get(item.getKey()).incCountsBy(item.getValue().getTotalCount());
                         } else {
                             results.put(item.getKey(), item.getValue());
                         }
@@ -263,7 +262,6 @@ public class TextRank {
                     addToResults(keywordOccurrence.getValue(), results);
                 }
             });
-
         });
         /*
         // First: merge neighboring words into phrases
@@ -370,12 +368,15 @@ public class TextRank {
                             });
                 });
          */
+        computeTotalOccurrence(results);
         peristKeyword(results, annotatedText);
 
         return true;
     }
 
-    private Map<String, Keyword> findRelatedKeywordAndMerge(Set<Long> coOccurrence, KeywordExtractedItem keywordOccurrence, Map<Long, List<KeywordExtractedItem>> keywords) {
+    private Map<String, Keyword> findRelatedKeywordAndMerge(Long tagId, KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, List<KeywordExtractedItem>> keywords) {
+        Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrences.get(tagId), tagId);
+        Set<Long> coOccurrence = mapStartId.get(keywordOccurrence.startPosition);
         Map<String, Keyword> results = new HashMap<>();
         if (coOccurrence == null) {
             return results;
@@ -389,12 +390,16 @@ public class TextRank {
             String currValue = keywordOccurrence.getValue();
             //della entry (pair) mi faccio dare il valore di destinazione e verifico se 
             if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
-                Map<String, Keyword> relatedValues = new HashMap();//findRelatedKeywordAndMerge(ccEntry.getKey(), coOccurrence, keywords);
+                Map<String, Keyword> relatedValues = new HashMap<>();
+                keywords.get(ccEntry).stream().forEach((newKeywordOccurrence) -> {
+                    relatedValues.putAll(findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords));
+                });
                 if (relatedValues.size() > 0) {
-                    relatedValues.keySet().stream().forEach((item) -> {
-                        addToResults(currValue.split("_")[0] + " " + item, results);
-                    });
-                } else {
+                        relatedValues.keySet().stream().forEach((item) -> {
+                            addToResults(currValue.split("_")[0] + " " + item, results);
+                        });
+                    }
+                else {
                     addToResults(currValue.split("_")[0] + " " + relValue, results);
                 }
                 found.set(true);
@@ -413,7 +418,7 @@ public class TextRank {
     private void addToResults(String res, Map<String, Keyword> results) {
         if (res != null) {
             if (results.containsKey(res)) {
-                results.get(res).incTotalCount();
+                results.get(res).incCounts();
             } else {
                 final Keyword keyword = new Keyword(res);
                 results.put(res, keyword);
@@ -484,42 +489,42 @@ public class TextRank {
         return true;
     }
 
-    private void addKeyphraseToResults(Map<Integer, String> keyphrase, Map<String, List<WordItem>> dependencies, long prev_eP, String lang, Map<String, Keyword> results) {
-        if (keyphrase == null) {// || keyphrase.size() < 2)
-            return;
-        }
-
-        // append dependency word if it's missing
-        if (useDependencies) {
-            List<WordItem> missing_words = new ArrayList<>();
-            for (String key : dependencies.keySet()) {
-                missing_words.addAll(dependencies.get(key));
-            }
-            missing_words.removeAll(keyphrase.values());
-            missing_words.stream()
-                    .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0)
-                    .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
-        }
-
-        // we handle single-word keywords later on, so skip if `keyphrase` is not a phrase
-        if (keyphrase.size() < 2) {
-            return;
-        }
-
-        // create keyphrase from a list of words
-        String key = keyphrase.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(en -> en.getValue())
-                .collect(Collectors.joining(" "));
-        key += "_" + lang;
-
-        // store keyphrase into 'results'
-        if (results.containsKey(key)) {
-            results.get(key).incCounts();
-        } else {
-            results.put(key, new Keyword(key));
-        }
-    }
+//    private void addKeyphraseToResults(Map<Integer, String> keyphrase, Map<String, List<WordItem>> dependencies, long prev_eP, String lang, Map<String, Keyword> results) {
+//        if (keyphrase == null) {// || keyphrase.size() < 2)
+//            return;
+//        }
+//
+//        // append dependency word if it's missing
+//        if (useDependencies) {
+//            List<WordItem> missing_words = new ArrayList<>();
+//            for (String key : dependencies.keySet()) {
+//                missing_words.addAll(dependencies.get(key));
+//            }
+//            missing_words.removeAll(keyphrase.values());
+//            missing_words.stream()
+//                    .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0)
+//                    .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
+//        }
+//
+//        // we handle single-word keywords later on, so skip if `keyphrase` is not a phrase
+//        if (keyphrase.size() < 2) {
+//            return;
+//        }
+//
+//        // create keyphrase from a list of words
+//        String key = keyphrase.entrySet().stream()
+//                .sorted(Map.Entry.comparingByKey())
+//                .map(en -> en.getValue())
+//                .collect(Collectors.joining(" "));
+//        key += "_" + lang;
+//
+//        // store keyphrase into 'results'
+//        if (results.containsKey(key)) {
+//            results.get(key).incCounts();
+//        } else {
+//            results.put(key, new Keyword(key));
+//        }
+//    }
 
     private List<Long> getTopX(Map<Long, Double> pageRanks, int x) {
         List<Long> topx = pageRanks.entrySet().stream()
@@ -630,6 +635,17 @@ public class TextRank {
             }
         });
         return result;
+    }
+
+    private void computeTotalOccurrence(Map<String, Keyword> results) {
+        results.entrySet().stream().forEach((entry) -> {
+            results.entrySet().stream().forEach((innerEntry) -> {
+                if (entry.getValue().getWordsCount() < innerEntry.getValue().getWordsCount()
+                        && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())) {
+                    entry.getValue().incTotalCountBy(innerEntry.getValue().getTotalCount());
+                }                    
+            });
+        });
     }
 
     public static class Builder {
