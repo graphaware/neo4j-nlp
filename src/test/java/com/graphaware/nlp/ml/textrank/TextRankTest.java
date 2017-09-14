@@ -46,12 +46,13 @@ public class TextRankTest extends NLPIntegrationTest {
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute("match (a:AnnotatedText) return a");
             assertTrue("TextRank: didn't find AnnotatedText (error in graph initialization).", result.hasNext());
-            if (!result.hasNext())
+            if (!result.hasNext()) {
                 return;
+            }
             Node annText = (Node) result.next().get("a");
             TextRank textrank = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration())
-                    .setTopXSinglewordKeywords(1.0f/5)
-                    .setTopXWordsForPhrases(1.0f/3)
+                    .setTopXSinglewordKeywords(1.0f / 5)
+                    .setTopXWordsForPhrases(1.0f / 3)
                     .build();
             boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res);
@@ -61,19 +62,21 @@ public class TextRankTest extends NLPIntegrationTest {
         // evaluate results
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute(
-                "MATCH (k:Keyword)-[:DESCRIBES]->(a:AnnotatedText)\n"
-                + "RETURN k.id AS id, k.value AS value\n");
-            int totCount  = 0;
+                    "MATCH (k:Keyword)-[:DESCRIBES]->(a:AnnotatedText)\n"
+                    + "RETURN k.id AS id, k.value AS value\n");
+            int totCount = 0;
             int totCount_phrases = 0;
             int trueCount = 0;
-            while (result!=null && result.hasNext()) {
+            while (result != null && result.hasNext()) {
                 Map<String, Object> next = result.next();
                 String tag = next.get("value").toString();
                 totCount++;
-                if (tag.split(" ").length > 1)
+                if (tag.split(" ").length > 1) {
                     totCount_phrases++;
-                if (expectedKeywords.contains(tag))
+                }
+                if (expectedKeywords.contains(tag)) {
                     trueCount++;
+                }
             }
             assertTrue("TextRank evaluation: didn't find any keyword!", totCount > 0);
             assertTrue("TextRank evaluation: didn't find any keyphrase!", totCount_phrases > 0);
