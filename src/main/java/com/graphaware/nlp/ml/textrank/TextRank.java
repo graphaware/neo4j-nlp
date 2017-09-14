@@ -127,10 +127,10 @@ public class TextRank {
         int nSkips = 1;
         while (res != null && res.hasNext()) {
             Map<String, Object> next = res.next();
-            Long tag1 = (Long) next.get("tag1");
-            Long tag2 = (Long) next.get("tag2");
-            int tag1Start = ((Long) next.get("sourceStartPosition")).intValue();
-            int tag2Start = ((Long) next.get("destinationStartPosition")).intValue();
+            Long tag1 = toLong(next.get("tag1"));
+            Long tag2 = toLong(next.get("tag2"));
+            int tag1Start = (toLong(next.get("sourceStartPosition"))).intValue();
+            int tag2Start = (toLong(next.get("destinationStartPosition"))).intValue();
             List<String> pos1 = Arrays.asList(((String) next.get("pos1")).split(","));
             List<String> pos2 = Arrays.asList(((String) next.get("pos2")).split(","));
 
@@ -170,6 +170,20 @@ public class TextRank {
             idToValue.put(tag2, (String) next.get("tag2_val"));
         }
         return results;
+    }
+
+    private static Long toLong(Object value) {
+        Long returnValue;
+        if (value instanceof Integer) {
+            returnValue = ((Integer)value).longValue();
+        } else if (value instanceof Long){
+            returnValue = ((Long)value);
+        } else if (value instanceof String) {
+            returnValue = Long.parseLong((String) value);
+        } else {
+            throw new RuntimeException("Value: " + value + " cannot be cast to Long");
+        }
+        return returnValue;
     }
 
     private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long source, int sourceStartPosition, Long destination, int destinationStartPosition) {
@@ -392,14 +406,14 @@ public class TextRank {
             if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
                 Map<String, Keyword> relatedValues = new HashMap<>();
                 keywords.get(ccEntry).stream().forEach((newKeywordOccurrence) -> {
-                    relatedValues.putAll(findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords));
+                    final Map<String, Keyword> recursiveResult = new HashMap<>();//findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords);
+                    relatedValues.putAll(recursiveResult);
                 });
                 if (relatedValues.size() > 0) {
-                        relatedValues.keySet().stream().forEach((item) -> {
-                            addToResults(currValue.split("_")[0] + " " + item, results);
-                        });
-                    }
-                else {
+                    relatedValues.keySet().stream().forEach((item) -> {
+                        addToResults(currValue.split("_")[0] + " " + item, results);
+                    });
+                } else {
                     addToResults(currValue.split("_")[0] + " " + relValue, results);
                 }
                 found.set(true);
@@ -525,7 +539,6 @@ public class TextRank {
 //            results.put(key, new Keyword(key));
 //        }
 //    }
-
     private List<Long> getTopX(Map<Long, Double> pageRanks, int x) {
         List<Long> topx = pageRanks.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
@@ -643,7 +656,7 @@ public class TextRank {
                 if (entry.getValue().getWordsCount() < innerEntry.getValue().getWordsCount()
                         && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())) {
                     entry.getValue().incTotalCountBy(innerEntry.getValue().getTotalCount());
-                }                    
+                }
             });
         });
     }
