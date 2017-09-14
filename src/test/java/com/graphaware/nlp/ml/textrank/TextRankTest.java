@@ -93,6 +93,16 @@ public class TextRankTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testTextRankViaProcedure() throws Exception {
+        createGraph();
+        executeInTransaction("match (l)-->(a:AnnotatedText)\n" +
+                "call ga.nlp.ml.textRank({annotatedText: a}) YIELD result RETURN result", (result -> {
+                    assertTrue(result.hasNext());
+        }));
+
+    }
+
+    @Test
     public void testCreate() throws Exception {
         createGraph();
     }
