@@ -38,6 +38,7 @@ public class TextRankProcedure extends AbstractDSL {
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
             return Stream.of(processor.process(request));
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
