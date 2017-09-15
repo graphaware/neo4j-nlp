@@ -23,6 +23,7 @@ public class LemmaValidationUnitTest {
         assertFalse(match(","));
         assertFalse(match(";"));
         assertFalse(match("-lrb-"));
+        assertTrue(match("MIL-A-8625"));
     }
 
     private boolean match(String value) {
