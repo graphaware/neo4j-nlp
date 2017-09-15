@@ -418,12 +418,12 @@ public class TextRank {
                 }
                 found.set(true);
             }
-            /*else {
+//            else {
 //                        if (!useDependencies || keywords.get(ccEntry.getKey()).get(0).getRelatedTags().contains(currValue.split("_")[0])) {
 //                            addToResults(relValue.split("_")[0] + " " + currValue, results);
 //                            found.set(true);
 //                        }
-//                    }*/
+//                    }
 
         }
         return results;
@@ -451,6 +451,7 @@ public class TextRank {
                     }
                     Node newNode = persister.persist(en.getValue(), en.getKey(), String.valueOf(System.currentTimeMillis()));
                     if (newNode != null) {
+                        //LOG.info("New node has labels: " + iterableToList(newNode.getLabels()).stream().map(l -> l.name()).collect(Collectors.joining(", ")));
                         Relationship rel = mergeRelationship(annotatedText, newNode);
                         rel.setProperty("count_exactMatch", en.getValue().getExactMatchCount());
                         rel.setProperty("count", en.getValue().getTotalCount());
@@ -714,7 +715,7 @@ public class TextRank {
         }
 
         public Builder setStopwords(String stopwords) {
-            if (stopwords.split(",").length > 0 && stopwords.split(",")[0].equals("+")) {// if the stopwords list starts with "+,....", append the list to the default 'stopWords' set
+            if (stopwords.split(",").length > 0 && stopwords.split(",")[0].equals("+")) { // if the stopwords list starts with "+,....", append the list to the default 'stopWords' set
                 this.stopWords.addAll(Arrays.asList(stopwords.split(",")).stream().filter(str -> !str.equals("+")).map(str -> str.trim().toLowerCase()).collect(Collectors.toSet()));
             } else {
                 this.stopWords = Arrays.asList(stopwords.split(",")).stream().map(str -> str.trim().toLowerCase()).collect(Collectors.toSet());
@@ -774,7 +775,8 @@ public class TextRank {
         }
 
         public Builder setKeywordLabel(String keywordLabel) {
-            this.keywordLabel = Labels.valueOf(keywordLabel);
+            //this.keywordLabel = Labels.valueOf(keywordLabel); // doesn't work because Labels is enum, while we want customizable keyword labels
+            this.keywordLabel = Label.label(keywordLabel);
             return this;
         }
     }
