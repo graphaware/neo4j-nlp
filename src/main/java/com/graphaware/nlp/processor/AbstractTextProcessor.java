@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractTextProcessor implements TextProcessor{
 
-    public static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)?$";
+    public static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)*$";
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
 
