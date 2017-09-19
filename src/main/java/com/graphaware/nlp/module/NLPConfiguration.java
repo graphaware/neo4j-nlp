@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,20 +15,16 @@
  */
 package com.graphaware.nlp.module;
 
-//import com.graphaware.common.policy.InclusionPolicies;
-//import com.graphaware.common.policy.none.IncludeNoRelationships;
 import com.graphaware.common.policy.inclusion.InclusionPolicies;
 import com.graphaware.common.policy.inclusion.none.IncludeNoRelationships;
 import com.graphaware.runtime.config.BaseTxDrivenModuleConfiguration;
 import com.graphaware.runtime.policy.InclusionPoliciesFactory;
 
 
-/**
- * {@link BaseTxDrivenModuleConfiguration} for {@link com.graphaware.spark.module.UuidModule}.
- */
 public class NLPConfiguration extends BaseTxDrivenModuleConfiguration<NLPConfiguration> {
 
     private static final String DEFAULT_CONCEPTNET_URL = "http://api.conceptnet.io";
+    //@todo spark settings should go to EE module
     private static final String DEFAULT_SPARK_REST_URL = "http://localhost:8082";
     
     private final String conceptNetUrl;

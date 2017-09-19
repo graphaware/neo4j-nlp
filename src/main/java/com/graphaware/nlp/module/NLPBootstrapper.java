@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,14 +15,14 @@
  */
 package com.graphaware.nlp.module;
 
-import java.util.Map;
-
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.runtime.module.BaseRuntimeModuleBootstrapper;
 import com.graphaware.runtime.module.RuntimeModule;
 import com.graphaware.runtime.module.RuntimeModuleBootstrapper;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.logging.Log;
+
+import java.util.Map;
 
 /**
  * Bootstraps the {@link NLPModule} in server mode.

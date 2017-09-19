@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,23 +15,11 @@
  */
 package com.graphaware.nlp.domain;
 
-import static com.graphaware.nlp.domain.Labels.Tag;
-import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
-import static com.graphaware.nlp.domain.Properties.LANGUAGE;
-import static com.graphaware.nlp.domain.Properties.PROPERTY_ID;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
+import java.util.stream.Collectors;
 
-public class Tag implements Persistable, Serializable {
+public class Tag {
 
     private static final long serialVersionUID = -1L;
 
@@ -81,15 +69,23 @@ public class Tag implements Persistable, Serializable {
     }
 
     public List<String> getPosAsList() {
-        return posL;
+        List<String> values =  posL != null ? posL : new ArrayList<>();
+
+        return values.stream().filter(pos -> { return pos != null; }).collect(Collectors.toList());
     }
 
     public List<String> getNeAsList() {
-        return neL;
+        List<String> values =  neL != null ? neL : new ArrayList<>();
+
+        return values.stream().filter(ne -> { return ne != null; }).collect(Collectors.toList());
     }
 
     public String getId() {
         return getLemma() + "_" + language;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 
     public void addParent(String rel, Tag storedTag, float weight) {
@@ -110,102 +106,68 @@ public class Tag implements Persistable, Serializable {
         }
         properties.put(key, value);
     }
+    
+//    public static Tag createTag(Node tagNode) {
+//        checkNodeIsATag(tagNode);
+//        Tag tag = new Tag(String.valueOf(tagNode.getProperty(CONTENT_VALUE)),
+//                String.valueOf(tagNode.getProperty(LANGUAGE)));
+//        return tag;
+//    }
+//
+//
+//    private static void checkNodeIsATag(Node tagNode) {
+//        Map<String, Object> allProperties = tagNode.getAllProperties();
+//        assert (tagNode.hasLabel(Tag));
+//        assert (allProperties.containsKey(PROPERTY_ID));
+//        assert (allProperties.containsKey(CONTENT_VALUE));
+//        assert (allProperties.containsKey(LANGUAGE));
+//    }
+//
+//    private void writeObject(ObjectOutputStream s) throws IOException {
+//        s.defaultWriteObject();
+//        s.writeObject(getLemma());
+//        s.writeObject(language);
+//        if (posL != null) {
+//            s.writeObject(posL);
+//        }
+//        if (neL != null) {
+//            s.writeObject(neL);
+//        }
+//        s.writeInt(multiplicity);
+//    }
+//
+//    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+//        s.defaultReadObject();
+//        this.lemma = (String) s.readObject();
+//        this.language = (String) s.readObject();
+//        this.posL = (List<String>) s.readObject();
+//        this.neL = (List<String>) s.readObject();
+//        this.multiplicity = s.readInt();
+//    }
+//
+//    @Override
+//    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
+//        Node tagNode = getOrCreate(database, force);
+//        assignNERLabel(tagNode);
+//        if (parents != null) {
+//            parents.stream().forEach((tagRelationship) -> {
+//                Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
+//                Map<String, Object> params = new HashMap<>();
+//                params.put("type", tagRelationship.getRelation());
+//                params.put("weight", tagRelationship.getWeight());
+//                params.put("sourceId", tagNode.getId());
+//                params.put("destId", parentTagNode.getId());
+//                database.execute("MATCH (source:Tag), (destination:Tag)\n"
+//                        + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
+//                        + "MERGE (source)-[r:IS_RELATED_TO {type: {type}}]->(destination)\n"
+//                        + "ON CREATE SET r.weight = {weight}", params);
+//
+//            });
+//        }
+//        return tagNode;
+//    }
 
-    @Override
-    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
-        Node tagNode = getOrCreate(database, force);
-        assignNERLabel(tagNode);
-        if (parents != null) {
-            parents.stream().forEach((tagRelationship) -> {
-                Node parentTagNode = tagRelationship.getParent().storeOnGraph(database, force);
-                Map<String, Object> params = new HashMap<>();
-                params.put("type", tagRelationship.getRelation());
-                params.put("weight", tagRelationship.getWeight());
-                params.put("sourceId", tagNode.getId());
-                params.put("destId", parentTagNode.getId());
-                database.execute("MATCH (source:Tag), (destination:Tag)\n"
-                        + "WHERE id(source) = {sourceId} and id(destination) = {destId}\n"
-                        + "MERGE (source)-[r:IS_RELATED_TO {type: {type}}]->(destination)\n"
-                        + "ON CREATE SET r.weight = {weight}", params);
-                
-            });
-        }
-        return tagNode;
+    public Collection<TagParentRelation> getParents() {
+        return parents;
     }
-
-    public Node getOrCreate(GraphDatabaseService database, boolean force) {
-        Node tagNode = database.findNode(Tag, PROPERTY_ID, getId());
-        if (tagNode != null && !force) {
-            return tagNode;
-        }
-        if (tagNode == null) {
-            tagNode = database.createNode(Tag);
-        }
-        tagNode.setProperty(PROPERTY_ID, getId());
-        tagNode.setProperty(CONTENT_VALUE, getLemma());
-        tagNode.setProperty(LANGUAGE, language);
-
-        if (neL != null) {
-            tagNode.setProperty("ne", neL.toArray(new String[neL.size()]));
-        }
-        if (posL != null) {
-            tagNode.setProperty("pos", posL.toArray(new String[posL.size()]));
-        }
-        
-        if (properties != null) {
-            for (Map.Entry<String, Object> property : properties.entrySet()) {
-                tagNode.setProperty(property.getKey(), property.getValue());
-            }
-        }
-
-        return tagNode;
-    }
-
-    public static Tag createTag(Node tagNode) {
-        checkNodeIsATag(tagNode);
-        Tag tag = new Tag(String.valueOf(tagNode.getProperty(CONTENT_VALUE)),
-                String.valueOf(tagNode.getProperty(LANGUAGE)));
-        return tag;
-    }
-
-    private void assignNERLabel(Node node) {
-        if (neL != null) {
-            System.out.println("NEL IS " + neL);
-            neL.stream().filter((ent) -> !(ent == null)).forEach((ent) -> {
-                System.out.println("assinging : " + ent + " to : " + node.getProperty("value").toString()) ;
-                node.addLabel(new NERLabel(ent));
-            });
-        }
-    }
-
-    private static void checkNodeIsATag(Node tagNode) {
-        Map<String, Object> allProperties = tagNode.getAllProperties();
-        assert (tagNode.hasLabel(Tag));
-        assert (allProperties.containsKey(PROPERTY_ID));
-        assert (allProperties.containsKey(CONTENT_VALUE));
-        assert (allProperties.containsKey(LANGUAGE));
-    }
-
-    private void writeObject(ObjectOutputStream s) throws IOException {
-        s.defaultWriteObject();
-        s.writeObject(getLemma());
-        s.writeObject(language);
-        if (posL != null) {
-            s.writeObject(posL);
-        }
-        if (neL != null) {
-            s.writeObject(neL);
-        }
-        s.writeInt(multiplicity);
-    }
-
-    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-        s.defaultReadObject();
-        this.lemma = (String) s.readObject();
-        this.language = (String) s.readObject();
-        this.posL = (List<String>) s.readObject();
-        this.neL = (List<String>) s.readObject();
-        this.multiplicity = s.readInt();
-    }
-
 }

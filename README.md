@@ -1,47 +1,120 @@
-GraphAware Natural Language Processing
-=========================================================
+# GraphAware Natural Language Processing
 
-This plugin adds NLP functionalities to Neo4j. It requires the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and its NLP methods are implemented either using the <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> or <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a>.
+This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
-Getting the Software
--------------------------
-### Server Mode
-When using Neo4j in the <a href="http://docs.neo4j.org/chunked/stable/server-installation.html" target="_blank">standalone server</a> mode, you will need the <a href="https://github.com/graphaware/neo4j-framework" target="_blank">GraphAware Neo4j Framework</a> and <a href="https://github.com/graphaware/neo4j-nlp" target="_blank">GraphAware NLP</a> .jar files (both of which you can download <a href="https://products.graphaware.com">here</a>) dropped into the `plugins/` directory of your Neo4j installation. 
+The main module, this module, provide a common interface for underlying text processors as well as a
+**Domain Specific Language** built atop stored procedures and functions making your Natural Language Processing
+workflow developer friendly.
 
-The following needs to be appended to the `neo4j.conf` file in the `config/` directory:
+It comes in 2 versions, Community (open-sourced) and Enterprise with the following NLP features :
 
-```
-  dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
-  com.graphaware.runtime.enabled=true
+## Feature Matrix
 
-  com.graphaware.module.NLP.2=com.graphaware.nlp.module.NLPBootstrapper
-```
+| | Community Edition | Enterprise Edition |
+| --- | :---: | :---: |
+| Text information Extraction | ✔ | ✔ |
+| ConceptNet5 Enricher | ✔ | ✔ |
+| Keyword Extraction | ✔ | ✔ |
+| Topics Extraction | ✔ | ✔ |
+| Similarity Computation | ✔ | ✔ |
+| Apache Spark Binding for Distributed Algorithms | | ✔ |
+| User Interface | | ✔ |
+| ML Prediction capalities | | ✔ |
+| Entity Merging | | ✔ |
+| Questions generator | | ✔ |
+| Conversational Features | | ✔ |
 
-The actual implementation of the NLP tools is in packages <a href="https://github.com/graphaware/neo4j-nlp-stanfordnlp" target="_blank">StanfordNLP</a> and <a href="https://github.com/graphaware/neo4j-nlp-opennlp" target="_blank">OpenNLP</a> (both provide similar functionalities described in section Getting Started). To get them working, just compile them and drop the .jar file(s) into `plugins/` directory:
+Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
+[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
 
-```
-# First you need to install neo4j-nlp
-cd neo4j-nlp
-mvn clean install
-cp target/graphaware-nlp-1.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
 
-# Next you can proceed to the OpenNLP and StanfordNLP
-cd ../neo4j-nlp-opennlp
-mvn clean package
-cp target/nlp-opennlp-1.0.0-SNAPSHOT.jar <YOUR_NEO4J_DIR>/plugins
-```
+## Installation
 
-Example of the `plugins/` directory:
+From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
+
+* `neo4j-framework`
+* `neo4j-nlp`
+* `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
+
+and copy them in the `plugins` directory of Neo4j.
+
+
+`plugins/` directory example :
+
 ```
 -rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-1.0-SNAPSHOT.jar
 -rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.1.3.47.jar
 -rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-1.0-SNAPSHOT.jar
 ```
 
-Note: both implementations (especially StanfordNLP) are rather greedy - you'll need a lot of RAM.
+Append the following configuration in the `neo4j.conf` file in the `config/` directory:
 
-Getting Started
---------------------
+```
+  dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
+  com.graphaware.runtime.enabled=true
+  com.graphaware.module.NLP.1=com.graphaware.nlp.module.NLPBootstrapper
+```
+
+Start or restart your Neo4j database.
+
+
+Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
+
+## Getting Started
+
+### Text extraction
+
+#### Pipelines and components
+
+The text extraction phase is done with a Natural Language Processing pipeline, each pipeline has a list of enabled components.
+
+For example, the basic `tokenizer` pipeline has the following components :
+
+
+* Sentence Segmentation
+* Tokenization
+* StopWords Removal
+* Stemming
+* Part Of Speech Tagging
+* Named Entity Recognition
+
+
+##### Example
+
+Let's take the following text as example :
+
+```
+Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
+and the police had spent hours trying to connect with the gunman and end the situation without further violence.
+But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
+wall to end the bloody standoff.
+```
+
+**Simulate your original corpus**
+
+Create a node with the text, this node will represent your original corpus or knowledge graph :
+
+```
+CREATE (n:News)
+SET n.text = "Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
+and the police had spent hours trying to connect with the gunman and end the situation without further violence.
+But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
+wall to end the bloody standoff.";
+```
+
+**Perform the text information extraction**
+
+The extraction is done via the `annotate` procedure which is the entry point to text information extraction
+
+```
+MATCH (n:News)
+CALL ga.nlp.annotate({text: n.text, id: id(n)})
+YIELD result
+MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
+RETURN result
+```
+
+
 
 List of procedures available:
 
@@ -52,10 +125,7 @@ This is an example of usage:
 
 ```
 #Add a new node with the text (not mandatory)
-CREATE (news:News {text:"Scores of people were already lying dead or injured inside a crowded Orlando nightclub,
-    and the police had spent hours trying to connect with the gunman and end the situation without further violence.
-    But when Omar Mateen threatened to set off explosives, the police decided to act, and pushed their way through a
-    wall to end the bloody standoff."}) 
+CREATE (news:News {text:""})
 RETURN news;
 
 #Annotate the news

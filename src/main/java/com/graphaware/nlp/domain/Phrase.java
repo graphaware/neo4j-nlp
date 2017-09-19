@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -15,19 +15,12 @@
  */
 package com.graphaware.nlp.domain;
 
-import static com.graphaware.nlp.domain.Labels.Phrase;
-import static com.graphaware.nlp.domain.Properties.CONTENT_VALUE;
-import static com.graphaware.nlp.domain.Properties.PHRASE_TYPE;
-import com.graphaware.nlp.domain.NLPDefaultValues;
 import java.util.Objects;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
 
-public class Phrase implements Persistable {
+public class Phrase {
     private final String content;
     private String type;
     private Phrase reference;
-    private Node phraseNode;
 
     public Phrase(String content) {
         this.content = content.trim();
@@ -50,13 +43,6 @@ public class Phrase implements Persistable {
         return this.content.equalsIgnoreCase(((Phrase)o).content);
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 37 * hash + Objects.hashCode(this.content);
-        return hash;
-    }
-
     public Phrase getReference() {
         return reference;
     }
@@ -65,27 +51,38 @@ public class Phrase implements Persistable {
         this.reference = reference;
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
-    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
-        phraseNode = getOrCreate(database, force);
-        return phraseNode;
+    public int hashCode() {
+        int hash = 3;
+        hash = 37 * hash + Objects.hashCode(this.content);
+        return hash;
     }
-    
-    public Node getOrCreate(GraphDatabaseService database, boolean force) {
-        if (phraseNode != null) {
-            return phraseNode;
-        }
-        phraseNode = database.findNode(Phrase, CONTENT_VALUE, content);
-        if (phraseNode != null && !force) {
-            return phraseNode;
-        }
-        if (phraseNode == null)
-            phraseNode = database.createNode(Phrase);
-        phraseNode.setProperty(CONTENT_VALUE, content);
-        if (type!=null)
-          phraseNode.setProperty(PHRASE_TYPE, type);
-        else
-          phraseNode.setProperty(PHRASE_TYPE, NLPDefaultValues.PHRASE_TYPE);
-        return phraseNode;
-    }
+
+//    @Override
+//    public Node storeOnGraph(GraphDatabaseService database, boolean force) {
+//        phraseNode = getOrCreate(database, force);
+//        return phraseNode;
+//    }
+//
+//    public Node getOrCreate(GraphDatabaseService database, boolean force) {
+//        if (phraseNode != null) {
+//            return phraseNode;
+//        }
+//        phraseNode = database.findNode(Phrase, CONTENT_VALUE, content);
+//        if (phraseNode != null && !force) {
+//            return phraseNode;
+//        }
+//        if (phraseNode == null)
+//            phraseNode = database.createNode(Phrase);
+//        phraseNode.setProperty(CONTENT_VALUE, content);
+//        if (type!=null)
+//          phraseNode.setProperty(PHRASE_TYPE, type);
+//        else
+//          phraseNode.setProperty(PHRASE_TYPE, NLPDefaultValues.PHRASE_TYPE);
+//        return phraseNode;
+//    }
 }

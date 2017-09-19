@@ -1,55 +1,61 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
  * GraphAware Framework is free software: you can redistribute it and/or modify it under the terms of
- * the GNU General Public License as published by the Free Software Foundation, either
+ * the GNU General License as published by the Free Software Foundation, either
  * version 3 of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details. You should have received a copy of
- * the GNU General Public License along with this program.  If not, see
+ * See the GNU General License for more details. You should have received a copy of
+ * the GNU General License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.PipelineInfo;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
+
 import java.util.List;
 import java.util.Map;
 
 public interface TextProcessor {
-    
-    public List<String> getPipelines();
 
-    public List<PipelineInfo> getPipelineInfos();
-    
-    public void createPipeline(Map<String, Object> pipelineSpec);
-    
-    public boolean checkPipeline(String name);
+    String DEFAULT_PIPELINE = "tokenizer";
 
-    @Deprecated
-    public AnnotatedText annotateText(String text, Object id, int level, String lang, boolean store);
+    void init();
 
-    public AnnotatedText annotateText(String text, Object id, String name, String lang, boolean store, Map<String, String> otherParams);
+    String getAlias();
 
-    public Tag annotateSentence(String text, String lang);
+    String override();
 
-    public Tag annotateTag(String text, String lang);
-    
-    public List<Tag> annotateTags(String text, String lang);
+    List<String> getPipelines();
 
-    public boolean checkLemmaIsValid(String value);
+    List<PipelineInfo> getPipelineInfos();
 
-    public AnnotatedText sentiment(AnnotatedText annotated, Map<String, String> otherParams);
+    void createPipeline(PipelineSpecification pipelineSpecification);
 
-    public void removePipeline(String pipeline);
+    boolean checkPipeline(String name);
 
-    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
+    AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
 
-    public String test(String project, String alg, String model, String file, String lang);
+    Tag annotateSentence(String text, String lang);
+
+    Tag annotateTag(String text, String lang);
+
+    List<Tag> annotateTags(String text, String lang);
+
+    boolean checkLemmaIsValid(String value);
+
+    AnnotatedText sentiment(AnnotatedText annotatedText);
+
+    void removePipeline(String pipeline);
+
+    String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
+
+    String test(String project, String alg, String model, String file, String lang);
 
 }

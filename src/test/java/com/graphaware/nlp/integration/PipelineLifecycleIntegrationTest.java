@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
 public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest {
 
     @Before
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
@@ -29,46 +30,15 @@ public class PipelineLifecycleIntegrationTest extends GraphAwareIntegrationTest 
     public void testStubProcessorIsRegistered() {
         List<String> registeredProcessors = new ArrayList<>();
         try (Transaction tx = getDatabase().beginTx()) {
-            Result result = getDatabase().execute("CALL ga.nlp.getProcessors()");
+            Result result = getDatabase().execute("CALL ga.nlp.processor.getProcessors()");
             while (result.hasNext()) {
-                registeredProcessors.add(result.next().get("class").toString());
+                Map<String, Object> processorInfo = result.next();
+                registeredProcessors.add(processorInfo.get("className").toString());
             }
             tx.success();
         }
 
         assertTrue(registeredProcessors.contains("com.graphaware.nlp.stub.StubTextProcessor"));
-    }
-
-    @Test
-    public void testDeletingPipelineNodeDeRegisterItFromProcessor() {
-        Map<String, Object> customPipeline = new HashMap<>();
-        customPipeline.put("name", "custom");
-        customPipeline.put("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("CALL ga.nlp.addPipeline({params})", Collections.singletonMap("params", customPipeline));
-            Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({params})", Collections.singletonMap("params", params));
-            assertTrue(result.hasNext());
-            while (result.hasNext()) {
-                Map<String, Object> record = result.next();
-                Map<String, Object> info = (Map<String, Object>) record.get("result");
-                assertEquals("custom", info.get("name"));
-            }
-
-            tx.success();
-        }
-
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("MATCH (n:Pipeline) DETACH DELETE n");
-            tx.success();
-        }
-
-        try (Transaction tx = getDatabase().beginTx()) {
-            Map<String, Object> params = Collections.singletonMap("textProcessor", "com.graphaware.nlp.stub.StubTextProcessor");
-            Result result = getDatabase().execute("CALL ga.nlp.getPipelineInfos({params})", Collections.singletonMap("params", params));
-            assertFalse(result.hasNext());
-            tx.success();
-        }
     }
 
 }

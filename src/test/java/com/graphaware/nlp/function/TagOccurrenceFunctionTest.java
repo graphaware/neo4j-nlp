@@ -1,7 +1,7 @@
 package com.graphaware.nlp.function;
 
+import com.graphaware.nlp.dsl.function.TagOccurrence;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
-import com.graphaware.test.integration.GraphAwareIntegrationTest;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;

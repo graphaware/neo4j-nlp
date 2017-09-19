@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -16,8 +16,6 @@
 package com.graphaware.nlp.language;
 
 import com.google.common.base.Optional;
-import static com.graphaware.nlp.domain.Constants.LANGUAGE_EN;
-import static com.graphaware.nlp.domain.Constants.LANGUAGE_NA;
 import com.optimaize.langdetect.LanguageDetector;
 import com.optimaize.langdetect.LanguageDetectorBuilder;
 import com.optimaize.langdetect.i18n.LdLocale;
@@ -27,12 +25,16 @@ import com.optimaize.langdetect.profiles.LanguageProfileReader;
 import com.optimaize.langdetect.text.CommonTextObjectFactories;
 import com.optimaize.langdetect.text.TextObject;
 import com.optimaize.langdetect.text.TextObjectFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.graphaware.nlp.domain.Constants.LANGUAGE_EN;
+import static com.graphaware.nlp.domain.Constants.LANGUAGE_NA;
 
 /*
 * https://github.com/optimaize/language-detector
@@ -87,6 +89,7 @@ public class LanguageManager {
                 return lang.get().getLanguage();
             }
         }
+
         return LANGUAGE_NA;
     }
     

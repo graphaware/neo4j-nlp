@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -16,125 +16,120 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
-import static com.graphaware.nlp.domain.Labels.Pipeline;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.graphdb.ResourceIterator;
-import org.neo4j.graphdb.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-@Component
 public class TextProcessorsManager {
+
     private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
+    private static final String DEFAULT_TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
 
-    private final GraphDatabaseService database;
-    private Map<String, TextProcessor> textProcessors;
+    private final Map<String, TextProcessor> textProcessors = new HashMap<>();
 
-    private static final String defaultTextProcessor = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
-    
-    @Autowired
-    public TextProcessorsManager(GraphDatabaseService database) {
-        this.database = database;
+    public TextProcessorsManager() {
         loadTextProcessors();
-        loadPipelines();
+        initiateTextProcessors();
     }
 
     private void loadTextProcessors() {
-        textProcessors = ServiceLoader.loadInstances(NLPTextProcessor.class);
+        Map<String, TextProcessor> loadedInstances = ServiceLoader.loadInstances(NLPTextProcessor.class);
+        textProcessors.putAll(loadedInstances);
+
+        loadedInstances.keySet().forEach(k -> {
+            TextProcessor ins = loadedInstances.get(k);
+            if (ins.override() != null && textProcessors.containsKey(ins.override())) {
+                textProcessors.remove(ins.override());
+            }
+        });
+
+        loadedInstances.keySet().forEach(k -> {
+            TextProcessor textProcessor = loadedInstances.get(k);
+            if (textProcessor.getAlias() != null && textProcessors.containsKey(k)) {
+                textProcessors.put(textProcessor.getAlias(), textProcessor);
+            }
+        });
     }
 
-    public Set<String> getTextProcessors() {
-        return textProcessors.keySet();
+    private void initiateTextProcessors() {
+        textProcessors.values().forEach(textProcessor -> {
+            textProcessor.init();
+        });
     }
-    
-    
+
     public TextProcessor getTextProcessor(String name) {
+        if (!textProcessors.containsKey(name)) {
+            throw new RuntimeException("Processor with name '" + name + "' does not exist");
+        }
         return textProcessors.get(name);
-    }    
-
-    public PipelineCreationResult createPipeline(Map<String, Object> inputParams) {
-        String processorName = (String) inputParams.get("textProcessor");
-            if (processorName == null || !textProcessors.containsKey(processorName)) {
-            return new PipelineCreationResult(-1, "Processor class not specified or not existing");
-        }
-        TextProcessor processor = textProcessors.get(processorName);
-        //TODO add catch
-        processor.createPipeline(inputParams);
-        return new PipelineCreationResult(0, "");
     }
 
-    private void loadPipelines() {
-        try (Transaction tx = database.beginTx()) {
-            ResourceIterator<Node> pipelineNodes = database.findNodes(Pipeline);
-            pipelineNodes.stream().forEach(pipeline -> {
-                createPipeline(pipeline.getAllProperties());
-            });            
-            tx.success();
+    public TextProcessor retrieveTextProcessor(String processor, String pipeline) {
+        TextProcessor newTP;
+        if (processor != null && processor.length() > 0) {
+            newTP = getTextProcessor(processor);
+            if (newTP == null) {
+                throw new RuntimeException("Text processor " + processor + " doesn't exist");
+            }
+        } else {
+            newTP = getDefaultProcessor();
         }
-    }
-    
-    public void storePipelines(Map<String, Object> inputParams) {
-        try (Transaction tx = database.beginTx()) {
-            Node pipelineNode = database.createNode(Pipeline);
-            inputParams.entrySet().stream().forEach(entry -> {
-                pipelineNode.setProperty(entry.getKey(), entry.getValue());
-            });            
-            tx.success();
+        if (pipeline != null && pipeline.length() > 0) {
+            if (!newTP.checkPipeline(pipeline)) {
+                throw new RuntimeException("Pipeline with name " + pipeline
+                        + " doesn't exist for processor " + newTP.getClass().getName());
+            }
+        } else {
+            throw new RuntimeException("Pipeline not specified");
         }
-    }
-    
-    public void removePipeline(Map<String, Object> inputParams) {
-        try (Transaction tx = database.beginTx()) {
-            Node pipelineNode = database.createNode(Pipeline);
-            inputParams.entrySet().stream().forEach(entry -> {
-                pipelineNode.setProperty(entry.getKey(), entry.getValue());
-            });            
-            tx.success();
-        }
+        LOG.info("Using text processor: " + newTP.getClass().getName());
+
+        return newTP;
     }
 
-    public String getDefaultProcessorName() {
-        if (textProcessors==null)
-          return null;
-        if (textProcessors.containsKey(defaultTextProcessor))
-          return defaultTextProcessor; // return the default text processor if it's available
-        if (textProcessors.keySet().size()>0)
-          return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
-        else
-          return null;
+    public Map<String, TextProcessor> getTextProcessors() {
+        return textProcessors;
     }
 
     public TextProcessor getDefaultProcessor() {
         return textProcessors.get(getDefaultProcessorName());
     }
 
+    public Set<String> getTextProcessorNames() {
+        return textProcessors.keySet();
+    }
+
+    public PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
+        String processorName = pipelineSpecification.getTextProcessor();
+        if (processorName == null || !textProcessors.containsKey(processorName)) {
+            throw new RuntimeException("Processor " + processorName + " does not exist");
+        }
+        TextProcessor processor = textProcessors.get(processorName);
+        processor.createPipeline(pipelineSpecification);
+
+        LOG.info("Created pipeline " + pipelineSpecification.getName() + " for processor " + processorName);
+
+        return new PipelineCreationResult(0, "");
+    }
+
     public void removePipeline(String processor, String pipeline) {
-        TextProcessor textProcessor = textProcessors.get(processor);
-        if (processor == null)
+        if (!textProcessors.containsKey(processor)) {
             throw new RuntimeException("No text processor with name " + processor + " available");
+        }
+
+        // @todo extract to its own method
+        TextProcessor textProcessor = textProcessors.get(processor);
         textProcessor.removePipeline(pipeline);
-        removePipelineNode(processor, pipeline);
     }
 
-    private void removePipelineNode(String processor, String pipeline) throws QueryExecutionException {
-      Map<String, Object> map = new HashMap<>();
-      map.put("textProcessor", processor);
-      map.put("name", pipeline);
-      try (Transaction tx = database.beginTx()) {
-        database.execute("MATCH (n:Pipeline {textProcessor: {textProcessor}, name: {name}}) DELETE n", map);
-        tx.success();
-      }
-    }
-
+    // @todo is it really needed ?
     public static class PipelineCreationResult {
+
         private final int result;
         private final String message;
 
@@ -150,5 +145,21 @@ public class TextProcessorsManager {
         public String getMessage() {
             return message;
         }
+    }
+
+    private String getDefaultProcessorName() {
+        if (textProcessors.isEmpty()) {
+            return null;
+        }
+
+        if (textProcessors.containsKey(DEFAULT_TEXT_PROCESSOR)) {
+            return DEFAULT_TEXT_PROCESSOR; // return the default text processor if it's available
+        }
+
+        if (textProcessors.keySet().size() > 0) {
+            return textProcessors.keySet().iterator().next(); // return first processor (or null) in the list in case the default text processor doesn't exist
+        }
+
+        return null;
     }
 }

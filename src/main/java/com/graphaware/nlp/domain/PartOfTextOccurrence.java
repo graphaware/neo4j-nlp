@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 GraphAware
+ * Copyright (c) 2013-2017 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
@@ -20,7 +20,7 @@ import com.graphaware.common.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 
-class PartOfTextOccurrence<T> {
+public class PartOfTextOccurrence<T> {
 
     private final T element;
     private final Pair<Integer, Integer> span;

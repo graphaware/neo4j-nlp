@@ -1,28 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.graphaware.nlp.ml.textrank;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
+import com.graphaware.nlp.NLPIntegrationTest;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.neo4j.graphdb.QueryExecutionException;
-import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 
 
-public class PageRankTest extends EmbeddedDatabaseIntegrationTest {
+public class PageRankTest extends NLPIntegrationTest {
 
     private final static double damp = 0.85;
     private Map<String, Double> expectedPRs;
@@ -48,14 +38,15 @@ public class PageRankTest extends EmbeddedDatabaseIntegrationTest {
 
         // run PageRank
         try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute(
-                "match (a:AnnotatedText) where a.id=\"test118\"\n"
-                + "call ga.nlp.ml.textrank.computePageRank({annotatedText: a, relationshipType: \"Related_to\", "
-                    + "nodeType: \"Test\", damp: " + damp + "}) yield result\n"
-                + "return result\n"
+            Result result = getDatabase().execute(
+                    "match (a:AnnotatedText) where a.id=\"test118\"\n"
+                            + "call ga.nlp.ml.pageRank({relationshipType: \"Related_to\", "
+                            + "nodeType: \"Test\", damp: " + damp + "}) yield result\n"
+                                    + "return result\n"
             );
+            assertTrue(result.hasNext());
         } catch (Exception e) {
-            assertTrue("PageRank failed: " + e.getMessage(), true);
+            assertTrue("PageRank failed: " + e.getMessage(), false);
             return;
         }
 
