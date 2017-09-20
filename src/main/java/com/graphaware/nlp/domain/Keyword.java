@@ -22,6 +22,7 @@ public class Keyword {
     private final int wordsCount;
     private int exactMatch;
     private int total;
+    private double relevance;
 
     public Keyword(String word) {
         this.keyword = word;
@@ -88,6 +89,14 @@ public class Keyword {
         return keywordNoLangInfo.contains(ki.getRawKeyword());
     }
 
+    public double getRelevance() {
+        return relevance;
+    }
+
+    public void setRelevance(double relevance) {
+        this.relevance = relevance;
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

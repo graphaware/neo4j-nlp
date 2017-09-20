@@ -244,6 +244,7 @@ public class TextRank {
                 item.setRelatedTags(iterableToList((Iterable<String>) next.get("rel_tags")));
                 item.setRelTagStartingPoints(iterableToList((Iterable<Number>) next.get("rel_tos")));
                 item.setRelTagEndingPoints(iterableToList((Iterable<Number>) next.get("rel_toe")));
+                item.setRelevance(pageRanks.get(tagId));
                 keywordsEntry.get(tagId).add(item);
             }
             if (res != null) {
@@ -273,7 +274,7 @@ public class TextRank {
                         }
                     });
                 } else {
-                    addToResults(keywordOccurrence.getValue(), results);
+                    addToResults(keywordOccurrence.getValue(), keywordOccurrence.getRelevance(), results);
                 }
             });
         });
@@ -395,7 +396,6 @@ public class TextRank {
         if (coOccurrence == null) {
             return results;
         }
-        AtomicBoolean found = new AtomicBoolean(false);
         Iterator<Long> iterator = coOccurrence.stream()
                 .filter((ccEntry) -> keywords.containsKey(ccEntry)).iterator();
         while (iterator.hasNext()) {
@@ -410,13 +410,16 @@ public class TextRank {
                     relatedValues.putAll(recursiveResult);
                 });
                 if (relatedValues.size() > 0) {
-                    relatedValues.keySet().stream().forEach((item) -> {
-                        addToResults(currValue.split("_")[0] + " " + item, results);
+                    relatedValues.entrySet().stream().forEach((item) -> {
+                        addToResults(currValue.split("_")[0] + " " + item.getKey(),
+                                keywordOccurrence.getRelevance() + item.getValue().getRelevance(), 
+                                results);
                     });
                 } else {
-                    addToResults(currValue.split("_")[0] + " " + relValue, results);
+                    addToResults(currValue.split("_")[0] + " " + relValue, 
+                            keywordOccurrence.getRelevance() + keywords.get(ccEntry).get(0).getRelevance(), 
+                            results);
                 }
-                found.set(true);
             }
 //            else {
 //                        if (!useDependencies || keywords.get(ccEntry.getKey()).get(0).getRelatedTags().contains(currValue.split("_")[0])) {
@@ -429,12 +432,13 @@ public class TextRank {
         return results;
     }
 
-    private void addToResults(String res, Map<String, Keyword> results) {
+    private void addToResults(String res, double relevance, Map<String, Keyword> results) {
         if (res != null) {
             if (results.containsKey(res)) {
                 results.get(res).incCounts();
             } else {
                 final Keyword keyword = new Keyword(res);
+                keyword.setRelevance(relevance);
                 results.put(res, keyword);
             }
         }
@@ -455,6 +459,7 @@ public class TextRank {
                         Relationship rel = mergeRelationship(annotatedText, newNode);
                         rel.setProperty("count_exactMatch", en.getValue().getExactMatchCount());
                         rel.setProperty("count", en.getValue().getTotalCount());
+                        rel.setProperty("count", en.getValue().getRelevance());
                     }
                     LOG.info(en.getKey().split("_")[0]);
                 });
@@ -787,6 +792,7 @@ public class TextRank {
         private int startPosition;
         private int endPosition;
         private String value;
+        private double relevance;
         private List<String> relatedTags;
         private List<Number> relTagStartingPoints;
         private List<Number> relTagEndingPoints;
@@ -847,5 +853,12 @@ public class TextRank {
             this.value = value;
         }
 
+        public double getRelevance() {
+            return relevance;
+        }
+
+        public void setRelevance(double relevance) {
+            this.relevance = relevance;
+        }
     }
 }
