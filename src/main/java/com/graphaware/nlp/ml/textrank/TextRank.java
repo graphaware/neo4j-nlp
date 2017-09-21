@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import com.google.common.collect.HashBiMap;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Keyword;
@@ -410,7 +411,7 @@ public class TextRank {
             if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
                 Map<String, Keyword> relatedValues = new HashMap<>();
                 keywords.get(ccEntry).stream().forEach((newKeywordOccurrence) -> {
-                    final Map<String, Keyword> recursiveResult = findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords);
+                    final Map<String, Keyword> recursiveResult = new HashMap<>(); //findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords);
                     relatedValues.putAll(recursiveResult);
                 });
                 if (relatedValues.size() > 0) {
