@@ -264,13 +264,16 @@ public class TextRank {
         keywordsEntry.entrySet().stream().forEach((entry) -> {
             long tagId = entry.getKey();
             entry.getValue().stream().forEach((keywordOccurrence) -> {
+                String currValue = keywordOccurrence.getValue();
                 Map<String, Keyword> localResults = findRelatedKeywordAndMerge(tagId, keywordOccurrence, coOccurrence, keywordsEntry);
                 if (localResults.size() > 0) {
                     localResults.entrySet().stream().forEach((item) -> {
-                        if (results.containsKey(item.getKey())) {
-                            results.get(item.getKey()).incCountsBy(item.getValue().getTotalCount());
+                        String newKey = keywordOccurrence.getValue().split("_")[0] + " " + item.getKey();
+                        addToResults(newKey, keywordOccurrence.getRelevance() + keywordOccurrence.getRelevance(), results);
+                        if (results.containsKey(newKey)) {
+                            results.get(newKey).incCountsBy(item.getValue().getTotalCount());
                         } else {
-                            results.put(item.getKey(), item.getValue());
+                            results.put(newKey, item.getValue());
                         }
                     });
                 } else {
@@ -389,7 +392,7 @@ public class TextRank {
         return true;
     }
 
-    private Map<String, Keyword> findRelatedKeywordAndMerge(Long tagId, KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, List<KeywordExtractedItem>> keywords) {
+    private Map<String, Keyword> findRelatedKeywordAndMerge(long tagId, KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, List<KeywordExtractedItem>> keywords) {
         Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrences.get(tagId), tagId);
         Set<Long> coOccurrence = mapStartId.get(keywordOccurrence.startPosition);
         Map<String, Keyword> results = new HashMap<>();
@@ -397,27 +400,28 @@ public class TextRank {
             return results;
         }
         Iterator<Long> iterator = coOccurrence.stream()
+                .filter((ccEntry) -> ccEntry != tagId)
                 .filter((ccEntry) -> keywords.containsKey(ccEntry)).iterator();
         while (iterator.hasNext()) {
             Long ccEntry = iterator.next();
             String relValue = keywords.get(ccEntry).get(0).getValue();
-            String currValue = keywordOccurrence.getValue();
+            //String currValue = keywordOccurrence.getValue();
             //della entry (pair) mi faccio dare il valore di destinazione e verifico se 
             if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
                 Map<String, Keyword> relatedValues = new HashMap<>();
                 keywords.get(ccEntry).stream().forEach((newKeywordOccurrence) -> {
-                    final Map<String, Keyword> recursiveResult = new HashMap<>();//findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords);
+                    final Map<String, Keyword> recursiveResult = findRelatedKeywordAndMerge(ccEntry, newKeywordOccurrence, coOccurrences, keywords);
                     relatedValues.putAll(recursiveResult);
                 });
                 if (relatedValues.size() > 0) {
                     relatedValues.entrySet().stream().forEach((item) -> {
-                        addToResults(currValue.split("_")[0] + " " + item.getKey(),
-                                keywordOccurrence.getRelevance() + item.getValue().getRelevance(), 
+                        addToResults(relValue + item.getKey(),
+                                keywords.get(ccEntry).get(0).getRelevance() + item.getValue().getRelevance(), 
                                 results);
                     });
                 } else {
-                    addToResults(currValue.split("_")[0] + " " + relValue, 
-                            keywordOccurrence.getRelevance() + keywords.get(ccEntry).get(0).getRelevance(), 
+                    addToResults(relValue, 
+                            keywords.get(ccEntry).get(0).getRelevance(), 
                             results);
                 }
             }
