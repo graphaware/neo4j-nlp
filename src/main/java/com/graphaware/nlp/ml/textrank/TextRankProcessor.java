@@ -45,6 +45,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
                 .setMaxSingleKeywords(request.getMaxSingleKeywords())
                 .setTopXWordsForPhrases(request.getTopXWordsForPhrases())
                 .setTopXSinglewordKeywords(request.getTopXSinglewordKeywords())
+                .setCleanSingleWordKeywords(request.isCleanSingleWordKeywords())
                 .setKeywordLabel(request.getKeywordLabel());
         
         TextRank textRank = textrankBuilder.build();

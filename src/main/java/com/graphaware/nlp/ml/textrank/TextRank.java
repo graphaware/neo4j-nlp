@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-import com.google.common.collect.HashBiMap;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Keyword;
@@ -26,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
@@ -80,6 +78,7 @@ public class TextRank {
     private final boolean respectSentences;
     private final boolean useTfIdfWeights;
     private final boolean useDependencies;
+    private final boolean cleanSingleWordKeyword;
     private final int cooccurrenceWindow;
     private final int maxSingles;
     private final double phrasesTopxWords;
@@ -89,13 +88,27 @@ public class TextRank {
     private final List<String> admittedPOSs;
     private final Map<Long, String> idToValue = new HashMap<>();
 
-    public TextRank(GraphDatabaseService database, boolean removeStopWords, boolean directionsMatter, boolean respectSentences, boolean useTfIdfWeights, boolean useDependencies, int cooccurrenceWindow, int maxSingles, double phrases_topx_words, double singles_topx_words, Label keywordLabel, Set<String> stopWords, List<String> admittedPOSs) {
+    public TextRank(GraphDatabaseService database, 
+            boolean removeStopWords, 
+            boolean directionsMatter, 
+            boolean respectSentences, 
+            boolean useTfIdfWeights, 
+            boolean useDependencies, 
+            boolean cleanSingleWordKeyword, 
+            int cooccurrenceWindow, 
+            int maxSingles, 
+            double phrases_topx_words, 
+            double singles_topx_words, 
+            Label keywordLabel, 
+            Set<String> stopWords, 
+            List<String> admittedPOSs) {
         this.database = database;
         this.removeStopWords = removeStopWords;
         this.directionsMatter = directionsMatter;
         this.respectSentences = respectSentences;
         this.useTfIdfWeights = useTfIdfWeights;
         this.useDependencies = useDependencies;
+        this.cleanSingleWordKeyword = cleanSingleWordKeyword;
         this.cooccurrenceWindow = cooccurrenceWindow;
         this.maxSingles = maxSingles;
         this.phrasesTopxWords = phrases_topx_words;
@@ -262,7 +275,7 @@ public class TextRank {
             Map<String, Keyword> localResults;
             do {
                 long tagId = keywordOccurrence.get().getTagId();
-                System.out.println("cur: " + currValue.get() + " examitating next level");
+                System.out.println("cur: " + currValue.get() + " examinating next level");
                 localResults = checkNextKeyword(tagId, keywordOccurrence.get(), coOccurrence, keywordMap);
                 if (localResults.size() > 0) {
                     localResults.entrySet().stream().forEach((item) -> {
@@ -286,6 +299,9 @@ public class TextRank {
             System.out.println("< " + currValue.get());
         }
         computeTotalOccurrence(results);
+        if (cleanSingleWordKeyword) {
+            results = cleanSingleWordKeyword(results);
+        }
         peristKeyword(results, annotatedText);
 
         return true;
@@ -394,42 +410,7 @@ public class TextRank {
         return true;
     }
 
-//    private void addKeyphraseToResults(Map<Integer, String> keyphrase, Map<String, List<WordItem>> dependencies, long prev_eP, String lang, Map<String, Keyword> results) {
-//        if (keyphrase == null) {// || keyphrase.size() < 2)
-//            return;
-//        }
-//
-//        // append dependency word if it's missing
-//        if (useDependencies) {
-//            List<WordItem> missing_words = new ArrayList<>();
-//            for (String key : dependencies.keySet()) {
-//                missing_words.addAll(dependencies.get(key));
-//            }
-//            missing_words.removeAll(keyphrase.values());
-//            missing_words.stream()
-//                    .filter(wi -> keyphrase.entrySet().stream().filter(en -> (en.getKey() - wi.getEnd()) == 1 || (wi.getStart() - prev_eP) == 1).count() > 0)
-//                    .forEach(wi -> keyphrase.put(wi.getStart(), wi.getWord()));
-//        }
-//
-//        // we handle single-word keywords later on, so skip if `keyphrase` is not a phrase
-//        if (keyphrase.size() < 2) {
-//            return;
-//        }
-//
-//        // create keyphrase from a list of words
-//        String key = keyphrase.entrySet().stream()
-//                .sorted(Map.Entry.comparingByKey())
-//                .map(en -> en.getValue())
-//                .collect(Collectors.joining(" "));
-//        key += "_" + lang;
-//
-//        // store keyphrase into 'results'
-//        if (results.containsKey(key)) {
-//            results.get(key).incCounts();
-//        } else {
-//            results.put(key, new Keyword(key));
-//        }
-//    }
+
     private List<Long> getTopX(Map<Long, Double> pageRanks, int x) {
         List<Long> topx = pageRanks.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
@@ -490,23 +471,7 @@ public class TextRank {
         }
         return newList;
     }
-
-    private boolean checkDependencies(Node annotatedText) {
-        try (Transaction tx = database.beginTx();) {
-            Result res = database.execute("MATCH (n:AnnotatedText) WHERE id(n) = " + annotatedText.getId() + "\n"
-                    + "MATCH (n)-[:CONTAINS_SENTENCE]->(s)-[:SENTENCE_TAG_OCCURRENCE]->(sot:TagOccurrence)-[r]->(other:TagOccurrence)\n"
-                    + "WHERE type(r) IN [\"AMOD\",\"COMPOUND\"]\n"
-                    + "RETURN count(r) as c"
-            );
-            if (res.hasNext() && ((Number) res.next().get("c")).intValue() > 0) {
-                return true;
-            }
-            tx.success();
-        } catch (Exception e) {
-            LOG.error("checkDependencies() exception: " + e);
-        }
-        return false;
-    }
+    
 
     private Relationship mergeRelationship(Node annotatedText, Node newNode) {
         Relationship rel = null;
@@ -551,6 +516,19 @@ public class TextRank {
             });
         });
     }
+    
+    private Map<String, Keyword>  cleanSingleWordKeyword(Map<String, Keyword> results) {
+        Map<String, Keyword> newResults = new HashMap<>(results);
+        results.entrySet().stream().forEach((entry) -> {
+            results.entrySet().stream().forEach((innerEntry) -> {
+                if (entry.getValue().getWordsCount() < innerEntry.getValue().getWordsCount()
+                        && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())) {
+                    newResults.remove(entry.getKey());
+                }
+            });
+        });
+        return newResults;
+    }
 
     public static class Builder {
 
@@ -563,6 +541,7 @@ public class TextRank {
         private static final boolean DEFAULT_RESPECT_SENTENCES = true;
         private static final boolean DEFAULT_USE_TF_IDF_WEIGHT = false;
         private static final boolean DEFAULT_USE_TYPED_DEPENDENCIES = true;
+        private static final boolean DEFAULT_CLEAN_SINGLE_WORD_KEYWORDS = true;
         private static final int DEFAULT_CO_OCCURRENCE_WINDOW = 2;
         private static final int DEFAULT_MAX_SINGLES = 15;
 
@@ -572,6 +551,7 @@ public class TextRank {
         private boolean respectSentences = DEFAULT_RESPECT_SENTENCES;
         private boolean useTfIdfWeights = DEFAULT_USE_TF_IDF_WEIGHT;
         private boolean useDependencies = DEFAULT_USE_TYPED_DEPENDENCIES;
+        private boolean cleanSingleWordKeyword = DEFAULT_CLEAN_SINGLE_WORD_KEYWORDS;
         private int cooccurrenceWindow = DEFAULT_CO_OCCURRENCE_WINDOW;
         private int maxSingles = DEFAULT_MAX_SINGLES;
         private double phrasesTopxWords;
@@ -594,6 +574,7 @@ public class TextRank {
                     respectSentences,
                     useTfIdfWeights,
                     useDependencies,
+                    cleanSingleWordKeyword,
                     cooccurrenceWindow,
                     maxSingles,
                     phrasesTopxWords,
@@ -667,6 +648,11 @@ public class TextRank {
         public Builder setKeywordLabel(String keywordLabel) {
             //this.keywordLabel = Labels.valueOf(keywordLabel); // doesn't work because Labels is enum, while we want customizable keyword labels
             this.keywordLabel = Label.label(keywordLabel);
+            return this;
+        }
+        
+        public Builder setCleanSingleWordKeywords(boolean cleanSingleWordKeyword) {
+            this.cleanSingleWordKeyword = cleanSingleWordKeyword;
             return this;
         }
     }
