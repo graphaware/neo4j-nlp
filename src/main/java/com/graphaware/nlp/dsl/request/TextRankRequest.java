@@ -61,11 +61,11 @@ public class TextRankRequest {
     private static final int DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
     private static final double DEFAULT_THRESHOLD = 0.0001;
-    private static final boolean DEFAULT_STOPWORDS_ENABLING = false;
+    private static final boolean DEFAULT_STOPWORDS_ENABLING = true;
     private static final boolean DEFAULT_RESPECT_DIRECTIONS = false;
-    private static final boolean DEFAULT_RESPECT_SENTENCES = false;
+    private static final boolean DEFAULT_RESPECT_SENTENCES = true;
     private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
-    private static final boolean DEFAULT_USE_DEPENDENCIES = false;
+    private static final boolean DEFAULT_USE_DEPENDENCIES = true;
     private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
     private static final int DEFAULT_MAX_SINGLE_KEYWORDS = 50;
     private static final double DEFAULT_PHRASES_TOPX = 1.0f/3;

@@ -33,6 +33,15 @@ public class Keyword {
         this.total = 1;
     }
     
+    public Keyword(String word, int occurrences) {
+        this.keyword = word;
+        this.keywordNoLangInfo = word.split("_")[0];
+        this.keywordsArray = keywordNoLangInfo.split(" ");
+        this.wordsCount = keywordsArray.length;
+        this.exactMatch = occurrences;
+        this.total = occurrences;
+    }
+    
     public String getKeyword() {
         return this.keyword;
     }
