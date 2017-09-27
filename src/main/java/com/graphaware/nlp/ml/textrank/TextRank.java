@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Keyword;
@@ -46,8 +47,7 @@ public class TextRank {
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, "
-            + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_BY_SENTENCE
             = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
@@ -61,8 +61,7 @@ public class TextRank {
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, "
-            + "(case tags[i].pos when null then 'Unknown,' else reduce(pos='', p in tags[i].pos | pos+p+',') end) as pos1, (case tags[i+1].pos when null then 'Unknown,' else reduce(pos='', p in tags[i+1].pos | pos+p+',') end) as pos2\n";
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
             + "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
@@ -86,6 +85,7 @@ public class TextRank {
     private final Label keywordLabel;
     private final Set<String> stopWords;
     private final List<String> admittedPOSs;
+    private Map<Long, List<Long>> neExpanded;
     private final Map<Long, String> idToValue = new HashMap<>();
 
     public TextRank(GraphDatabaseService database, 
@@ -118,7 +118,8 @@ public class TextRank {
         this.admittedPOSs = admittedPOSs;
     }
 
-    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
+    @Deprecated
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrencesOld(Node annotatedText) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         String query;
@@ -146,12 +147,12 @@ public class TextRank {
             Long tag2 = toLong(next.get("tag2"));
             int tag1Start = (toLong(next.get("sourceStartPosition"))).intValue();
             int tag2Start = (toLong(next.get("destinationStartPosition"))).intValue();
-            List<String> pos1 = Arrays.asList(((String) next.get("pos1")).split(","));
-            List<String> pos2 = Arrays.asList(((String) next.get("pos2")).split(","));
+            List<String> pos1 = Arrays.asList((String[]) next.get("pos1"));
+            List<String> pos2 = Arrays.asList((String[]) next.get("pos2"));
 
             // check whether POS of both tags are admitted
-            boolean bPOS1 = pos1.stream().filter(pos -> pos != null && admittedPOSs.contains(pos)).count() != 0;
-            boolean bPOS2 = pos2.stream().filter(pos -> pos != null && admittedPOSs.contains(pos)).count() != 0;
+            boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
+            boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
 
             // fill tag co-occurrences (adjacency matrix)
             //   * window of words N = 2 (i.e. neighbours only => both neighbours must pass cleaning requirements)
@@ -187,6 +188,87 @@ public class TextRank {
         return results;
     }
 
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", annotatedText.getId());
+        String query;
+        if (respectSentences) {
+            query = COOCCURRENCE_QUERY_BY_SENTENCE;
+        } else {
+            query = COOCCURRENCE_QUERY;
+        }
+
+        Result res = null;
+        try (Transaction tx = database.beginTx();) {
+            res = database.execute(query, params);
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while creating co-occurrences: ", e);
+        }
+
+        List<CoOccurrenceItem> prelim = new ArrayList<>();
+        while (res != null && res.hasNext()) {
+            Map<String, Object> next = res.next();
+            Long tag1 = toLong(next.get("tag1"));
+            Long tag2 = toLong(next.get("tag2"));
+            String tagVal1 = (String) next.get("tag1_val");
+            String tagVal2 = (String) next.get("tag2_val");
+            int tag1Start = (toLong(next.get("sourceStartPosition"))).intValue();
+            int tag2Start = (toLong(next.get("destinationStartPosition"))).intValue();
+            List<String> pos1 = Arrays.asList((String[]) next.get("pos1"));
+            List<String> pos2 = Arrays.asList((String[]) next.get("pos2"));
+
+            // check whether POS of both tags are admitted
+            boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
+            boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
+
+            // fill tag co-occurrences (adjacency matrix)
+            if (bPOS1 && bPOS2) {
+                prelim.add(new CoOccurrenceItem(tag1, tag1Start, tag2, tag2Start));
+            }
+
+            // for logging purposses and for `handleNamedEntities()`
+            idToValue.put(tag1, tagVal1);
+            idToValue.put(tag2, tagVal2);
+        }
+
+        Map<Long, List<Pair<Long, Long>>> neExp = expandNamedEntities();
+        neExpanded = neExp.entrySet().stream()
+                        .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().map(p -> p.second()).collect(Collectors.toList()) ));
+ 
+        Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
+        long neVisited = 0L;
+        for (CoOccurrenceItem it: prelim) {
+            Long tag1 = it.getSource();
+            Long tag2 = it.getDestination();
+            int tag1Start = it.getSourceStartingPositions().get(0).first().intValue();
+            int tag2Start = it.getSourceStartingPositions().get(0).second().intValue();
+
+            if (neExp.containsKey(tag1)) {
+                if (neVisited == 0L || neVisited != tag1.longValue()) {
+                    connectTagsInNE(results, neExp.get(tag1), tag1Start);
+                    neVisited = 0L;
+                }
+                tag1Start += neExp.get(tag1).get( neExp.get(tag1).size() - 1 ).first().intValue();
+                tag1 = neExp.get(tag1).get( neExp.get(tag1).size() - 1 ).second();
+            }
+
+            if (neExp.containsKey(tag2)) {
+                connectTagsInNE(results, neExp.get(tag2), tag2Start);
+                neVisited = tag2;
+                tag2 = neExp.get(tag2).get(0).second();
+            } else
+                neVisited = 0L;
+
+            addTagToCoOccurrence(results, tag1, tag1Start, tag2, tag2Start);
+            if (!directionsMatter) { // when direction of co-occurrence relationships is not important
+                addTagToCoOccurrence(results, tag2, tag2Start, tag1, tag1Start);
+            }
+        }
+
+        return results;
+    }
+
     private static Long toLong(Object value) {
         Long returnValue;
         if (value instanceof Integer) {
@@ -217,6 +299,78 @@ public class TextRank {
         } else {
             mapTag1.put(destination, new CoOccurrenceItem(source, sourceStartPosition, destination, destinationStartPosition));
         }
+    }
+
+    private void connectTagsInNE(Map<Long, Map<Long, CoOccurrenceItem>> results, List<Pair<Long, Long>> tags, int startOffset) {
+        int n = tags.size();
+        for (int i=0; i<n-2; i++) {
+            for (int j=i+1; j<n; j++) {
+                addTagToCoOccurrence(results, tags.get(i).second(), startOffset + tags.get(i).first().intValue(), tags.get(j).second(), startOffset + tags.get(j).first().intValue());
+                if (!directionsMatter) { // when direction of co-occurrence relationships is not important
+                    addTagToCoOccurrence(results, tags.get(j).second(), startOffset + tags.get(j).first().intValue(), tags.get(i).second(), startOffset + tags.get(i).first().intValue());
+                }
+            }
+        }
+    }
+
+    private  Map<Long, List<Pair<Long, Long>>> expandNamedEntities() {
+        //TextProcessor processor = getNLPManager().getTextProcessorsManager().getTextProcessor();
+        //AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification.getName(), "en", null);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("name", "tokenizer");
+        parameters.put("textProcessor", "com.graphaware.nlp.processor.stanford.StanfordTextProcessor");
+
+        Map<String, Object> p = new HashMap<>();
+        p.put("params", parameters);
+
+        Map<Long, List<Pair<Long, Long>>> result = new HashMap<>();
+        Map<Long, String> newIdsToVal = new HashMap<>();
+
+        long nextNewId = -2L;
+        for (Long valueL: idToValue.keySet()) {
+                if (idToValue.get(valueL).split(" ").length < 2)
+                    continue;
+                String str = idToValue.get(valueL).toLowerCase();
+                p.put("text", str);
+                List<Pair<Long, Long>> res = new ArrayList<>();
+                try (Transaction tx = database.beginTx()) {
+                    Result r = database.execute(
+                        "WITH ga.nlp.processor.annotate({text}, {params}) AS annotated\n"
+                        + "with keys(annotated.sentences[0].tagOccurrences) as keys, annotated\n"
+                        + "unwind keys as k\n"
+                        + "with toInteger(k) as kInt, annotated\n"
+                        + "order by kInt asc\n"
+                        + "return kInt as start, annotated.sentences[0].tagOccurrences[toString(kInt)][0].element.lemma as lemma"
+                        , p);
+                    while (r.hasNext()) {
+                        Map<String, Object> next = r.next();
+                        Long start = (Long) next.get("start");
+                        String val = (String) next.get("lemma");
+                        List<Long> lId = idToValue.entrySet().stream().filter(en -> en.getValue().equals(val) || en.getValue().toLowerCase().equals(val)).map(Map.Entry::getKey).collect(Collectors.toList());
+                        List<Long> lIdNew = newIdsToVal.entrySet().stream().filter(en -> en.getValue().equals(val) || en.getValue().toLowerCase().equals(val)).map(Map.Entry::getKey).collect(Collectors.toList());
+                        if (lId!=null && lId.size()>0) {
+                            res.add(new Pair<>(start, lId.get(0)));
+                        } else if (lIdNew!=null && lIdNew.size()>0) {
+                            res.add(new Pair<>(start, lIdNew.get(0)));
+                        } else {
+                            res.add(new Pair<>(start, nextNewId));
+                            newIdsToVal.put(nextNewId, val);
+                            nextNewId -= 1L;
+                        }
+                    }
+                    r.close();
+                    tx.success();
+                }
+                if (res.size() > 0)
+                    result.put(valueL, res);
+        }
+
+        // finish by adding newly assigned IDs to idToValue map
+        for (Long key: newIdsToVal.keySet())
+             idToValue.put(key, newIdsToVal.get(key));
+
+        return result;
     }
 
     public boolean evaluate(Node annotatedText, int iter, double damp, double threshold) {
@@ -271,18 +425,18 @@ public class TextRank {
                     = new AtomicReference<>(keywordsOccurrences.remove(0));
             final AtomicReference<String> currValue = new AtomicReference<>(keywordOccurrence.get().getValue());
             final AtomicReference<Double> currRelevance = new AtomicReference<>(keywordOccurrence.get().getRelevance());
-            System.out.println("> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
+            //System.out.println("> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
             Map<String, Keyword> localResults;
             do {
                 long tagId = keywordOccurrence.get().getTagId();
-                System.out.println("cur: " + currValue.get() + " examinating next level");
+                //System.out.println("cur: " + currValue.get() + " examinating next level");
                 localResults = checkNextKeyword(tagId, keywordOccurrence.get(), coOccurrence, keywordMap);
                 if (localResults.size() > 0) {
                     localResults.entrySet().stream().forEach((item) -> {
                         KeywordExtractedItem nextKeyword = keywordsOccurrences.get(0);
                         if (nextKeyword != null && nextKeyword.value.equalsIgnoreCase(item.getKey())) {
                             String newCurrValue = currValue.get().split("_")[0] + " " + item.getKey();
-                            System.out.println(">> " + newCurrValue);
+                            //System.out.println(">> " + newCurrValue);
                             double newCurrRelevance = currRelevance.get() + item.getValue().getRelevance();
                             currValue.set(newCurrValue);
                             currRelevance.set(newCurrRelevance);
@@ -296,8 +450,27 @@ public class TextRank {
                 }
             } while (!localResults.isEmpty() && keywordOccurrence.get() != null);
             addToResults(currValue.get(), currRelevance.get(), results, 1);
-            System.out.println("< " + currValue.get());
+            //System.out.println("< " + currValue.get());
         }
+
+        // add named entities that contain at least some of the top 1/3 of words
+        /*neExpanded.entrySet().stream()
+            .filter(en -> {
+                long n = en.getValue().stream().filter(v -> topThird.contains(v)).count();
+                return n > 0;
+                //return n >= en.getValue().size() / 3.0f || (n > 0 && en.getValue().size() == 2);
+            })
+            .forEach(en -> {
+                final String key = idToValue.get(en.getKey()) + "_en"; // + lang;
+                results.put(key, new Keyword(key)); // TO DO: handle counters exactMatch and total
+            });*/
+        for (Long key: neExpanded.keySet()) {
+            if (neExpanded.get(key).stream().filter(v -> topThird.contains(v)).count() == 0)
+                continue;
+            String keystr = idToValue.get(key) + "_en"; // + lang;
+            results.put(keystr, new Keyword(keystr)); // TO DO: handle counters exactMatch and total
+        }
+
         computeTotalOccurrence(results);
         if (cleanSingleWordKeyword) {
             results = cleanSingleWordKeyword(results);
@@ -320,9 +493,9 @@ public class TextRank {
         while (iterator.hasNext()) {
             Long ccEntry = iterator.next();
             String relValue = keywords.get(ccEntry).getValue();
-            System.out.println("checkNextKeyword >> " + relValue);
+            //System.out.println("checkNextKeyword >> " + relValue);
             if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
-                System.out.println("checkNextKeyword >>> " + relValue);
+                //System.out.println("checkNextKeyword >>> " + relValue);
                 addToResults(relValue,
                         keywords.get(ccEntry).getRelevance(),
                         results, 1);
@@ -332,11 +505,11 @@ public class TextRank {
     }
 
     private void addToResults(String res, double relevance, Map<String, Keyword> results, int occurrences) {
-        System.out.println("addToResults: " + res + " " + relevance + " " + occurrences);
+        //System.out.println("addToResults: " + res + " " + relevance + " " + occurrences);
         if (res != null) {
             if (results.containsKey(res)) {
                 results.get(res).incCountsBy(occurrences);
-                System.out.println("+inc");
+                //System.out.println("+inc");
             } else {
                 final Keyword keyword = new Keyword(res, occurrences);
                 keyword.setRelevance(relevance);
@@ -532,8 +705,8 @@ public class TextRank {
 
     public static class Builder {
 
-        private static final String[] STOP_WORDS = {"new", "old", "large", "big", "small", "many", "few", "best", "worst"};
-        private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS", "Unknown"};
+        private static final String[] STOP_WORDS = {"new", "old", "large", "big", "vast", "small", "many", "few", "best", "worst"};
+        private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"};
 
         private static final boolean DEFAULT_REMOVE_STOP_WORDS = false;
 
