@@ -64,7 +64,8 @@ public class TextRank {
             + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
-            + "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
+            //+ "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
+            + "WHERE id(a) = {id}" // new
             + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
             + "WHERE not exists(t2.pos) or any(p in t2.pos where p in {posList})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
@@ -387,7 +388,7 @@ public class TextRank {
         LOG.info("Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
-        params.put("nodeList", topThird);
+        //params.put("nodeList", topThird); // new (also changed the GET_TAG_QUERY)
         params.put("posList", admittedPOSs);
         List<KeywordExtractedItem> keywordsOccurrences = new ArrayList<>();
         Map<Long, KeywordExtractedItem> keywordMap = new HashMap<>();
@@ -403,7 +404,7 @@ public class TextRank {
                 item.setRelatedTags(iterableToList((Iterable<String>) next.get("rel_tags")));
                 item.setRelTagStartingPoints(iterableToList((Iterable<Number>) next.get("rel_tos")));
                 item.setRelTagEndingPoints(iterableToList((Iterable<Number>) next.get("rel_toe")));
-                item.setRelevance(pageRanks.get(tagId));
+                item.setRelevance(pageRanks.containsKey(tagId) ? pageRanks.get(tagId) : 0);
                 keywordsOccurrences.add(item);
                 if (!keywordMap.containsKey(tagId)) {
                     keywordMap.put(tagId, item);
@@ -418,6 +419,8 @@ public class TextRank {
             return false;
         }
 
+        Map<String, Long> valToId = idToValue.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
         Map<String, Keyword> results = new HashMap<>();
 
         while (!keywordsOccurrences.isEmpty()) {
@@ -425,13 +428,18 @@ public class TextRank {
                     = new AtomicReference<>(keywordsOccurrences.remove(0));
             final AtomicReference<String> currValue = new AtomicReference<>(keywordOccurrence.get().getValue());
             final AtomicReference<Double> currRelevance = new AtomicReference<>(keywordOccurrence.get().getRelevance());
-            //System.out.println("> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
+            List<Long> relTagIDs = keywordOccurrence.get().getRelatedTags().stream().map(el -> valToId.get(el)).collect(Collectors.toList()); // new
+            relTagIDs.retainAll(topThird); // new
+            if (!topThird.contains(keywordOccurrence.get().getTagId()) && relTagIDs.size()==0) // new
+                continue;
+            //System.out.println("\n> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
             Map<String, Keyword> localResults;
             do {
                 long tagId = keywordOccurrence.get().getTagId();
-                //System.out.println("cur: " + currValue.get() + " examinating next level");
+                //System.out.println("  cur: " + currValue.get() + ". Examining next level");
                 localResults = checkNextKeyword(tagId, keywordOccurrence.get(), coOccurrence, keywordMap);
                 if (localResults.size() > 0) {
+                    //System.out.println("    related tags: " + localResults.entrySet().stream().map(en -> en.getKey()).collect(Collectors.joining(", ")));
                     localResults.entrySet().stream().forEach((item) -> {
                         KeywordExtractedItem nextKeyword = keywordsOccurrences.get(0);
                         if (nextKeyword != null && nextKeyword.value.equalsIgnoreCase(item.getKey())) {
@@ -454,21 +462,11 @@ public class TextRank {
         }
 
         // add named entities that contain at least some of the top 1/3 of words
-        /*neExpanded.entrySet().stream()
-            .filter(en -> {
-                long n = en.getValue().stream().filter(v -> topThird.contains(v)).count();
-                return n > 0;
-                //return n >= en.getValue().size() / 3.0f || (n > 0 && en.getValue().size() == 2);
-            })
-            .forEach(en -> {
-                final String key = idToValue.get(en.getKey()) + "_en"; // + lang;
-                results.put(key, new Keyword(key)); // TO DO: handle counters exactMatch and total
-            });*/
         for (Long key: neExpanded.keySet()) {
             if (neExpanded.get(key).stream().filter(v -> topThird.contains(v)).count() == 0)
                 continue;
             String keystr = idToValue.get(key) + "_en"; // + lang;
-            results.put(keystr, new Keyword(keystr)); // TO DO: handle counters exactMatch and total
+            addToResults(keystr, pageRanks.containsKey(key) ? pageRanks.get(key) : 0, results, 1);
         }
 
         computeTotalOccurrence(results);
@@ -481,26 +479,37 @@ public class TextRank {
     }
 
     private Map<String, Keyword> checkNextKeyword(long tagId, KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, KeywordExtractedItem> keywords) {
+        Map<String, Keyword> results = new HashMap<>();
+        if (!coOccurrences.containsKey(tagId))
+            return results;
+
         Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrences.get(tagId), tagId);
         Set<Long> coOccurrence = mapStartId.get(keywordOccurrence.startPosition);
-        Map<String, Keyword> results = new HashMap<>();
         if (coOccurrence == null) {
             return results;
         }
+
         Iterator<Long> iterator = coOccurrence.stream()
                 .filter((ccEntry) -> ccEntry != tagId)
                 .filter((ccEntry) -> keywords.containsKey(ccEntry)).iterator();
+
         while (iterator.hasNext()) {
             Long ccEntry = iterator.next();
             String relValue = keywords.get(ccEntry).getValue();
             //System.out.println("checkNextKeyword >> " + relValue);
-            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
+            //if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
+            List<String> merged = new ArrayList<>(keywords.get(tagId).getRelatedTags()); // new
+            merged.retainAll(keywordOccurrence.getRelatedTags()); // new
+            //System.out.println("    related tag = " + idToValue.get(ccEntry) + ", related tags = " + keywords.get(tagId).getRelatedTags().stream().collect(Collectors.joining(", ")));
+            //System.out.println("      merged = " + merged.stream().collect(Collectors.joining(", ")));
+            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0]) || merged.size()>0) { // new
                 //System.out.println("checkNextKeyword >>> " + relValue);
                 addToResults(relValue,
                         keywords.get(ccEntry).getRelevance(),
                         results, 1);
             }
         }
+
         return results;
     }
 
@@ -695,7 +704,9 @@ public class TextRank {
         results.entrySet().stream().forEach((entry) -> {
             results.entrySet().stream().forEach((innerEntry) -> {
                 if (entry.getValue().getWordsCount() < innerEntry.getValue().getWordsCount()
-                        && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())) {
+                        && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())
+                        && entry.getValue().getWordsCount() == 1 // new
+                    ) {
                     newResults.remove(entry.getKey());
                 }
             });
