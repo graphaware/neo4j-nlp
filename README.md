@@ -114,73 +114,23 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
+### Enrich your original knowledge
 
+As of now, a single enricher is available, making use of the ConceptNet5 API.
+
+This enricher will extend the meaning of tokens (Tag nodes) in the graph.
+
+```
+MATCH (n:Tag)
+CALL ga.nlp.enrich.concept({tag: n, depth:2, admittedRelationships:["IsA","PartOf"]})
+YIELD result
+RETURN result
+```
+
+Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
 List of procedures available:
 
-**1. Tag extraction**
-
-This procedure allows to process text and get back sentences and tags after processing. The return value is a node of type AnnotatedText that is connected to sentences and them to tags.
-This is an example of usage:
-
-```
-#Add a new node with the text (not mandatory)
-CREATE (news:News {text:""})
-RETURN news;
-
-#Annotate the news
-MATCH (n:News)
-CALL ga.nlp.annotate({text:n.text, id: n.uuid}) YIELD result
-MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
-RETURN n, result;
-```
-
-Available parameters:
-  * `text` (mandatory): the text to be processed
-  * `id` (mandatory): the id to assign to the new node created
-  * `textProcessor` (optional): specify text processor to use (default is StanfordNLP, but if it's not present, the first available one is automatically used instead - see Neo4j log for information about which one was used)
-  * `pipeline` (optional, default is *tokenizer*)
-  * `languageCheck` (optional, default *true*): check whether is language detected correctly and whether it is supported
-  * `sentiment` (optional, default *false*): this allow to specify if also sentiment is extracted for each sentence in the text, if true a label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
-  * `store` (optional, default *true*): this enable the storing of sentence in the sentence node. This is necessary if sentences need to be processed later, for example for sentiment extraction
-
-**2. Sentiment extraction**
-
-This procedure allows to process sentences beloging to AnnotatedText node and add sentiment to each of them. A label will be asigned to the sentence from VeryNegative, Negative, Neutral, Positive, VeryPositive
-
-```
-MATCH (a:AnnotatedText {id: {id}}) WITH a 
-CALL ga.nlp.sentiment({node:a}) YIELD result 
-MATCH (result)-[:CONTAINS_SENTENCE]->(s:Sentence) 
-return labels(s) as labels
-```
-
-Available parameters:
-  * `node` (mandatory): node (with label *AnnotatedText*) to analyse
-  * `textProcessor` (optional)
-
-**3. Ontology**
-Another feature provided by GraphAware NLP is the ability to build ontology hierarchies, starting from the tags extracted from the text. 
-The source for this ontology is ConceptNet5. It is a semantic network containing lots of things computers know about the world, 
-especially when understanding text written by people.
-
-```
-MATCH (a:AnnotatedText)
-CALL ga.nlp.concept({node:a, depth: 2}) YIELD result
-return result
-```
-
-**4. Search**
-Text processed during the annotation process is decomposed in all the main tags. Stop words, lemmatization, punctuation pruning and other cleaning procedures are applied to reduce the amount of tags to the most significant. 
-Furthermore, for each tag, its term frequency is stored to provide information about how often a lemma appears in the document. 
-Using such data and inspired by Elasticsearch scoring functions, GraphAware NLP exposes a search procedure that provides basic search capabilities leveraging tag information stored after text analysis.
-
-```
-CALL ga.nlp.search("gun Orlando") YIELD result, score
-MATCH (result)<-[]-(news:News)
-RETURN DISTINCT news, score
-ORDER BY score desc;
-```
 
 **5. Language Detection**
 
