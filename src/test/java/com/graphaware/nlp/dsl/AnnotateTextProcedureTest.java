@@ -52,10 +52,11 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
     @Test
     public void testExceptionIsThrownWhenLanguageCannotBeDetected() {
         try {
-            executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc'})", emptyConsumer());
-            assertFalse(true);
-        } catch (Exception e) {
+            //executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc'})", emptyConsumer());
+            executeInTransaction("CALL ga.nlp.annotate({text: 'The European Union accumulated a higher portion of GDP as a form of foreign aid than any other economic union.', id: 'test-proc'})", emptyConsumer());
             assertTrue(true);
+        } catch (Exception e) {
+            assertTrue(false);
         }
     }
 
