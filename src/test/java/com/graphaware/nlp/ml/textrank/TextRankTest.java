@@ -42,7 +42,7 @@ public class TextRankTest extends NLPIntegrationTest {
     public void testTextRank() throws Exception {
         createGraph();
 
-        // run TextRank
+        // Run TextRank
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute("match (a:AnnotatedText) return a");
             assertTrue("TextRank: didn't find AnnotatedText (error in graph initialization).", result.hasNext());
