@@ -41,19 +41,19 @@ public class TextProcessorsManager {
         Map<String, TextProcessor> loadedInstances = ServiceLoader.loadInstances(NLPTextProcessor.class);
         textProcessors.putAll(loadedInstances);
 
-        loadedInstances.keySet().forEach(k -> {
-            TextProcessor ins = loadedInstances.get(k);
-            if (ins.override() != null && textProcessors.containsKey(ins.override())) {
-                textProcessors.remove(ins.override());
-            }
-        });
-
-        loadedInstances.keySet().forEach(k -> {
-            TextProcessor textProcessor = loadedInstances.get(k);
-            if (textProcessor.getAlias() != null && textProcessors.containsKey(k)) {
-                textProcessors.put(textProcessor.getAlias(), textProcessor);
-            }
-        });
+//        loadedInstances.keySet().forEach(k -> {
+//            TextProcessor ins = loadedInstances.get(k);
+//            if (ins.override() != null && textProcessors.containsKey(ins.override())) {
+//                textProcessors.remove(ins.override());
+//            }
+//        });
+//
+//        loadedInstances.keySet().forEach(k -> {
+//            TextProcessor textProcessor = loadedInstances.get(k);
+//            if (textProcessor.getAlias() != null && textProcessors.containsKey(k)) {
+//                textProcessors.put(textProcessor.getAlias(), textProcessor);
+//            }
+//        });
     }
 
     private void initiateTextProcessors() {
