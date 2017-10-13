@@ -105,6 +105,10 @@ public class Keyword {
     public void setRelevance(double relevance) {
         this.relevance = relevance;
     }
+
+    public double getMeanRelevance() {
+        return this.relevance/this.wordsCount;
+    }
     
     @Override
     public boolean equals(Object obj) {
