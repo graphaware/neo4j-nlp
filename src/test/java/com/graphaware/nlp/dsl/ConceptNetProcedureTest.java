@@ -16,7 +16,7 @@ public class ConceptNetProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testConceptProcedureWithAnnotatedNode() {
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'stub'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
 

@@ -31,19 +31,19 @@ public class TextProcessorManagerTest {
     @Test
     public void testProcessorsAreRegisteredWithAliases() {
         TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
-        assertTrue(textProcessorsManager.getTextProcessor("stub") instanceof StubTextProcessor);
+        assertTrue(textProcessorsManager.getTextProcessor("com.graphaware.nlp.stub.StubTextProcessor") instanceof StubTextProcessor);
     }
 
     @Test
     public void testRetrievingProcessorWithNameAndPipeline() {
         TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
-        assertTrue(textProcessorsManager.retrieveTextProcessor("stub", "tokenizer") instanceof StubTextProcessor);
+        assertTrue(textProcessorsManager.retrieveTextProcessor("com.graphaware.nlp.stub.StubTextProcessor", "tokenizer") instanceof StubTextProcessor);
     }
 
     @Test(expected = RuntimeException.class)
     public void testRetrieveProcessorWithUnknownPipelineThrowException() {
         TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
-        textProcessorsManager.retrieveTextProcessor("stub", "unk");
+        textProcessorsManager.retrieveTextProcessor("com.graphaware.nlp.stub.StubTextProcessor", "unk");
     }
 
     @Test(expected = RuntimeException.class)

@@ -23,7 +23,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
             getNLPManager().annotateTextAndPersist(
                     "Hello world",
                     "id-123",
-                    "stub",
+                    "com.graphaware.nlp.stub.StubTextProcessor",
                     "tokenizer",
                     false,
                     false
@@ -40,7 +40,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
             getNLPManager().annotateTextAndPersist(
                     "Hello world",
                     "id-123",
-                    "stub",
+                    "com.graphaware.nlp.stub.StubTextProcessor",
                     "tokenizer",
                     false,
                     false

@@ -245,7 +245,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
         tester.assertSentenceWithIdHasSentimentLabel("123_0", SentimentLabels.VeryPositive.toString());
         assertEquals("tokenizer",
-                ((StubTextProcessor) manager.getTextProcessorsManager().getTextProcessor("stub")).getLastPipelineUsed());
+                ((StubTextProcessor) manager.getTextProcessorsManager().getTextProcessor("com.graphaware.nlp.stub.StubTextProcessor")).getLastPipelineUsed());
     }
 
 
