@@ -18,11 +18,11 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.2.1.51</version>
+    <version>3.3.0.51</version>
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.2.1.51.1</version>
+  <version>3.3.0.51.1</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
@@ -88,20 +88,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <resttest.version>${parent.version}.16</resttest.version>
+    <resttest.version>${parent.version}.18</resttest.version>
   </properties>
   
   <dependencies>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j</artifactId>
-      <scope>provided</scope>
-    </dependency>
 
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
