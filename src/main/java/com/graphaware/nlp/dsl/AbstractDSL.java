@@ -15,7 +15,7 @@
  */
 package com.graphaware.nlp.dsl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPModule;
 import org.neo4j.graphdb.GraphDatabaseService;

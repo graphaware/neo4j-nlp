@@ -5,6 +5,7 @@ import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
+import com.graphaware.test.integration.DatabaseIntegrationTest;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;
 import org.junit.Before;
 import org.neo4j.graphdb.Result;

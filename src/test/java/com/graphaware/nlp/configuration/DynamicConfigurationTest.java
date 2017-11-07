@@ -1,6 +1,6 @@
 package com.graphaware.nlp.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;

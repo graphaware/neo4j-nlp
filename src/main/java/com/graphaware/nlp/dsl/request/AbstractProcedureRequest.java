@@ -1,6 +1,6 @@
 package com.graphaware.nlp.dsl.request;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.util.ProcedureRequestUtils;
 
 import java.util.Arrays;

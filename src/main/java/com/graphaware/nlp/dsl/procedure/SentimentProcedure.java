@@ -17,6 +17,7 @@ package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.SingleResult;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
