@@ -32,6 +32,8 @@ public class AnnotatedText {
 
     private String text;
 
+    private int numTerms;
+
     private List<Sentence> sentences = new ArrayList<>();
 
     public List<Sentence> getSentences() {
@@ -58,6 +60,14 @@ public class AnnotatedText {
 
     public void setText(String text) {
         this.text = text;
+    }
+
+    public int getNumTerms() {
+        return numTerms;
+    }
+
+    public void setNumTerms(int numTerms) {
+        this.numTerms = numTerms;
     }
 
     public List<Tag> getTags() {

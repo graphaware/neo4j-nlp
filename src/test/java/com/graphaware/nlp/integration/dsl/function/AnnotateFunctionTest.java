@@ -26,7 +26,6 @@ public class AnnotateFunctionTest extends GraphAwareIntegrationTest {
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         runtime.start();
         runtime.waitUntilStarted();
-        ((GraphDatabaseAPI) getDatabase()).getDependencyResolver().resolveDependency(Procedures.class).registerFunction(AnnotateFunction.class);
     }
 
     @Test
