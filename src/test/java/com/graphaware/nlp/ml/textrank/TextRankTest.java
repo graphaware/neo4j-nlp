@@ -51,8 +51,7 @@ public class TextRankTest extends NLPIntegrationTest {
             }
             Node annText = (Node) result.next().get("a");
             TextRank textrank = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration())
-                    .setTopXSinglewordKeywords(1.0f / 5)
-                    .setTopXWordsForPhrases(1.0f / 3)
+                    .setTopXTags(1.0f / 3)
                     .build();
 if (annText == null)
     System.out.println(">>>>>> annText is null!");
