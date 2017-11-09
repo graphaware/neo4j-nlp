@@ -39,13 +39,11 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrankBuilder.removeStopWords(request.isDoStopwords())
                 .respectDirections(request.isRespectDirections())
                 .respectSentences(request.isRespectSentences())
-                .useTfIdfWeights(request.isUseTfIdfWeights())
                 .useDependencies(request.isUseDependencies())
-                .setCooccurrenceWindow(request.getCooccurrenceWindow())
-                .setMaxSingleKeywords(request.getMaxSingleKeywords())
-                .setTopXWordsForPhrases(request.getTopXWordsForPhrases())
-                .setTopXSinglewordKeywords(request.getTopXSinglewordKeywords())
-                .setCleanSingleWordKeywords(request.isCleanSingleWordKeywords())
+                .useDependenciesForCooccurrences(request.isUseDependenciesForCooccurrences())
+                //.setCooccurrenceWindow(request.getCooccurrenceWindow())
+                .setTopXTags(request.getTopXTags())
+                .setCleanKeywords(request.isCleanKeywords())
                 .setKeywordLabel(request.getKeywordLabel());
         
         TextRank textRank = textrankBuilder.build();

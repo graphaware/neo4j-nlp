@@ -25,8 +25,15 @@ import org.neo4j.graphdb.Node;
 
 public class KeywordPersister extends AbstractPersister implements Persister<Keyword> {
 
+    private Label keywordLabel;
+
     public KeywordPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
         super(database, dynamicConfiguration, registry);
+        keywordLabel = configuration().getLabelFor(Labels.Keyword);
+    }
+
+    public void setLabel(Label label) {
+        this.keywordLabel = label;
     }
 
     @Override
@@ -47,7 +54,6 @@ public class KeywordPersister extends AbstractPersister implements Persister<Key
     @Override
     public Node getOrCreate(Keyword keyword, String id, String txId) {
         Node newNode;
-        final Label keywordLabel = configuration().getLabelFor(Labels.Keyword);
         Node storedKeyword = getIfExist(keywordLabel, "id", keyword.getKeyword());
         if (storedKeyword != null) {
             newNode = storedKeyword;

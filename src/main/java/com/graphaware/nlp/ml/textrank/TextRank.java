@@ -19,8 +19,10 @@ import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Keyword;
+import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +40,15 @@ public class TextRank {
     // query based on orignal TextRank: it doesn't care about sentence boundaries (it connects last word of a sentence with 1st word of the next sentence)
     private static final String COOCCURRENCE_QUERY
             = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
-            + "WHERE id(a) = {id} \n"
+            + "WHERE id(a) = {id}\n"
             + "WITH to\n"
             + "ORDER BY to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-            + "WHERE size(t.value) > 2\n"
+            //+ "WHERE size(t.value) > 2\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH collect(t) as tags, collect(to) as tagsPosition\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-            + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+            + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
             + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
@@ -55,40 +58,59 @@ public class TextRank {
             + "WITH s, to\n"
             + "ORDER BY s.sentenceNumber, to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-            + "WHERE size(t.value) > 2\n"
+            //+ "WHERE size(t.value) > 2\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH s, collect(t) as tags, collect(to) as tagsPosition\n"
             + "ORDER BY s.sentenceNumber\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
-            + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].value as tag1_val, tags[i+1].value as tag2_val, "
+            + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
             + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
+
+    private static final String COOCCURRENCE_QUERY_FROM_DEPENDENCIES
+            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)//-[r]->(to2:TagOccurrence)\n"
+            + "WHERE id(a) = {id}\n"
+            + "WITH to\n"
+            //+ "MATCH (to)-[r]-(to2:TagOccurrence)\n"
+            + "OPTIONAL MATCH (to)-[r]-(to2:TagOccurrence)\n"
+            + "WHERE to <> to2 AND to.startPosition < to2.startPosition\n"
+            + "WITH to, to2, r\n"
+            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+            //+ "WHERE size(t.value) > 2 //and (size(t.pos)=0 OR any(p in t.pos where p in {}))\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
+            //+ "MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
+            + "OPTIONAL MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
+            //+ "WHERE size(t2.value) > 2 //and (size(t2.pos)=0 OR any(p in t2.pos where p in {}))\n"
+            + "WHERE size(t2.value) > 2 AND NOT(toLower(t2.value) IN {stopwords}) AND NOT ANY(pos IN t2.pos WHERE t2.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t2) WHERE l IN {forbiddenNEs})\n"
+            + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, to.startPosition as sourceStartPosition, to2.startPosition as destinationStartPosition, t.pos as pos1, t2.pos as pos2, collect(type(r))\n"
+            + "ORDER BY sourceStartPosition, destinationStartPosition";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
             //+ "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
             + "WHERE id(a) = {id}" // new
             + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-            //+ "OPTIONAL MATCH (to)-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n" // new
-            + "WHERE not exists(t2.pos) or any(p in t2.pos where p in {posList})\n"
+            + "WHERE not exists(t2.pos) or size(t2.pos) = 0 or any(p in t2.pos where p in {posList})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
-            + "collect(t2.value) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
+            + "collect(t2.id) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
             + "ORDER BY sP asc";
+
+    private static final String PIPELINE_WITHOUT_NER = "tokenizerNoNEs";
 
     private final GraphDatabaseService database;
     private final boolean removeStopWords;
     private final boolean directionsMatter;
     private final boolean respectSentences;
-    private final boolean useTfIdfWeights;
     private final boolean useDependencies;
-    private final boolean cleanSingleWordKeyword;
+    private final boolean cooccurrencesFromDependencies;
+    private final boolean cleanKeywords;
     private final boolean expandNEs;
     private final int cooccurrenceWindow;
-    private final int maxSingles;
-    private final double phrasesTopxWords;
-    private final double singlesTopxWords;
+    private final double topxTags;
     private final Label keywordLabel;
     private final Set<String> stopWords;
     private final List<String> admittedPOSs;
     private final List<String> forbiddenNEs;
+    private final List<String> forbiddenPOSs;
     private Map<Long, List<Long>> neExpanded;
     private final Map<Long, String> idToValue = new HashMap<>();
 
@@ -96,33 +118,45 @@ public class TextRank {
             boolean removeStopWords, 
             boolean directionsMatter, 
             boolean respectSentences, 
-            boolean useTfIdfWeights, 
             boolean useDependencies, 
-            boolean cleanSingleWordKeyword,
+            boolean cooccurrencesFromDependencies,
+            boolean cleanKeywords,
             int cooccurrenceWindow, 
-            int maxSingles, 
-            double phrases_topx_words, 
-            double singles_topx_words, 
+            double topxTags, 
             Label keywordLabel, 
             Set<String> stopWords, 
             List<String> admittedPOSs,
-            List<String> forbiddenNEs) {
+            List<String> forbiddenNEs,
+            List<String> forbiddenPOSs) {
         this.database = database;
         this.removeStopWords = removeStopWords;
         this.directionsMatter = directionsMatter;
         this.respectSentences = respectSentences;
-        this.useTfIdfWeights = useTfIdfWeights;
+        //this.useTfIdfWeights = useTfIdfWeights;
         this.useDependencies = useDependencies;
-        this.cleanSingleWordKeyword = cleanSingleWordKeyword;
-        this.expandNEs = false; // TO DO
+        this.cooccurrencesFromDependencies = cooccurrencesFromDependencies;
+        this.cleanKeywords = cleanKeywords;
+        this.expandNEs = true; // not useful making this user-customizable
         this.cooccurrenceWindow = cooccurrenceWindow;
-        this.maxSingles = maxSingles;
-        this.phrasesTopxWords = phrases_topx_words;
-        this.singlesTopxWords = singles_topx_words;
+        this.topxTags = topxTags;
         this.keywordLabel = keywordLabel;
         this.stopWords = stopWords;
         this.admittedPOSs = admittedPOSs;
         this.forbiddenNEs = forbiddenNEs;
+        this.forbiddenPOSs = forbiddenPOSs;
+
+        initializePipelineWithoutNEs();
+    }
+
+    private void initializePipelineWithoutNEs() {
+        //System.out.println(" >>> default processor: " + NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor().getAlias());
+        Map<String, Boolean> params = new HashMap<>();
+        params.put("tokenize", true);
+        params.put("ner", false);
+        PipelineSpecification ps = new PipelineSpecification(PIPELINE_WITHOUT_NER, null);
+        ps.setProcessingSteps(params);
+        NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor()
+            .createPipeline(ps);
     }
 
     @Deprecated
@@ -195,14 +229,34 @@ public class TextRank {
         return results;
     }
 
-    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", annotatedText.getId());
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText, boolean fromDependencies) {
         String query;
-        if (respectSentences) {
+        if (fromDependencies)
+            query = COOCCURRENCE_QUERY_FROM_DEPENDENCIES;
+        else if (respectSentences) {
             query = COOCCURRENCE_QUERY_BY_SENTENCE;
         } else {
             query = COOCCURRENCE_QUERY;
+        }
+
+        // use tf*idf for creating a list of stopwords
+        //Map<Long, TfIdfObject> tfidfMap = initializeNodeWeights_TfIdf(annotatedText, null);
+        //List<Long> currStopwords = tfidfMap.entrySet().stream()
+        //    .filter(en -> en.getValue().getTfIdf() < 0.5)
+        //    .map(en -> en.getKey()).collect(Collectors.toList());//.keySet();
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", annotatedText.getId());
+        params.put("stopwords", stopWords);
+        params.put("forbiddenPOSs", forbiddenPOSs);
+        params.put("forbiddenNEs", forbiddenNEs);
+        //params.put("forbiddenNEs", new ArrayList<String>());
+        //params.put("forbiddenNEs", Arrays.asList("NER_Number", "NER_Ordinal", "NER_Percent", "NER_Duration"));
+
+        if (fromDependencies) {
+            params.put("stopwords", new ArrayList<String>());
+            params.put("forbiddenPOSs", new ArrayList<String>());
+            params.put("forbiddenNEs", new ArrayList<String>());
         }
 
         Result res = null;
@@ -218,10 +272,10 @@ public class TextRank {
             Map<String, Object> next = res.next();
             Long tag1 = toLong(next.get("tag1"));
             Long tag2 = toLong(next.get("tag2"));
-            String tagVal1 = (String) next.get("tag1_val");
-            String tagVal2 = (String) next.get("tag2_val");
-            int tag1Start = (toLong(next.get("sourceStartPosition"))).intValue();
-            int tag2Start = (toLong(next.get("destinationStartPosition"))).intValue();
+            String tagVal1 = (String) next.get("tag1_id");
+            String tagVal2 = (String) next.get("tag2_id");
+            Long tag1Start = toLong(next.get("sourceStartPosition"));
+            Long tag2Start = toLong(next.get("destinationStartPosition"));
             List<String> pos1 = next.get("pos1") != null ? Arrays.asList((String[]) next.get("pos1")) : new ArrayList<>();
             List<String> pos2 = next.get("pos2") != null ? Arrays.asList((String[]) next.get("pos2")) : new ArrayList<>();
 
@@ -230,13 +284,127 @@ public class TextRank {
             boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
 
             // fill tag co-occurrences (adjacency matrix)
-            if (bPOS1 && bPOS2) {
-                prelim.add(new CoOccurrenceItem(tag1, tag1Start, tag2, tag2Start));
+            if (bPOS1 && bPOS2 && tagVal1 != null && tagVal2 != null) {
+                prelim.add(new CoOccurrenceItem(tag1, tag1Start.intValue(), tag2, tag2Start.intValue()));
             }
 
             // for logging purposses and for `expandNamedEntities()`
-            idToValue.put(tag1, tagVal1);
-            idToValue.put(tag2, tagVal2);
+            if (tag1!=null)
+                idToValue.put(tag1, tagVal1);
+            if (tag2!=null)
+                idToValue.put(tag2, tagVal2);
+        }
+
+        Map<Long, List<Pair<Long, Long>>> neExp;
+        if (expandNEs && !fromDependencies) {
+            // process named entities: split them into individual tokens by calling ga.nlp.annotate(), assign them IDs and create co-occurrences
+            neExp = expandNamedEntities();
+            neExpanded = neExp.entrySet().stream()
+                            .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().stream().map(p -> p.second()).collect(Collectors.toList()) ));
+        } else
+            neExp = new HashMap<>();
+
+        //System.out.println(" >> Creating co-occurrence graph:");
+        //String gr = "";
+        //Long prev = -1L; 
+        Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
+        long neVisited = 0L;
+        for (CoOccurrenceItem it: prelim) {
+            Long tag1 = it.getSource();
+            Long tag2 = it.getDestination();
+            int tag1Start = it.getStartingPositions().get(0).first().intValue();
+            int tag2Start = it.getStartingPositions().get(0).second().intValue();
+
+            if (expandNEs && !fromDependencies) {
+                if (neExp.containsKey(tag1)) {
+                    if (neVisited == 0L || neVisited != tag1.longValue()) {
+                        connectTagsInNE(results, neExp.get(tag1), tag1Start);
+                        neVisited = 0L;
+                    }
+                    tag1Start += neExp.get(tag1).get( neExp.get(tag1).size() - 1 ).first().intValue();
+                    tag1 = neExp.get(tag1).get( neExp.get(tag1).size() - 1 ).second();
+                }
+
+                if (neExp.containsKey(tag2)) {
+                    connectTagsInNE(results, neExp.get(tag2), tag2Start);
+                    neVisited = tag2;
+                    tag2 = neExp.get(tag2).get(0).second();
+                } else
+                    neVisited = 0L;
+            }
+
+            addTagToCoOccurrence(results, tag1, tag1Start, tag2, tag2Start);
+            if (!directionsMatter) { // when direction of co-occurrence relationships is not important
+                addTagToCoOccurrence(results, tag2, tag2Start, tag1, tag1Start);
+            }
+
+            // print co-occurrence sequences (graph)
+            /*if (prev.equals("")) {
+                gr = idToValue.get(tag1) + " -> " + idToValue.get(tag2);
+            } else if (tag1.equals(prev)) {
+                gr += " -> " + idToValue.get(tag2);
+            } else {
+                System.out.println("   " + gr);
+                gr = idToValue.get(tag1) + " -> " + idToValue.get(tag2);
+            }
+            prev = tag2;*/
+        }
+
+        return results;
+    }
+
+    @Deprecated
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences_fromDependencies(Node annotatedText) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", annotatedText.getId());
+        String query;
+        if (respectSentences) {
+            query = COOCCURRENCE_QUERY_BY_SENTENCE;
+        } else {
+            query = COOCCURRENCE_QUERY;
+        }
+
+        query = COOCCURRENCE_QUERY_FROM_DEPENDENCIES;
+
+        Result res = null;
+        try (Transaction tx = database.beginTx();) {
+            res = database.execute(query, params);
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while creating co-occurrences: ", e);
+        }
+
+        //Map<Long, Double> tfidfMap = initializeNodeWeights_TfIdf(annotatedText, null);
+        //List<Long> currStopwords = tfidfMap.entrySet().stream()
+        //    .filter(en -> en.getValue() < 0.7)
+        //    .map(en -> en.getKey()).collect(Collectors.toList());//.keySet();
+
+        List<CoOccurrenceItem> prelim = new ArrayList<>();
+        while (res != null && res.hasNext()) {
+            Map<String, Object> next = res.next();
+            Long tag1 = toLong(next.get("tag1"));
+            Long tag2 = toLong(next.get("tag2"));
+            String tagVal1 = (String) next.get("tag1_val");
+            String tagVal2 = (String) next.get("tag2_val");
+            Long tag1Start = toLong(next.get("sourceStartPosition"));
+            Long tag2Start = toLong(next.get("destinationStartPosition"));
+            List<String> pos1 = next.get("pos1") != null ? Arrays.asList((String[]) next.get("pos1")) : new ArrayList<>();
+            List<String> pos2 = next.get("pos2") != null ? Arrays.asList((String[]) next.get("pos2")) : new ArrayList<>();
+
+            // check whether POS of both tags are admitted
+            boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
+            boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
+
+            // fill tag co-occurrences (adjacency matrix)
+            if (bPOS1 && bPOS2 && tagVal1 != null && tagVal2 != null) {
+                prelim.add(new CoOccurrenceItem(tag1, tag1Start.intValue(), tag2, tag2Start.intValue()));
+            }
+
+            // for logging purposses and for `expandNamedEntities()`
+            if (tag1!=null)
+                idToValue.put(tag1, tagVal1);
+            if (tag2!=null)
+                idToValue.put(tag2, tagVal2);
         }
 
         Map<Long, List<Pair<Long, Long>>> neExp;
@@ -248,13 +416,16 @@ public class TextRank {
         } else
             neExp = new HashMap<>();
  
+        System.out.println(" >> Creating co-occurrence graph:");
+        String gr = "";
+        Long prev = -1L;
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
         long neVisited = 0L;
         for (CoOccurrenceItem it: prelim) {
             Long tag1 = it.getSource();
             Long tag2 = it.getDestination();
-            int tag1Start = it.getSourceStartingPositions().get(0).first().intValue();
-            int tag2Start = it.getSourceStartingPositions().get(0).second().intValue();
+            int tag1Start = it.getStartingPositions().get(0).first().intValue();
+            int tag2Start = it.getStartingPositions().get(0).second().intValue();
 
             if (expandNEs) {
                 if (neExp.containsKey(tag1)) {
@@ -285,7 +456,9 @@ public class TextRank {
 
     private static Long toLong(Object value) {
         Long returnValue;
-        if (value instanceof Integer) {
+        if (value == null) {
+            return null;
+        }else if (value instanceof Integer) {
             returnValue = ((Integer) value).longValue();
         } else if (value instanceof Long) {
             returnValue = ((Long) value);
@@ -315,6 +488,24 @@ public class TextRank {
         }
     }
 
+    /*private void addTagToCoOccurrenceNew(Map<Long, Map<Long, CoOccurrenceItem>> results, CoOccurrenceItem cooccurrence) {
+        Map<Long, CoOccurrenceItem> mapTag1;
+        if (!results.containsKey(cooccurrence.getSource())) {
+            mapTag1 = new HashMap<>();
+            results.put(cooccurrence.getSource(), mapTag1);
+        } else {
+            mapTag1 = results.get(cooccurrence.getSource());
+        }
+
+        if (mapTag1.containsKey(cooccurrence.getDestination())) {
+            CoOccurrenceItem ccEntry = mapTag1.get(cooccurrence.getDestination());
+            ccEntry.incCount();
+            ccEntry.addPositions(cooccurrence.getStartingPositions().first(), cooccurrence.getStartingPositions().second());
+        } else {
+            mapTag1.put(destination, cooccurrence);
+        }
+    }*/
+
     private void connectTagsInNE(Map<Long, Map<Long, CoOccurrenceItem>> results, List<Pair<Long, Long>> tags, int startOffset) {
         int n = tags.size();
         for (int i=0; i<n-2; i++) {
@@ -328,11 +519,8 @@ public class TextRank {
     }
 
     private  Map<Long, List<Pair<Long, Long>>> expandNamedEntities() {
-        //TextProcessor processor = getNLPManager().getTextProcessorsManager().getTextProcessor();
-        //AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification.getName(), "en", null);
-
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("name", "tokenizer");
+        parameters.put("name", PIPELINE_WITHOUT_NER);
 
         Map<String, Object> p = new HashMap<>();
         p.put("params", parameters);
@@ -344,7 +532,7 @@ public class TextRank {
         for (Long valueL: idToValue.keySet()) {
                 if (idToValue.get(valueL).trim().split(" ").length < 2)
                     continue;
-                String str = idToValue.get(valueL).trim().toLowerCase();
+                String str = idToValue.get(valueL).toLowerCase().split("_")[0].trim();
                 p.put("text", str);
                 List<Pair<Long, Long>> res = new ArrayList<>();
                 try (Transaction tx = database.beginTx()) {
@@ -354,12 +542,12 @@ public class TextRank {
                         + "unwind keys as k\n"
                         + "with toInteger(k) as kInt, annotated\n"
                         + "order by kInt asc\n"
-                        + "return kInt as start, annotated.sentences[0].tagOccurrences[toString(kInt)][0].element.lemma as lemma"
+                        + "return kInt as start, annotated.sentences[0].tagOccurrences[toString(kInt)][0].element.id as tagVal"
                         , p);
                     while (r.hasNext()) {
                         Map<String, Object> next = r.next();
                         Long start = (Long) next.get("start");
-                        String val = (String) next.get("lemma");
+                        String val = (String) next.get("tagVal");
                         List<Long> lId = idToValue.entrySet().stream().filter(en -> en.getValue().equals(val) || en.getValue().equalsIgnoreCase(val)).map(Map.Entry::getKey).collect(Collectors.toList());
                         List<Long> lIdNew = newIdsToVal.entrySet().stream().filter(en -> en.getValue().equals(val) || en.getValue().equalsIgnoreCase(val)).map(Map.Entry::getKey).collect(Collectors.toList());
                         if (lId!=null && lId.size()>0) {
@@ -387,17 +575,35 @@ public class TextRank {
     }
 
     public boolean evaluate(Node annotatedText, int iter, double damp, double threshold) {
-        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedText);
+        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedText, cooccurrencesFromDependencies);
         PageRank pageRank = new PageRank(database);
-        if (useTfIdfWeights) {
-            pageRank.setNodeWeights(initializeNodeWeights_TfIdf(annotatedText, coOccurrence));
-        }
+        //if (useTfIdfWeights) {
+        //    pageRank.setNodeWeights(initializeNodeWeights_TfIdf(annotatedText, coOccurrence));
+        //}
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
 
-        int n_oneThird = (int) (pageRanks.size() * phrasesTopxWords);
+        if (cooccurrencesFromDependencies) {
+            coOccurrence.clear();
+            coOccurrence = createCooccurrences(annotatedText, false); // co-occurrences from natural word flow; needed for merging keywords into key phrases
+        }
+
+        if (pageRanks == null) {
+            LOG.error("Page ranks not retrieved, aborting evaluate() method ...");
+            return false;
+        }
+
+        // get tf*idf: useful for cleanFinalKeywords()
+        final Map<Long, TfIdfObject> tfidfMap = new HashMap<>();
+        if (useDependencies)
+            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+
+        int n_oneThird = (int) (pageRanks.size() * topxTags);
         List<Long> topThird = getTopX(pageRanks, n_oneThird);
 
+        System.out.println(" > All tags:");
+        pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
         LOG.info("Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
+
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         //params.put("nodeList", topThird); // new (also changed the GET_TAG_QUERY)
@@ -452,36 +658,63 @@ public class TextRank {
                     = new AtomicReference<>(keywordsOccurrences.remove(0));
             final AtomicReference<String> currValue = new AtomicReference<>(keywordOccurrence.get().getValue());
             final AtomicReference<Double> currRelevance = new AtomicReference<>(keywordOccurrence.get().getRelevance());
+            final AtomicReference<TfIdfObject> currTfIdf = new AtomicReference<>(tfidfMap != null ? tfidfMap.get(keywordOccurrence.get().getTagId()) : new TfIdfObject(1.0d, 1.0d));
+            final AtomicReference<Integer> currNTopRated = new AtomicReference<>(0);
             List<Long> relTagIDs = getRelTagsIntoDepth(keywordOccurrence.get(), keywordsOccurrences); // TO DO: revisit this
             relTagIDs.retainAll(topThird); // keep only those that are among top 1/3
-            if (!topThird.contains(keywordOccurrence.get().getTagId()) && relTagIDs.size()==0) // new
+            if (!useDependencies && !topThird.contains(keywordOccurrence.get().getTagId())) // if useDependencies==false, keep only those keywords that are among top 1/3
                 continue;
+            if (useDependencies && !topThird.contains(keywordOccurrence.get().getTagId()) && relTagIDs.size()==0)
+                continue;
+            //System.out.println("\n val: " + keywordOccurrence.get().getValue() + ", relTagIDs: " + relTagIDs.stream().map(el -> idToValue.get(el)).collect(Collectors.joining(", ")));
             //System.out.println("\n> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
             Map<String, Keyword> localResults;
+            if (topThird.contains(keywordOccurrence.get().getTagId()))
+                currNTopRated.set(currNTopRated.get() + 1);
             do {
-                long tagId = keywordOccurrence.get().getTagId();
+                int endPosition = keywordOccurrence.get().getEndPosition();
                 //System.out.println("  cur: " + currValue.get() + ". Examining next level");
-                localResults = checkNextKeyword(tagId, keywordOccurrence.get(), coOccurrence, keywordMap);
+                localResults = checkNextKeyword(keywordOccurrence.get(), coOccurrence, keywordMap);
                 if (localResults.size() > 0) {
                     //System.out.println("    related tags: " + localResults.entrySet().stream().map(en -> en.getKey()).collect(Collectors.joining(", ")));
+                    keywordOccurrence.set(null);
                     localResults.entrySet().stream().forEach((item) -> {
                         KeywordExtractedItem nextKeyword = keywordsOccurrences.get(0);
-                        if (nextKeyword != null && nextKeyword.getValue().equalsIgnoreCase(item.getKey())) {
+                        //System.out.println("      " + nextKeyword.getValue() + ": " + nextKeyword.getStartPosition());
+                        //if (nextKeyword != null && nextKeyword.getValue().equalsIgnoreCase(item.getKey())) {
+                        if (nextKeyword != null && nextKeyword.getValue().equalsIgnoreCase(item.getKey())
+                                && (topThird.contains(nextKeyword.getTagId()) || useDependencies)
+                                && (nextKeyword.getStartPosition() - endPosition) == 1) // crucial condition for graphs from co-occurrences
+                                //&& ((nextKeyword.getStartPosition() - endPosition) == 1 || useDependencies))
+                        {
                             String newCurrValue = currValue.get().trim().split("_")[0] + " " + item.getKey();
                             //System.out.println(">> " + newCurrValue);
                             double newCurrRelevance = currRelevance.get() + item.getValue().getRelevance();
+                            if (topThird.contains(nextKeyword.getTagId()))
+                                currNTopRated.set(currNTopRated.get() + 1);
                             currValue.set(newCurrValue);
                             currRelevance.set(newCurrRelevance);
+                            if (tfidfMap != null && tfidfMap.containsKey(nextKeyword.getTagId())) {
+                                // tf and idf are sums of tf and idf of all words in a phrase
+                                double tf  = currTfIdf.get().getTf() + tfidfMap.get(nextKeyword.getTagId()).getTf();
+                                double idf = currTfIdf.get().getIdf() + tfidfMap.get(nextKeyword.getTagId()).getIdf();
+
+                                // minimal tf and idf
+                                //double tf  = currTfIdf.get().getTf() < tfidfMap.get(nextKeyword.getTagId()).getTf() ? currTfIdf.get().getTf() : tfidfMap.get(nextKeyword.getTagId()).getTf();
+                                //double idf = currTfIdf.get().getIdf() < tfidfMap.get(nextKeyword.getTagId()).getIdf() ? currTfIdf.get().getIdf() : tfidfMap.get(nextKeyword.getTagId()).getIdf();
+
+                                currTfIdf.set(new TfIdfObject(tf, idf));
+                            }
                             keywordOccurrence.set(nextKeyword);
                             keywordsOccurrences.remove(0);
-                        } else {
-                            LOG.warn("Next keyword not found!");
-                            keywordOccurrence.set(null);
-                        }
+                        }// else {
+                            //LOG.warn("Next keyword not found!");
+                        //    keywordOccurrence.set(null);
+                        //}
                     });
                 }
             } while (!localResults.isEmpty() && keywordOccurrence.get() != null);
-            addToResults(currValue.get(), currRelevance.get(), results, 1);
+            addToResults(currValue.get(), currRelevance.get(), currTfIdf.get(), currNTopRated.get(), results, 1);
             //System.out.println("< " + currValue.get());
         }
 
@@ -492,48 +725,58 @@ public class TextRank {
                     continue;
                 if (wrongNEs.contains(key))
                     continue;
-                String keystr = idToValue.get(key).toLowerCase() + "_en"; // + lang; // TO DO
-                addToResults(keystr, pageRanks.containsKey(key) ? pageRanks.get(key) : 0, results, 1);
+                String keystr = idToValue.get(key).toLowerCase();
+                addToResults(keystr,
+                    pageRanks.containsKey(key) ? pageRanks.get(key) : 0.,
+                    tfidfMap != null && tfidfMap.containsKey(key) ? tfidfMap.get(key) : new TfIdfObject(1., 1.),
+                    (int) (neExpanded.get(key).stream().filter(v -> topThird.contains(v)).count()),
+                    results,
+                    1);
             }
         }
 
         computeTotalOccurrence(results);
-        if (cleanSingleWordKeyword) {
-            results = cleanSingleWordKeyword(results);
+        if (cleanKeywords) {
+            results = cleanFinalKeywords(results, n_oneThird);
         }
         peristKeyword(results, annotatedText);
 
         return true;
     }
 
-    private Map<String, Keyword> checkNextKeyword(long tagId, KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, KeywordExtractedItem> keywords) {
+    private Map<String, Keyword> checkNextKeyword(KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, KeywordExtractedItem> keywords) {
+        long tagId = keywordOccurrence.getTagId();
         Map<String, Keyword> results = new HashMap<>();
         if (!coOccurrences.containsKey(tagId))
             return results;
 
-        Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrences.get(tagId), tagId);
-        Set<Long> coOccurrence = mapStartId.get(keywordOccurrence.startPosition);
+        Map<Integer, Set<Long>> mapStartId = createThisMapping(coOccurrences.get(tagId)); // mapping: sourceStartPosition -> Set(destination tagIDs)
+        Set<Long> coOccurrence = mapStartId.get(keywordOccurrence.getStartPosition());
         if (coOccurrence == null) {
             return results;
         }
 
         Iterator<Long> iterator = coOccurrence.stream()
                 .filter((ccEntry) -> ccEntry != tagId)
-                .filter((ccEntry) -> keywords.containsKey(ccEntry)).iterator();
+                .filter((ccEntry) -> keywords.containsKey(ccEntry))
+                .iterator();
 
         while (iterator.hasNext()) {
             Long ccEntry = iterator.next();
             String relValue = keywords.get(ccEntry).getValue();
             //System.out.println("checkNextKeyword >> " + relValue);
-            //if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0])) {
+            //if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue)) {
             List<String> merged = new ArrayList<>(keywords.get(ccEntry).getRelatedTags()); // new
             merged.retainAll(keywordOccurrence.getRelatedTags()); // new
             //System.out.println("    co-occurring tag = " + idToValue.get(ccEntry) + ", related tags = " + keywords.get(ccEntry).getRelatedTags().stream().collect(Collectors.joining(", ")));
             //System.out.println("      merged = " + merged.stream().collect(Collectors.joining(", ")));
-            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue.split("_")[0]) || merged.size()>0) { // new
+            // TO DO: even when using dependencies, we should be able to merge words that are next to each other but that have no dependency (?)
+            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue) || merged.size()>0) { // new
                 //System.out.println("checkNextKeyword >>> " + relValue);
                 addToResults(relValue,
                         keywords.get(ccEntry).getRelevance(),
+                        new TfIdfObject(0., 0.),
+                        0,
                         results, 1);
             }
         }
@@ -541,7 +784,8 @@ public class TextRank {
         return results;
     }
 
-    private void addToResults(String res, double relevance, Map<String, Keyword> results, int occurrences) {
+    //private void addToResults(String res, double relevance, Map<String, Keyword> results, int occurrences) {
+    private void addToResults(String res, double relevance, TfIdfObject tfidf, int nTopRated, Map<String, Keyword> results, int occurrences) {
         //System.out.println("addToResults: " + res + " " + relevance + " " + occurrences);
         if (res != null) {
             if (results.containsKey(res)) {
@@ -550,6 +794,9 @@ public class TextRank {
             } else {
                 final Keyword keyword = new Keyword(res, occurrences);
                 keyword.setRelevance(relevance);
+                keyword.setTf(tfidf.getTf());
+                keyword.setIdf(tfidf.getIdf());
+                keyword.setNTopRated(nTopRated);
                 results.put(res, keyword);
             }
         }
@@ -558,6 +805,7 @@ public class TextRank {
     private void peristKeyword(Map<String, Keyword> results, Node annotatedText) {
         LOG.info("--- Results: ");
         KeywordPersister persister = NLPManager.getInstance().getPersister(Keyword.class);
+        persister.setLabel(keywordLabel);
         results.entrySet().stream()
                 .forEach(en -> {
                     // check keyword consistency
@@ -580,7 +828,7 @@ public class TextRank {
         Map<String, Long> valToId = idToValue.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
         List<String> relTags = kwOccurrence.getRelatedTags();
         kwOccurrences.stream()
-            .filter(el -> relTags.contains(el.getValue().split("_")[0]))
+            .filter(el -> relTags.contains(el.getValue()))
             .forEach(el -> {
                 relTags.addAll(el.getRelatedTags());
                 //System.out.println("  ADDING (" + el.getValue() + "): " + el.getRelatedTags() + ", size = " + el.getRelatedTags().size());
@@ -641,14 +889,18 @@ public class TextRank {
         return topx;
     }
 
-    private Map<Long, Double> initializeNodeWeights_TfIdf(Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences) {
-        Map<Long, Double> nodeWeights = new HashMap<>();
-        coOccurrences.entrySet().stream().forEach((coOccurrence) -> {
-            coOccurrence.getValue().entrySet().stream().forEach((entry) -> {
-                nodeWeights.put(entry.getValue().getSource(), 1.0d);
-                nodeWeights.put(entry.getValue().getDestination(), 1.0d);
+    private void initializeNodeWeights_TfIdf(Map<Long, TfIdfObject> nodeWeights, Node annotatedText, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences) {
+        //Map<Long, TfIdfObject> nodeWeights = new HashMap<>();
+        if (coOccurrences != null) {
+            coOccurrences.entrySet().stream().forEach((coOccurrence) -> {
+                nodeWeights.put(coOccurrence.getKey(), new TfIdfObject(1.0d, 1.0d)); // source
+                coOccurrence.getValue().entrySet().stream()
+                    .filter((entry) -> !nodeWeights.containsKey(entry.getKey()))
+                    .forEach((entry) -> {
+                        nodeWeights.put(entry.getValue().getDestination(), new TfIdfObject(1.0d, 1.0d)); // destination
+                    });
             });
-        });
+        }
 
         String query = "MATCH (doc:AnnotatedText)\n"
                 + "WITH count(doc) as documentsCount\n"
@@ -656,34 +908,37 @@ public class TextRank {
                 + "WHERE id(a) = {id} \n"
                 + "WITH t, sum(ht.tf) as tf, documentsCount\n"
                 + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[:HAS_TAG]->(t)\n"
-                + "RETURN id(t) as tag, t.value as tagVal, tf, count(distinct a) as docCountForTag, documentsCount\n";
+                + "RETURN id(t) as tag, t.id as tagVal, tf, count(distinct a) as docCountForTag, documentsCount\n";
 
         try (Transaction tx = database.beginTx();) {
             Result res = database.execute(query, Collections.singletonMap("id", annotatedText.getId()));
             while (res != null && res.hasNext()) {
                 Map<String, Object> next = res.next();
                 Long tag = (Long) next.get("tag");
-                if (!nodeWeights.keySet().contains(tag)) // initialize only those that are needed!
-                {
+                if (coOccurrences != null && !nodeWeights.keySet().contains(tag)) // initialize only those that are needed
                     continue;
-                }
                 long tf = ((Long) next.get("tf"));
 
                 long docCount = (long) next.get("documentsCount");
                 long docCountTag = (long) next.get("docCountForTag");
                 double idf = Math.log10(1.0d * docCount / docCountTag);
 
-                //nodeWeights.put(tag, tf*idf);
-                nodeWeights.put(tag, idf);
+                if (nodeWeights.containsKey(tag)) {
+                    nodeWeights.get(tag).setTf(tf);
+                    nodeWeights.get(tag).setIdf(idf);
+                } else {
+                    nodeWeights.put(tag, new TfIdfObject(tf, idf));
+                }
+                
                 //LOG.info((String) next.get("tagVal") + ": tf = " + tf + ", idf = " + idf + " (docCountTag = " + docCountTag + "), tf*idf = " + tf*idf);
             }
             tx.success();
         } catch (Exception e) {
             LOG.error("Error while initializing node weights: ", e);
-            return nodeWeights;
+            return;// nodeWeights;
         }
 
-        return nodeWeights;
+        return;// nodeWeights;
     }
 
     private <T> List<T> iterableToList(Iterable<T> it) {
@@ -710,11 +965,10 @@ public class TextRank {
         return rel;
     }
 
-    private Map<Integer, Set<Long>> createThisMapping(Map<Long, CoOccurrenceItem> coOccorrence, long tagId) {
+    private Map<Integer, Set<Long>> createThisMapping(Map<Long, CoOccurrenceItem> coOccorrence) {
         Map<Integer, Set<Long>> result = new HashMap<>();
         coOccorrence.entrySet().stream().forEach((entry) -> {
-            if (entry.getValue().getSource() == tagId) {
-                entry.getValue().getSourceStartingPositions()
+                entry.getValue().getStartingPositions()
                         .forEach((pairStartingPoint) -> {
                             if (pairStartingPoint.first() < pairStartingPoint.second()) {
                                 if (!result.containsKey(pairStartingPoint.first())) {
@@ -723,7 +977,6 @@ public class TextRank {
                                 result.get(pairStartingPoint.first()).add(entry.getValue().getDestination());
                             }
                         });
-            }
         });
         return result;
     }
@@ -739,25 +992,75 @@ public class TextRank {
         });
     }
     
-    private Map<String, Keyword> cleanSingleWordKeyword(Map<String, Keyword> results) {
+    private Map<String, Keyword> cleanFinalKeywords(Map<String, Keyword> results, int topx) {
         Map<String, Keyword> newResults = new HashMap<>(results);
         results.entrySet().stream().forEach((entry) -> {
             results.entrySet().stream().forEach((innerEntry) -> {
                 if (entry.getValue().getWordsCount() < innerEntry.getValue().getWordsCount()
                         && innerEntry.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword())
-                        && entry.getValue().getWordsCount() == 1 // new
+                        //&& entry.getValue().getWordsCount() == 1 // new
                         //&& entry.getValue().getMeanRelevance() < innerEntry.getValue().getMeanRelevance() // new
                     ) {
-                    newResults.remove(entry.getKey());
+                    //newResults.remove(entry.getKey());
+                    int nDiff = innerEntry.getValue().getWordsCount() - entry.getValue().getWordsCount();
+                    double entryMult = entry.getValue().getRelevance() * entry.getValue().getTfIdf(); ///entry.getValue().getWordsCount();
+                    double innentryMult = innerEntry.getValue().getRelevance() * innerEntry.getValue().getTfIdf(); ///innerEntry.getValue().getWordsCount();
+                    if (entry.getValue().getWordsCount() == 1 )//&& innentryMult/entryMult > (1 + 1.0f * nDiff/entry.getValue().getWordsCount()))
+                        newResults.remove(entry.getKey());
+                    //else if (1.0f * innerEntry.getValue().getNTopRated() / innerEntry.getValue().getWordsCount() < 0.5)
+                    //    newResults.remove(innerEntry.getKey());
+                    //if ( (innerEntry.getValue().getTfIdf() - entry.getValue().getTfIdf()) > 1.0 * nDiff && innerEntry.getValue().getTfIdf() / entry.getValue().getTfIdf() > (1 + 0.2 * nDiff))
+                    //    newResults.remove(entry.getKey());
                     //if ( !( Math.abs(entry.getValue().getRelevance() - innerEntry.getValue().getRelevance()) < (0.10 * innerEntry.getValue().getWordsCount()) * entry.getValue().getRelevance() ) )//|| entry.getValue().getWordsCount() == 1 )
                     //    newResults.remove(entry.getKey());
-                    /*if ( Math.abs(entry.getValue().getRelevance() - innerEntry.getValue().getRelevance()) < (0.05 * innerEntry.getValue().getWordsCount()) * entry.getValue().getRelevance() )
-                        newResults.remove(innerEntry.getKey());
-                    if (entry.getValue().getWordsCount() == 1)
-                        newResults.remove(entry.getKey());*/
+                    //if ( Math.abs(entry.getValue().getRelevance() - innerEntry.getValue().getRelevance()) > 0.8 * entry.getValue().getMeanRelevance() )
+                    //    newResults.remove(entry.getKey());
+                    //if ( innentryMult / innerEntry.getValue().getWordsCount() > entryMult/entry.getValue().getWordsCount() )
+                    //    newResults.remove(entry.getKey());
+                    //else if ( innentryMult / innerEntry.getValue().getWordsCount() < 0.9 * entryMult/entry.getValue().getWordsCount() )
+                    //    newResults.remove(innerEntry.getKey());
                 }
             });
         });
+
+        /*Map<String, Keyword> pom2 = new HashMap<>(results.entrySet().stream().filter(en -> en.getValue().getWordsCount() > 1).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        final AtomicReference<Integer> nWords = new AtomicReference<>(2);
+        while (pom2 != null && pom2.size() > 0) {
+        results.entrySet().stream()
+            .filter(en -> en.getValue().getWordsCount() == nWords.get() && pom2.containsKey(en.getKey()))
+            .forEach((entry) -> {
+                //System.out.println("  >> investigating: " + entry.getKey());
+                Map<String, Double> r = results.entrySet().stream()
+                    .filter(innen -> innen.getValue().getWordsCount() > entry.getValue().getWordsCount())
+                    .filter(innen -> innen.getValue().getRawKeyword().contains(entry.getValue().getRawKeyword()))
+                    .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getMeanRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount() )); // !!
+                //System.out.println("    found: " + r.keySet().stream().collect(Collectors.joining(", ")));
+                r.put(entry.getKey(), entry.getValue().getMeanRelevance() * entry.getValue().getTfIdf()/entry.getValue().getWordsCount()); // !!
+                r.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .skip(1)
+                    .forEach(innentry -> {
+                        newResults.remove(innentry.getKey());
+                        //System.out.println("   >>> removing: " + innentry.getKey());
+                    });
+                pom2.remove(entry.getKey());
+                r.entrySet().stream().forEach(e -> pom2.remove(e.getKey()));
+            });
+        nWords.set(nWords.get() + 1);
+        }*/
+
+        // Use (PR * tf*idf) for selecting top 1/3 of keywords / key phrases
+        // Crucial piece of code for TextRank with dependencies enrichment
+        if (useDependencies) {
+            Map<String, Double> pom = newResults.entrySet().stream()
+                //.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount()/e.getValue().getWordsCount() ));
+                .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getIdf() ));
+            pom.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .skip(topx)
+                .forEach(entry -> newResults.remove(entry.getKey()));
+        }
+
         return newResults;
     }
 
@@ -765,33 +1068,36 @@ public class TextRank {
 
         private static final String[] STOP_WORDS = {"new", "old", "large", "big", "vast", "small", "many", "few", "good", "better", "best", "bad", "worse", "worst"};
         private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"};
-        private static final String[] FORBIDDEN_NES = {"NER_Date", "NER_Number", "NER_Duration", "NER_Ordinal"};
+        private static final String[] FORBIDDEN_NE = {"NER_Number", "NER_Ordinal", "NER_Percent", "NER_Date", "NER_Duration"}; //"NER_Date", "NER_Duration"
+        private static final String[] FORBIDDEN_POS = {"CC", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"};
+        private static final String[] STOP_WORDS_MEDIUM = {"now", "later", "least", "well", "always", "new", "old", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "larger", "smaller", "big", "lower", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "might", "may", "shall", "can", "could", "would", "will", "such", "like", "other", "another", "far", "away"};
+        private static final String[] STOP_WORDS_LARGE = {"now", "recently", "late", "later", "lately", "recent", "finally", "often", "always", "new", "old", "novel", "least", "last", "well", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "large", "larger", "small", "smaller", "big", "vast", "little", "lower", "long", "short", "wide", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "make", "might", "may", "shall", "can", "could", "would", "will", "entire", "entirely", "overall", "useful", "usefully", "easy", "easier", "certain", "such", "like", "difficult", "necessary", "unnecessary", "full", "fully", "empty", "successful", "successfully", "unsuccessful", "unsuccessfully", "especially", "usual", "usually", "other", "another", "far", "away"};
 
         private static final boolean DEFAULT_REMOVE_STOP_WORDS = false;
-
         private static final boolean DEFAULT_DIRECTION_MATTER = false;
-        private static final boolean DEFAULT_RESPECT_SENTENCES = true;
-        private static final boolean DEFAULT_USE_TF_IDF_WEIGHT = false;
+        private static final boolean DEFAULT_RESPECT_SENTENCES = false;
         private static final boolean DEFAULT_USE_TYPED_DEPENDENCIES = true;
-        private static final boolean DEFAULT_CLEAN_SINGLE_WORD_KEYWORDS = true;
+        private static final boolean DEFAULT_COOCURRENCES_FROM_DEPENDENCIES = false;
+        private static final boolean DEFAULT_CLEAN_KEYWORDS = true;
         private static final int DEFAULT_CO_OCCURRENCE_WINDOW = 2;
-        private static final int DEFAULT_MAX_SINGLES = 15;
+        private static final double DEFAULT_TAGS_TOPX = 1/3.0f;
 
         private final GraphDatabaseService database;
         private boolean removeStopWords = DEFAULT_REMOVE_STOP_WORDS;
         private boolean directionsMatter = DEFAULT_DIRECTION_MATTER;
         private boolean respectSentences = DEFAULT_RESPECT_SENTENCES;
-        private boolean useTfIdfWeights = DEFAULT_USE_TF_IDF_WEIGHT;
         private boolean useDependencies = DEFAULT_USE_TYPED_DEPENDENCIES;
-        private boolean cleanSingleWordKeyword = DEFAULT_CLEAN_SINGLE_WORD_KEYWORDS;
+        private boolean cooccurrencesFromDependencies = DEFAULT_COOCURRENCES_FROM_DEPENDENCIES;
+        private boolean cleanKeywords = DEFAULT_CLEAN_KEYWORDS;
         private int cooccurrenceWindow = DEFAULT_CO_OCCURRENCE_WINDOW;
-        private int maxSingles = DEFAULT_MAX_SINGLES;
-        private double phrasesTopxWords;
-        private double singlesTopxWords;
+        private double topxTags = DEFAULT_TAGS_TOPX;
         private Label keywordLabel;
-        private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS));
+        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS));
+        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_MEDIUM));
+        private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_LARGE));
         private List<String> admittedPOSs = Arrays.asList(ADMITTED_POS);
-        private List<String> forbiddenNEs = Arrays.asList(FORBIDDEN_NES);
+        private List<String> forbiddenNEs = Arrays.asList(FORBIDDEN_NE);
+        private List<String> forbiddenPOSs = Arrays.asList(FORBIDDEN_POS);
 
 
         public Builder(GraphDatabaseService database, DynamicConfiguration configuration) {
@@ -804,17 +1110,16 @@ public class TextRank {
                     removeStopWords,
                     directionsMatter,
                     respectSentences,
-                    useTfIdfWeights,
                     useDependencies,
-                    cleanSingleWordKeyword,
+                    cooccurrencesFromDependencies,
+                    cleanKeywords,
                     cooccurrenceWindow,
-                    maxSingles,
-                    phrasesTopxWords,
-                    singlesTopxWords,
+                    topxTags,
                     keywordLabel,
                     stopWords,
                     admittedPOSs,
-                    forbiddenNEs);
+                    forbiddenNEs,
+                    forbiddenPOSs);
             return result;
         }
 
@@ -843,23 +1148,18 @@ public class TextRank {
             return this;
         }
 
-        public Builder useTfIdfWeights(boolean val) {
-            this.useTfIdfWeights = val;
-            return this;
-        }
-
         public Builder useDependencies(boolean val) {
             this.useDependencies = val;
             return this;
         }
 
-        public Builder setCooccurrenceWindow(int val) {
-            this.cooccurrenceWindow = val;
+        public Builder useDependenciesForCooccurrences(boolean val) {
+            this.cooccurrencesFromDependencies = val;
             return this;
         }
 
-        public Builder setMaxSingleKeywords(int val) {
-            this.maxSingles = val;
+        public Builder setCooccurrenceWindow(int val) {
+            this.cooccurrenceWindow = val;
             return this;
         }
 
@@ -873,13 +1173,8 @@ public class TextRank {
             return this;
         }
 
-        public Builder setTopXWordsForPhrases(double topXWordsForPhrases) {
-            this.phrasesTopxWords = topXWordsForPhrases;
-            return this;
-        }
-
-        public Builder setTopXSinglewordKeywords(double topXSinglewordKeywords) {
-            this.singlesTopxWords = topXSinglewordKeywords;
+        public Builder setTopXTags(double topXTags) {
+            this.topxTags = topXTags;
             return this;
         }
 
@@ -889,8 +1184,8 @@ public class TextRank {
             return this;
         }
         
-        public Builder setCleanSingleWordKeywords(boolean cleanSingleWordKeyword) {
-            this.cleanSingleWordKeyword = cleanSingleWordKeyword;
+        public Builder setCleanKeywords(boolean cleanKeywords) {
+            this.cleanKeywords = cleanKeywords;
             return this;
         }
     }
@@ -976,4 +1271,5 @@ public class TextRank {
             this.relTagEndingPoints.addAll(item.getRelTagEndingPoints());
         }
     }
+
 }
