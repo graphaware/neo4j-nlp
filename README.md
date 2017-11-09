@@ -1,7 +1,6 @@
 # GraphAware Natural Language Processing
 
-[![Build Status](https://travis-ci.com/graphaware/neo4j-nlp.svg?token=ZyWhqkGDy6y7LDXXxzdz&branch=master)](https://travis-ci.com/graphaware/neo4j-nlp)
-
+[![Build Status](https://travis-ci.org/graphaware/neo4j-nlp.svg?branch=master)](https://travis-ci.org/graphaware/neo4j-nlp)
 This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
 The main module, this module, provide a common interface for underlying text processors as well as a

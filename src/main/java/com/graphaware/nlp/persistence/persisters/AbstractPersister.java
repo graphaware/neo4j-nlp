@@ -15,10 +15,11 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -41,7 +42,8 @@ public abstract class AbstractPersister {
         this.database = database;
         this.configuration = dynamicConfiguration;
         this.registry = registry;
-        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
+        mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     protected GraphDatabaseService getDatabase() {

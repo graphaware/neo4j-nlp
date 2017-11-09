@@ -15,12 +15,12 @@
  */
 package com.graphaware.nlp.dsl.function;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
@@ -37,7 +37,7 @@ public class AnnotateFunction extends AbstractDSL {
         AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification.getName(), "en", null);
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
 
         return mapper.convertValue(annotatedText, Map.class);
     }
