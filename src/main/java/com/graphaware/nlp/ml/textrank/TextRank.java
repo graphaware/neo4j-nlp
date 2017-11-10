@@ -87,11 +87,11 @@ public class TextRank {
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
             //+ "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
-            + "WHERE id(a) = {id}" // new
+            + "WHERE id(a) = {id}  and not (toLower(node.value) IN {stopwords})" // new
             + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-            + "WHERE not exists(t2.pos) or size(t2.pos) = 0 or any(p in t2.pos where p in {posList})\n"
+            + "WHERE not exists(t2.pos) or size(t2.pos) = 0 or any(p in t2.pos where p in {posList}) and not (toLower(t2.value) IN {stopwords})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
-            + "collect(t2.id) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
+            + "collect(id(t2)) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
             + "ORDER BY sP asc";
 
     private static final String PIPELINE_WITHOUT_NER = "tokenizerNoNEs";
@@ -282,9 +282,11 @@ public class TextRank {
             // check whether POS of both tags are admitted
             boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
             boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
+            //System.out.println("  " + tagVal1 + " -> " + tagVal2);
 
             // fill tag co-occurrences (adjacency matrix)
             if (bPOS1 && bPOS2 && tagVal1 != null && tagVal2 != null) {
+                //System.out.println("    passed");
                 prelim.add(new CoOccurrenceItem(tag1, tag1Start.intValue(), tag2, tag2Start.intValue()));
             }
 
@@ -333,6 +335,7 @@ public class TextRank {
                     neVisited = 0L;
             }
 
+            //System.out.println("  Creating co-occurrence: " + idToValue.get(tag1) + " -> " + idToValue.get(tag2));
             addTagToCoOccurrence(results, tag1, tag1Start, tag2, tag2Start);
             if (!directionsMatter) { // when direction of co-occurrence relationships is not important
                 addTagToCoOccurrence(results, tag2, tag2Start, tag1, tag1Start);
@@ -564,7 +567,7 @@ public class TextRank {
                     tx.success();
                 }
                 if (res.size() > 0)
-                    result.put(valueL, res);
+                    result.put(valueL, res); // map: id(NE) -> ListOfIndividualTags(Pair(startPostion, tagId))
         }
 
         // finish by adding newly assigned IDs to idToValue map
@@ -602,12 +605,13 @@ public class TextRank {
 
         System.out.println(" > All tags:");
         pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
-        LOG.info("Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
+        System.out.println(" > Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
-        //params.put("nodeList", topThird); // new (also changed the GET_TAG_QUERY)
         params.put("posList", admittedPOSs);
+        params.put("stopwords", removeStopWords ? stopWords : new ArrayList<String>());
+
         List<KeywordExtractedItem> keywordsOccurrences = new ArrayList<>();
         Map<Long, KeywordExtractedItem> keywordMap = new HashMap<>();
         List<Long> wrongNEs = new ArrayList<>();
@@ -617,9 +621,6 @@ public class TextRank {
                 Map<String, Object> next = res.next();
                 long tagId = (long) next.get("tagId");
 
-                // remove stopwords
-                if (removeStopWords && stopWords.contains(((String) next.get("tag")).split("_")[0]))
-                    continue;
                 // remove stop-NEs
                 if (iterableToList((Iterable<String>) next.get("labels")).stream().anyMatch(el -> forbiddenNEs.contains(el))) {
                     wrongNEs.add(tagId);
@@ -630,7 +631,7 @@ public class TextRank {
                 item.setStartPosition(((Number) next.get("sP")).intValue());
                 item.setValue(((String) next.get("tag")));
                 item.setEndPosition(((Number) next.get("eP")).intValue());
-                item.setRelatedTags(iterableToList((Iterable<String>) next.get("rel_tags")));
+                item.setRelatedTags(iterableToList((Iterable<Long>) next.get("rel_tags")));
                 item.setRelTagStartingPoints(iterableToList((Iterable<Number>) next.get("rel_tos")));
                 item.setRelTagEndingPoints(iterableToList((Iterable<Number>) next.get("rel_toe")));
                 item.setRelevance(pageRanks.containsKey(tagId) ? pageRanks.get(tagId) : 0);
@@ -660,13 +661,14 @@ public class TextRank {
             final AtomicReference<Double> currRelevance = new AtomicReference<>(keywordOccurrence.get().getRelevance());
             final AtomicReference<TfIdfObject> currTfIdf = new AtomicReference<>(tfidfMap != null ? tfidfMap.get(keywordOccurrence.get().getTagId()) : new TfIdfObject(1.0d, 1.0d));
             final AtomicReference<Integer> currNTopRated = new AtomicReference<>(0);
-            List<Long> relTagIDs = getRelTagsIntoDepth(keywordOccurrence.get(), keywordsOccurrences); // TO DO: revisit this
+            Set<Long> relTagIDs = getRelTagsIntoDepth(keywordOccurrence.get(), keywordsOccurrences);
+            //System.out.println("\n val: " + keywordOccurrence.get().getValue() + ", relTagIDs: " + relTagIDs.stream().map(el -> idToValue.get(el)).collect(Collectors.joining(", ")));
             relTagIDs.retainAll(topThird); // keep only those that are among top 1/3
+            //System.out.println("   relTagIDs among top 1/3: " + relTagIDs.stream().map(el -> idToValue.get(el)).collect(Collectors.joining(", ")));
             if (!useDependencies && !topThird.contains(keywordOccurrence.get().getTagId())) // if useDependencies==false, keep only those keywords that are among top 1/3
                 continue;
             if (useDependencies && !topThird.contains(keywordOccurrence.get().getTagId()) && relTagIDs.size()==0)
                 continue;
-            //System.out.println("\n val: " + keywordOccurrence.get().getValue() + ", relTagIDs: " + relTagIDs.stream().map(el -> idToValue.get(el)).collect(Collectors.joining(", ")));
             //System.out.println("\n> " + currValue.get() + " - " + keywordOccurrence.get().getStartPosition());
             Map<String, Keyword> localResults;
             if (topThird.contains(keywordOccurrence.get().getTagId()))
@@ -681,10 +683,9 @@ public class TextRank {
                     localResults.entrySet().stream().forEach((item) -> {
                         KeywordExtractedItem nextKeyword = keywordsOccurrences.get(0);
                         //System.out.println("      " + nextKeyword.getValue() + ": " + nextKeyword.getStartPosition());
-                        //if (nextKeyword != null && nextKeyword.getValue().equalsIgnoreCase(item.getKey())) {
                         if (nextKeyword != null && nextKeyword.getValue().equalsIgnoreCase(item.getKey())
                                 && (topThird.contains(nextKeyword.getTagId()) || useDependencies)
-                                && (nextKeyword.getStartPosition() - endPosition) == 1) // crucial condition for graphs from co-occurrences
+                                && (nextKeyword.getStartPosition() - endPosition) == 1) // crucial condition for graphs from co-occurrences, but very useful also for graphs from dependencies
                                 //&& ((nextKeyword.getStartPosition() - endPosition) == 1 || useDependencies))
                         {
                             String newCurrValue = currValue.get().trim().split("_")[0] + " " + item.getKey();
@@ -714,7 +715,8 @@ public class TextRank {
                     });
                 }
             } while (!localResults.isEmpty() && keywordOccurrence.get() != null);
-            addToResults(currValue.get(), currRelevance.get(), currTfIdf.get(), currNTopRated.get(), results, 1);
+            if (currNTopRated.get() > 0)
+                addToResults(currValue.get(), currRelevance.get(), currTfIdf.get(), currNTopRated.get(), results, 1);
             //System.out.println("< " + currValue.get());
         }
 
@@ -726,8 +728,14 @@ public class TextRank {
                 if (wrongNEs.contains(key))
                     continue;
                 String keystr = idToValue.get(key).toLowerCase();
+                double pr = pageRanks.containsKey(key) ? pageRanks.get(key) : 0.;
+                if (pr == 0.) // set PageRank value of an NE to max value of PR of it's composite words
+                    pr = (double) pageRanks.entrySet().stream()
+                            .filter(en -> neExpanded.get(key).contains(en.getKey()))
+                            .mapToDouble(en -> en.getValue())
+                            .max().orElse(0.);
                 addToResults(keystr,
-                    pageRanks.containsKey(key) ? pageRanks.get(key) : 0.,
+                    pr,
                     tfidfMap != null && tfidfMap.containsKey(key) ? tfidfMap.get(key) : new TfIdfObject(1., 1.),
                     (int) (neExpanded.get(key).stream().filter(v -> topThird.contains(v)).count()),
                     results,
@@ -765,13 +773,12 @@ public class TextRank {
             Long ccEntry = iterator.next();
             String relValue = keywords.get(ccEntry).getValue();
             //System.out.println("checkNextKeyword >> " + relValue);
-            //if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue)) {
-            List<String> merged = new ArrayList<>(keywords.get(ccEntry).getRelatedTags()); // new
+            List<Long> merged = new ArrayList<>(keywords.get(ccEntry).getRelatedTags());
             merged.retainAll(keywordOccurrence.getRelatedTags()); // new
             //System.out.println("    co-occurring tag = " + idToValue.get(ccEntry) + ", related tags = " + keywords.get(ccEntry).getRelatedTags().stream().collect(Collectors.joining(", ")));
             //System.out.println("      merged = " + merged.stream().collect(Collectors.joining(", ")));
             // TO DO: even when using dependencies, we should be able to merge words that are next to each other but that have no dependency (?)
-            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(relValue) || merged.size()>0) { // new
+            if (!useDependencies || keywordOccurrence.getRelatedTags().contains(keywords.get(ccEntry).getTagId()) || merged.size()>0) {
                 //System.out.println("checkNextKeyword >>> " + relValue);
                 addToResults(relValue,
                         keywords.get(ccEntry).getRelevance(),
@@ -784,7 +791,6 @@ public class TextRank {
         return results;
     }
 
-    //private void addToResults(String res, double relevance, Map<String, Keyword> results, int occurrences) {
     private void addToResults(String res, double relevance, TfIdfObject tfidf, int nTopRated, Map<String, Keyword> results, int occurrences) {
         //System.out.println("addToResults: " + res + " " + relevance + " " + occurrences);
         if (res != null) {
@@ -810,7 +816,7 @@ public class TextRank {
                 .forEach(en -> {
                     // check keyword consistency
                     if (en.getKey().split("_").length > 2) {
-                        LOG.warn("Tag " + en.getKey() + " has more than 1 underscore symbols, newly created " + keywordLabel.name() + " node might be wrong");
+                        LOG.warn("Tag " + en.getKey() + " has more than 1 underscore symbols, newly created " + keywordLabel.name() + " node might be wrong.");
                     }
                     Node newNode = persister.persist(en.getValue(), en.getKey(), String.valueOf(System.currentTimeMillis()));
                     if (newNode != null) {
@@ -824,16 +830,18 @@ public class TextRank {
                 });
     }
 
-    private List<Long> getRelTagsIntoDepth(KeywordExtractedItem kwOccurrence, List<KeywordExtractedItem> kwOccurrences) {
-        Map<String, Long> valToId = idToValue.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-        List<String> relTags = kwOccurrence.getRelatedTags();
+    private Set<Long> getRelTagsIntoDepth(KeywordExtractedItem kwOccurrence, List<KeywordExtractedItem> kwOccurrences) {
+        //Map<String, Long> valToId = idToValue.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+        Set<Long> relTags = new HashSet<Long>(kwOccurrence.getRelatedTags());
         kwOccurrences.stream()
-            .filter(el -> relTags.contains(el.getValue()))
+            //.filter(el -> relTags.contains(el.getValue()))
+            .filter(el -> relTags.contains(el.getTagId()) || el.getRelatedTags().stream().anyMatch(l -> relTags.contains(l)))
             .forEach(el -> {
                 relTags.addAll(el.getRelatedTags());
+                relTags.add(el.getTagId());
                 //System.out.println("  ADDING (" + el.getValue() + "): " + el.getRelatedTags() + ", size = " + el.getRelatedTags().size());
             });
-        return relTags.stream().map(el -> valToId.get(el)).collect(Collectors.toList());
+        return relTags;//.stream().map(el -> valToId.get(el)).collect(Collectors.toSet());
     }
 
     public boolean postprocess() {
@@ -948,8 +956,15 @@ public class TextRank {
         }
         return newList;
     }
-    
 
+    private <T> Set<T> iterableToSet(Iterable<T> it) {
+        Set<T> newList = new HashSet<>();
+        for (T obj : it) {
+            newList.add(obj);
+        }
+        return newList;
+    }
+    
     private Relationship mergeRelationship(Node annotatedText, Node newNode) {
         Relationship rel = null;
         Iterable<Relationship> itr = newNode.getRelationships(Direction.OUTGOING, DESCRIBES);
@@ -1051,7 +1066,8 @@ public class TextRank {
 
         // Use (PR * tf*idf) for selecting top 1/3 of keywords / key phrases
         // Crucial piece of code for TextRank with dependencies enrichment
-        if (useDependencies) {
+        //if (useDependencies) {
+        if (cooccurrencesFromDependencies) {
             Map<String, Double> pom = newResults.entrySet().stream()
                 //.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount()/e.getValue().getWordsCount() ));
                 .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getIdf() ));
@@ -1197,7 +1213,7 @@ public class TextRank {
         private int endPosition;
         private String value;
         private double relevance;
-        private List<String> relatedTags;
+        private List<Long> relatedTags;
         private List<Number> relTagStartingPoints;
         private List<Number> relTagEndingPoints;
 
@@ -1225,11 +1241,11 @@ public class TextRank {
             this.endPosition = endPosition;
         }
 
-        public List<String> getRelatedTags() {
+        public List<Long> getRelatedTags() {
             return relatedTags;
         }
 
-        public void setRelatedTags(List<String> relatedTags) {
+        public void setRelatedTags(List<Long> relatedTags) {
             this.relatedTags = relatedTags;
         }
 
