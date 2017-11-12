@@ -39,6 +39,9 @@ From the [GraphAware plugins directory](https://products.graphaware.com), downlo
 
 and copy them in the `plugins` directory of Neo4j.
 
+*Take care that the version numbers of the framework you are using match with the version of Neo4J
+you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.3.0, all
+of the JARs you download should contain 3.3 in their version number.
 
 `plugins/` directory example :
 
@@ -54,12 +57,24 @@ Append the following configuration in the `neo4j.conf` file in the `config/` dir
   dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
   com.graphaware.runtime.enabled=true
   com.graphaware.module.NLP.1=com.graphaware.nlp.module.NLPBootstrapper
+  dbms.security.procedures.whitelist=ga.nlp.*
 ```
 
 Start or restart your Neo4j database.
 
 
 Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
+
+## Quick Documentation in Neo4j Browser
+
+Once the extension is loaded, you can see basic documentation on all available procedures by running
+this Cypher query:
+
+```
+CALL dbms.procedures() YIELD name, signature, description
+WHERE name =~ 'ga.nlp.*'
+RETURN name, signature, description ORDER BY name asc;
+```
 
 ## Getting Started
 
@@ -136,7 +151,8 @@ List of procedures available:
 **5. Language Detection**
 
 ```
-CALL ga.nlp.language({text:{value}}) YIELD result return result
+CALL ga.nlp.detectLanguage("What language is this in?") 
+YIELD result return result
 ```
 
 **6. NLP based filter**
