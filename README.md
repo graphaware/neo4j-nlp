@@ -62,8 +62,14 @@ Append the following configuration in the `neo4j.conf` file in the `config/` dir
 
 Start or restart your Neo4j database.
 
-
 Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
+
+Additionally, the following indexes and constraints are suggested to speed performance:
+
+```
+CREATE CONSTRAINT ON (a:Tag) ASSERT a.id IS UNIQUE;
+CREATE INDEX ON :Tag(a.value);
+```
 
 ## Quick Documentation in Neo4j Browser
 
