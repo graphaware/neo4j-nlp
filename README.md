@@ -33,7 +33,7 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
-* `neo4j-framework`
+* `neo4j-framework` (the JAR for this is labeled "graphaware-server-enterprise-all")
 * `neo4j-nlp`
 * `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
 
