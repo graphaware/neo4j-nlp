@@ -136,6 +136,10 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
+This procedure will create many linked nodes attached to your `:News` node, breaking down the language
+into words, parts of speech, and functions.  This analysis of the text acts as a starting point for the
+later steps.
+
 ### Enrich your original knowledge
 
 As of now, a single enricher is available, making use of the ConceptNet5 API.
@@ -153,6 +157,25 @@ Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
 List of procedures available:
 
+### Sentiment Detection
+
+You can also determine whether the text presented is positive, negative, or neutral.  This procedure
+requires an AnnotatedText node, which is produced by `ga.nlp.annotate` above.
+
+```
+MATCH (t:MyNode)-[]-(a:AnnotatedText) 
+CALL ga.nlp.sentiment(a) YIELD result 
+RETURN result;
+```
+
+This procedure will simply return "SUCCESS" when it is successful, but it will apply the `:POSITIVE`, 
+`:NEUTRAL` or `:NEGATIVE` label to each Sentence.  As a result, when sentiment detection is complete,
+you can query for the sentiment of sentences as such:
+
+```
+MATCH (s:Sentence)
+RETURN s.text, labels(s)
+```
 
 **5. Language Detection**
 
