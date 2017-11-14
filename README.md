@@ -33,12 +33,15 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
-* `neo4j-framework`
+* `neo4j-framework` (the JAR for this is labeled "graphaware-server-enterprise-all")
 * `neo4j-nlp`
 * `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
 
 and copy them in the `plugins` directory of Neo4j.
 
+*Take care that the version numbers of the framework you are using match with the version of Neo4J
+you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.3.0, all
+of the JARs you download should contain 3.3 in their version number.
 
 `plugins/` directory example :
 
@@ -54,12 +57,30 @@ Append the following configuration in the `neo4j.conf` file in the `config/` dir
   dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
   com.graphaware.runtime.enabled=true
   com.graphaware.module.NLP.1=com.graphaware.nlp.module.NLPBootstrapper
+  dbms.security.procedures.whitelist=ga.nlp.*
 ```
 
 Start or restart your Neo4j database.
 
-
 Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
+
+Additionally, the following indexes and constraints are suggested to speed performance:
+
+```
+CREATE CONSTRAINT ON (a:Tag) ASSERT a.id IS UNIQUE;
+CREATE INDEX ON :Tag(a.value);
+```
+
+## Quick Documentation in Neo4j Browser
+
+Once the extension is loaded, you can see basic documentation on all available procedures by running
+this Cypher query:
+
+```
+CALL dbms.procedures() YIELD name, signature, description
+WHERE name =~ 'ga.nlp.*'
+RETURN name, signature, description ORDER BY name asc;
+```
 
 ## Getting Started
 
@@ -115,6 +136,10 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
+This procedure will create many linked nodes attached to your `:News` node, breaking down the language
+into words, parts of speech, and functions.  This analysis of the text acts as a starting point for the
+later steps.
+
 ### Enrich your original knowledge
 
 As of now, a single enricher is available, making use of the ConceptNet5 API.
@@ -132,11 +157,31 @@ Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
 List of procedures available:
 
+### Sentiment Detection
+
+You can also determine whether the text presented is positive, negative, or neutral.  This procedure
+requires an AnnotatedText node, which is produced by `ga.nlp.annotate` above.
+
+```
+MATCH (t:MyNode)-[]-(a:AnnotatedText) 
+CALL ga.nlp.sentiment(a) YIELD result 
+RETURN result;
+```
+
+This procedure will simply return "SUCCESS" when it is successful, but it will apply the `:POSITIVE`, 
+`:NEUTRAL` or `:NEGATIVE` label to each Sentence.  As a result, when sentiment detection is complete,
+you can query for the sentiment of sentences as such:
+
+```
+MATCH (s:Sentence)
+RETURN s.text, labels(s)
+```
 
 **5. Language Detection**
 
 ```
-CALL ga.nlp.language({text:{value}}) YIELD result return result
+CALL ga.nlp.detectLanguage("What language is this in?") 
+YIELD result return result
 ```
 
 **6. NLP based filter**
