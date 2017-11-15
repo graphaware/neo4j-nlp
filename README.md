@@ -138,9 +138,24 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
-This procedure will create many linked nodes attached to your `:News` node, breaking down the language
-into words, parts of speech, and functions.  This analysis of the text acts as a starting point for the
-later steps.
+This procedure will link your original `:News` node to an `:AnnotatedText` node which is the entry point for the graph
+based NLP of this particular News. The original text is broken down into words, parts of speech, and functions.
+This analysis of the text acts as a starting point for the later steps.
+
+![annotated text](https://github.com/graphaware/neo4j-nlp/raw/master/docs/image1.png)
+
+**Running a batch of annotations**
+
+If you have a big set of data to annotate, we recommend to use [APOC](https://github.com/neo4j-contrib/neo4j-apoc-procedures) :
+
+```
+CALL apoc.periodic.iterate(
+"MATCH (n:News) RETURN n LIMIT 500",
+"CALL ga.nlp.annotate({text: n.text, id: id(n)})
+YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", {})
+```
+
+Do not run run the procedure in parallel to avoid deadlocks.
 
 ### Enrich your original knowledge
 
@@ -158,6 +173,8 @@ RETURN result
 Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
 
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
+
+![annotated text](https://github.com/graphaware/neo4j-nlp/raw/master/docs/image2.png)
 
 ## List of available procedures
 
