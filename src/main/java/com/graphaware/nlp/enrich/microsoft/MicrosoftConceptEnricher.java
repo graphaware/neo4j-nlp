@@ -1,6 +1,5 @@
 package com.graphaware.nlp.enrich.microsoft;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
@@ -68,7 +67,7 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
         }
 
         tags.stream().forEach(tag -> {
-            conceptTags.addAll(getConcepts(tag));
+            conceptTags.addAll(getConcepts(tag, request.getResultsLimit()));
             conceptTags.add(tag);
         });
 
@@ -81,7 +80,7 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
         return tagToBeAnnotated;
     }
 
-    public List<Tag> getConcepts(Tag tag) {
+    public List<Tag> getConcepts(Tag tag, int limit) {
         final List<Tag> concepts = new ArrayList<>();
         String param = tag.getLemma();
         try {
@@ -90,7 +89,7 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
             //
             return concepts;
         }
-        String url = "https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance="+ param + "&topK=10";
+        String url = "https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance="+ param + "&topK=" + limit;
 
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
