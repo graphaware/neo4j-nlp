@@ -67,7 +67,9 @@ Note: both concrete text processors are quite greedy - you will need to dedicate
 Additionally, the following indexes and constraints are suggested to speed performance:
 
 ```
-CREATE CONSTRAINT ON (a:Tag) ASSERT a.id IS UNIQUE;
+CREATE CONSTRAINT ON (n:AnnotatedText) ASSERT n.id IS UNIQUE;
+CREATE CONSTRAINT ON (n:Tag) ASSERT n.id IS UNIQUE;
+CREATE CONSTRAINT ON (n:Sentence) ASSERT n.id IS UNIQUE;
 CREATE INDEX ON :Tag(a.value);
 ```
 
@@ -153,9 +155,21 @@ YIELD result
 RETURN result
 ```
 
+Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
+
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
 List of procedures available:
+
+### Keyword Extraction
+
+```
+MATCH (a:AnnotatedText)
+CALL ga.nlp.ml.textRank({stopwords: '+,other,email', annotatedText: a, useDependencies: true})
+YIELD result RETURN result
+```
+
+Refer to our blog post about [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html) for a detailed explanation of this procedure.
 
 ### Sentiment Detection
 
