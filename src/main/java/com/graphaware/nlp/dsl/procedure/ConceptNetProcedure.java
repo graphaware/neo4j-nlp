@@ -19,6 +19,7 @@ import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
+import com.graphaware.nlp.enrich.microsoft.MicrosoftConceptEnricher;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
@@ -35,6 +36,15 @@ public class ConceptNetProcedure extends AbstractDSL {
     public Stream<NodeResult> annotate(@Name("conceptRequest") Map<String, Object> conceptRequest) {
         ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
         ConceptNet5Enricher enricher = (ConceptNet5Enricher) getNLPManager().getEnricher(ConceptNet5Enricher.ENRICHER_NAME);
+        Node result = enricher.importConcept(request);
+        return Stream.of(new NodeResult(result));
+    }
+
+    @Procedure(name = "ga.nlp.enrich.concept.microsoft", mode = Mode.WRITE)
+    @Description("Enrich text knowledge with Microsoft Concept Graph")
+    public Stream<NodeResult> enrich(@Name("conceptRequest") Map<String, Object> conceptRequest) {
+        ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
+        MicrosoftConceptEnricher enricher = (MicrosoftConceptEnricher) getNLPManager().getEnricher(MicrosoftConceptEnricher.ENRICHER_NAME);
         Node result = enricher.importConcept(request);
         return Stream.of(new NodeResult(result));
     }

@@ -28,7 +28,7 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
 
     //https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance=chief executive officer&topK=10
 
-    private static final String ENRICHER_NAME = "MICROSOFT_CONCEPT";
+    public static final String ENRICHER_NAME = "MICROSOFT_CONCEPT";
     private final TextProcessorsManager textProcessorsManager;
     private final ClientConfig cfg = new DefaultClientConfig();
 
@@ -92,7 +92,9 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
 
         Map<String, Double> map = response.getEntity(Map.class);
         map.keySet().stream().forEach(k -> {
-            concepts.add(new Tag(k, "en"));
+            Tag n = new Tag(k, "en");
+            tag.addParent("IS_RELATED_TO", n, map.get(k).floatValue());
+            concepts.add(n);
         });
 
         return concepts;
