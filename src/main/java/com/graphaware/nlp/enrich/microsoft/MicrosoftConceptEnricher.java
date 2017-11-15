@@ -19,6 +19,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
 import javax.ws.rs.core.MediaType;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -82,7 +83,14 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
 
     public List<Tag> getConcepts(Tag tag) {
         final List<Tag> concepts = new ArrayList<>();
-        String url = "https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance="+tag.getLemma()+"&topK=10";
+        String param = tag.getLemma();
+        try {
+            param = URLEncoder.encode(tag.getLemma(), "UTF-8");
+        } catch (Exception e) {
+            //
+            return concepts;
+        }
+        String url = "https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance="+ param + "&topK=10";
 
         WebResource resource = Client.create(cfg).resource(url);
         ClientResponse response = resource
