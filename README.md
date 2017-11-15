@@ -73,7 +73,7 @@ CREATE CONSTRAINT ON (n:Sentence) ASSERT n.id IS UNIQUE;
 CREATE INDEX ON :Tag(a.value);
 ```
 
-## Quick Documentation in Neo4j Browser
+### Quick Documentation in Neo4j Browser
 
 Once the extension is loaded, you can see basic documentation on all available procedures by running
 this Cypher query:
@@ -103,7 +103,7 @@ For example, the basic `tokenizer` pipeline has the following components :
 * Named Entity Recognition
 
 
-##### Example
+#### Example
 
 Let's take the following text as example :
 
@@ -159,7 +159,7 @@ Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more i
 
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
-List of procedures available:
+## List of available procedures
 
 ### Keyword Extraction
 
@@ -191,14 +191,14 @@ MATCH (s:Sentence)
 RETURN s.text, labels(s)
 ```
 
-**5. Language Detection**
+### Language Detection
 
 ```
 CALL ga.nlp.detectLanguage("What language is this in?") 
 YIELD result return result
 ```
 
-**6. NLP based filter**
+### NLP based filter
 
 ```
 CALL ga.nlp.filter({text:'On 8 May 2013,
@@ -215,7 +215,7 @@ CALL ga.nlp.filter({text:'On 8 May 2013,
 return result
 ```
 
-**7. Cosine similarity computation**
+### Cosine similarity computation
 
 Once tags are extracted from all the news or other nodes containing some text, it is possible to compute similarities between them using content based similarity. 
 During this process, each annotated text is described using the TF-IDF encoding format. TF-IDF is an established technique from the field of information retrieval and stands for Term Frequency-Inverse Document Frequency. 
