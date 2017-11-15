@@ -117,6 +117,12 @@
       <version>1.19.1</version>
     </dependency>
 
+    <!--<dependency>-->
+      <!--<groupId>com.sun.jersey</groupId>-->
+      <!--<artifactId>jersey-xml</artifactId>-->
+      <!--<version>1.19.1</version>-->
+    <!--</dependency>-->
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -138,6 +144,13 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+      <version>2.7.4</version>
+    </dependency>
+
 
     <dependency>
       <groupId>com.google.guava</groupId>

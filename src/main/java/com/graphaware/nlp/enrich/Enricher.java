@@ -15,8 +15,13 @@
  */
 package com.graphaware.nlp.enrich;
 
+import com.graphaware.nlp.dsl.request.ConceptRequest;
+import org.neo4j.graphdb.Node;
+
 public interface Enricher {
 
     String getName();
+
+    Node importConcept(ConceptRequest request);
 
 }

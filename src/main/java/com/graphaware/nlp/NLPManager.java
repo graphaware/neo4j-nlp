@@ -27,6 +27,7 @@ import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
+import com.graphaware.nlp.enrich.microsoft.MicrosoftConceptEnricher;
 import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
@@ -231,6 +232,7 @@ public final class NLPManager {
     private EnrichmentRegistry buildAndRegisterEnrichers() {
         EnrichmentRegistry registry = new EnrichmentRegistry();
         registry.register(new ConceptNet5Enricher(database, persistenceRegistry, configuration, textProcessorsManager));
+        registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, configuration, textProcessorsManager));
 
         return registry;
     }
