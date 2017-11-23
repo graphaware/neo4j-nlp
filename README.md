@@ -189,11 +189,11 @@ YIELD result RETURN result
 `annotatedText` is a mandatory parameter which refers to the annotated document that is required to be analyzed.
 
 Available optional parameters (default values are in brackets):
+
 * `keywordLabel` (Keyword): label name of the keyword nodes
 * `useDependencies` (true): use universal dependencies to enrich extracted keywords and key phrases by tags related through COMPOUND and AMOD relationships
 * `dependenciesGraph` (false): use universal dependencies for creating tag co-occurrence graph (default is false, which means that a natural word flow is used for building co-occurrences)
 * `cleanKeywords` (true): run cleaning procedure
-  ** ADD DESCRIPTION
 * `topXTags` (1/3): set a fraction of highest-rated tags that will be used as keywords / key phrases
 * `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
 * `stopwords`: customize stopwords list (it it starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
@@ -203,7 +203,8 @@ Available optional parameters (default values are in brackets):
 * `damp` (0.85): PageRank damping factor
 * `threshold` (0.0001): PageRank convergence threshold
 
-For detailed algorithm description, please refer to our blog post about [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html) for a detailed explanation of this procedure.
+For a detailed `TextRank` algorithm description, please refer to our blog post about
+[Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html).
 
 ### Sentiment Detection
 
