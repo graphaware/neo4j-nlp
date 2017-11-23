@@ -1,0 +1,536 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.graphaware.neo4j:nlp:jar:3.3.0.51.2-SNAPSHOT
+[WARNING] The expression ${parent.version} is deprecated. Please use ${project.parent.version} instead.
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] Inspecting build with total of 1 modules...
+[INFO] Installing Nexus Staging features:
+[INFO]   ... total of 1 executions of maven-deploy-plugin replaced with nexus-staging-maven-plugin
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Natural Language Processing with Neo4j 3.3.0.51.2-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ nlp ---
+[INFO] Deleting /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/target
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ nlp ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.5.1:compile (default-compile) @ nlp ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 117 source files to /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/target/classes
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/java/com/graphaware/nlp/util/ProcedureRequestUtils.java: /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/java/com/graphaware/nlp/util/ProcedureRequestUtils.java uses or overrides a deprecated API.
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/java/com/graphaware/nlp/util/ProcedureRequestUtils.java: Recompile with -Xlint:deprecation for details.
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/java/com/graphaware/nlp/NLPManager.java: Some input files use unchecked or unsafe operations.
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/main/java/com/graphaware/nlp/NLPManager.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ nlp ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.5.1:testCompile (default-testCompile) @ nlp ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 38 source files to /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/target/test-classes
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/test/java/com/graphaware/nlp/persistence/AnnotatedTextPersistenceTest.java: /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/test/java/com/graphaware/nlp/persistence/AnnotatedTextPersistenceTest.java uses unchecked or unsafe operations.
+[INFO] /Users/vlasta/Documents/workspace/NLP/neo4j-nlp/src/test/java/com/graphaware/nlp/persistence/AnnotatedTextPersistenceTest.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.19.1:test (default-test) @ nlp ---
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=512m; support was removed in 8.0
+Running com.graphaware.nlp.configuration.DynamicConfigurationTest
+2017-11-23 12:52:40.280+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+2017-11-23 12:52:42.878+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+2017-11-23 12:52:43.342+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+2017-11-23 12:52:43.509+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.928 sec - in com.graphaware.nlp.configuration.DynamicConfigurationTest
+Running com.graphaware.nlp.dsl.AnnotateTextProcedureTest
+2017-11-23 12:52:49.261+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:52:54 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@24e31f06: startup date [Thu Nov 23 13:52:54 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:52:54 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:52:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@24e31f06
+Nov 23, 2017 1:52:54 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:52:55 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:52:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@24e31f06
+Nov 23, 2017 1:52:56 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:52:56 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 12 ms
+Nov 23, 2017 1:52:56 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:52:56 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:52:56 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:52:56 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:52:56 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:52:56 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:52:56 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:52:57 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@24e31f06: startup date [Thu Nov 23 13:52:54 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:52:57 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:52:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@24e31f06
+2017-11-23 12:53:03.244+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:03 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@538c90bf: startup date [Thu Nov 23 13:53:03 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:03 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:03 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@538c90bf
+Nov 23, 2017 1:53:03 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:03 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@538c90bf
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:03 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:03 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:03 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:03 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:03 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:03 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:03 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:04 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:05 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@538c90bf: startup date [Thu Nov 23 13:53:03 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:05 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:03 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@538c90bf
+2017-11-23 12:53:10.348+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:10 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@25379b3c: startup date [Thu Nov 23 13:53:10 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:10 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:10 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@25379b3c
+Nov 23, 2017 1:53:10 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:10 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@25379b3c
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:10 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:10 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:10 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:10 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:10 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:10 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:10 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:10 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:11 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@25379b3c: startup date [Thu Nov 23 13:53:10 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:11 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:10 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@25379b3c
+2017-11-23 12:53:16.382+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:16 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@5977f3d6: startup date [Thu Nov 23 13:53:16 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:16 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:16 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5977f3d6
+Nov 23, 2017 1:53:16 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:16 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5977f3d6
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:16 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 8 ms
+Nov 23, 2017 1:53:16 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:16 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:16 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:16 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:16 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:16 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:17 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:17 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@5977f3d6: startup date [Thu Nov 23 13:53:16 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:17 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:16 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5977f3d6
+2017-11-23 12:53:22.539+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:22 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@57c089ac: startup date [Thu Nov 23 13:53:22 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:22 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:22 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@57c089ac
+Nov 23, 2017 1:53:22 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:22 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@57c089ac
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:22 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:22 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:22 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:22 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:22 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:22 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:22 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:23 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:23 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@57c089ac: startup date [Thu Nov 23 13:53:22 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:23 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:22 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@57c089ac
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 39.597 sec - in com.graphaware.nlp.dsl.AnnotateTextProcedureTest
+Running com.graphaware.nlp.dsl.ConceptNetProcedureTest
+2017-11-23 12:53:28.352+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:28 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@5f849a79: startup date [Thu Nov 23 13:53:28 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:28 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:28 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5f849a79
+Nov 23, 2017 1:53:28 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:28 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5f849a79
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:28 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:28 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:28 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:28 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:28 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:28 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:28 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:28 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:43 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@5f849a79: startup date [Thu Nov 23 13:53:28 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:43 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:28 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@5f849a79
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.949 sec - in com.graphaware.nlp.dsl.ConceptNetProcedureTest
+Running com.graphaware.nlp.dsl.ConfigurationProcedureTest
+2017-11-23 12:53:48.368+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:48 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@1e792043: startup date [Thu Nov 23 13:53:48 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:48 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:48 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1e792043
+Nov 23, 2017 1:53:48 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:48 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1e792043
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:48 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:48 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:48 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:48 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:48 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:48 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:48 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:48 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:48 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@1e792043: startup date [Thu Nov 23 13:53:48 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:48 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:48 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1e792043
+2017-11-23 12:53:54.484+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:53:54 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@72db6e52: startup date [Thu Nov 23 13:53:54 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:54 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:53:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@72db6e52
+Nov 23, 2017 1:53:54 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:53:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@72db6e52
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:53:54 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 7 ms
+Nov 23, 2017 1:53:54 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:53:54 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:53:54 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:53:54 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:54 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:54 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:54 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:53:55 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@72db6e52: startup date [Thu Nov 23 13:53:54 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:53:55 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:53:54 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@72db6e52
+2017-11-23 12:54:00.294+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:54:00 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@586f56d2: startup date [Thu Nov 23 13:54:00 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:00 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:54:00 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@586f56d2
+Nov 23, 2017 1:54:00 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:54:00 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@586f56d2
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:54:00 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 6 ms
+Nov 23, 2017 1:54:00 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:54:00 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:54:00 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:54:00 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:00 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:00 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:00 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:00 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@586f56d2: startup date [Thu Nov 23 13:54:00 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:00 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:54:00 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@586f56d2
+2017-11-23 12:54:06.307+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:54:06 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@1f60412a: startup date [Thu Nov 23 13:54:06 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:06 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:54:06 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1f60412a
+Nov 23, 2017 1:54:06 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:54:06 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1f60412a
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:54:06 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 6 ms
+Nov 23, 2017 1:54:06 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:54:06 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:54:06 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:54:06 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:06 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:06 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:06 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:06 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@1f60412a: startup date [Thu Nov 23 13:54:06 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:06 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:54:06 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@1f60412a
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.824 sec - in com.graphaware.nlp.dsl.ConfigurationProcedureTest
+Running com.graphaware.nlp.dsl.EnrichTest
+2017-11-23 12:54:12.267+0000 INFO [c.g.r.b.RuntimeKernelExtension] GraphAware Runtime disabled.
+Nov 23, 2017 1:54:12 PM org.springframework.context.support.GenericApplicationContext prepareRefresh
+INFO: Refreshing org.springframework.context.support.GenericApplicationContext@53842018: startup date [Thu Nov 23 13:54:12 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:12 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext prepareRefresh
+INFO: Refreshing Root WebApplicationContext: startup date [Thu Nov 23 13:54:12 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@53842018
+Nov 23, 2017 1:54:12 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext loadBeanDefinitions
+INFO: Scanning base packages: [com.**.graphaware.**,org.**.graphaware.**,net.**.graphaware.**,com.graphaware.server.foundation.stats]
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/clear],methods=[POST]}" onto public void com.graphaware.module.resttest.RestTestApi.clearDatabase()
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertEmpty],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertEmpty(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSameGraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSameGraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping register
+INFO: Mapped "{[/resttest/assertSubgraph],methods=[POST]}" onto public java.lang.String com.graphaware.module.resttest.RestTestApi.assertSubgraph(com.graphaware.module.resttest.RestTestRequest,javax.servlet.http.HttpServletResponse) throws java.io.IOException
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.handler.SimpleUrlHandlerMapping registerHandler
+INFO: Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler]
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter initControllerAdviceCache
+INFO: Looking for @ControllerAdvice: Root WebApplicationContext: startup date [Thu Nov 23 13:54:12 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@53842018
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization started
+Nov 23, 2017 1:54:12 PM org.springframework.web.servlet.DispatcherServlet initServletBean
+INFO: FrameworkServlet 'graphaware/graphaware': initialization completed in 6 ms
+Nov 23, 2017 1:54:12 PM com.sun.jersey.api.core.PackagesResourceConfig init
+INFO: Scanning for root resource and provider classes in the packages:
+  com.graphaware.server
+Nov 23, 2017 1:54:12 PM com.sun.jersey.api.core.ScanningResourceConfig logClasses
+INFO: Root resource classes found:
+  class com.graphaware.server.foundation.bootstrap.GraphAwareServerBootstrapper
+Nov 23, 2017 1:54:12 PM com.sun.jersey.api.core.ScanningResourceConfig init
+INFO: No provider classes found.
+Nov 23, 2017 1:54:12 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:12 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:12 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:12 PM com.sun.jersey.server.impl.application.WebApplicationImpl _initiate
+INFO: Initiating Jersey application, version 'Jersey: 1.19.1 03/11/2016 02:08 PM'
+Nov 23, 2017 1:54:14 PM org.springframework.context.support.GenericApplicationContext doClose
+INFO: Closing org.springframework.context.support.GenericApplicationContext@53842018: startup date [Thu Nov 23 13:54:12 CET 2017]; root of context hierarchy
+Nov 23, 2017 1:54:14 PM org.springframework.web.context.support.AnnotationConfigWebApplicationContext doClose
+INFO: Closing Root WebApplicationContext: startup date [Thu Nov 23 13:54:12 CET 2017]; parent: org.springframework.context.support.GenericApplicationContext@53842018
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.301 sec - in com.graphaware.nlp.dsl.EnrichTest
+Running com.graphaware.nlp.dsl.LanguageProcedureTest
