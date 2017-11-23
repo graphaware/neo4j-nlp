@@ -33,12 +33,15 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
-* `neo4j-framework`
+* `neo4j-framework` (the JAR for this is labeled "graphaware-server-enterprise-all")
 * `neo4j-nlp`
 * `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
 
 and copy them in the `plugins` directory of Neo4j.
 
+*Take care that the version numbers of the framework you are using match with the version of Neo4J
+you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.3.0, all
+of the JARs you download should contain 3.3 in their version number.
 
 `plugins/` directory example :
 
@@ -54,12 +57,32 @@ Append the following configuration in the `neo4j.conf` file in the `config/` dir
   dbms.unmanaged_extension_classes=com.graphaware.server=/graphaware
   com.graphaware.runtime.enabled=true
   com.graphaware.module.NLP.1=com.graphaware.nlp.module.NLPBootstrapper
+  dbms.security.procedures.whitelist=ga.nlp.*
 ```
 
 Start or restart your Neo4j database.
 
-
 Note: both concrete text processors are quite greedy - you will need to dedicate sufficient memory for to Neo4j heap space.
+
+Additionally, the following indexes and constraints are suggested to speed performance:
+
+```
+CREATE CONSTRAINT ON (n:AnnotatedText) ASSERT n.id IS UNIQUE;
+CREATE CONSTRAINT ON (n:Tag) ASSERT n.id IS UNIQUE;
+CREATE CONSTRAINT ON (n:Sentence) ASSERT n.id IS UNIQUE;
+CREATE INDEX ON :Tag(a.value);
+```
+
+### Quick Documentation in Neo4j Browser
+
+Once the extension is loaded, you can see basic documentation on all available procedures by running
+this Cypher query:
+
+```
+CALL dbms.procedures() YIELD name, signature, description
+WHERE name =~ 'ga.nlp.*'
+RETURN name, signature, description ORDER BY name asc;
+```
 
 ## Getting Started
 
@@ -80,7 +103,7 @@ For example, the basic `tokenizer` pipeline has the following components :
 * Named Entity Recognition
 
 
-##### Example
+#### Example
 
 Let's take the following text as example :
 
@@ -115,6 +138,25 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
+This procedure will link your original `:News` node to an `:AnnotatedText` node which is the entry point for the graph
+based NLP of this particular News. The original text is broken down into words, parts of speech, and functions.
+This analysis of the text acts as a starting point for the later steps.
+
+![annotated text](https://github.com/graphaware/neo4j-nlp/raw/master/docs/image1.png)
+
+**Running a batch of annotations**
+
+If you have a big set of data to annotate, we recommend to use [APOC](https://github.com/neo4j-contrib/neo4j-apoc-procedures) :
+
+```
+CALL apoc.periodic.iterate(
+"MATCH (n:News) RETURN n LIMIT 500",
+"CALL ga.nlp.annotate({text: n.text, id: id(n)})
+YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", {})
+```
+
+Do not run run the procedure in parallel to avoid deadlocks.
+
 ### Enrich your original knowledge
 
 As of now, a single enricher is available, making use of the ConceptNet5 API.
@@ -128,18 +170,52 @@ YIELD result
 RETURN result
 ```
 
+Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
+
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
-List of procedures available:
+![annotated text](https://github.com/graphaware/neo4j-nlp/raw/master/docs/image2.png)
 
+## List of available procedures
 
-**5. Language Detection**
+### Keyword Extraction
 
 ```
-CALL ga.nlp.language({text:{value}}) YIELD result return result
+MATCH (a:AnnotatedText)
+CALL ga.nlp.ml.textRank({stopwords: '+,other,email', annotatedText: a, useDependencies: true})
+YIELD result RETURN result
 ```
 
-**6. NLP based filter**
+Refer to our blog post about [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html) for a detailed explanation of this procedure.
+
+### Sentiment Detection
+
+You can also determine whether the text presented is positive, negative, or neutral.  This procedure
+requires an AnnotatedText node, which is produced by `ga.nlp.annotate` above.
+
+```
+MATCH (t:MyNode)-[]-(a:AnnotatedText) 
+CALL ga.nlp.sentiment(a) YIELD result 
+RETURN result;
+```
+
+This procedure will simply return "SUCCESS" when it is successful, but it will apply the `:POSITIVE`, 
+`:NEUTRAL` or `:NEGATIVE` label to each Sentence.  As a result, when sentiment detection is complete,
+you can query for the sentiment of sentences as such:
+
+```
+MATCH (s:Sentence)
+RETURN s.text, labels(s)
+```
+
+### Language Detection
+
+```
+CALL ga.nlp.detectLanguage("What language is this in?") 
+YIELD result return result
+```
+
+### NLP based filter
 
 ```
 CALL ga.nlp.filter({text:'On 8 May 2013,
@@ -156,7 +232,7 @@ CALL ga.nlp.filter({text:'On 8 May 2013,
 return result
 ```
 
-**7. Cosine similarity computation**
+### Cosine similarity computation
 
 Once tags are extracted from all the news or other nodes containing some text, it is possible to compute similarities between them using content based similarity. 
 During this process, each annotated text is described using the TF-IDF encoding format. TF-IDF is an established technique from the field of information retrieval and stands for Term Frequency-Inverse Document Frequency. 
@@ -166,3 +242,13 @@ Text documents can be TF-IDF encoded as vectors in a multidimensional Euclidean 
 CALL ga.nlp.ml.cosine.compute({}) YIELD result
 ```
 
+## License
+
+Copyright (c) 2017 GraphAware
+
+GraphAware is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program.
+If not, see <http://www.gnu.org/licenses/>.
