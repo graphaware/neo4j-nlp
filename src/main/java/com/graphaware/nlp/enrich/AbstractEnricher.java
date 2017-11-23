@@ -15,13 +15,18 @@
  */
 package com.graphaware.nlp.enrich;
 
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
+import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.TextProcessor;
-import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.*;
+
+import java.util.*;
 
 public class AbstractEnricher {
 
@@ -46,6 +51,36 @@ public class AbstractEnricher {
             annotateTag = new Tag(parentConcept, language);
         }
         return annotateTag;
+    }
+
+    protected Pair<Iterator<Node>, Node> getTagsIteratorFromRequest(ConceptRequest request) {
+        Node annotatedNode = request.getAnnotatedNode();
+        Node tagToBeAnnotated = null;
+        if (annotatedNode == null) {
+            tagToBeAnnotated = request.getTag();
+        }
+        Iterator<Node> tagsIterator;
+        if (annotatedNode != null) {
+            tagsIterator = getAnnotatedTextTags(annotatedNode);
+        } else if (tagToBeAnnotated != null) {
+            List<Node> proc = new ArrayList<>();
+            proc.add(tagToBeAnnotated);
+            tagsIterator = proc.iterator();
+        } else {
+            throw new RuntimeException("You need to specify or an annotated text or a list of tags");
+        }
+
+        return new Pair(tagsIterator, tagToBeAnnotated);
+    }
+
+    protected ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", annotatedNode.getId());
+        Result queryRes = getDatabase().execute("MATCH (n)-[*..2]->"
+                + "(t:" + getConfiguration().getLabelFor(Labels.Tag) + ") "
+                + "where id(n) = {id} return distinct t", params);
+        ResourceIterator<Node> tags = queryRes.columnAs("t");
+        return tags;
     }
 
     public GraphDatabaseService getDatabase() {

@@ -16,6 +16,7 @@
 package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
@@ -62,26 +63,15 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     public Node importConcept(ConceptRequest request) {
         List<Tag> conceptTags = new ArrayList<>();
         Node annotatedNode = request.getAnnotatedNode();
-        Node tagToBeAnnotated = null;
-        if (annotatedNode == null) {
-            tagToBeAnnotated = request.getTag();
-        }
+        Pair<Iterator<Node>, Node> pair = getTagsIteratorFromRequest(request);
+        Iterator<Node> tagsIterator = pair.first();
+        Node tagToBeAnnotated = pair.second();
         int depth = request.getDepth();
         String lang = request.getLanguage();
         Boolean splitTags = request.isSplitTag();
         Boolean filterByLang = request.isFilterByLanguage();
         List<String> admittedRelationships = request.getAdmittedRelationships();
         List<String> admittedPos = request.getAdmittedPos();
-        Iterator<Node> tagsIterator;
-        if (annotatedNode != null) {
-            tagsIterator = getAnnotatedTextTags(annotatedNode);
-        } else if (tagToBeAnnotated != null) {
-            List<Node> proc = new ArrayList<>();
-            proc.add(tagToBeAnnotated);
-            tagsIterator = proc.iterator();
-        } else {
-            throw new RuntimeException("You need to specify or an annotated text or a list of tags");
-        }
 
         TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), TextProcessor.DEFAULT_PIPELINE);
         List<Tag> tags = new ArrayList<>();
@@ -147,16 +137,6 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
     private boolean importerShouldBeReloaded() {
         return !conceptnet5Importer.getClient().getConceptNet5EndPoint().equals(getConceptNetUrl());
-    }
-
-    private ResourceIterator<Node> getAnnotatedTextTags(Node annotatedNode) throws QueryExecutionException {
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", annotatedNode.getId());
-        Result queryRes = getDatabase().execute("MATCH (n)-[*..2]->"
-                + "(t:" + getConfiguration().getLabelFor(Labels.Tag) + ") "
-                + "where id(n) = {id} return distinct t", params);
-        ResourceIterator<Node> tags = queryRes.columnAs("t");
-        return tags;
     }
 
 }
