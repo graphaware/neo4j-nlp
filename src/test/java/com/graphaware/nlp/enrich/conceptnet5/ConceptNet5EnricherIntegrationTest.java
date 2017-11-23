@@ -3,6 +3,7 @@ package com.graphaware.nlp.enrich.conceptnet5;
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
+import com.graphaware.nlp.enrich.EnricherAbstractTest;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.stub.StubTextProcessor;
@@ -17,13 +18,7 @@ import java.util.Collections;
 
 import static org.junit.Assert.*;
 
-public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        createTagConstraint();
-    }
+public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
 
     @Test
     public void testConceptNetUrlIsConfigurable() {
@@ -147,28 +142,6 @@ public class ConceptNet5EnricherIntegrationTest extends NLPIntegrationTest {
             assertTrue(result.hasNext());
         }));
 
-    }
-
-
-
-    private void createTagConstraint() {
-        executeInTransaction("CREATE CONSTRAINT ON (t:Tag) ASSERT t.id IS UNIQUE;", (result -> {
-        }));
-    }
-
-    private void debugTagsRelations() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().findNodes(Label.label("Tag")).forEachRemaining(node -> {
-                node.getRelationships(RelationshipType.withName("IS_RELATED_TO")).forEach(relationship -> {
-                    System.out.println(node.getAllProperties());
-                    System.out.println(relationship.getOtherNode(node).getAllProperties());
-                    System.out.println(relationship.getProperty("type"));
-                });
-
-            });
-
-            tx.success();
-        }
     }
 
 }
