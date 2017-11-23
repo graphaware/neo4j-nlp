@@ -26,10 +26,10 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static com.graphaware.nlp.util.TextUtils.*;
+import static com.graphaware.nlp.util.TextUtils.removeApices;
+import static com.graphaware.nlp.util.TextUtils.removeParenthesis;
+
 
 public class ConceptNet5Importer {
 
