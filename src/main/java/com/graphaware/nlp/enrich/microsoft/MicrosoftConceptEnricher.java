@@ -24,9 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class MicrosoftConceptEnricher extends AbstractEnricher implements Enricher {
+import static com.graphaware.nlp.util.TextUtils.removeApices;
+import static com.graphaware.nlp.util.TextUtils.removeParenthesis;
 
-    //https://concept.research.microsoft.com/api/Concept/ScoreByProb?instance=chief executive officer&topK=10
+public class MicrosoftConceptEnricher extends AbstractEnricher implements Enricher {
 
     public static final String ENRICHER_NAME = "MICROSOFT_CONCEPT";
     private final TextProcessorsManager textProcessorsManager;
@@ -66,12 +67,16 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
             tags.add(tag);
         }
 
-        tags.stream().forEach(tag -> {
-            conceptTags.addAll(getConcepts(tag, request.getResultsLimit()));
+        tags.forEach(tag -> {
+            getConcepts(tag, 20).forEach(conceptTag -> {
+                Tag annotatedTag = tryToAnnotate(conceptTag.getLemma(), "en", processor);
+                conceptTag.getParents().forEach(parent -> {annotatedTag.addParent(parent);});
+                conceptTags.add(annotatedTag);
+            });
             conceptTags.add(tag);
         });
 
-        conceptTags.stream().forEach((newTag) -> {
+        conceptTags.forEach((newTag) -> {
             if (newTag != null) {
                 getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
             }
@@ -99,12 +104,19 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
 
         Map<String, Double> map = response.getEntity(Map.class);
         map.keySet().stream().forEach(k -> {
-            Tag n = new Tag(k, "en");
-            tag.addParent("IS_RELATED_TO", n, map.get(k).floatValue());
+            Tag n = new Tag(cleanImportedConcept(k), "en");
+            tag.addParent("IS_RELATED_TO", n, map.get(k).floatValue(), ENRICHER_NAME);
             concepts.add(n);
         });
 
         return concepts;
 
+    }
+
+    private String cleanImportedConcept(String concept) {
+        concept = removeApices(concept);
+        concept = removeParenthesis(concept);
+
+        return concept;
     }
 }

@@ -16,8 +16,11 @@
 package com.graphaware.nlp.enrich;
 
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.persisters.Persister;
+import com.graphaware.nlp.processor.TextProcessor;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 public class AbstractEnricher {
@@ -32,6 +35,17 @@ public class AbstractEnricher {
         this.database = database;
         this.persistenceRegistry = persistenceRegistry;
         this.configuration = configuration;
+    }
+
+    protected Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
+        Tag annotateTag = null;
+        if (LanguageManager.getInstance().isLanguageSupported(language)) {
+            annotateTag = nlpProcessor.annotateTag(parentConcept, language);
+        }
+        if (annotateTag == null) {
+            annotateTag = new Tag(parentConcept, language);
+        }
+        return annotateTag;
     }
 
     public GraphDatabaseService getDatabase() {

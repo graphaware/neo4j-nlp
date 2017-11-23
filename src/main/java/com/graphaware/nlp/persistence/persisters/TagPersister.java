@@ -159,7 +159,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
                 String query = String.format("MATCH (source:`%s`), (target:`%s`) " +
                         "WHERE id(source) = {source} AND id(target) = {target} " +
                         "MERGE (source)-[r:`%s` {%s: {type} }]->(target) " +
-                        "ON CREATE SET r.%s = {weight} ",
+                        "ON CREATE SET r.%s = {weight}, r.source = {sourceId} ",
                         configuration().getLabelFor(Labels.Tag),
                         configuration().getLabelFor(Labels.Tag),
                         Relationships.IS_RELATED_TO,
@@ -170,6 +170,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
                 parameters.put("target", targetId);
                 parameters.put("type", tagRelationship.getRelation());
                 parameters.put("weight", tagRelationship.getWeight());
+                parameters.put("sourceId", tagRelationship.getSource());
                 getDatabase().execute(query, parameters);
             });
         }
