@@ -569,7 +569,7 @@ public class TextRank {
                     = new AtomicReference<>(keywordsOccurrences.remove(0));
             final AtomicReference<String> currValue = new AtomicReference<>(keywordOccurrence.get().getValue());
             final AtomicReference<Double> currRelevance = new AtomicReference<>(keywordOccurrence.get().getRelevance());
-            final AtomicReference<TfIdfObject> currTfIdf = new AtomicReference<>(tfidfMap != null ? tfidfMap.get(keywordOccurrence.get().getTagId()) : new TfIdfObject(1.0d, 1.0d));
+            final AtomicReference<TfIdfObject> currTfIdf = new AtomicReference<>(!tfidfMap.isEmpty() ? tfidfMap.get(keywordOccurrence.get().getTagId()) : new TfIdfObject(1.0d, 1.0d));
             final AtomicReference<Integer> currNTopRated = new AtomicReference<>(0);
             Set<Long> relTagIDs = getRelTagsIntoDepth(keywordOccurrence.get(), keywordsOccurrences);
             //System.out.println("\n val: " + keywordOccurrence.get().getValue() + ", relTagIDs: " + relTagIDs.stream().map(el -> idToValue.get(el)).collect(Collectors.joining(", ")));
