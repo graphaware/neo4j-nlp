@@ -1006,8 +1006,8 @@ public class TextRank {
         private double topxTags = DEFAULT_TAGS_TOPX;
         private Label keywordLabel;
         //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS));
-        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_MEDIUM));
-        private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_LARGE));
+        private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_MEDIUM));
+        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_LARGE));
         private List<String> admittedPOSs = Arrays.asList(ADMITTED_POS);
         private List<String> forbiddenNEs = Arrays.asList(FORBIDDEN_NE);
         private List<String> forbiddenPOSs = Arrays.asList(FORBIDDEN_POS);
