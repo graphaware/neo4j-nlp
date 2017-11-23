@@ -42,6 +42,8 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
     public static final String ENRICHER_NAME = "CONCEPT_NET_5";
 
+    private static final String ALIAS_NAME = "conceptnet5";
+
     private final TextProcessorsManager textProcessorsManager;
 
     private ConceptNet5Importer conceptnet5Importer;
@@ -58,6 +60,11 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     @Override
     public String getName() {
         return ENRICHER_NAME;
+    }
+
+    @Override
+    public String getAlias() {
+        return ALIAS_NAME;
     }
 
     public Node importConcept(ConceptRequest request) {

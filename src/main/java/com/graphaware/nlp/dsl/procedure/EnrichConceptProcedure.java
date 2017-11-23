@@ -17,35 +17,41 @@ package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
+import com.graphaware.nlp.dsl.result.EnricherList;
 import com.graphaware.nlp.dsl.result.NodeResult;
-import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
-import com.graphaware.nlp.enrich.microsoft.MicrosoftConceptEnricher;
+import com.graphaware.nlp.enrich.Enricher;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class ConceptNetProcedure extends AbstractDSL {
+public class EnrichConceptProcedure extends AbstractDSL {
    
     @Procedure(name = "ga.nlp.enrich.concept", mode = Mode.WRITE)
-    @Description("Enrich text knowledge with ConceptNet5")
+    @Description("Enrich knowledge concepts by consulting external knowledge bases like ConceptNet5 or Microsoft Concept Graphs")
     public Stream<NodeResult> annotate(@Name("conceptRequest") Map<String, Object> conceptRequest) {
         ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
-        ConceptNet5Enricher enricher = (ConceptNet5Enricher) getNLPManager().getEnricher(ConceptNet5Enricher.ENRICHER_NAME);
+        Enricher enricher = getNLPManager().getEnricher(request.getEnricherName());
         Node result = enricher.importConcept(request);
         return Stream.of(new NodeResult(result));
     }
 
-    @Procedure(name = "ga.nlp.enrich.concept.microsoft", mode = Mode.WRITE)
-    @Description("Enrich text knowledge with Microsoft Concept Graph")
-    public Stream<NodeResult> enrich(@Name("conceptRequest") Map<String, Object> conceptRequest) {
-        ConceptRequest request = ConceptRequest.fromMap(conceptRequest);
-        MicrosoftConceptEnricher enricher = (MicrosoftConceptEnricher) getNLPManager().getEnricher(MicrosoftConceptEnricher.ENRICHER_NAME);
-        Node result = enricher.importConcept(request);
-        return Stream.of(new NodeResult(result));
+    @Procedure(name = "ga.nlp.enrichers.list", mode = Mode.READ)
+    @Description("List enrichers available")
+    public Stream<EnricherList> list() {
+        Map<String, Enricher> enrichers = getNLPManager().getEnrichmentRegistry().getEnrichers();
+        List<EnricherList> list = new ArrayList<>();
+        enrichers.values().forEach(e -> {
+            list.add(new EnricherList(e.getName(), e.getAlias()));
+        });
+
+        return list.stream();
     }
+
 }

@@ -159,16 +159,23 @@ Do not run run the procedure in parallel to avoid deadlocks.
 
 ### Enrich your original knowledge
 
-As of now, a single enricher is available, making use of the ConceptNet5 API.
+We implement external knowledge bases in order to enrich the knowledge of your current data.
+
+As of now, two implementations are available :
+
+* ConceptNet5
+* Microsoft Concept Graph
 
 This enricher will extend the meaning of tokens (Tag nodes) in the graph.
 
 ```
 MATCH (n:Tag)
-CALL ga.nlp.enrich.concept({tag: n, depth:2, admittedRelationships:["IsA","PartOf"]})
+CALL ga.nlp.enrich.concept({enricher: 'conceptnet5', tag: n, depth:2, admittedRelationships:["IsA","PartOf"]})
 YIELD result
 RETURN result
 ```
+
+The `enricher` parameter can take `microsoft` or `conceptnet5` as value, is optional and has a default value for ConceptNet5.
 
 Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
 

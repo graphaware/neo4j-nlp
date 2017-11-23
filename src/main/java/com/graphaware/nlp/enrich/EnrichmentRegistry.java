@@ -22,12 +22,30 @@ public class EnrichmentRegistry {
 
     private final Map<String, Enricher> enrichers = new HashMap<>();
 
+    private final Map<String, Enricher> enrichersByAlias = new HashMap<>();
+
     public void register(Enricher enricher) {
         enrichers.put(enricher.getName(), enricher);
+        enrichersByAlias.put(enricher.getAlias(), enricher);
     }
 
     public Enricher get(String name) {
         return enrichers.get(name);
     }
 
+    public Enricher resolve(String key) {
+        if (enrichersByAlias.containsKey(key)) {
+            return enrichersByAlias.get(key);
+        }
+
+        if (enrichers.containsKey(key)) {
+            return enrichers.get(key);
+        }
+
+        throw new RuntimeException("Unknown enricher : " + key);
+    }
+
+    public Map<String, Enricher> getEnrichers() {
+        return enrichers;
+    }
 }

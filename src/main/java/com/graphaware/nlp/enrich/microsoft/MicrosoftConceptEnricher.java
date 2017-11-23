@@ -31,6 +31,7 @@ import static com.graphaware.nlp.util.TextUtils.removeParenthesis;
 public class MicrosoftConceptEnricher extends AbstractEnricher implements Enricher {
 
     public static final String ENRICHER_NAME = "MICROSOFT_CONCEPT";
+    private static final String ALIAS_NAME = "microsoft";
     private final TextProcessorsManager textProcessorsManager;
     private final ClientConfig cfg = new DefaultClientConfig();
 
@@ -47,6 +48,11 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
     @Override
     public String getName() {
         return ENRICHER_NAME;
+    }
+
+    @Override
+    public String getAlias() {
+        return ALIAS_NAME;
     }
 
     @Override

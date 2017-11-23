@@ -16,6 +16,7 @@
 package com.graphaware.nlp.dsl.result;
 
 public class ProcessorsList {
+
     public final String className;
 
     public ProcessorsList(String className) {
