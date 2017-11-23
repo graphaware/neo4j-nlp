@@ -29,17 +29,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.graphaware.nlp.util.TextUtils.*;
+
 public class ConceptNet5Importer {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
     public static final String DEFAULT_LANGUAGE = "en";
-
-    private static String REGEX = "\\(..\\)$";
-    private static String REPLACE = "";
-
-    private Pattern pattern = Pattern.compile(REGEX);
 
     private final ConceptNet5Client client;
     private int depthSearch = 2;
@@ -108,12 +105,12 @@ public class ConceptNet5Importer {
                                 if (depth > 1) {
                                     importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit);
                                 }
-                                source.addParent(concept.getRel(), annotateTag, concept.getWeight());
+                                source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                                 res.add(annotateTag);
                             }
                         } else {
                             Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
-                            annotateTag.addParent(concept.getRel(), source, concept.getWeight());
+                            annotateTag.addParent(concept.getRel(), source, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                             res.add(annotateTag);
                         }
                     }
@@ -142,6 +139,7 @@ public class ConceptNet5Importer {
 //        }
 //        return value;
 //    }
+
     private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
@@ -158,23 +156,6 @@ public class ConceptNet5Importer {
             return true;
         }
         return admittedRelations.stream().anyMatch((rel) -> (concept.getRel().contains(rel)));
-    }
-
-    protected String removeParenthesis(String concept) {
-        Pattern p = Pattern.compile(REGEX);
-        Matcher m = p.matcher(concept);
-        StringBuffer sb = new StringBuffer();
-        while (m.find()) {
-            m.appendReplacement(sb, REPLACE);
-        }
-        m.appendTail(sb);
-        return sb.toString();
-    }
-    protected String removeApices(String concept) {
-        if (concept != null) {
-            return concept.replace("\"", "");
-        }
-        return null;
     }
 
     public static class Builder {

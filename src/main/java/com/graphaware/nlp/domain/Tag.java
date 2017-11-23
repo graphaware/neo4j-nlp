@@ -92,6 +92,10 @@ public class Tag {
         addParent(new TagParentRelation(storedTag, rel, weight));
     }
 
+    public void addParent(String rel, Tag storedTag, float weight, String source) {
+        addParent(new TagParentRelation(storedTag, rel, weight, source));
+    }
+
     public void addParent(String rel, Tag storedTag) {
         addParent(new TagParentRelation(storedTag, rel));
     }

@@ -19,6 +19,7 @@ public class TagParentRelation {
     private Tag parent;
     private String relation;
     private float weight;
+    private String source;
 
     public TagParentRelation(Tag parent, String relation) {
         this.parent = parent;
@@ -29,6 +30,13 @@ public class TagParentRelation {
         this.parent = parent;
         this.relation = relation;
         this.weight = weight;
+    }
+
+    public TagParentRelation(Tag parent, String relation, float weight, String source) {
+        this.parent = parent;
+        this.relation = relation;
+        this.weight = weight;
+        this.source = source;
     }
 
     public Tag getParent() {
@@ -54,5 +62,12 @@ public class TagParentRelation {
     public void setWeight(float weight) {
         this.weight = weight;
     }
-    
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
 }
