@@ -20,6 +20,7 @@ public class Keyword {
     private final String keywordNoLangInfo;
     private final String[] keywordsArray;
     private final int wordsCount;
+    private String keywordOriginal;
     private int exactMatch;
     private int total;
     private double relevance;
@@ -29,6 +30,7 @@ public class Keyword {
     public Keyword(String word) {
         this.keyword = word;
         this.keywordNoLangInfo = word.split("_")[0];
+        this.keywordOriginal = word;
         this.keywordsArray = keywordNoLangInfo.split(" ");
         this.wordsCount = keywordsArray.length;
         this.exactMatch = 1;
@@ -40,6 +42,7 @@ public class Keyword {
     public Keyword(String word, int occurrences) {
         this.keyword = word;
         this.keywordNoLangInfo = word.split("_")[0];
+        this.keywordOriginal = word;
         this.keywordsArray = keywordNoLangInfo.split(" ");
         this.wordsCount = keywordsArray.length;
         this.exactMatch = occurrences;
@@ -54,6 +57,18 @@ public class Keyword {
 
     public String getRawKeyword() {
         return this.keywordNoLangInfo;
+    }
+
+    public String getOriginalRawKeyword() {
+        return this.keywordOriginal.split("_")[0];
+    }
+
+    public String getOriginalTagId() {
+        return this.keywordOriginal;
+    }
+
+    public void setOriginalTagId(String val) {
+        this.keywordOriginal = val;
     }
 
     public String[] getListOfWords() {

@@ -44,7 +44,7 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
         List<String> queries = ImportUtils.getImportQueriesFromApocExport(content);
         queries.forEach(q -> {
             executeInTransaction(q, (result -> {
-                //
+                assertTrue("Failure in createGraph() method. Query:\n" + q, result.hasNext());
             }));
         });
     }

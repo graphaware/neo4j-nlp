@@ -415,7 +415,7 @@ public class TextRank {
 
     private void connectTagsInNE(Map<Long, Map<Long, CoOccurrenceItem>> results, List<Pair<Long, Long>> tags, int startOffset) {
         int n = tags.size();
-        for (int i=0; i<n-2; i++) {
+        for (int i=0; i<n-1; i++) {
             for (int j=i+1; j<n; j++) {
                 addTagToCoOccurrence(results, tags.get(i).second(), startOffset + tags.get(i).first().intValue(), tags.get(j).second(), startOffset + tags.get(j).first().intValue());
                 if (!directionsMatter) { // when direction of co-occurrence relationships is not important
@@ -637,9 +637,9 @@ public class TextRank {
                     continue;
                 if (wrongNEs.contains(key))
                     continue;
-                String keystr = idToValue.get(key).toLowerCase();
+                String keystr = idToValue.get(key);//.toLowerCase();
                 double pr = pageRanks.containsKey(key) ? pageRanks.get(key) : 0.;
-                if (pr == 0.) // set PageRank value of an NE to max value of PR of it's composite words
+                if (pr == 0.) // set PageRank value of a NE to max value of PR of it's composite words
                     pr = (double) pageRanks.entrySet().stream()
                             .filter(en -> neExpanded.get(key).contains(en.getKey()))
                             .mapToDouble(en -> en.getValue())
@@ -704,16 +704,18 @@ public class TextRank {
     private void addToResults(String res, double relevance, TfIdfObject tfidf, int nTopRated, Map<String, Keyword> results, int occurrences) {
         //System.out.println("addToResults: " + res + " " + relevance + " " + occurrences);
         if (res != null) {
-            if (results.containsKey(res)) {
-                results.get(res).incCountsBy(occurrences);
+            String resLower = res.toLowerCase();
+            if (results.containsKey(resLower)) {
+                results.get(resLower).incCountsBy(occurrences);
                 //System.out.println("+inc");
             } else {
-                final Keyword keyword = new Keyword(res, occurrences);
+                final Keyword keyword = new Keyword(resLower, occurrences);
+                keyword.setOriginalTagId(res);
                 keyword.setRelevance(relevance);
                 keyword.setTf(tfidf.getTf());
                 keyword.setIdf(tfidf.getIdf());
                 keyword.setNTopRated(nTopRated);
-                results.put(res, keyword);
+                results.put(resLower, keyword);
             }
         }
     }

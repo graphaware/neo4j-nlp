@@ -70,5 +70,7 @@ public class KeywordPersister extends AbstractPersister implements Persister<Key
         node.setProperty("value", keyword.getRawKeyword());
         node.setProperty("keywordsList", keyword.getListOfWords());
         node.setProperty("numTerms", keyword.getWordsCount());
+        node.setProperty("originalTagId", keyword.getOriginalTagId());
+        node.setProperty("originalTagValue", keyword.getOriginalRawKeyword());
     }
 }
