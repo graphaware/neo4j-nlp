@@ -133,6 +133,11 @@ public class TextRankSummarizer {
 
     public boolean evaluate(Node annotatedText, int iter, double damp, double threshold) {
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createGraph(annotatedText);
+        if (coOccurrence == null || coOccurrence.size() == 0) {
+            LOG.info("Graph of co-occurrences is empty, aborting ...");
+            return true;
+        }
+
         PageRank pageRank = new PageRank(database);
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
 
@@ -158,7 +163,7 @@ public class TextRankSummarizer {
                 });
 
         // Save results
-        System.out.println(saveQuery.get());
+        //System.out.println(saveQuery.get());
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         try (Transaction tx = database.beginTx();) {
