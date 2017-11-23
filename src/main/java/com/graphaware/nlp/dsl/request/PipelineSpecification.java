@@ -37,7 +37,7 @@ public class PipelineSpecification {
     }
     
     public static PipelineSpecification fromMap(Map<String, Object> map) {
-        PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(), map.get("textProcessor").toString());
+        PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(), map.containsKey("textProcessor") ? map.get("textProcessor").toString() : null);
         pipelineSpecification.setThreadNumber(map.containsKey("threadNumber") ? ((Number) map.get("threadNumber")).longValue() : DEFAULT_THREAD_NUMBER);
         if (map.containsKey("processingSteps")) {
             pipelineSpecification.setProcessingSteps((Map) map.get("processingSteps"));

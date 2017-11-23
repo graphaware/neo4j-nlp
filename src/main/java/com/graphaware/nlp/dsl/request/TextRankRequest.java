@@ -34,14 +34,12 @@ public class TextRankRequest {
     private final static String PARAMETER_DO_STOPWORDS = "removeStopwords";
     private final static String PARAMETER_RESPECT_DIRECTIONS = "respectDirections";
     private final static String PARAMETER_RESPECT_SENTENCES = "respectSentences";
-    private final static String PARAMETER_USE_TFIDF_WEIGHTS = "useTfIdfWeights";
     private final static String PARAMETER_USE_DEPENDENCIES = "useDependencies";
-    private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
-    private final static String PARAMETER_MAX_SINGLE_KEYWORDS = "maxSinglewordKeywords";
-    private final static String PARAMETER_PHRASES_TOPX = "topXWordsForPhrases";
-    private final static String PARAMETER_SINGLES_TOPX = "topXSinglewordKeywords";
+    private final static String PARAMETER_COOCCURRENCES_FROM_DEPENDENCIES = "dependenciesGraph";
+    //private final static String PARAMETER_COOCCURRENCE_WINDOW = "cooccurrenceWindow";
+    private final static String PARAMETER_TAGS_TOPX = "topXTags";
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
-    private final static String PARAMETER_CLEAN_SINGLE_WORD_KEYWORDS = "cleanSingleWordKeywords";
+    private final static String PARAMETER_CLEAN_KEYWORDS = "cleanKeywords";
 
     private Node node;
     private int iterations;
@@ -50,13 +48,11 @@ public class TextRankRequest {
     private boolean doStopwords;
     private boolean respectDirections;
     private boolean respectSentences;
-    private boolean useTfIdfWeights;
     private boolean useDependencies;
-    private boolean cleanSingleWordKeywords;
+    private boolean dependenciesGraph;
+    private boolean cleanKeywords;
     private int cooccurrenceWindow;
-    private int maxSingles;
-    private double phrases_topx;
-    private double singles_topx;
+    private double topxTags;
     private String keywordLabel;
     private String stopWords;    
 
@@ -65,14 +61,12 @@ public class TextRankRequest {
     private static final double DEFAULT_THRESHOLD = 0.0001;
     private static final boolean DEFAULT_STOPWORDS_ENABLING = true;
     private static final boolean DEFAULT_RESPECT_DIRECTIONS = false;
-    private static final boolean DEFAULT_RESPECT_SENTENCES = true;
-    private static final boolean DEFAULT_USE_TFIDF_WEIGHTS = false;
+    private static final boolean DEFAULT_RESPECT_SENTENCES = false;
     private static final boolean DEFAULT_USE_DEPENDENCIES = true;
-    private static final boolean DEFAULT_CLEAN_SINGLE_WORD_KEYWORDSS = true;
-    private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
-    private static final int DEFAULT_MAX_SINGLE_KEYWORDS = 50;
-    private static final double DEFAULT_PHRASES_TOPX = 1.0f/3;
-    private static final double DEFAULT_SINGLES_TOPX = 1.0f/5;
+    private static final boolean DEFAULT_COOCCURRENCES_FROM_DEPENDENCIES = false;
+    private static final boolean DEFAULT_CLEAN_KEYWORDSS = true;
+    //private static final int DEFAULT_COOCCURRENCE_WINDOW = 2;
+    private static final double DEFAULT_TAGS_TOPX = 1.0f/3;
     private static final String DEFAULT_KEYWORD_LABEL = "Keyword";
 
     public static TextRankRequest fromMap(Map<String, Object> textRankRequest) {
@@ -87,13 +81,12 @@ public class TextRankRequest {
         result.setDoStopwords((boolean) textRankRequest.getOrDefault(PARAMETER_DO_STOPWORDS, DEFAULT_STOPWORDS_ENABLING));
         result.setRespectDirections((boolean) textRankRequest.getOrDefault(PARAMETER_RESPECT_DIRECTIONS, DEFAULT_RESPECT_DIRECTIONS));
         result.setRespectSentences((boolean) textRankRequest.getOrDefault(PARAMETER_RESPECT_SENTENCES, DEFAULT_RESPECT_SENTENCES));
-        result.setUseTfIdfWeights((boolean) textRankRequest.getOrDefault(PARAMETER_USE_TFIDF_WEIGHTS, DEFAULT_USE_TFIDF_WEIGHTS));
+        //result.setUseTfIdfWeights((boolean) textRankRequest.getOrDefault(PARAMETER_USE_TFIDF_WEIGHTS, DEFAULT_USE_TFIDF_WEIGHTS));
         result.setUseDependencies((boolean) textRankRequest.getOrDefault(PARAMETER_USE_DEPENDENCIES, DEFAULT_USE_DEPENDENCIES));
-        result.setCleanSingleWordKeywords((boolean) textRankRequest.getOrDefault(PARAMETER_CLEAN_SINGLE_WORD_KEYWORDS, DEFAULT_CLEAN_SINGLE_WORD_KEYWORDSS));
-        result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
-        result.setMaxSingleKeywords(((Number) textRankRequest.getOrDefault(PARAMETER_MAX_SINGLE_KEYWORDS, DEFAULT_MAX_SINGLE_KEYWORDS)).intValue());
-        result.setTopXWordsForPhrases(((Number) textRankRequest.getOrDefault(PARAMETER_PHRASES_TOPX, DEFAULT_PHRASES_TOPX)).doubleValue());
-        result.setTopXSinglewordKeywords(((Number) textRankRequest.getOrDefault(PARAMETER_SINGLES_TOPX, DEFAULT_SINGLES_TOPX)).doubleValue());
+        result.setUseDependenciesForCooccurrences((boolean) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCES_FROM_DEPENDENCIES, DEFAULT_COOCCURRENCES_FROM_DEPENDENCIES));
+        result.setCleanKeywords((boolean) textRankRequest.getOrDefault(PARAMETER_CLEAN_KEYWORDS, DEFAULT_CLEAN_KEYWORDSS));
+        //result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
+        result.setTopXTags(((Number) textRankRequest.getOrDefault(PARAMETER_TAGS_TOPX, DEFAULT_TAGS_TOPX)).doubleValue());
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
 
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
@@ -158,20 +151,20 @@ public class TextRankRequest {
         this.respectSentences = respectSentences;
     }
 
-    public boolean isUseTfIdfWeights() {
-        return useTfIdfWeights;
-    }
-
-    public void setUseTfIdfWeights(boolean useTfIdfWeights) {
-        this.useTfIdfWeights = useTfIdfWeights;
-    }
-
     public boolean isUseDependencies() {
-        return useDependencies;
+        return this.useDependencies;
     }
 
     public void setUseDependencies(boolean useDependencies) {
         this.useDependencies = useDependencies;
+    }
+
+    public boolean isUseDependenciesForCooccurrences() {
+        return this.dependenciesGraph;
+    }
+
+    public void setUseDependenciesForCooccurrences(boolean dependenciesGraph) {
+        this.dependenciesGraph = dependenciesGraph;
     }
 
     public int getCooccurrenceWindow() {
@@ -182,28 +175,12 @@ public class TextRankRequest {
         this.cooccurrenceWindow = cooccurrenceWindow;
     }
 
-    public int getMaxSingleKeywords() {
-        return maxSingles;
+    public double getTopXTags() {
+        return this.topxTags;
     }
 
-    public void setMaxSingleKeywords(int n) {
-        this.maxSingles = n;
-    }
-
-    public double getTopXWordsForPhrases() {
-        return this.phrases_topx;
-    }
-
-    public void setTopXWordsForPhrases(double n) {
-        this.phrases_topx = n;
-    }
-
-    public double getTopXSinglewordKeywords() {
-        return this.singles_topx;
-    }
-
-    public void setTopXSinglewordKeywords(double n) {
-        this.singles_topx = n;
+    public void setTopXTags(double n) {
+        this.topxTags = n;
     }
 
     public String getKeywordLabel() {
@@ -222,11 +199,11 @@ public class TextRankRequest {
         this.stopWords = stopWords;
     }
 
-    public boolean isCleanSingleWordKeywords() {
-        return cleanSingleWordKeywords;
+    public boolean isCleanKeywords() {
+        return this.cleanKeywords;
     }
 
-    public void setCleanSingleWordKeywords(boolean cleanSingleWordKeywords) {
-        this.cleanSingleWordKeywords = cleanSingleWordKeywords;
+    public void setCleanKeywords(boolean cleanKeywords) {
+        this.cleanKeywords = cleanKeywords;
     }    
 }

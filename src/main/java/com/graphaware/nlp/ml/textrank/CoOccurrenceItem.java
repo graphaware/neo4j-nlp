@@ -28,6 +28,7 @@ public class CoOccurrenceItem {
     public CoOccurrenceItem(long source, long destination) {
         this(source, 0, destination, 0);
     }
+
     public CoOccurrenceItem(long source, int sourceStartPosition, long destination, int destinationStartingPosition) {
         this.source = source;
         this.destination = destination;
@@ -64,7 +65,7 @@ public class CoOccurrenceItem {
         this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartingPosition));
     }
 
-    public List<Pair<Integer, Integer>> getSourceStartingPositions() {
+    public List<Pair<Integer, Integer>> getStartingPositions() {
         return occurrence;
     }    
 }

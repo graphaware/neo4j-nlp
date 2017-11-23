@@ -27,6 +27,7 @@ import java.util.Map;
 import com.graphaware.nlp.util.ImportUtils;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -51,13 +52,10 @@ public class TextRankTest extends NLPIntegrationTest {
             }
             Node annText = (Node) result.next().get("a");
             TextRank textrank = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration())
-                    .setTopXSinglewordKeywords(1.0f / 5)
-                    .setTopXWordsForPhrases(1.0f / 3)
+                    .setTopXTags(1.0f / 3)
                     .build();
-if (annText == null)
-    System.out.println(">>>>>> annText is null!");
-if (textrank == null)
-    System.out.println(">>>>>> textrank is null!");
+            assertNotNull("AnnotatedText not found.", annText);
+            assertNotNull("TextRank.Builder failed: textrank is null", textrank);
             boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res);
             tx.success();
@@ -121,7 +119,7 @@ if (textrank == null)
         queries.forEach(q -> {
             //System.out.println(q);
             executeInTransaction(q, (result -> {
-                //
+
             }));
         });
     }

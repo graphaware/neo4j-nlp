@@ -30,7 +30,6 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
     private static final Logger LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
     public SingleResult process(TextRankRequest request) {
-
         TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
         if (request.getStopWords() != null 
                 && !request.getStopWords().isEmpty()) {
@@ -39,13 +38,11 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         textrankBuilder.removeStopWords(request.isDoStopwords())
                 .respectDirections(request.isRespectDirections())
                 .respectSentences(request.isRespectSentences())
-                .useTfIdfWeights(request.isUseTfIdfWeights())
                 .useDependencies(request.isUseDependencies())
-                .setCooccurrenceWindow(request.getCooccurrenceWindow())
-                .setMaxSingleKeywords(request.getMaxSingleKeywords())
-                .setTopXWordsForPhrases(request.getTopXWordsForPhrases())
-                .setTopXSinglewordKeywords(request.getTopXSinglewordKeywords())
-                .setCleanSingleWordKeywords(request.isCleanSingleWordKeywords())
+                .useDependenciesForCooccurrences(request.isUseDependenciesForCooccurrences())
+                //.setCooccurrenceWindow(request.getCooccurrenceWindow())
+                .setTopXTags(request.getTopXTags())
+                .setCleanKeywords(request.isCleanKeywords())
                 .setKeywordLabel(request.getKeywordLabel());
         
         TextRank textRank = textrankBuilder.build();
@@ -53,7 +50,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Res: " + res);
+        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + res);
         return res ? SingleResult.success() : SingleResult.fail();
     }
 
@@ -65,5 +62,19 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
+    }
+
+    public SingleResult summarize(TextRankRequest request) {
+        TextRankSummarizer.Builder summarizerBuilder = new TextRankSummarizer.Builder(getDatabase(), getNLPManager().getConfiguration());
+        //summarizerBuilder.setKeywordLabel(request.getKeywordLabel());
+
+        TextRankSummarizer trSummarizer = summarizerBuilder.build();
+        boolean res = trSummarizer.evaluate(request.getNode(),
+                request.getIterations(),
+                request.getDamp(),
+                request.getThreshold());
+        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + res);
+
+        return res ? SingleResult.success() : SingleResult.fail();
     }
 }
