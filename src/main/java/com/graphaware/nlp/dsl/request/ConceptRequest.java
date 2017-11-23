@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import org.neo4j.graphdb.Node;
 
 import java.util.Arrays;
@@ -32,6 +33,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     private final static boolean DEFAULT_FILTER_BY_LANGUAGE = true;
     public final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
     private static final int DEFAULT_RESULTS_LIMIT = 100;
+    private static final String DEFAULT_ENRICHER = ConceptNet5Enricher.ENRICHER_NAME;
 
     private int depth = DEFAULT_DEPTH;
     private String language = DEFAULT_LANGUAGE;
@@ -41,6 +43,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     private List<String> admittedRelationships = Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP);
     private List<String> admittedPos = DEFAULT_ADMITTED_POS;
     private int resultsLimit = DEFAULT_RESULTS_LIMIT;
+    private String enricherName = DEFAULT_ENRICHER;
     
     private Node annotatedNode;
     private Node tag;
@@ -60,7 +63,8 @@ public class ConceptRequest extends AbstractProcedureRequest {
                 ADMITTED_RELATIONSHIPS_KEY,
                 LIMIT_KEY,
                 TEXT_PROCESSOR_KEY,
-                LANGUAGE_KEY
+                LANGUAGE_KEY,
+                ENRICHER_KEY
         );
     }
 
@@ -144,6 +148,14 @@ public class ConceptRequest extends AbstractProcedureRequest {
         this.resultsLimit = resultsLimit;
     }
 
+    public String getEnricherName() {
+        return enricherName;
+    }
+
+    public void setEnricherName(String enricherName) {
+        this.enricherName = enricherName;
+    }
+
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
 
         ConceptRequest request = new ConceptRequest();
@@ -173,6 +185,10 @@ public class ConceptRequest extends AbstractProcedureRequest {
         if (conceptRequest.containsKey(LIMIT_KEY)) {
             request.setResultsLimit( (int) conceptRequest.get(LIMIT_KEY));
         }
+        if (conceptRequest.containsKey(ENRICHER_KEY)) {
+            request.setEnricherName(conceptRequest.get(ENRICHER_KEY).toString());
+        }
+
         request.setProcessor((String) conceptRequest.get(TEXT_PROCESSOR_KEY));
         return request;
     }

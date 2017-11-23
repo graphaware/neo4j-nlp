@@ -22,6 +22,8 @@ public interface Enricher {
 
     String getName();
 
+    String getAlias();
+
     Node importConcept(ConceptRequest request);
 
 }

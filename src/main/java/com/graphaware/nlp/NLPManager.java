@@ -226,7 +226,7 @@ public final class NLPManager {
     }
 
     public Enricher getEnricher(String name) {
-        return enrichmentRegistry.get(name);
+        return enrichmentRegistry.resolve(name);
     }
 
     private EnrichmentRegistry buildAndRegisterEnrichers() {
@@ -235,6 +235,10 @@ public final class NLPManager {
         registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, configuration, textProcessorsManager));
 
         return registry;
+    }
+
+    public EnrichmentRegistry getEnrichmentRegistry() {
+        return enrichmentRegistry;
     }
 
     public NLPExtension getExtension(Class clazz) {
