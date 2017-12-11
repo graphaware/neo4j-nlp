@@ -33,7 +33,7 @@ public class Tag {
     private Map<String, Object> properties;
 
     public Tag(String lemma, String language) {
-        this.lemma = lemma;
+        this.lemma = lemma.trim();
         this.language = language;
         this.parents = new CopyOnWriteArraySet<>();
     }

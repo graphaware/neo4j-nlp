@@ -4,3 +4,4 @@ target/
 dependency-reduced.xml
 dependency-reduced-pom.xml
 .idea
+.DS_Store
