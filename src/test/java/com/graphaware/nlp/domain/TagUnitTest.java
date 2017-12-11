@@ -10,5 +10,6 @@ public class TagUnitTest {
     public void testTagIsTrimmedOnConstruct() {
         Tag tag = new Tag(" Institute", "en");
         assertEquals("institute", tag.getLemma());
+        assertEquals("institute_en", tag.getId());
     }
 }
