@@ -15,6 +15,7 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | --- | :---: | :---: |
 | Text information Extraction | ✔ | ✔ |
 | ConceptNet5 Enricher | ✔ | ✔ |
+| Microsoft Concept Enricher | ✔ | ✔ |
 | Keyword Extraction | ✔ | ✔ |
 | Topics Extraction | ✔ | ✔ |
 | Similarity Computation | ✔ | ✔ |
