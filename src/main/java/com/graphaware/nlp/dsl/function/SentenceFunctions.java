@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Sentence {
+public class SentenceFunctions {
 
     @UserFunction("ga.nlp.sentence.nextTags")
     @Description("Returns a list of Tag nodes that appear just after the given Tag in a sentence along with the frequency")

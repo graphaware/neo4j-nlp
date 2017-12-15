@@ -61,7 +61,7 @@ public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
                 if (token.equals(expectedTokenForPOS)) {
                     tag.setPos(Collections.singletonList(expectedPOS));
                 }
-                sentence.addTagOccurrence(0, 20, sentence.addTag(tag));
+                sentence.addTagOccurrence(0, 20, token, sentence.addTag(tag));
             }
             inc.incrementAndGet();
             annotatedText.addSentence(sentence);
@@ -83,7 +83,7 @@ public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
                     tag.setPos(Collections.singletonList("cool" + v));
                     tag.setNe(Collections.singletonList("NER_Cool" + v));
                 }
-                sentence.addTagOccurrence(0, 20, sentence.addTag(tag));
+                sentence.addTagOccurrence(0, 20, token, sentence.addTag(tag));
             }
             inc.incrementAndGet();
             annotatedText.addSentence(sentence);

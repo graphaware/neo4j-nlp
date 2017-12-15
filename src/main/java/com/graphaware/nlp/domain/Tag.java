@@ -15,20 +15,20 @@
  */
 package com.graphaware.nlp.domain;
 
+import com.graphaware.nlp.util.TypeConverter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 public class Tag {
 
-    private static final long serialVersionUID = -1L;
 
     private int multiplicity = 1;
-    private String lemma;
+    private final String lemma;
     private List<String> posL;
     private List<String> neL;
     private final Collection<TagParentRelation> parents;
-    private String language;
+    private final String language;
     
     private Map<String, Object> properties;
 
@@ -78,6 +78,14 @@ public class Tag {
         List<String> values =  neL != null ? neL : new ArrayList<>();
 
         return values.stream().filter(ne -> { return ne != null; }).collect(Collectors.toList());
+    }
+    
+    public String[]  getPosAsArray() {
+        return TypeConverter.convertStringListToArray(getPosAsList());
+    }
+    
+    public String[] getNeAsArray() {
+        return TypeConverter.convertStringListToArray(getNeAsList());
     }
 
     public String getId() {

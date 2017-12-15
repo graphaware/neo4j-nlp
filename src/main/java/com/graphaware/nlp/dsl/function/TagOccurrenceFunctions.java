@@ -24,7 +24,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
 
-public class TagOccurrence {
+public class TagOccurrenceFunctions {
 
     @Context
     public GraphDatabaseService database;

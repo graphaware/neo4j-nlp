@@ -15,39 +15,21 @@
  */
 package com.graphaware.nlp.domain;
 
-import com.graphaware.common.util.Pair;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class PartOfTextOccurrence<T> {
-
-    private final T element;
-    private final Pair<Integer, Integer> span;
-    private final List<String> partIds = new ArrayList<>();
-
-    public PartOfTextOccurrence(T element, int begin, int end) {
-        this.element = element;
-        this.span = new Pair<>(begin, end);
+public class TagOccurrence extends PartOfTextOccurrence<Tag> {
+    private final String value;
+    
+    public TagOccurrence(Tag element, int begin, int end, String value) {
+        this(element, begin, end, value, null);
     }
 
-    public PartOfTextOccurrence(T element, int begin, int end, List<String> partIds) {
-        this(element, begin, end);
-        if (partIds != null
-                && !partIds.isEmpty()) {
-            this.partIds.addAll(partIds);
-        }
+    public TagOccurrence(Tag element, int begin, int end, String value, List<String> partIds) {
+        super(element, begin, end, partIds);
+        this.value = value;
     }
 
-    public T getElement() {
-        return element;
-    }
-
-    public Pair<Integer, Integer> getSpan() {
-        return span;
-    }
-
-    public List<String> getPartIds() {
-        return partIds;
+    public String getValue() {
+        return value;
     }
 }

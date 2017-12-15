@@ -84,7 +84,7 @@ public class StubTextProcessor implements TextProcessor {
                 tag.setPos(Collections.singletonList("TESTVB"));
                 int begin = pos;
                 pos += token.length() + 1;
-                sentence.addTagOccurrence(begin, pos, sentence.addTag(tag));
+                sentence.addTagOccurrence(begin, pos, token, sentence.addTag(tag));
             }
             Phrase phrase = new Phrase(stext);
             sentence.addPhraseOccurrence(0, stext.length(), phrase);
