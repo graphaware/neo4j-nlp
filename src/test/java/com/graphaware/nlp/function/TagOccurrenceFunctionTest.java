@@ -1,6 +1,6 @@
 package com.graphaware.nlp.function;
 
-import com.graphaware.nlp.dsl.function.TagOccurrence;
+import com.graphaware.nlp.dsl.function.TagOccurrenceFunctions;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,7 +16,7 @@ public class TagOccurrenceFunctionTest extends EmbeddedDatabaseIntegrationTest {
 
     @Before
     public void registerFunction() throws Exception {
-        ((GraphDatabaseAPI) getDatabase()).getDependencyResolver().resolveDependency(Procedures.class).registerFunction(TagOccurrence.class);
+        ((GraphDatabaseAPI) getDatabase()).getDependencyResolver().resolveDependency(Procedures.class).registerFunction(TagOccurrenceFunctions.class);
     }
 
     @Test

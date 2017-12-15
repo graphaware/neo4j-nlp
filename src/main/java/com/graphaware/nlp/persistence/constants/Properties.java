@@ -32,6 +32,7 @@ public final class Properties {
     public static final String START_POSITION = "startPosition";
     public static final String END_POSITION = "endPosition";
     public static final String CONTENT_VALUE = "value";
+    public static final String TAG_ORIGINAL_VALUE = "value";
     public static final String PHRASE_TYPE = "type";
     public static final String LANGUAGE = "language";
     public static final String TF = "tf";

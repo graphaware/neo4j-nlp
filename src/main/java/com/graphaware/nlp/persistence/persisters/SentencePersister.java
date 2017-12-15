@@ -119,7 +119,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
 
     private void storeSentenceTagOccurrences(Sentence sentence, Node sentenceNode, String txId) {
         sentence.getTagOccurrences().values().forEach(occurrence -> {
-            for (PartOfTextOccurrence<Tag> tagAtPosition : occurrence) {
+            for (TagOccurrence tagAtPosition : occurrence) {
                 Node tagNode = getPersister(Tag.class).getOrCreate(tagAtPosition.getElement(), null, txId);
                 Node tagOccurrenceNode = createTagOccurrenceNode(tagAtPosition);
                 relateTagOccurrenceToTag(tagOccurrenceNode, tagNode);
@@ -132,11 +132,13 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         sentenceNode.createRelationshipTo(tagOccurrenceNode, configuration().getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE));
     }
 
-    private Node createTagOccurrenceNode(PartOfTextOccurrence<Tag> occurrence) {
+    private Node createTagOccurrenceNode(TagOccurrence occurrence) {
         Node node = database.createNode(configuration().getLabelFor(Labels.TagOccurrence));
         node.setProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_BEGIN), occurrence.getSpan().first());
         node.setProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_END), occurrence.getSpan().second());
-
+        node.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), occurrence.getElement().getPosAsArray());
+        node.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), occurrence.getElement().getNeAsArray());
+        node.setProperty(configuration().getPropertyKeyFor(Properties.TAG_ORIGINAL_VALUE), occurrence.getValue());
         return node;
     }
 
@@ -190,7 +192,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         sentenceNode.addLabel(configuration().getLabelFor(sentimentLabel));
     }
 
-    private Node getTagOccurrenceInSentence(Node sentenceNode, PartOfTextOccurrence<Tag> tagOccurrence) {
+    private Node getTagOccurrenceInSentence(Node sentenceNode, TagOccurrence tagOccurrence) {
         for (Relationship relationship : sentenceNode.getRelationships(configuration().getRelationshipFor(Relationships.SENTENCE_TAG_OCCURRENCE), Direction.OUTGOING)) {
             Node otherNode = relationship.getEndNode();
             if (otherNode.getProperty(configuration().getPropertyKeyFor(Properties.OCCURRENCE_BEGIN)).equals(tagOccurrence.getSpan().first())

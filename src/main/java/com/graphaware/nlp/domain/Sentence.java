@@ -21,14 +21,12 @@ import java.util.*;
 
 public class Sentence implements Comparable<Sentence> {
     
-    private static final long serialVersionUID = -1L;
-
     public static final int NO_SENTIMENT = -1;
 
-    private Map<String, Tag> tags = new HashMap<>();
-    private Map<Integer, List<PartOfTextOccurrence<Tag>>> tagOccurrences = new HashMap<>();
+    private final Map<String, Tag> tags = new HashMap<>();
+    private final Map<Integer, List<TagOccurrence>> tagOccurrences = new HashMap<>();
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
-    private List<TypedDependency> typedDependencies = new ArrayList<>();
+    private final List<TypedDependency> typedDependencies = new ArrayList<>();
 
     private final String sentence;
     private int sentiment = NO_SENTIMENT;
@@ -79,24 +77,25 @@ public class Sentence implements Comparable<Sentence> {
         return sentenceNumber;
     }
 
-    public void addTagOccurrence(int begin, int end, Tag tag) {
+    public void addTagOccurrence(int begin, int end, String value, Tag tag) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
         }
         if (tagOccurrences.containsKey(begin))
-          tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end));
+          tagOccurrences.get(begin).add(new TagOccurrence(tag, begin, end, value));
         else
-          tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end))));
+          tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new TagOccurrence(tag, begin, end, value))));
     }
 
-    public void addTagOccurrence(int begin, int end, Tag tag, List<String> tokenIds) {
+    public void addTagOccurrence(int begin, int end, String value, Tag tag, List<String> tokenIds) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative (for tag: " + tag.getLemma() + ")");
         }
         if (tagOccurrences.containsKey(begin))
-            tagOccurrences.get(begin).add(new PartOfTextOccurrence<>(tag, begin, end, tokenIds));
+            tagOccurrences.get(begin).add(new TagOccurrence(tag, begin, end, value, tokenIds));
         else
-            tagOccurrences.put(begin, new ArrayList<>(Arrays.asList(new PartOfTextOccurrence<>(tag, begin, end, tokenIds))));
+            tagOccurrences.put(begin, 
+                    new ArrayList<>(Arrays.asList(new TagOccurrence(tag, begin, end, value, tokenIds))));
     }
 
     public void addTypedDependency(TypedDependency typedDependency) {
@@ -119,7 +118,7 @@ public class Sentence implements Comparable<Sentence> {
         return null;
     }
 
-    public Map<Integer, List<PartOfTextOccurrence<Tag>>> getTagOccurrences() {
+    public Map<Integer, List<TagOccurrence>> getTagOccurrences() {
         return tagOccurrences;
     }
 
@@ -169,7 +168,7 @@ public class Sentence implements Comparable<Sentence> {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");
         }
-        List<PartOfTextOccurrence<Tag>> occurrence = tagOccurrences.get(begin);
+        List<TagOccurrence> occurrence = tagOccurrences.get(begin);
         if (occurrence != null) {
             return occurrence.get(0).getElement(); // TO DO: take into account that more than one PartOfTextOccurrence is possible
         } else {

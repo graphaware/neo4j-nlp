@@ -1,9 +1,9 @@
 package com.graphaware.nlp.util;
 
 import com.graphaware.nlp.domain.AnnotatedText;
-import com.graphaware.nlp.domain.PartOfTextOccurrence;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.domain.TagOccurrence;
 
 import java.util.HashSet;
 import java.util.List;
@@ -78,14 +78,27 @@ public class TestAnnotatedText {
         assertTrue(found);
     }
 
-    public Tag getTagOccurrenceAtPosition(int sentenceNumber, int begin) {
+    public Tag getTagAtPosition(int sentenceNumber, int begin) {
         if (begin < 0) {
             throw new RuntimeException("Begin cannot be negative");
         }
-        List<PartOfTextOccurrence<Tag>> occurrences = annotatedText.getSentencesSorted().get(sentenceNumber).getTagOccurrences().get(begin);
+        List<TagOccurrence> occurrences = annotatedText.getSentencesSorted().get(sentenceNumber).getTagOccurrences().get(begin);
         if (occurrences != null) {
             // @TODO: take into account that more than one PartOfTextOccurrence is possible
             return occurrences.get(0).getElement();
+        } else {
+            return null;
+        }
+    }
+    
+    public TagOccurrence getTagOccurrenceAtPosition(int sentenceNumber, int begin) {
+        if (begin < 0) {
+            throw new RuntimeException("Begin cannot be negative");
+        }
+        List<TagOccurrence> occurrences = annotatedText.getSentencesSorted().get(sentenceNumber).getTagOccurrences().get(begin);
+        if (occurrences != null) {
+            // @TODO: take into account that more than one PartOfTextOccurrence is possible
+            return occurrences.get(0);
         } else {
             return null;
         }
