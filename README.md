@@ -47,9 +47,9 @@ of the JARs you download should contain 3.3 in their version number.
 `plugins/` directory example :
 
 ```
--rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-1.0-SNAPSHOT.jar
--rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.1.3.47.jar
--rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-1.0-SNAPSHOT.jar
+-rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-3.3.1.51.2-SNAPSHOT.jar
+-rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.3.1.51.2.jar
+-rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-3.3.1.51.2-SNAPSHOT.jar
 ```
 
 Append the following configuration in the `neo4j.conf` file in the `config/` directory:
