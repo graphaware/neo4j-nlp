@@ -21,6 +21,8 @@ import com.graphaware.nlp.parser.domain.Page;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.pdf.PDFParser;
+import org.neo4j.kernel.configuration.Config;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
@@ -56,15 +58,21 @@ public class TikaPDFParser extends AbstractExtension {
 
 
     private File getFile(String filename) {
-        ClassPathResource classPathResource = new ClassPathResource(filename);
+        Map<String, String> params = ((GraphDatabaseAPI) getNLPManager().getDatabase()).getDependencyResolver().resolveDependency(Config.class).getRaw();
+        String filepath = params.get(NEO4J_HOME) + File.separator + IMPORT_DIR + File.separator + filename;
+//        ClassPathResource classPathResource = new ClassPathResource(filepath);
         String file = null;
         try {
-            file = classPathResource.getFile().getAbsolutePath();
+
+            return new File(filepath);
+//
+//            file = classPathResource.getFile().getAbsolutePath();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Unable to read file", e);
         }
 
-        return new File(file);
+//        return new File(file);
     }
 
 }
