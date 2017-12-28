@@ -37,7 +37,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
 
     @Override
     public Node persist(Tag object, String id, String txId) {
-        return null;
+        throw new UnsupportedOperationException("This cannot implemented for this persister");
     }
 
     @Override
@@ -191,5 +191,10 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
 
     private void setLastTransaction(Node node, String txId) {
         node.setProperty(configuration().getPropertyKeyFor(Properties.LAST_TX_ID), txId);
+    }
+
+    @Override
+    public Node persist(Tag object) {
+        throw new UnsupportedOperationException("This cannot implemented for this persister");
     }
 }

@@ -37,6 +37,11 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     public AnnotatedTextPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
         super(database, dynamicConfiguration, registry);
     }
+    
+    @Override
+    public Node persist(AnnotatedText annotatedText) {
+        throw new UnsupportedOperationException("This cannot implemented for this persister");
+    }
 
     @Override
     public Node persist(AnnotatedText annotatedText, String id, String txId) {

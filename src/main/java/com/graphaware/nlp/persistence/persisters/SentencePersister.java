@@ -248,4 +248,9 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         String type = phrase.getType() != null ? phrase.getType() : NLPDefaultValues.PHRASE_TYPE;
         phraseNode.setProperty(configuration().getPropertyKeyFor(Properties.PHRASE_TYPE), type);
     }
+
+    @Override
+    public Node persist(Sentence object) {
+        throw new UnsupportedOperationException("This cannot implemented for this persister"); //To change body of generated methods, choose Tools | Templates.
+    }
 }

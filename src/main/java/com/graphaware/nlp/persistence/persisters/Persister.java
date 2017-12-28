@@ -20,6 +20,8 @@ import org.neo4j.graphdb.Node;
 public interface Persister<T> {
 
     Node persist(T object, String id, String txId);
+    
+    Node persist(T object);
 
     T fromNode(Node node);
 

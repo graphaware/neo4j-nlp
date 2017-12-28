@@ -259,9 +259,9 @@ public class TextRank {
         //params.put("forbiddenNEs", Arrays.asList("NER_Number", "NER_Ordinal", "NER_Percent", "NER_Duration"));
 
         if (fromDependencies) {
-            params.put("stopwords", new ArrayList<String>());
-            params.put("forbiddenPOSs", new ArrayList<String>());
-            params.put("forbiddenNEs", new ArrayList<String>());
+            params.put("stopwords", new ArrayList<>());
+            params.put("forbiddenPOSs", new ArrayList<>());
+            params.put("forbiddenNEs", new ArrayList<>());
         }
 
         Result res = null;
@@ -513,14 +513,12 @@ public class TextRank {
         int n_oneThird = (int) (pageRanks.size() * topxTags);
         List<Long> topThird = getTopX(pageRanks, n_oneThird);
 
-        System.out.println(" > All tags:");
         pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
-        System.out.println(" > Top " + n_oneThird + " tags: " + topThird.stream().map(id -> idToValue.get(id)).collect(Collectors.joining(", ")));
-
+        
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
         params.put("posList", admittedPOSs);
-        params.put("stopwords", removeStopWords ? stopWords : new ArrayList<String>());
+        params.put("stopwords", removeStopWords ? stopWords : new ArrayList<>());
 
         List<KeywordExtractedItem> keywordsOccurrences = new ArrayList<>();
         Map<Long, KeywordExtractedItem> keywordMap = new HashMap<>();

@@ -54,7 +54,7 @@ public class SparseVector {
     }
 
     public List<Float> getList() {
-        List<Float> vectorAsList = new ArrayList<>(Collections.nCopies(cardinality*2 + 1, 0.0f));
+        List<Float> vectorAsList = new ArrayList<>(Collections.nCopies(cardinality * 2 + 1, 0.0f));
         vectorAsList.set(0, cardinality.floatValue());
         final int offset = cardinality;
         IntStream.range(0, cardinality).forEach((k) -> {
@@ -64,6 +64,19 @@ public class SparseVector {
             vectorAsList.set(offset + 1 + k, value);
         });
         return vectorAsList;
+    }
+    
+    public float[] getArray() {
+        float[] vector = new float[cardinality * 2 + 1];
+        vector[0] = cardinality.floatValue();
+        final int offset = cardinality;
+        IntStream.range(0, cardinality).forEach((k) -> {
+            float pos = index.get(k).floatValue();
+            Float value = values.get(k);
+            vector[k + 1] = pos;
+            vector[offset + 1 + k] = value;
+        });
+        return vector;
     }
 
     public Integer getCardinality() {
@@ -79,12 +92,16 @@ public class SparseVector {
     }
 
     public float dot(SparseVector other) {
+        if (this.cardinality == 0 ||
+                other.cardinality == 0) {
+            return 0f;
+        }
         final AtomicReference<Float> sum = new AtomicReference<>(0f);
         int xIndex = 0;
         int yIndex = 0;
 
         while (true) {
-            if (index.get(xIndex) == other.getIndex().get(yIndex)) {
+            if (index.get(xIndex).longValue() == other.getIndex().get(yIndex).longValue()) {
                 float curValue = sum.get();
                 curValue += values.get(xIndex) * other.getValues().get(yIndex);
                 sum.set(curValue);
@@ -102,7 +119,7 @@ public class SparseVector {
         }
         return sum.get();
     }
-    
+
     public float norm() {
         return Double.valueOf(Math.sqrt(this.dot(this))).floatValue();
     }
@@ -111,6 +128,5 @@ public class SparseVector {
     public String toString() {
         return getList().toString(); //To change body of generated methods, choose Tools | Templates.
     }
- 
-    
+
 }

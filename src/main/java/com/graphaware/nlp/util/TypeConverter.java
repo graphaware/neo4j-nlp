@@ -17,8 +17,12 @@ package com.graphaware.nlp.util;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TypeConverter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TypeConverter.class);
 
     public static byte[] toByteArray(double[] doubleArray) {
         int times = Double.SIZE / Byte.SIZE;
@@ -40,5 +44,24 @@ public class TypeConverter {
 
     public static String[] convertStringListToArray(List<String> list) {
         return list.toArray(new String[0]);
+    }
+
+    public static float getFloatValue(Object value) {
+        if (value == null) {
+            return 1.0f;
+        }
+        if (value instanceof Double) {
+            return ((Double) value).floatValue();
+        }
+        if (value instanceof Float) {
+            return ((Float) value);
+        } else {
+            try {
+                return Float.valueOf(String.valueOf(value));
+            } catch (Exception ex) {
+                LOG.error("Error while parsing float value from string: " + value, ex);
+                return 1.0f;
+            }
+        }
     }
 }

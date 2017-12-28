@@ -36,7 +36,8 @@ public enum Labels implements Label {
     Negative,
     VeryPositive,
     VeryNegative,
-    Neutral;
+    Neutral,
+    VectorContainer;
 
 
     public static boolean contains(String label) {

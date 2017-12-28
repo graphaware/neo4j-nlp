@@ -73,4 +73,9 @@ public class KeywordPersister extends AbstractPersister implements Persister<Key
         node.setProperty("originalTagId", keyword.getOriginalTagId());
         node.setProperty("originalTagValue", keyword.getOriginalRawKeyword());
     }
+
+    @Override
+    public Node persist(Keyword object) {
+        throw new UnsupportedOperationException("This cannot implemented for this persister"); //To change body of generated methods, choose Tools | Templates.
+    }
 }

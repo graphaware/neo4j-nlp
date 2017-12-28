@@ -20,7 +20,9 @@ import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
+import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
@@ -41,6 +43,8 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
+import com.graphaware.nlp.vector.QueryBasedVectorComputation;
+import com.graphaware.nlp.vector.SparseVector;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
@@ -64,6 +68,8 @@ public final class NLPManager {
     private PersistenceRegistry persistenceRegistry;
 
     private EnrichmentRegistry enrichmentRegistry;
+    
+    private QueryBasedVectorComputation vectorComputation;
 
     private final Map<Class, NLPExtension> extensions = new HashMap<>();
 
@@ -98,6 +104,7 @@ public final class NLPManager {
         this.persistenceRegistry = new PersistenceRegistry(database, configuration);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
+        this.vectorComputation = new QueryBasedVectorComputation(database);
         loadExtensions();
         registerEventListeners();
         initialized = true;
@@ -279,5 +286,13 @@ public final class NLPManager {
 
     private String getPipeline(String pipelineName) {
         return ProcessorUtils.getPipeline(pipelineName, configuration);
+    }
+
+    public Node computeVectorAndPersist(ComputeVectorRequest request) {
+        SparseVector vector = 
+                vectorComputation.getTFMap(request.getInput().getId(), request.getQuery()) ;
+        VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
+        getPersister(vectorNode.getClass()).persist(vectorNode, null, null);
+        return request.getInput();
     }
 }

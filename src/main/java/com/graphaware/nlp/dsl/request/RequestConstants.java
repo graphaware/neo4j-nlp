@@ -2,6 +2,9 @@ package com.graphaware.nlp.dsl.request;
 
 public final class RequestConstants {
     public static final String NODE_KEY = "node";
+    public static final String INPUT_KEY = "input";
+    public static final String QUERY_KEY = "query";
+    public static final String PROPERTY_KEY = "property";
     public static final String TEXT_KEY = "text";
     public static final String TAG_KEY = "tag";
     public static final String DEPTH_KEY = "depth";
@@ -18,4 +21,6 @@ public final class RequestConstants {
     public static final String FORCE_KEY = "force";
     public static final String FILTER_KEY = "filter";
     public static final String ENRICHER_KEY = "enricher";
+    public static final String RELATIONSHIP_TYPE_KEY = "relationshipType";
+    public static final String K_SIZE_KEY = "kSize";
 }

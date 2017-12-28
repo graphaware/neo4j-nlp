@@ -20,6 +20,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.persistence.persisters.*;
 import org.neo4j.graphdb.GraphDatabaseService;
 
@@ -35,6 +36,7 @@ public class PersistenceRegistry {
         register(Sentence.class, new SentencePersister(databaseService, configuration, this));
         register(AnnotatedText.class, new AnnotatedTextPersister(databaseService, configuration, this));
         register(Keyword.class, new KeywordPersister(databaseService, configuration, this));
+        register(VectorContainer.class, new VectorPersister(databaseService, configuration, this));
     }
 
     public final void register(Class clazz, Persister persister) {

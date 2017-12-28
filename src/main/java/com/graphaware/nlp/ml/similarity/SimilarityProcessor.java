@@ -16,6 +16,7 @@
 package com.graphaware.nlp.ml.similarity;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
+import com.graphaware.nlp.dsl.request.SimilarityRequest;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Node;
@@ -33,27 +34,34 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
     private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcessor.class);
 
     private FeatureBasedProcessLogic featureBusinessLogic;
-    private final static String PARAMETER_NAME_QUERY = "query";
-    private final static String PARAMETER_RELATIONSHIP_TYPE = "relationshipType";
+    private VectorProcessLogic vectorBusinessLogic;
 
     //private static final Boolean PARAMETER_NAME_ADJ_ADV = "adjectives_adverbs";
-
-
     @Override
     public void postLoaded() {
         featureBusinessLogic = new FeatureBasedProcessLogic(getDatabase());
+        featureBusinessLogic.start();
+        vectorBusinessLogic = new VectorProcessLogic(getDatabase());
+        vectorBusinessLogic.start();
     }
 
-    public int compute(List<Node> input, String query, String relationshipType, Long depth) {
+    public int compute(SimilarityRequest request) {
+
         int processed;
-        if (depth != null && depth > 0) {
-            processed = computeAllCn5(input, depth.intValue());
+        if (request.getPropertyName() != null) {
+            processed = computeUsingProperty(request.getInput(), request.getPropertyName(), request.getRelationshipType(), request.getkSize());
         } else {
-            processed = computeAll(input, query, relationshipType);
+            Long depth = request.getDepth();
+            if (depth != null && depth > 0) {
+                processed = computeAllCn5(request.getInput(), depth.intValue());
+            } else {
+                processed = computeAll(request.getInput(), request.getQuery(), request.getRelationshipType());
+            }
         }
+
         return processed;
     }
-    
+
     public int computeAll(List<Node> input, String query, String relationshipType) {
         int processed = 0;
         List<Long> firstNodeIds = getNodesFromInput(input);
@@ -96,6 +104,12 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
         int processed = 0;
         List<Long> firstNodeIds = getNodesFromInput(input);
         processed = featureBusinessLogic.computeFeatureSimilarityForNodes(firstNodeIds, depth);
+        return processed;
+    }
+
+    private int computeUsingProperty(List<Node> input, String propertyName, String relationshipType, int kSize) {
+        int processed = 0;
+        processed = vectorBusinessLogic.computeFeatureSimilarityForNodes(input, propertyName, relationshipType, kSize);
         return processed;
     }
 }

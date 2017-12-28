@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.graphaware.nlp.domain.Constants.KNN_SIZE;
+import static com.graphaware.nlp.util.TypeConverter.getFloatValue;
+import java.util.concurrent.Executors;
 
 public class FeatureBasedProcessLogic {
 
@@ -69,6 +71,10 @@ public class FeatureBasedProcessLogic {
         this.similarityFunction = new CosineSimilarity();
         this.queueProcessor = new SimilarityQueueProcessor(database);
         this.database = database;
+    }
+    
+    public void start() {
+        Executors.newSingleThreadExecutor().execute(queueProcessor);
     }
 
     private final Cache<Long, Map<Long, Float>> tfCache
@@ -230,22 +236,4 @@ public class FeatureBasedProcessLogic {
         queueProcessor.offer(new SimilarityItemProcessEntry(firstNodeId, kNN));
     }
 
-    protected float getFloatValue(Object value) {
-        if (value == null) {
-            return 1.0f;
-        }
-        if (value instanceof Double) {
-            return ((Double) value).floatValue();
-        }
-        if (value instanceof Float) {
-            return ((Float) value);
-        } else {
-            try {
-                return Float.valueOf(String.valueOf(value));
-            } catch (Exception ex) {
-                LOG.error("Error while parsing float value from string: " + value, ex);
-                return 1.0f;
-            }
-        }
-    }
 }
