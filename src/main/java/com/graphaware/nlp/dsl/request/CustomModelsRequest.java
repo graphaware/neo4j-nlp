@@ -56,7 +56,7 @@ public class CustomModelsRequest {
         result.setAlg((String) request.get(PARAMETER_ALG));
         result.setModelID((String) request.get(PARAMETER_MODEL_ID));
         result.setInputFile((String) request.get(PARAMETER_INPUT_FILE));
-        result.setLanguage((String) request.getOrDefault(PARAMETER_LANG, DEFAULT_LANG));
+        result.setLanguage((String) request.getOrDefault(PARAMETER_ALG, DEFAULT_LANG));
 
         if (request.containsKey(PARAMETER_TRAINING_PARAMS)) {
             result.setTrainingParameters((Map) request.get(PARAMETER_TRAINING_PARAMS));

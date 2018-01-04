@@ -26,13 +26,13 @@ public class PipelineInfo {
 
     public Map<String, Object> options;
 
-    public Map<String, Boolean> specifications;
+    public Map<String, Object> specifications;
 
     public long numberOfThreads;
 
     public List<String> stopwords;
 
-    public PipelineInfo(String name, String textProcessorClass, Map<String, Object> options, Map<String, Boolean> specifications, int numberOfThreads, List<String> stopwords) {
+    public PipelineInfo(String name, String textProcessorClass, Map<String, Object> options, Map<String, Object> specifications, int numberOfThreads, List<String> stopwords) {
         this.name = name;
         this.textProcessorClass = textProcessorClass;
         this.options = options;
@@ -53,7 +53,7 @@ public class PipelineInfo {
         return options;
     }
 
-    public Map<String, Boolean> getSpecifications() {
+    public Map<String, Object> getSpecifications() {
         return specifications;
     }
 
