@@ -122,8 +122,6 @@ public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
         return annotatedText;
     }
 
-
-
     private AnnotatedText createAnnotatedTextWithSameTagInSameTextWithDifferentPos() {
         AnnotatedText annotatedText = new AnnotatedText();
         AtomicInteger inc = new AtomicInteger();

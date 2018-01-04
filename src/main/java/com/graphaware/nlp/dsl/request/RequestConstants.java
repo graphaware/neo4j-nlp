@@ -23,4 +23,7 @@ public final class RequestConstants {
     public static final String ENRICHER_KEY = "enricher";
     public static final String RELATIONSHIP_TYPE_KEY = "relationshipType";
     public static final String K_SIZE_KEY = "kSize";
+    public static final String ANNOTATORS = "annotators";
+    public static final String EXCLUDED_NER = "excludedNER";
+    public static final String EXCLUDED_POS = "excludedPOS";
 }

@@ -22,6 +22,13 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractTextProcessor implements TextProcessor{
 
+    public static final String STEP_TOKENIZE = "tokenize";
+    public static final String STEP_NER = "ner";
+    public static final String STEP_PHRASE = "phrase";
+    public static final String STEP_DEPENDENCY = "dependency";
+    public static final String STEP_SENTIMENT = "sentiment";
+
+    public static final String DEFAULT_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
     public static final String PUNCT_REGEX_PATTERN = "^([a-z0-9]+)([-_][a-z0-9]+)*$";
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);

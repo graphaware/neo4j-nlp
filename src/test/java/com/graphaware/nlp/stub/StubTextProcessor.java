@@ -3,6 +3,7 @@ package com.graphaware.nlp.stub;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Phrase;
+import com.graphaware.nlp.processor.AbstractTextProcessor;
 import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
@@ -88,6 +89,37 @@ public class StubTextProcessor implements TextProcessor {
             }
             Phrase phrase = new Phrase(stext);
             sentence.addPhraseOccurrence(0, stext.length(), phrase);
+            annotatedText.addSentence(sentence);
+            sentenceNumber++;
+        }
+
+        return annotatedText;
+    }
+
+    @Override
+    public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
+        this.lastPipelineUsed = "CORE";
+        AnnotatedText annotatedText = new AnnotatedText();
+        String[] sentencesSplit = text.split("\\.");
+        int sentenceNumber = 0;
+        for (String stext : sentencesSplit) {
+            String[] parts = stext.split(" ");
+            int pos = 0;
+            final Sentence sentence = new Sentence(stext, sentenceNumber);
+            for (String token : parts) {
+                Tag tag = new Tag(token, lang);
+                if (!pipelineSpecification.getExcludedNER().contains("test")) {
+                    tag.setNe(Collections.singletonList("test"));
+                }
+                tag.setPos(Collections.singletonList("TESTVB"));
+                int begin = pos;
+                pos += token.length() + 1;
+                sentence.addTagOccurrence(begin, pos, token, sentence.addTag(tag));
+            }
+            if (pipelineSpecification.hasProcessingStep("phrase")) {
+                Phrase phrase = new Phrase(stext);
+                sentence.addPhraseOccurrence(0, stext.length(), phrase);
+            }
             annotatedText.addSentence(sentence);
             sentenceNumber++;
         }

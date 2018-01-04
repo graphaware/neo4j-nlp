@@ -130,12 +130,36 @@ public final class NLPManager {
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
         String lang = checkTextLanguage(text, checkForLanguage);
-        String pipeline = getPipeline(pipelineName);
-        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
+        String pipeline = null;
+        TextProcessor processor = null;
+        try {
+            pipeline = getPipeline(pipelineName);
+            processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
+        } catch (Exception e) {
+            pipeline = pipelineName;
+            PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipelineName);
+            processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+            AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
+
+            return processAnnotationPersist(id, text, at);
+        }
+
         AnnotatedText annotatedText = processor.annotateText(
                 text, pipeline, lang, null
         );
 
+        return processAnnotationPersist(id, text, annotatedText);
+    }
+
+    public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {
+        String lang = checkTextLanguage(text, checkForLanguage);
+        TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        AnnotatedText annotatedText = processor.annotateText(text, lang, pipelineSpecification);
+
+        return processAnnotationPersist(id, text, annotatedText);
+    }
+
+    public Node processAnnotationPersist(String id, String text, AnnotatedText annotatedText) {
         String txId = String.valueOf(System.currentTimeMillis());
         Node annotatedNode = persistAnnotatedText(annotatedText, id, txId);
         TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId);
@@ -166,11 +190,23 @@ public final class NLPManager {
                 }
             });
         });
+
+        for (PipelineSpecification ps : configuration.loadCustomPipelines()) {
+            list.add(new PipelineInfo(
+                    ps.getName(),
+                    ps.getTextProcessor(),
+                    Collections.emptyMap(),
+                    ps.getProcessingSteps(),
+                    Integer.valueOf(String.valueOf(ps.getThreadNumber())),
+                    Arrays.asList(ps.getStopWords())
+
+            ));
+        }
+
         return list;
     }
 
     public void removePipeline(String pipeline, String processor) {
-        getTextProcessorsManager().getTextProcessor(processor).removePipeline(pipeline);
         configuration.removePipeline(pipeline, processor);
     }
 
@@ -228,7 +264,10 @@ public final class NLPManager {
     }
 
     public void addPipeline(PipelineSpecification request) {
-        textProcessorsManager.createPipeline(request);
+        // Check that the textProcessor exist !
+        if (null == request.getTextProcessor() || textProcessorsManager.getTextProcessor(request.getTextProcessor()) == null) {
+            throw new RuntimeException(String.format("Invalid text processor %s", request.getTextProcessor()));
+        }
         configuration.storeCustomPipeline(request);
     }
 

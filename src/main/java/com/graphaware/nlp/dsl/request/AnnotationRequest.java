@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,12 @@ public class AnnotationRequest extends AbstractProcedureRequest {
     private boolean force;
 
     private boolean checkLanguage = true;
+
+    private List<String> annotators = new ArrayList<>();
+
+    private List<String> excludedNER = new ArrayList<>();
+
+    private List<String> excludedPOS = new ArrayList<>();
 
     public AnnotationRequest() {
 
@@ -56,7 +63,10 @@ public class AnnotationRequest extends AbstractProcedureRequest {
                 TEXT_KEY,
                 PIPELINE_KEY,
                 FORCE_KEY,
-                CHECK_LANGUAGE_KEY
+                CHECK_LANGUAGE_KEY,
+                ANNOTATORS,
+                EXCLUDED_NER,
+                EXCLUDED_POS
         );
     }
 
@@ -101,5 +111,17 @@ public class AnnotationRequest extends AbstractProcedureRequest {
 
     public boolean shouldCheckLanguage() {
         return checkLanguage;
+    }
+
+    public List<String> getAnnotators() {
+        return annotators;
+    }
+
+    public List<String> getExcludedNER() {
+        return excludedNER;
+    }
+
+    public List<String> getExcludedPOS() {
+        return excludedPOS;
     }
 }

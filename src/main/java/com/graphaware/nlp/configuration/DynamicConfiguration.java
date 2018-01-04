@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DynamicConfiguration {
 
@@ -125,6 +126,25 @@ public class DynamicConfiguration {
         });
 
         return list;
+    }
+
+    public PipelineSpecification loadPipeline(String name) {
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        AtomicReference<PipelineSpecification> result = new AtomicReference<>();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(PIPELINE_KEY_PREFIX)) {
+                try {
+                    PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
+                    if (pipelineSpecification.getName().equals(name)) {
+                        result.set(pipelineSpecification);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e.getMessage());
+                }
+            }
+        });
+
+        return result.get();
     }
 
     public void removePipeline(String name, String textProcessor) {

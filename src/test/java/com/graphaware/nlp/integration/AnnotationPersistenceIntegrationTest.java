@@ -4,6 +4,7 @@ import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.SentimentLabels;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
@@ -18,7 +19,10 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -246,6 +250,29 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         tester.assertSentenceWithIdHasSentimentLabel("123_0", SentimentLabels.VeryPositive.toString());
         assertEquals("tokenizer",
                 ((StubTextProcessor) manager.getTextProcessorsManager().getTextProcessor("com.graphaware.nlp.stub.StubTextProcessor")).getLastPipelineUsed());
+    }
+
+    @Test
+    public void testAnnotationWithCustomPipeline() {
+        Map<String, Object> spec = new HashMap<>();
+        spec.put("name", "my-pipeline");
+        spec.put("textProcessor", StubTextProcessor.class.getName());
+        spec.put("processingSteps", Collections.singletonMap("tokenize", true));
+        spec.put("excludedNER", Collections.singletonList("test"));
+        PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(spec);
+        getNLPManager().addPipeline(pipelineSpecification);
+        try (Transaction tx = getDatabase().beginTx()) {
+            manager.annotateTextAndPersist(
+                    "hello my name is John. I am working for IBM. I live in Italy",
+                    "123-fff",
+                    true,
+                    pipelineSpecification
+            );
+            tx.success();
+        }
+
+        TestNLPGraph tester = new TestNLPGraph(getDatabase());
+        tester.assertNodesCount("test", 0);
     }
 
 
