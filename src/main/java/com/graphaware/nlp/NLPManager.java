@@ -130,15 +130,20 @@ public final class NLPManager {
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
         String lang = checkTextLanguage(text, checkForLanguage);
-        String pipeline = getPipeline(pipelineName);
-        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipelineName);
-        if (textProcessor == null && pipelineSpecification != null) {
-            TextProcessor tp = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
-            AnnotatedText at = tp.annotateText(text, lang, pipelineSpecification);
+        String pipeline = null;
+        TextProcessor processor = null;
+        try {
+            pipeline = getPipeline(pipelineName);
+            processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
+        } catch (Exception e) {
+            pipeline = pipelineName;
+            PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipelineName);
+            processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+            AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
 
             return processAnnotationPersist(id, text, at);
         }
-        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
+
         AnnotatedText annotatedText = processor.annotateText(
                 text, pipeline, lang, null
         );
