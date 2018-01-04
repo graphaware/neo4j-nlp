@@ -42,6 +42,8 @@ public interface TextProcessor {
 
     AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
 
+    AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification);
+
     Tag annotateSentence(String text, String lang);
 
     Tag annotateTag(String text, String lang);

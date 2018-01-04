@@ -15,8 +15,12 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 
 public class PipelineSpecification {
 
@@ -32,6 +36,10 @@ public class PipelineSpecification {
 
     private long threadNumber;
 
+    private List<String> excludedNER = new ArrayList<>();
+
+    private List<String> excludedPOS = new ArrayList<>();
+
     public PipelineSpecification() {
 
     }
@@ -41,6 +49,9 @@ public class PipelineSpecification {
         pipelineSpecification.setThreadNumber(map.containsKey("threadNumber") ? ((Number) map.get("threadNumber")).longValue() : DEFAULT_THREAD_NUMBER);
         if (map.containsKey("processingSteps")) {
             pipelineSpecification.setProcessingSteps((Map) map.get("processingSteps"));
+        }
+        if (map.containsKey(EXCLUDED_NER)) {
+            pipelineSpecification.setExcludedNER((List<String>) map.get(EXCLUDED_NER));
         }
 
         return pipelineSpecification;
@@ -93,5 +104,25 @@ public class PipelineSpecification {
 
     public void setProcessingSteps(Map<String, Boolean> processingSteps) {
         this.processingSteps = processingSteps;
+    }
+
+    public Map<String, Boolean> getProcessingSteps() {
+        return processingSteps;
+    }
+
+    public List<String> getExcludedNER() {
+        return excludedNER;
+    }
+
+    public void setExcludedNER(List<String> excludedNER) {
+        this.excludedNER = excludedNER;
+    }
+
+    public List<String> getExcludedPOS() {
+        return excludedPOS;
+    }
+
+    public void setExcludedPOS(List<String> excludedPOS) {
+        this.excludedPOS = excludedPOS;
     }
 }
