@@ -130,12 +130,12 @@ public class StubTextProcessor implements TextProcessor {
     }
 
     @Override
-    public String train(String project, String alg, String model, String file, String lang, Map<String, String> params) {
+    public String train(String alg, String modelId, String file, String lang, Map<String, Object> params) {
         return null;
     }
 
     @Override
-    public String test(String project, String alg, String model, String file, String lang) {
+    public String test(String alg, String modelId, String file, String lang) {
         return null;
     }
 

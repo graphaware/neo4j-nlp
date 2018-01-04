@@ -24,6 +24,7 @@ import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
 import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
+import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.enrich.Enricher;
@@ -294,5 +295,10 @@ public final class NLPManager {
         VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
         getPersister(vectorNode.getClass()).persist(vectorNode, null, null);
         return request.getInput();
+    }
+
+    public String train(CustomModelsRequest request) {
+        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
+        return processor.train(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage(), request.getTrainingParameters());
     }
 }
