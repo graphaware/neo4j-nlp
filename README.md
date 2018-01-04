@@ -103,6 +103,28 @@ For example, the basic `tokenizer` pipeline has the following components :
 * Part Of Speech Tagging
 * Named Entity Recognition
 
+It is also possible to create a custom pipeline:
+
+```
+CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customStopWords', processingSteps: {tokenize: true, ner: true, dependency: false}, stopWords: '+,result, all, during', 
+threadNumber: 20})
+```
+
+The available optional parameters (default values are in brackets):
+* `name`: desired name of a new pipeline
+* `textProcessor`: to which text processor should the new pipeline be added
+* `processingSteps`: pipeline configuration (available in both Stanford and OpenNLP unless stated otherwise)
+  * `tokenize` (default: true): perform tokenization
+  * `ner` (default: true): Named Entity Recognition
+  * `sentiment` (default: false): run sentiment analysis on sentences
+  * `coref` (default: false): Coreference Resolution (identify multiple mentions of the same entity, such as "Barack Obama" and "he")
+  * `relations` (default: false): run relations identification between two tokens
+  * `dependency`  (default: false, StanfordNLP only): extract typed dependencies (ex.: amod - adjective modifier, conj - conjunct, ...)
+  * `cleanxml`  (default: false, StanfordNLP only): remove XML tags
+  * `truecase`  (default: false, StanfordNLP only): recognizes the "true" case of tokens (how they would be capitalized in well-edited text) 
+* `stopWords`: specify words that are required to be ignored (if the list starts with +, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
+* `threadNumber` (default: 4): for multi-threading
+
 
 #### Example
 
@@ -204,7 +226,7 @@ Available optional parameters (default values are in brackets):
 * `cleanKeywords` (true): run cleaning procedure
 * `topXTags` (1/3): set a fraction of highest-rated tags that will be used as keywords / key phrases
 * `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
-* `stopwords`: customize stopwords list (it it starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
+* `stopwords`: customize stopwords list (if the list starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
 * `respectSentences` (false): respect or not sentence boundaries for co-occurrence graph building
 * `respectDirections` (false): respect or not directions in co-occurrence graph (how the words follow each other)
 * `iterations` (30): number of PageRank iterations
