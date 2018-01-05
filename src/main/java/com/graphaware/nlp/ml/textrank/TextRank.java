@@ -155,7 +155,7 @@ public class TextRank {
 
     private void initializePipelineWithoutNEs() {
         //System.out.println(" >>> default processor: " + NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor().getAlias());
-        Map<String, Boolean> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("tokenize", true);
         params.put("ner", false);
         PipelineSpecification ps = new PipelineSpecification(PIPELINE_WITHOUT_NER, null);

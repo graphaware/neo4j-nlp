@@ -22,7 +22,6 @@ import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
-import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

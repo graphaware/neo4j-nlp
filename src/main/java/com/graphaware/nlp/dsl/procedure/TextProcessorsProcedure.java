@@ -69,11 +69,23 @@ public class TextProcessorsProcedure extends AbstractDSL {
     }
 
     @Procedure(name = "ga.nlp.processor.train", mode = Mode.WRITE)
-    @Description("Procedure for training/testing custom models.")
+    @Description("Procedure for training custom models.")
     public Stream<SingleResult> train(@Name("customModelsRequest") Map<String, Object> customModelsRequest) {
         try {
             CustomModelsRequest request = CustomModelsRequest.fromMap(customModelsRequest);
             Object result = getNLPManager().train(request);
+            return Stream.of(new SingleResult(result));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.processor.test", mode = Mode.WRITE)
+    @Description("Procedure for testing custom models.")
+    public Stream<SingleResult> test(@Name("customModelsRequest") Map<String, Object> customModelsRequest) {
+        try {
+            CustomModelsRequest request = CustomModelsRequest.fromMap(customModelsRequest);
+            Object result = getNLPManager().test(request);
             return Stream.of(new SingleResult(result));
         } catch (Exception e) {
             throw new RuntimeException(e);
