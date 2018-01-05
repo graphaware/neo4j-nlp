@@ -340,4 +340,9 @@ public final class NLPManager {
         TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
         return processor.train(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage(), request.getTrainingParameters());
     }
+
+    public String test(CustomModelsRequest request) {
+        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
+        return processor.test(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage());
+    }
 }
