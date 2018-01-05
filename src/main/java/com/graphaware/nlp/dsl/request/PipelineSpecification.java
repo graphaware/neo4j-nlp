@@ -111,7 +111,7 @@ public class PipelineSpecification {
     public void setProcessingSteps(Map<String, Object> processingSteps) {
         this.processingSteps = processingSteps;
     }
-
+    
     public Map<String, Object> getProcessingSteps() {
         return processingSteps;
     }
