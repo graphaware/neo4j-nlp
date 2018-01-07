@@ -27,8 +27,8 @@ import java.util.stream.IntStream;
 
 public class CosineFunctions {
 
-    @UserFunction
-    @Description("com.graphaware.nlp.ml.similarity.cosine([1.2, 2.3, 3.1], [1.3,0,2.4]) - compute cosine similarity between them")
+    @UserFunction(name = "ga.nlp.ml.similarity.cosine")
+    @Description("ga.nlp.ml.similarity.cosine([1.2, 2.3, 3.1], [1.3,0,2.4]) - compute cosine similarity between them")
     public double cosine(
             @Name("vector1") List<Double> vector1,
             @Name("vector2") List<Double> vector2) {
