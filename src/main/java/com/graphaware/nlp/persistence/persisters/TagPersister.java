@@ -66,6 +66,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         if (shouldBeUpdated(tag, node)) {
             assignNamedEntityOnTag(node, tag);
             assignPartOfSpeechOnTag(node, tag);
+            storeExtraProperties(tag, node);
         }
 
         if (!checkSameTransaction(node, txId)) {
@@ -102,6 +103,12 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
                 if (!original.contains(s)) {
                     return true;
                 }
+            }
+        }
+
+        for (String k : tag.getExtraProperties().keySet()) {
+            if (!tagNode.hasProperty(k)) {
+                return true;
             }
         }
 
@@ -146,6 +153,12 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
                 .forEach(allPos::add);
 
         tagNode.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), TypeConverter.convertStringListToArray(allPos));
+    }
+
+    private void storeExtraProperties(Tag tag, Node tagNode) {
+        for (String k : tag.getExtraProperties().keySet()) {
+            tagNode.setProperty(k, tag.getExtraProperties().get(k));
+        }
     }
 
     private void storeTagParent(Node tagNode, Tag tag, String txId) {

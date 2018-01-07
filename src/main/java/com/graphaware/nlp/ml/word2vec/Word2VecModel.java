@@ -51,11 +51,25 @@ public class Word2VecModel {
         }
     }
 
+    public void createModelFromPaths(String sourcePath, String destPath, String modelName) {
+        List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(sourcePath, destPath);
+        if (modelsName != null) {
+            modelsName.forEach(model -> {
+                Word2VecIndexLookup index = new Word2VecIndexLookup(destPath + model);
+                models.put(modelName, index);
+            });
+        }
+    }
+
+    public Map<String, Word2VecIndexLookup> getModels() {
+        return models;
+    }
+
     public double[] getWordToVec(String lemma, String modelName) {
         if (models.isEmpty()) {
             return null;
         }
-        if (modelName == null) {
+        if (modelName == null || modelName.equals("")) {
             return models.get(defaultModel).searchIndex(lemma);
         } else if (models.containsKey(modelName)) {
             return models.get(modelName).searchIndex(lemma);
