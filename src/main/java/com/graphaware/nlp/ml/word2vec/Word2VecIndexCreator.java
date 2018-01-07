@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Word2VecIndexCreator {
@@ -126,6 +127,9 @@ public class Word2VecIndexCreator {
                 continue;
             }
             String fileName = file.getName();
+            if (isIgnorableFile(fileName)) {
+                continue;
+            }
             String[] sp = fileName.split("-");
             String modelName = sp[0];
             LOG.info("Custom models: Found file " + fileName + ". Assigned name: " + modelName);
@@ -135,5 +139,11 @@ public class Word2VecIndexCreator {
         }
 
         return modelNames;
+    }
+
+    private static boolean isIgnorableFile(String filename) {
+        List<String> ignores = Arrays.asList(".DS_Store");
+
+        return ignores.contains(filename);
     }
 }

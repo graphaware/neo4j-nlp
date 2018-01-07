@@ -78,12 +78,19 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
-    public void testGettingVectorWithUserFunction() {
+    public void testGettingVectorForTagWithUserFunction() {
         executeInTransaction("CALL ga.nlp.annotate({text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         executeInTransaction("MATCH (n:Tag) WHERE n.value = 'agriculturist' RETURN ga.nlp.ml.word2vec.vector(n, 'numberbatch') AS vector", (result -> {
             assertTrue(result.hasNext());
             List<Double> vector = (List<Double>) ((Map<String, Object>) result.next()).get("vector");
             assertEquals(-0.0129, vector.get(2), 1.0d);
+        }));
+    }
+
+    @Test
+    public void testGettingVectorForWordWithUserFunction() {
+        executeInTransaction("RETURN ga.nlp.ml.word2vec.wordVector('agriculturist') AS vector", (result -> {
+            assertTrue(result.hasNext());
         }));
     }
 }

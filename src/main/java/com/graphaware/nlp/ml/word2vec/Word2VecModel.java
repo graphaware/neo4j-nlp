@@ -69,7 +69,7 @@ public class Word2VecModel {
         if (models.isEmpty()) {
             return null;
         }
-        if (modelName == null) {
+        if (modelName == null || modelName.equals("")) {
             return models.get(defaultModel).searchIndex(lemma);
         } else if (models.containsKey(modelName)) {
             return models.get(modelName).searchIndex(lemma);
