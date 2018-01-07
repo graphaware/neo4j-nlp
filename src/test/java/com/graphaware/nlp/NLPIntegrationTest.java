@@ -13,6 +13,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -85,6 +86,18 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         }
 
         return result;
+    }
+
+    protected Map<String, Object> buildSeqParameters(Object ...parameters) {
+        int i = 0;
+        Map<String, Object> map = new HashMap<>();
+        for (Object o : parameters) {
+            String k = "p" + i;
+            map.put(k, o);
+            ++i;
+        }
+
+        return map;
     }
 
 }
