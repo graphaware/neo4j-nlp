@@ -29,20 +29,4 @@ public class Word2VecIndexTest {
         double[] searchIndex = lookup.searchIndex("agriculturist");
         assertTrue(-0.0129d == searchIndex[2]);
     }
-
-    @Test
-    public void testLookUp() {
-        Word2VecIndexLookup lookup = new Word2VecIndexLookup(indexPath);
-        double[] results = lookup.searchIndex("agriculturist");
-        for(double r : results) {
-            System.out.println(r);
-        }
-    }
-
-    @Test
-    public void testLookupWithProcessor() {
-        Word2VecProcessor processor = new Word2VecProcessor();
-        System.out.println(processor.getWord2Vec("agriculturist", null));
-    }
-    
 }

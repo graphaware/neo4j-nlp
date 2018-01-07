@@ -18,10 +18,17 @@ package com.graphaware.nlp.dsl.procedure;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
+import com.graphaware.nlp.dsl.result.Word2VecModelResult;
+import com.graphaware.nlp.ml.word2vec.Word2VecIndexLookup;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
+import org.apache.commons.lang.ArrayUtils;
 import org.neo4j.graphdb.Node;
 import org.neo4j.procedure.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -35,11 +42,36 @@ public class Word2VecProcedure extends AbstractDSL {
         int processed = word2VecProcessor.attach(request);
         return Stream.of(new SingleResult(processed));
     }
-//
-//    @UserFunction(name = "ga.nlp.ml.word2vec.getVector")
-//    @Description("Retrieve the embedding vector for the given Tag node")
-//    public SingleResult retrieveVector(@Name("tag") Node tag) {
-//        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-//        return new SingleResult(word2VecProcessor.getWord2Vec(tag.getProperty("value").toString(), null));
-//    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.listModels", mode = Mode.WRITE)
+    public Stream<Word2VecModelResult> listModels() {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        Map<String, Word2VecIndexLookup> models = word2VecProcessor.getWord2VecModel().getModels();
+        List<Word2VecModelResult> results = new ArrayList<>();
+        models.keySet().forEach(s -> {
+            try {
+                results.add(new Word2VecModelResult(s, models.get(s).getStorePath(), models.get(s).countIndex()));
+            } catch (IOException e) {
+                //
+            }
+        });
+
+        return results.stream();
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.addModel", mode = Mode.WRITE)
+    public Stream<SingleResult> addModel(@Name("sourePath") String sourcePath, @Name("destinationPath") String destinationPath, @Name("modelName") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        word2VecProcessor.getWord2VecModel().createModelFromPaths(sourcePath, destinationPath, modelName);
+
+        return Stream.of(SingleResult.success());
+    }
+
+    @UserFunction(name = "ga.nlp.ml.word2vec.vector")
+    @Description("Retrieve the embedding vector for the given Tag node")
+    public List<Double> retrieveVector(@Name("tag") Node tag, @Name(value = "modelName", defaultValue = "") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        Double[] doubleArray = ArrayUtils.toObject(word2VecProcessor.getWord2Vec(tag.getProperty("value").toString(), modelName));
+        return Arrays.asList(doubleArray);
+    }
 }

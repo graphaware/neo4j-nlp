@@ -40,12 +40,14 @@ public class Word2VecIndexLookup {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
+    private final String storePath;
     private final IndexReader indexReader;
     private final IndexSearcher indexSearcher;
     
     private final Set<String> fieldsToLoad;
 
     public Word2VecIndexLookup(String storePath) {
+        this.storePath = storePath;
         try {
             indexReader = DirectoryReader.open(FSDirectory.open(Paths.get(storePath)));;
             indexSearcher = new IndexSearcher(indexReader);
@@ -55,6 +57,14 @@ public class Word2VecIndexLookup {
         } catch (IOException ex) {
             throw new RuntimeException("Error while creating index", ex);
         }
+    }
+
+    public long countIndex() throws IOException {
+        return indexSearcher.collectionStatistics(Word2VecIndexCreator.WORD_FIELD).docCount();
+    }
+
+    public String getStorePath() {
+        return storePath;
     }
 
     public double[] searchIndex(String searchString) {
