@@ -1,6 +1,7 @@
 package com.graphaware.nlp;
 
 import com.graphaware.common.kv.GraphKeyValueStore;
+import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.runtime.GraphAwareRuntime;
@@ -57,6 +58,10 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
             resultConsumer.accept(getDatabase().execute(query, p));
             tx.success();
         }
+    }
+
+    protected Word2VecProcessor getWord2VecProcessor() {
+        return (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
     }
 
     protected void clearDb() {

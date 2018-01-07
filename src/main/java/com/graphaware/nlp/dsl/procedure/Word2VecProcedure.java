@@ -19,10 +19,8 @@ import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
-import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Mode;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.Procedure;
+import org.neo4j.graphdb.Node;
+import org.neo4j.procedure.*;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -31,11 +29,17 @@ public class Word2VecProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.word2vec.attach", mode = Mode.WRITE)
     @Description("For each tag attach the related word2vec value")
-    public Stream<SingleResult> applySentiment(@Name("input") Map<String, Object> word2VecRequest) {
+    public Stream<SingleResult> attachConcepts(@Name("input") Map<String, Object> word2VecRequest) {
         Word2VecRequest request = Word2VecRequest.fromMap(word2VecRequest);
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
         int processed = word2VecProcessor.attach(request);
         return Stream.of(new SingleResult(processed));
     }
-
+//
+//    @UserFunction(name = "ga.nlp.ml.word2vec.getVector")
+//    @Description("Retrieve the embedding vector for the given Tag node")
+//    public SingleResult retrieveVector(@Name("tag") Node tag) {
+//        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+//        return new SingleResult(word2VecProcessor.getWord2Vec(tag.getProperty("value").toString(), null));
+//    }
 }

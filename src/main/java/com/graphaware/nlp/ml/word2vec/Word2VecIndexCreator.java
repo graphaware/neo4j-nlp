@@ -74,6 +74,7 @@ public class Word2VecIndexCreator {
     }
 
     private static void indexWord2Vec(IndexWriter writer, String sourceFile) throws IOException {
+
         LineIterator it = FileUtils.lineIterator(new File(sourceFile), "UTF-8");
         try {
             while (it.hasNext()) {
@@ -81,7 +82,15 @@ public class Word2VecIndexCreator {
                 String[] split = line.split(" ");
                 if (split != null && split.length > 2) {
                     Document doc = new Document();
-                    doc.add(new StringField(WORD_FIELD, split[0], Field.Store.YES));
+                    String word = split[0];
+                    String wordToUse = split[0];
+                    if (word.startsWith("/c/") && !word.startsWith("/c/en/")) {
+                        continue;
+                    }
+                    if (word.startsWith("/c/en")) {
+                        wordToUse = wordToUse.replace("/c/en/", "").trim();
+                    }
+                    doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
                     double[] vector = new double[split.length - 1];
                     for (int i = 0; i < split.length - 1; i++) {
                         vector[i] = Double.parseDouble(split[i + 1]);
@@ -108,6 +117,9 @@ public class Word2VecIndexCreator {
             return modelNames;
         }
         LOG.info("path = " + path);
+        if (!path.endsWith("/")) {
+            path = path + "/";
+        }
         
         for (File file : listOfFiles) {
             if (!file.isFile()) {
@@ -121,6 +133,7 @@ public class Word2VecIndexCreator {
                 modelNames.add(modelName);
             }
         }
+
         return modelNames;
     }
 }
