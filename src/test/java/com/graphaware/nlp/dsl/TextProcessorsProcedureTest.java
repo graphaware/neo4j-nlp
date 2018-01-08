@@ -78,6 +78,23 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         assertEquals("my-model", pipelineSpecification.getProcessingStepAsString("customSentiment"));
     }
 
+    @Test
+    public void testCustomPipelineWithSentimentModelShouldDisplayModelNameInPipelineInfo() {
+        clearDb();
+        removeCustomPipelines();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"', processingSteps:{customSentiment:'my-model'}})", emptyConsumer());
+        PipelineSpecification pipelineSpecification = getNLPManager().getConfiguration().loadPipeline("custom-1");
+        assertEquals("my-model", pipelineSpecification.getProcessingStepAsString("customSentiment"));
+        executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                Map<String, Object> record = (Map<String, Object>) result.next();
+                Map<String, Object> specs = (Map<String, Object>) record.get("specifications");
+                assertEquals("my-model", specs.get("customSentiment"));
+            }
+        }));
+    }
+
     private void removeCustomPipelines() {
         try (Transaction tx = getDatabase().beginTx()) {
             getNLPManager().getConfiguration().loadCustomPipelines().forEach(pipelineSpecification -> {

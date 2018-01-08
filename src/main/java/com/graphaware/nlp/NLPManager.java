@@ -197,7 +197,7 @@ public final class NLPManager {
                     ps.getName(),
                     ps.getTextProcessor(),
                     Collections.emptyMap(),
-                    ps.getProcessingSteps(),
+                    ps.getProcessingStepsAsStrings(),
                     Integer.valueOf(String.valueOf(ps.getThreadNumber())),
                     Arrays.asList(ps.getStopWords())
 
