@@ -56,8 +56,8 @@ public interface TextProcessor {
 
     void removePipeline(String pipeline);
 
-    String train(String project, String alg, String model, String file, String lang, Map<String, String> params);
+    String train(String alg, String modelId, String file, String lang, Map<String, Object> params);
 
-    String test(String project, String alg, String model, String file, String lang);
+    String test(String alg, String modelId, String file, String lang);
 
 }

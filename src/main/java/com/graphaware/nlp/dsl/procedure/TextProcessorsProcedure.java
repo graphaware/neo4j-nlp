@@ -16,6 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
@@ -65,5 +66,29 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Description("Returns the pipeline informations")
     public Stream<PipelineInfo> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
         return getNLPManager().getPipelineInformations(pipelineName).stream();
+    }
+
+    @Procedure(name = "ga.nlp.processor.train", mode = Mode.WRITE)
+    @Description("Procedure for training custom models.")
+    public Stream<SingleResult> train(@Name("customModelsRequest") Map<String, Object> customModelsRequest) {
+        try {
+            CustomModelsRequest request = CustomModelsRequest.fromMap(customModelsRequest);
+            Object result = getNLPManager().train(request);
+            return Stream.of(new SingleResult(result));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.processor.test", mode = Mode.WRITE)
+    @Description("Procedure for testing custom models.")
+    public Stream<SingleResult> test(@Name("customModelsRequest") Map<String, Object> customModelsRequest) {
+        try {
+            CustomModelsRequest request = CustomModelsRequest.fromMap(customModelsRequest);
+            Object result = getNLPManager().test(request);
+            return Stream.of(new SingleResult(result));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

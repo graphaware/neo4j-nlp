@@ -3,6 +3,7 @@ package com.graphaware.nlp.dsl;
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
+import org.apache.commons.lang3.builder.ToStringExclude;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
@@ -65,6 +66,32 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
             assertTrue(result.hasNext());
             assertEquals(1, result.stream().count());
+        }));
+    }
+
+    @Test
+    public void testAddingPipelineWithCustomSentimentModel() {
+        clearDb();
+        removeCustomPipelines();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"', processingSteps:{customSentiment:'my-model'}})", emptyConsumer());
+        PipelineSpecification pipelineSpecification = getNLPManager().getConfiguration().loadPipeline("custom-1");
+        assertEquals("my-model", pipelineSpecification.getProcessingStepAsString("customSentiment"));
+    }
+
+    @Test
+    public void testCustomPipelineWithSentimentModelShouldDisplayModelNameInPipelineInfo() {
+        clearDb();
+        removeCustomPipelines();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"', processingSteps:{customSentiment:'my-model'}})", emptyConsumer());
+        PipelineSpecification pipelineSpecification = getNLPManager().getConfiguration().loadPipeline("custom-1");
+        assertEquals("my-model", pipelineSpecification.getProcessingStepAsString("customSentiment"));
+        executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                Map<String, Object> record = (Map<String, Object>) result.next();
+                Map<String, Object> specs = (Map<String, Object>) record.get("specifications");
+                assertEquals("my-model", specs.get("customSentiment"));
+            }
         }));
     }
 

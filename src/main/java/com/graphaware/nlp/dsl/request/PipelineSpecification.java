@@ -15,10 +15,13 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 
@@ -30,7 +33,7 @@ public class PipelineSpecification {
 
     private String textProcessor;
 
-    private Map<String, Boolean> processingSteps = new HashMap<>();
+    private Map<String, Object> processingSteps = new HashMap<>();
 
     private String stopWords;
 
@@ -71,15 +74,21 @@ public class PipelineSpecification {
     }
 
     public boolean hasProcessingStep(String stepName) {
-        return processingSteps.containsKey(stepName) && processingSteps.get(stepName);
+        return processingSteps.containsKey(stepName) && objectToBoolean(processingSteps.get(stepName));
     }
 
     public boolean hasProcessingStep(String stepName, boolean defaultValue) {
         if (processingSteps.containsKey(stepName)) {
-            return processingSteps.get(stepName);
+            return objectToBoolean(processingSteps.get(stepName));
         }
 
         return defaultValue;
+    }
+
+    public String getProcessingStepAsString(String stepName) {
+        if (!processingSteps.containsKey(stepName))
+            return null;
+        return objectToString(processingSteps.get(stepName));
     }
 
     public void addProcessingStep(String step) {
@@ -102,11 +111,16 @@ public class PipelineSpecification {
         this.threadNumber = threadNumber;
     }
 
-    public void setProcessingSteps(Map<String, Boolean> processingSteps) {
+    public void setProcessingSteps(Map<String, Object> processingSteps) {
         this.processingSteps = processingSteps;
     }
 
     public Map<String, Boolean> getProcessingSteps() {
+        return processingSteps.entrySet().stream().collect(Collectors.toMap(en -> en.getKey(), en -> objectToBoolean(en.getValue())));
+    }
+
+    @JsonProperty("processingSteps")
+    public Map<String, Object> getProcessingStepsAsStrings() {
         return processingSteps;
     }
 
@@ -124,5 +138,33 @@ public class PipelineSpecification {
 
     public void setExcludedPOS(List<String> excludedPOS) {
         this.excludedPOS = excludedPOS;
+    }
+
+    private boolean objectToBoolean(Object obj) {
+        boolean result = false;
+        if (obj instanceof Boolean)
+            result = (Boolean) obj;
+        else if (obj instanceof String)
+            result = !((String) obj).isEmpty();
+        else if (obj instanceof Number)
+            result = true; //((Number) obj).doubleValue() != 0.0d;
+        return result;
+    }
+
+    private String objectToString(Object obj) {
+        String result = null;
+        if (obj instanceof Boolean)
+            result = ((Boolean) obj).toString();
+        else if (obj instanceof String)
+            result = (String) obj;
+        else if (obj instanceof Long)
+            result = ((Long) obj).toString();
+        else if (obj instanceof Integer)
+            result = ((Integer) obj).toString();
+        else if (obj instanceof Float)
+            result = ((Float) obj).toString();
+        else if (obj instanceof Long)
+            result = ((Double) obj).toString();
+        return result;
     }
 }
