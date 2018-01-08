@@ -126,6 +126,11 @@ The available optional parameters (default values are in brackets):
 * `threadNumber` (default: 4): for multi-threading
 * `excludedNER`: (default: none) specify a list of NE to not be recognized in upper case, for example for excluding `NER_Money` and `NER_O` on the Tag nodes, use ['O', 'MONEY']
 
+To delete a pipeline, use this command:
+```
+CALL ga.nlp.processor.removePipeline(<pipeline-name>, <text-processor>)
+```
+
 
 #### Example
 
