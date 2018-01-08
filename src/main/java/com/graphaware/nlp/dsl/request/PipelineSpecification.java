@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 
@@ -113,7 +114,7 @@ public class PipelineSpecification {
     }
 
     public Map<String, Boolean> getProcessingSteps() {
-        return processingSteps.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, objectToBoolean(Map.Entry::getValue)));
+        return processingSteps.entrySet().stream().collect(Collectors.toMap(en -> en.getKey(), en -> objectToBoolean(en.getValue())));
         //return processingSteps;
     }
 
