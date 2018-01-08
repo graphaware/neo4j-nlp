@@ -15,6 +15,8 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -115,6 +117,11 @@ public class PipelineSpecification {
 
     public Map<String, Boolean> getProcessingSteps() {
         return processingSteps.entrySet().stream().collect(Collectors.toMap(en -> en.getKey(), en -> objectToBoolean(en.getValue())));
+    }
+
+    @JsonProperty("processingSteps")
+    public Map<String, Object> getProcessingStepsAsStrings() {
+        return processingSteps;
     }
 
     public List<String> getExcludedNER() {
