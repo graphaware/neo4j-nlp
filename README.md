@@ -167,6 +167,13 @@ MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)
 RETURN result
 ```
 
+Available parameters of `annotate` procedure:
+  * `text`: text to annotate represented as a string
+  * `id`: specify ID that will be used as `id` property of the new AnnotatedText node
+  * `textProcessor` (default: "Stanford", if not available than the first entry in the list of available text processors)
+  * `pipeline` (default: tokenizer)
+  * `checkLanguage` (default: true): run language detection on provided text and check whether it's supported
+
 This procedure will link your original `:News` node to an `:AnnotatedText` node which is the entry point for the graph
 based NLP of this particular News. The original text is broken down into words, parts of speech, and functions.
 This analysis of the text acts as a starting point for the later steps.
