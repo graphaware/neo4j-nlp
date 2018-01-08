@@ -79,7 +79,12 @@ public class Word2VecProcedure extends AbstractDSL {
     @Description("Retrieve the embedding vector for the given word ")
     public List<Double> retrieveVectorForWord(@Name("word") String word, @Name(value = "modelName", defaultValue = "") String modelName) {
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        Double[] doubleArray = ArrayUtils.toObject(word2VecProcessor.getWord2Vec(word, modelName));
+        double[] vector = word2VecProcessor.getWord2Vec(word, modelName);
+        if (vector == null) {
+            return null;
+        }
+        
+        Double[] doubleArray = ArrayUtils.toObject(vector);
         return Arrays.asList(doubleArray);
     }
 }

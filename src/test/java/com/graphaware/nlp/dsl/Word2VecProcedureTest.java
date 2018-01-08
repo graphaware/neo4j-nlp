@@ -88,6 +88,15 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testGettingWordVectorForNonExistingWordReturnsNull() {
+        executeInTransaction("RETURN ga.nlp.ml.word2vec.wordVector('non-value') AS vector", (result -> {
+            assertTrue(result.hasNext());
+            Map<String, Object> record = (Map<String, Object>) result.next();
+            assertNull(record.get("vector"));
+        }));
+    }
+
+    @Test
     public void testGettingVectorForWordWithUserFunction() {
         executeInTransaction("RETURN ga.nlp.ml.word2vec.wordVector('agriculturist') AS vector", (result -> {
             assertTrue(result.hasNext());

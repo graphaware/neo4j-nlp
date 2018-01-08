@@ -57,6 +57,9 @@ public class Word2VecModel {
             modelsName.forEach(model -> {
                 Word2VecIndexLookup index = new Word2VecIndexLookup(destPath + model);
                 models.put(modelName, index);
+                if (defaultModel == null) {
+                    defaultModel = modelName;
+                }
             });
         }
     }
