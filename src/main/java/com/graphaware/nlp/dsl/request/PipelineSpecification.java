@@ -140,7 +140,7 @@ public class PipelineSpecification {
         else if (obj instanceof String)
             result = !((String) obj).isEmpty();
         else if (obj instanceof Number)
-            result = ((Number) obj).doubleValue() != 0.0d;
+            result = true; //((Number) obj).doubleValue() != 0.0d;
         return result;
     }
 
