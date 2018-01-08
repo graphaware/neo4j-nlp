@@ -112,9 +112,9 @@ public class PipelineSpecification {
     public void setProcessingSteps(Map<String, Object> processingSteps) {
         this.processingSteps = processingSteps;
     }
-    
-    public Map<String, Object> getProcessingSteps() {
-        return processingSteps;
+
+    public Map<String, Boolean> getProcessingSteps() {
+        return processingSteps.entrySet().stream().collect(Collectors.toMap(en -> en.getKey(), en -> objectToBoolean(en.getValue())));
     }
 
     public List<String> getExcludedNER() {
