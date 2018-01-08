@@ -115,7 +115,6 @@ public class PipelineSpecification {
 
     public Map<String, Boolean> getProcessingSteps() {
         return processingSteps.entrySet().stream().collect(Collectors.toMap(en -> en.getKey(), en -> objectToBoolean(en.getValue())));
-        //return processingSteps;
     }
 
     public List<String> getExcludedNER() {

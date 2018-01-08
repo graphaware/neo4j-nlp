@@ -94,6 +94,7 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
             extendedTags.stream().forEach((newTag) -> {
                 if (newTag != null) {
                     getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
+
                     affectedTag.incrementAndGet();
                 }
             });
@@ -102,6 +103,14 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
             LOG.error("Error!!!! ", ex);
             throw new RuntimeException("Error", ex);
         }
+    }
+
+    public double[] getWord2Vec(String value, String modelName) {
+        return word2VecModel.getWordToVec(value, modelName);
+    }
+
+    public Word2VecModel getWord2VecModel() {
+        return word2VecModel;
     }
 
     private TextProcessor getProcessor(String processor) throws RuntimeException {
