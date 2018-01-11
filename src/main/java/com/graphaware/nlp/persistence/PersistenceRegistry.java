@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.persistence;
 
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
@@ -31,7 +32,8 @@ public class PersistenceRegistry {
 
     private final Map<Class, Persister> registeredPersisters = new HashMap<>();
 
-    public PersistenceRegistry(GraphDatabaseService databaseService, DynamicConfiguration configuration) {
+    public PersistenceRegistry(GraphDatabaseService databaseService) {
+        DynamicConfiguration configuration = NLPManager.getInstance().getConfiguration();
         register(Tag.class, new TagPersister(databaseService, configuration, this));
         register(Sentence.class, new SentencePersister(databaseService, configuration, this));
         register(AnnotatedText.class, new AnnotatedTextPersister(databaseService, configuration, this));

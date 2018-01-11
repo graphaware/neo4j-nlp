@@ -102,7 +102,7 @@ public final class NLPManager {
         this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager();
         this.database = database;
-        this.persistenceRegistry = new PersistenceRegistry(database, configuration);
+        this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
         this.vectorComputation = new QueryBasedVectorComputation(database);
@@ -278,8 +278,8 @@ public final class NLPManager {
 
     private EnrichmentRegistry buildAndRegisterEnrichers() {
         EnrichmentRegistry registry = new EnrichmentRegistry();
-        registry.register(new ConceptNet5Enricher(database, persistenceRegistry, configuration, textProcessorsManager));
-        registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, configuration, textProcessorsManager));
+        registry.register(new ConceptNet5Enricher(database, persistenceRegistry, textProcessorsManager));
+        registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, textProcessorsManager));
 
         return registry;
     }

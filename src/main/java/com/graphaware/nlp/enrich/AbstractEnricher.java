@@ -16,6 +16,7 @@
 package com.graphaware.nlp.enrich;
 
 import com.graphaware.common.util.Pair;
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
@@ -34,12 +35,12 @@ public class AbstractEnricher {
 
     private final PersistenceRegistry persistenceRegistry;
 
-    private final DynamicConfiguration configuration;
+    private final NLPManager manager;
 
-    public AbstractEnricher(GraphDatabaseService database, PersistenceRegistry persistenceRegistry, DynamicConfiguration configuration) {
+    public AbstractEnricher(GraphDatabaseService database, PersistenceRegistry persistenceRegistry) {
         this.database = database;
         this.persistenceRegistry = persistenceRegistry;
-        this.configuration = configuration;
+        this.manager = NLPManager.getInstance();
     }
 
     protected Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
@@ -92,7 +93,7 @@ public class AbstractEnricher {
     }
 
     public DynamicConfiguration getConfiguration() {
-        return configuration;
+        return manager.getConfiguration();
     }
 
     protected Persister getPersister(Class clazz) {

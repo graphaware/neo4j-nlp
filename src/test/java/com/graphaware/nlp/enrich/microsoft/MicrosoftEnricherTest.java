@@ -1,7 +1,6 @@
 package com.graphaware.nlp.enrich.microsoft;
 
 
-import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.enrich.EnricherAbstractTest;
@@ -21,8 +20,8 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
     @Test
     public void testCanGetConceptsFromMicrosoft() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
-        PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, configuration, new TextProcessorsManager());
+        PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
+        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 
@@ -51,8 +50,8 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
     @Test
     public void testEnricherNameIsSetAsRelationshipProperty() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
-        PersistenceRegistry registry = new PersistenceRegistry(getDatabase(), configuration);
-        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, configuration, new TextProcessorsManager());
+        PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
+        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 

@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.dsl;
 
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPModule;
@@ -32,6 +33,10 @@ public abstract class AbstractDSL {
 
     protected NLPManager getNLPManager() {
         return getStartedRuntime(database).getModule(NLPModule.class).getNlpManager();
+    }
+
+    protected DynamicConfiguration getConfiguration() {
+        return getNLPManager().getConfiguration();
     }
 
 }

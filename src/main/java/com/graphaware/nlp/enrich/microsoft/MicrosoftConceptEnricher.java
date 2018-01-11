@@ -38,9 +38,8 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
     public MicrosoftConceptEnricher(
             GraphDatabaseService database,
             PersistenceRegistry persistenceRegistry,
-            DynamicConfiguration configuration,
             TextProcessorsManager textProcessorsManager) {
-        super(database, persistenceRegistry, configuration);
+        super(database, persistenceRegistry);
         this.textProcessorsManager = textProcessorsManager;
         cfg.getClasses().add(JacksonJsonProvider.class);
     }

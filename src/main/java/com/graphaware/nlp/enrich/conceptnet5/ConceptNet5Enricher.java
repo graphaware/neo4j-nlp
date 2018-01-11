@@ -51,9 +51,8 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     public ConceptNet5Enricher(
             GraphDatabaseService database,
             PersistenceRegistry persistenceRegistry,
-            DynamicConfiguration configuration,
             TextProcessorsManager textProcessorsManager) {
-        super(database, persistenceRegistry, configuration);
+        super(database, persistenceRegistry);
         this.textProcessorsManager = textProcessorsManager;
     }
 
