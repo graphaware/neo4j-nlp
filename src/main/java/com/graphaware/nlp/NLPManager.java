@@ -52,31 +52,31 @@ import org.neo4j.logging.Log;
 
 import java.util.*;
 
-public class NLPManager {
+public final class NLPManager {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
 
     private static NLPManager instance = null;
 
-    protected NLPConfiguration nlpConfiguration;
+    private NLPConfiguration nlpConfiguration;
 
-    protected TextProcessorsManager textProcessorsManager;
+    private TextProcessorsManager textProcessorsManager;
 
     protected GraphDatabaseService database;
 
     protected DynamicConfiguration configuration;
 
-    protected PersistenceRegistry persistenceRegistry;
+    private PersistenceRegistry persistenceRegistry;
 
-    protected EnrichmentRegistry enrichmentRegistry;
+    private EnrichmentRegistry enrichmentRegistry;
     
-    protected QueryBasedVectorComputation vectorComputation;
+    private QueryBasedVectorComputation vectorComputation;
 
-    protected final Map<Class, NLPExtension> extensions = new HashMap<>();
+    private final Map<Class, NLPExtension> extensions = new HashMap<>();
 
-    protected EventDispatcher eventDispatcher;
+    private EventDispatcher eventDispatcher;
 
-    protected boolean initialized = false;
+    private boolean initialized = false;
 
     protected NLPManager() {
         super();
@@ -276,7 +276,7 @@ public class NLPManager {
         return enrichmentRegistry.resolve(name);
     }
 
-    protected EnrichmentRegistry buildAndRegisterEnrichers() {
+    private EnrichmentRegistry buildAndRegisterEnrichers() {
         EnrichmentRegistry registry = new EnrichmentRegistry();
         registry.register(new ConceptNet5Enricher(database, persistenceRegistry, textProcessorsManager));
         registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, textProcessorsManager));
@@ -296,7 +296,7 @@ public class NLPManager {
         return null;
     }
 
-    protected void loadExtensions() {
+    private void loadExtensions() {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 
         extensionMap.keySet().forEach(k -> {
@@ -306,13 +306,13 @@ public class NLPManager {
         });
     }
 
-    protected void registerEventListeners() {
+    private void registerEventListeners() {
         extensions.values().forEach(e -> {
             e.registerEventListeners(eventDispatcher);
         });
     }
 
-    protected void registerPipelinesFromConfig() {
+    private void registerPipelinesFromConfig() {
         configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
             // Check that the text processor exist, it can happen that the configuration
             // hold a reference to a processor that is not more registered, in order to avoid
@@ -324,7 +324,7 @@ public class NLPManager {
         });
     }
 
-    protected String getPipeline(String pipelineName) {
+    private String getPipeline(String pipelineName) {
         return ProcessorUtils.getPipeline(pipelineName, configuration);
     }
 
