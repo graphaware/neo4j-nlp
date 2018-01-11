@@ -29,7 +29,8 @@ public class KeywordPersister extends AbstractPersister implements Persister<Key
 
     public KeywordPersister(GraphDatabaseService database, PersistenceRegistry registry) {
         super(database, registry);
-        keywordLabel = configuration().getLabelFor(Labels.Keyword);
+        keywordLabel = configuration()
+                .getLabelFor(Labels.Keyword);
     }
 
     public void setLabel(Label label) {

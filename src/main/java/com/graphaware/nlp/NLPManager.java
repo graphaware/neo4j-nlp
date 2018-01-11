@@ -94,13 +94,13 @@ public class NLPManager {
         return NLPManager.instance;
     }
 
-    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
+    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration, DynamicConfiguration configuration) {
         if (initialized) {
             return;
         }
         this.nlpConfiguration = nlpConfiguration;
-        this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager();
+        this.configuration = configuration;
         this.database = database;
         this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();

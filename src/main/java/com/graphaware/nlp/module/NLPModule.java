@@ -17,6 +17,7 @@ package com.graphaware.nlp.module;
 
 import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.event.DatabaseTransactionEvent;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
@@ -49,7 +50,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public void initialize(GraphDatabaseService database) {
         super.initialize(database);
         nlpManager = NLPManager.getInstance();
-        nlpManager.init(database, nlpMLConfiguration);
+        nlpManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));
     }
 
     public NLPConfiguration getNlpMLConfiguration() {

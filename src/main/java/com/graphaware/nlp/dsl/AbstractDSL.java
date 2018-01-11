@@ -18,11 +18,8 @@ package com.graphaware.nlp.dsl;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
-import com.graphaware.nlp.module.NLPModule;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.procedure.Context;
-
-import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
 
 public abstract class AbstractDSL {
 
@@ -32,11 +29,10 @@ public abstract class AbstractDSL {
     public static ObjectMapper mapper = new ObjectMapper();
 
     protected NLPManager getNLPManager() {
-        return getStartedRuntime(database).getModule(NLPModule.class).getNlpManager();
+        return NLPManager.getInstance();
     }
 
     protected DynamicConfiguration getConfiguration() {
         return getNLPManager().getConfiguration();
     }
-
 }
