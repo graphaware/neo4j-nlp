@@ -39,7 +39,7 @@ public abstract class AbstractPersister {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public AbstractPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
+    public AbstractPersister(GraphDatabaseService database, PersistenceRegistry registry) {
         this.database = database;
         this.registry = registry;
         this.manager = NLPManager.getInstance();

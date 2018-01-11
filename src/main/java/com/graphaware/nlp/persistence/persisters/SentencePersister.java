@@ -29,8 +29,8 @@ import java.util.Map;
 
 public class SentencePersister extends AbstractPersister implements Persister<Sentence> {
 
-    public SentencePersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
-        super(database, dynamicConfiguration, registry);
+    public SentencePersister(GraphDatabaseService database, PersistenceRegistry registry) {
+        super(database, registry);
     }
 
     @Override

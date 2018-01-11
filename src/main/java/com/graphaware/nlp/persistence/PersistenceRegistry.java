@@ -33,12 +33,11 @@ public class PersistenceRegistry {
     private final Map<Class, Persister> registeredPersisters = new HashMap<>();
 
     public PersistenceRegistry(GraphDatabaseService databaseService) {
-        DynamicConfiguration configuration = NLPManager.getInstance().getConfiguration();
-        register(Tag.class, new TagPersister(databaseService, configuration, this));
-        register(Sentence.class, new SentencePersister(databaseService, configuration, this));
-        register(AnnotatedText.class, new AnnotatedTextPersister(databaseService, configuration, this));
-        register(Keyword.class, new KeywordPersister(databaseService, configuration, this));
-        register(VectorContainer.class, new VectorPersister(databaseService, configuration, this));
+        register(Tag.class, new TagPersister(databaseService, this));
+        register(Sentence.class, new SentencePersister(databaseService, this));
+        register(AnnotatedText.class, new AnnotatedTextPersister(databaseService, this));
+        register(Keyword.class, new KeywordPersister(databaseService, this));
+        register(VectorContainer.class, new VectorPersister(databaseService, this));
     }
 
     public final void register(Class clazz, Persister persister) {
