@@ -15,8 +15,6 @@
  */
 package com.graphaware.nlp.persistence;
 
-import com.graphaware.nlp.NLPManager;
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.Sentence;

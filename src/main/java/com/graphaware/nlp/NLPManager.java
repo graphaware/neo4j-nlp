@@ -52,33 +52,33 @@ import org.neo4j.logging.Log;
 
 import java.util.*;
 
-public final class NLPManager {
+public class NLPManager {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
 
     private static NLPManager instance = null;
 
-    private NLPConfiguration nlpConfiguration;
+    protected NLPConfiguration nlpConfiguration;
 
-    private TextProcessorsManager textProcessorsManager;
+    protected TextProcessorsManager textProcessorsManager;
 
-    private GraphDatabaseService database;
+    protected GraphDatabaseService database;
 
-    private DynamicConfiguration configuration;
+    protected DynamicConfiguration configuration;
 
-    private PersistenceRegistry persistenceRegistry;
+    protected PersistenceRegistry persistenceRegistry;
 
-    private EnrichmentRegistry enrichmentRegistry;
+    protected EnrichmentRegistry enrichmentRegistry;
     
-    private QueryBasedVectorComputation vectorComputation;
+    protected QueryBasedVectorComputation vectorComputation;
 
-    private final Map<Class, NLPExtension> extensions = new HashMap<>();
+    protected final Map<Class, NLPExtension> extensions = new HashMap<>();
 
-    private EventDispatcher eventDispatcher;
+    protected EventDispatcher eventDispatcher;
 
-    private boolean initialized = false;
+    protected boolean initialized = false;
 
-    private NLPManager() {
+    protected NLPManager() {
         super();
     }
 
@@ -237,7 +237,7 @@ public final class NLPManager {
         );
     }
 
-    private String checkTextLanguage(String text, boolean failIfUnsupported) {
+    protected String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
         String detectedLanguage = languageManager.detectLanguage(text);
 
@@ -276,7 +276,7 @@ public final class NLPManager {
         return enrichmentRegistry.resolve(name);
     }
 
-    private EnrichmentRegistry buildAndRegisterEnrichers() {
+    protected EnrichmentRegistry buildAndRegisterEnrichers() {
         EnrichmentRegistry registry = new EnrichmentRegistry();
         registry.register(new ConceptNet5Enricher(database, persistenceRegistry, textProcessorsManager));
         registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, textProcessorsManager));
@@ -296,7 +296,7 @@ public final class NLPManager {
         return null;
     }
 
-    private void loadExtensions() {
+    protected void loadExtensions() {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 
         extensionMap.keySet().forEach(k -> {
@@ -306,13 +306,13 @@ public final class NLPManager {
         });
     }
 
-    private void registerEventListeners() {
+    protected void registerEventListeners() {
         extensions.values().forEach(e -> {
             e.registerEventListeners(eventDispatcher);
         });
     }
 
-    private void registerPipelinesFromConfig() {
+    protected void registerPipelinesFromConfig() {
         configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
             // Check that the text processor exist, it can happen that the configuration
             // hold a reference to a processor that is not more registered, in order to avoid
@@ -324,7 +324,7 @@ public final class NLPManager {
         });
     }
 
-    private String getPipeline(String pipelineName) {
+    protected String getPipeline(String pipelineName) {
         return ProcessorUtils.getPipeline(pipelineName, configuration);
     }
 

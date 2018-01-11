@@ -16,7 +16,6 @@
 package com.graphaware.nlp.persistence.persisters;
 
 import com.graphaware.common.log.LoggerFactory;
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
