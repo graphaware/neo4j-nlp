@@ -29,8 +29,8 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
     
     private static final Logger LOG = LoggerFactory.getLogger(VectorPersister.class);
 
-    public VectorPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
-        super(database, dynamicConfiguration, registry);
+    public VectorPersister(GraphDatabaseService database, PersistenceRegistry registry) {
+        super(database, registry);
     }
     
     @Override

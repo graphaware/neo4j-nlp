@@ -31,11 +31,15 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
     public void setUp() throws Exception {
         resetSingleton();
         super.setUp();
+        registerRuntime();
+        keyValueStore = new GraphKeyValueStore(getDatabase());
+    }
+
+    protected void registerRuntime() {
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         runtime.start();
         runtime.waitUntilStarted();
-        keyValueStore = new GraphKeyValueStore(getDatabase());
     }
     
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {

@@ -31,8 +31,8 @@ import java.util.*;
 
 public class TagPersister extends AbstractPersister implements Persister<Tag> {
 
-    public TagPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
-        super(database, dynamicConfiguration, registry);
+    public TagPersister(GraphDatabaseService database, PersistenceRegistry registry) {
+        super(database, registry);
     }
 
     @Override

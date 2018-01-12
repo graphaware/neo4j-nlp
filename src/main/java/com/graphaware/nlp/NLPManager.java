@@ -62,9 +62,9 @@ public final class NLPManager {
 
     private TextProcessorsManager textProcessorsManager;
 
-    private GraphDatabaseService database;
+    protected GraphDatabaseService database;
 
-    private DynamicConfiguration configuration;
+    protected DynamicConfiguration configuration;
 
     private PersistenceRegistry persistenceRegistry;
 
@@ -78,7 +78,7 @@ public final class NLPManager {
 
     private boolean initialized = false;
 
-    private NLPManager() {
+    protected NLPManager() {
         super();
     }
 
@@ -94,15 +94,15 @@ public final class NLPManager {
         return NLPManager.instance;
     }
 
-    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration) {
+    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration, DynamicConfiguration configuration) {
         if (initialized) {
             return;
         }
         this.nlpConfiguration = nlpConfiguration;
-        this.configuration = new DynamicConfiguration(database);
         this.textProcessorsManager = new TextProcessorsManager();
+        this.configuration = configuration;
         this.database = database;
-        this.persistenceRegistry = new PersistenceRegistry(database, configuration);
+        this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
         this.vectorComputation = new QueryBasedVectorComputation(database);
@@ -237,7 +237,7 @@ public final class NLPManager {
         );
     }
 
-    private String checkTextLanguage(String text, boolean failIfUnsupported) {
+    protected String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
         String detectedLanguage = languageManager.detectLanguage(text);
 
@@ -278,8 +278,8 @@ public final class NLPManager {
 
     private EnrichmentRegistry buildAndRegisterEnrichers() {
         EnrichmentRegistry registry = new EnrichmentRegistry();
-        registry.register(new ConceptNet5Enricher(database, persistenceRegistry, configuration, textProcessorsManager));
-        registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, configuration, textProcessorsManager));
+        registry.register(new ConceptNet5Enricher(database, persistenceRegistry, textProcessorsManager));
+        registry.register(new MicrosoftConceptEnricher(database, persistenceRegistry, textProcessorsManager));
 
         return registry;
     }

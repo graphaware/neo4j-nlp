@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
+import com.graphaware.nlp.NLPManager;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
@@ -32,16 +33,16 @@ public abstract class AbstractPersister {
 
     protected final GraphDatabaseService database;
 
-    private final DynamicConfiguration configuration;
+    protected final NLPManager manager;
 
     private final PersistenceRegistry registry;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public AbstractPersister(GraphDatabaseService database, DynamicConfiguration dynamicConfiguration, PersistenceRegistry registry) {
+    public AbstractPersister(GraphDatabaseService database, PersistenceRegistry registry) {
         this.database = database;
-        this.configuration = dynamicConfiguration;
         this.registry = registry;
+        this.manager = NLPManager.getInstance();
         mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
         mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
@@ -51,7 +52,7 @@ public abstract class AbstractPersister {
     }
 
     protected DynamicConfiguration configuration() {
-        return configuration;
+        return manager.getConfiguration();
     }
 
     protected ObjectMapper mapper() {

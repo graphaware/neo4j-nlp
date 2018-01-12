@@ -2,6 +2,7 @@ package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.SentimentLabels;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
@@ -38,7 +39,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         super.setUp();
         clearDatabase();
         manager = NLPManager.getInstance();
-        manager.init(getDatabase(), NLPConfiguration.defaultConfiguration());
+        manager.init(getDatabase(), NLPConfiguration.defaultConfiguration(), new DynamicConfiguration(getDatabase()));
     }
 
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
