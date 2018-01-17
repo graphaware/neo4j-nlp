@@ -51,7 +51,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:AnnotatedText) RETURN n", (result -> {
             assertTrue(result.hasNext());
             Node at = (Node) result.next().get("n");
-            assertTrue(at.hasLabel(Label.label("Event")));
+            assertTrue(at.hasLabel(Label.label("STUB_Event")));
         }));
     }
 }

@@ -37,11 +37,11 @@ public class DynamicConfiguration {
     private static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
     private static final String SETTING_KEY_PREFIX = "SETTING_";
     private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
-    
-    private final GraphDatabaseService database;
-    private final GraphKeyValueStore keyValueStore;
+
     private Map<String, Object> userProvidedConfiguration;
-    private final ObjectMapper mapper = new ObjectMapper();
+    protected final GraphDatabaseService database;
+    protected final GraphKeyValueStore keyValueStore;
+    protected final ObjectMapper mapper = new ObjectMapper();
 
     public DynamicConfiguration(GraphDatabaseService database) {
         this.database = database;
