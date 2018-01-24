@@ -24,6 +24,18 @@ public class LemmaValidationUnitTest {
         assertFalse(match(";"));
         assertFalse(match("-lrb-"));
         assertTrue(match("MIL-A-8625"));
+        //Det är idag kallt. Året är 2018
+        assertTrue(match("är"));
+        assertTrue(match("Året"));
+        assertTrue(match("Året-är"));
+        assertTrue(match("générale"));
+        assertTrue(match("deçà"));
+        assertTrue(match("vôtre"));
+        assertTrue(match("aujourd'hui"));
+        assertTrue(match("Dörfer"));
+        assertTrue(match("Ausführung"));
+        assertTrue(match("Maßstab"));
+
     }
 
     private boolean match(String value) {
