@@ -21,7 +21,7 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | Similarity Computation | ✔ | ✔ |
 | Apache Spark Binding for Distributed Algorithms | | ✔ |
 | User Interface | | ✔ |
-| ML Prediction capalities | | ✔ |
+| ML Prediction capabilities | | ✔ |
 | Entity Merging | | ✔ |
 | Questions generator | | ✔ |
 | Conversational Features | | ✔ |
