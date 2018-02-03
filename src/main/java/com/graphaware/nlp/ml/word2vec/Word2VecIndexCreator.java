@@ -45,7 +45,7 @@ public class Word2VecIndexCreator {
     public static final String VECTOR_FIELD = "values";
     public static final String WORD_FIELD = "word";
 
-    public static boolean loadFromFile(String sourceFile, String indexPath, boolean create) {
+    public static boolean loadFromFile(String sourceFile, String indexPath, boolean create, String language) {
         try {
             if (!create) {
                 File f = new File(indexPath);
@@ -63,7 +63,7 @@ public class Word2VecIndexCreator {
             }
             iwc.setRAMBufferSizeMB(256.0);
             try (IndexWriter writer = new IndexWriter(dir, iwc)) {
-                indexWord2Vec(writer, sourceFile);
+                indexWord2Vec(writer, sourceFile, language);
                 writer.forceMerge(1);
             }
             
@@ -74,7 +74,7 @@ public class Word2VecIndexCreator {
         return true;
     }
 
-    private static void indexWord2Vec(IndexWriter writer, String sourceFile) throws IOException {
+    private static void indexWord2Vec(IndexWriter writer, String sourceFile, String language) throws IOException {
 
         LineIterator it = FileUtils.lineIterator(new File(sourceFile), "UTF-8");
         try {
@@ -85,11 +85,11 @@ public class Word2VecIndexCreator {
                     Document doc = new Document();
                     String word = split[0];
                     String wordToUse = split[0];
-                    if (word.startsWith("/c/") && !word.startsWith("/c/en/")) {
+                    if (word.startsWith("/c/") && !word.startsWith("/c/" + language + "/")) {
                         continue;
                     }
-                    if (word.startsWith("/c/en")) {
-                        wordToUse = wordToUse.replace("/c/en/", "").trim();
+                    if (word.startsWith("/c/" + language)) {
+                        wordToUse = wordToUse.replace("/c/" + language + "/", "").trim();
                     }
                     doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
                     double[] vector = new double[split.length - 1];
@@ -105,7 +105,7 @@ public class Word2VecIndexCreator {
         }
     }
     
-    public static List<String> inspectDirectoryAndLoad(String path, String destPath) {
+    public static List<String> inspectDirectoryAndLoad(String path, String destPath, String language) {
         List<String> modelNames = new ArrayList<>();
         if (path == null || path.length() == 0) {
             LOG.error("Scanning for word2Vec files: wrong path specified.");
@@ -133,7 +133,7 @@ public class Word2VecIndexCreator {
             String[] sp = fileName.split("-");
             String modelName = sp[0];
             LOG.info("Custom models: Found file " + fileName + ". Assigned name: " + modelName);
-            if (loadFromFile((path + fileName), (destPath +  modelName), false)) {
+            if (loadFromFile((path + fileName), (destPath +  modelName), false, language)) {
                 modelNames.add(modelName);
             }
         }

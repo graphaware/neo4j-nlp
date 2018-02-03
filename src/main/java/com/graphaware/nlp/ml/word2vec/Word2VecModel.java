@@ -37,7 +37,7 @@ public class Word2VecModel {
     }
 
     protected final void init() {
-        List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(WORD2VEC_SOURCE_DIRECTORY, WORD2VEC_DEST_DIRECTORY);
+        List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(WORD2VEC_SOURCE_DIRECTORY, WORD2VEC_DEST_DIRECTORY, "en");
         if (modelsName != null && modelsName.size() > 0) {
             modelsName.forEach((modelName) -> {
                 LOG.info("Adding model: " + modelName);
@@ -51,8 +51,8 @@ public class Word2VecModel {
         }
     }
 
-    public void createModelFromPaths(String sourcePath, String destPath, String modelName) {
-        List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(sourcePath, destPath);
+    public void createModelFromPaths(String sourcePath, String destPath, String modelName, String language) {
+        List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(sourcePath, destPath, language);
         if (modelsName != null) {
             modelsName.forEach(model -> {
                 Word2VecIndexLookup index = new Word2VecIndexLookup(destPath + model);
