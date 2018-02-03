@@ -20,7 +20,7 @@ public class Word2VecIndexTest {
                 + "word2VecIndex_"
                 + System.currentTimeMillis();
         System.out.println("Storing in file: " + indexPath);
-        Word2VecIndexCreator.loadFromFile(sourceFile, indexPath, true);
+        Word2VecIndexCreator.loadFromFile(sourceFile, indexPath, true, "en");
     }
 
     @Test

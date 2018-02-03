@@ -60,9 +60,9 @@ public class Word2VecProcedure extends AbstractDSL {
     }
 
     @Procedure(name = "ga.nlp.ml.word2vec.addModel", mode = Mode.WRITE)
-    public Stream<SingleResult> addModel(@Name("sourePath") String sourcePath, @Name("destinationPath") String destinationPath, @Name("modelName") String modelName) {
+    public Stream<SingleResult> addModel(@Name("sourePath") String sourcePath, @Name("destinationPath") String destinationPath, @Name("modelName") String modelName, @Name(defaultValue = "en", value = "language") String language) {
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        word2VecProcessor.getWord2VecModel().createModelFromPaths(sourcePath, destinationPath, modelName);
+        word2VecProcessor.getWord2VecModel().createModelFromPaths(sourcePath, destinationPath, modelName, language);
 
         return Stream.of(SingleResult.success());
     }

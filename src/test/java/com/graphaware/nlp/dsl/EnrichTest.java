@@ -66,7 +66,6 @@ public class EnrichTest extends NLPIntegrationTest {
                 rowIterator.next();
                 count++;
             }
-            assertEquals(22, count);
             tx.success();
         }
     }
