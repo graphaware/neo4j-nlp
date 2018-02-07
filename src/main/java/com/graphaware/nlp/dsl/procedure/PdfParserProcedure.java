@@ -1,10 +1,8 @@
-package com.graphaware.nlp.parser.procedure;
+package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.parser.domain.Page;
 import com.graphaware.nlp.parser.pdf.TikaPDFParser;
-import org.neo4j.kernel.configuration.Config;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
