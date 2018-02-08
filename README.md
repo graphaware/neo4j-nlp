@@ -19,6 +19,7 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | Keyword Extraction | ✔ | ✔ |
 | Topics Extraction | ✔ | ✔ |
 | Similarity Computation | ✔ | ✔ |
+| PDF Parsing | ✔ | ✔ |
 | Apache Spark Binding for Distributed Algorithms | | ✔ |
 | User Interface | | ✔ |
 | ML Prediction capabilities | | ✔ |
@@ -301,6 +302,25 @@ Text documents can be TF-IDF encoded as vectors in a multidimensional Euclidean 
 
 ```
 CALL ga.nlp.ml.cosine.compute({}) YIELD result
+```
+
+### Parsing PDF Documents
+
+```
+CALL ga.nlp.parser.pdf("file:///Users/ikwattro/_graphs/nlp/import/myfile.pdf") YIELD number, paragraphs
+```
+
+The procedure return rows with columns `number` being the page number and `paragraphs` being a `List<String>` of paragraph texts.
+
+You can also pass an `http` or `https` url to the procedure for loading a file from a remote location.
+
+#### Exclude content from the pdf
+
+In some cases, pdf documents have some recurrent useless content like page footers etc, you can excluded them from the parsing by
+passing a list of regexes defining the parts to exclude :
+
+```
+CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"]
 ```
 
 ## License
