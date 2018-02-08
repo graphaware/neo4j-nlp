@@ -24,6 +24,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 
 public abstract class AbstractExtension implements NLPExtension {
 
+    protected static final String NEO4J_HOME = "unsupported.dbms.directories.neo4j_home";
+    protected static final String IMPORT_DIR = "import";
+
     protected NLPManager getNLPManager() {
         return NLPManager.getInstance();
     }

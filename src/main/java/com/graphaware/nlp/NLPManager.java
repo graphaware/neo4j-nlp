@@ -56,6 +56,8 @@ public final class NLPManager {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
 
+    private static final String NEO4j_HOME = "unsupported.dbms.directories.neo4j_home";
+
     private static NLPManager instance = null;
 
     private NLPConfiguration nlpConfiguration;
