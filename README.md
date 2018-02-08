@@ -72,7 +72,7 @@ Additionally, the following indexes and constraints are suggested to speed perfo
 CREATE CONSTRAINT ON (n:AnnotatedText) ASSERT n.id IS UNIQUE;
 CREATE CONSTRAINT ON (n:Tag) ASSERT n.id IS UNIQUE;
 CREATE CONSTRAINT ON (n:Sentence) ASSERT n.id IS UNIQUE;
-CREATE INDEX ON :Tag(a.value);
+CREATE INDEX ON :Tag(value);
 ```
 
 ### Quick Documentation in Neo4j Browser
@@ -325,7 +325,7 @@ CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"]
 
 ## License
 
-Copyright (c) 2017 GraphAware
+Copyright (c) 2013-2018 GraphAware
 
 GraphAware is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
