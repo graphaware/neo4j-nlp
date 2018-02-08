@@ -16,6 +16,7 @@
 package com.graphaware.nlp.event;
 
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.Node;
 
 public class TextAnnotationEvent implements Event {
@@ -28,11 +29,14 @@ public class TextAnnotationEvent implements Event {
 
     private final String txId;
 
-    public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id, String txId) {
+    private final PipelineSpecification pipelineSpecification;
+
+    public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id, String txId, PipelineSpecification pipelineSpecification) {
         this.annotatedNode = annotatedNode;
         this.annotatedText = annotatedText;
         this.id = id;
         this.txId = txId;
+        this.pipelineSpecification = pipelineSpecification;
     }
 
     public Node getAnnotatedNode() {
@@ -49,5 +53,9 @@ public class TextAnnotationEvent implements Event {
 
     public String getTxId() {
         return txId;
+    }
+
+    public PipelineSpecification getPipelineSpecification() {
+        return pipelineSpecification;
     }
 }

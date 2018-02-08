@@ -144,14 +144,14 @@ public final class NLPManager {
             processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
             AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
 
-            return processAnnotationPersist(id, text, at);
+            return processAnnotationPersist(id, text, at, pipelineSpecification);
         }
 
         AnnotatedText annotatedText = processor.annotateText(
                 text, pipeline, lang, null
         );
 
-        return processAnnotationPersist(id, text, annotatedText);
+        return processAnnotationPersist(id, text, annotatedText, new PipelineSpecification());
     }
 
     public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {
@@ -159,13 +159,13 @@ public final class NLPManager {
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
         AnnotatedText annotatedText = processor.annotateText(text, lang, pipelineSpecification);
 
-        return processAnnotationPersist(id, text, annotatedText);
+        return processAnnotationPersist(id, text, annotatedText, pipelineSpecification);
     }
 
-    public Node processAnnotationPersist(String id, String text, AnnotatedText annotatedText) {
+    public Node processAnnotationPersist(String id, String text, AnnotatedText annotatedText, PipelineSpecification pipelineSpecification) {
         String txId = String.valueOf(System.currentTimeMillis());
         Node annotatedNode = persistAnnotatedText(annotatedText, id, txId);
-        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId);
+        TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId, pipelineSpecification);
         annotatedText.setText(text);
         eventDispatcher.notify(NLPEvents.POST_TEXT_ANNOTATION, event);
 
