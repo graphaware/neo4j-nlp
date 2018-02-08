@@ -13,7 +13,8 @@ public class PdfParserProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testParsingPdfWithProcedure() throws Exception {
-        String f = getClass().getClassLoader().getResource("blogpost.pdf").toURI().toString();
+        String f = getClass().getClassLoader().getResource("import/blogpost.pdf").getPath();
+        System.out.println("Loading file from " + f);
         executeInTransaction("CALL ga.nlp.parser.pdf({file})", Collections.singletonMap("file", f), (result -> {
             assertTrue(result.hasNext());
         }));
@@ -22,7 +23,8 @@ public class PdfParserProcedureTest extends NLPIntegrationTest {
     @Test
     public void testParsingPdfAndStore() throws Exception {
         clearDb();
-        String f = getClass().getClassLoader().getResource("blogpost.pdf").toURI().toString();
+        String f = getClass().getClassLoader().getResource("import/blogpost.pdf").getPath();
+        System.out.println("Loading file from " + f);
         executeInTransaction("CALL ga.nlp.parser.pdf({file})\n" +
                 "YIELD number, paragraphs\n" +
                 "UNWIND paragraphs AS paragraph\n" +
