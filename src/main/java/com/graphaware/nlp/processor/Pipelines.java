@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2017 GraphAware
+ * Copyright (c) 2013-2018 GraphAware
  *
  * This file is part of the GraphAware Framework.
  *
