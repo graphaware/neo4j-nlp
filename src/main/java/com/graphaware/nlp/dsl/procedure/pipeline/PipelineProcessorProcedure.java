@@ -17,7 +17,10 @@ package com.graphaware.nlp.dsl.procedure.pipeline;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.ProcessorItem;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
@@ -26,11 +29,19 @@ import org.neo4j.procedure.Procedure;
 
 public class PipelineProcessorProcedure extends AbstractDSL {
     
+    @Procedure(name = "ga.nlp.pipeline.processor.available", mode = Mode.WRITE)
+    @Description("Create a Pipeline Processor")
+    public Stream<ProcessorItem> available() {
+        Set<ProcessorItem> pipelineProcessors = getPipelineManager().getPipelineProcessors();
+        return pipelineProcessors.stream();
+    }
+    
     @Procedure(name = "ga.nlp.pipeline.processor.create", mode = Mode.WRITE)
-    @Description("Create a Pipeline input")
-    public Stream<NodeResult> create(@Name(value = "name") String name,
-            @Name(value = "class", defaultValue = "") String classname, 
-            @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
+    @Description("Create a Pipeline Processor")
+    public Stream<NodeResult> create(@Name(value = "id") String id,
+            @Name(value = "processorName") String processorName, 
+            @Name(value = "parameters") Map<String, Object> parameters) {
+        getPipelineManager().createPipelineProcessor(id, processorName, parameters);
         return null;
     }
     

@@ -13,11 +13,29 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.pipeline;
+package com.graphaware.nlp.dsl.result;
 
 import java.util.Map;
 
-public interface PipelineConfiguration {
-    public PipelineConfiguration fromMap(Map<String, Object> parameters);
-    public Map<String, Object> getMap();
+public class ProcessorInstanceItem {
+    public final String className;
+    public final String name;
+    public final Map<String, Object> parameters;
+    public final boolean valid;
+
+    public ProcessorInstanceItem(String className, String name, 
+            Map<String, Object> parameters,
+            boolean valid) {
+        this.className = className;
+        this.name = name;
+        this.parameters = parameters;
+        this.valid = valid;
+    }
+
+    @Override
+    public String toString() {
+        return name + " [" + className + " ]";
+    }
+    
+    
 }

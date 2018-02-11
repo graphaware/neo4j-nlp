@@ -18,7 +18,7 @@ package com.graphaware.nlp.dsl.procedure;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.dsl.result.ProcessorsList;
+import com.graphaware.nlp.dsl.result.TextProcessorItem;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.processor.PipelineInfo;
 import org.neo4j.procedure.Description;
@@ -34,8 +34,8 @@ public class TextProcessorsProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.processor.getProcessors", mode = Mode.READ)
     @Description("Get the list of available Text Processors with the related classes")
-    public Stream<ProcessorsList> getProcessors() {
-        Set<ProcessorsList> result = getNLPManager().getProcessors();
+    public Stream<TextProcessorItem> getProcessors() {
+        Set<TextProcessorItem> result = getNLPManager().getProcessors();
         return result.stream();
     }
     

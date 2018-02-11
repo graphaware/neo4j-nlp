@@ -31,12 +31,11 @@ public class PipelineInputProcedure extends AbstractDSL {
     public Stream<NodeResult> create(@Name(value = "name") String name,
             @Name(value = "class", defaultValue = "") String classname, 
             @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
-        
         return null;
     }
     
     @Procedure(name = "ga.nlp.pipeline.input.list", mode = Mode.READ)
-    @Description("List Pipelines")
+    @Description("List Pipelines input")
     public Stream<NodeResult> list() {
         return null;
     }

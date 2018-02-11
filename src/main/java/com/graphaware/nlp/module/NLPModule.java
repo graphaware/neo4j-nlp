@@ -53,10 +53,10 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public void initialize(GraphDatabaseService database) {
         super.initialize(database);
         nlpManager = NLPManager.getInstance();
-        nlpManager.init(database, nlpMLConfiguration);
+        nlpManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));
         
         pipelineManager = PipelineManager.getInstance();
-        pipelineManager.init(database, nlpMLConfiguration);        
+        pipelineManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));        
     }
 
     public NLPConfiguration getNlpMLConfiguration() {

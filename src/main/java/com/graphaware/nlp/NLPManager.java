@@ -26,7 +26,7 @@ import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
 import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.dsl.result.ProcessorsList;
+import com.graphaware.nlp.dsl.result.TextProcessorItem;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
 import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
@@ -256,11 +256,11 @@ public final class NLPManager {
         return detectedLanguage;
     }
 
-    public Set<ProcessorsList> getProcessors() {
+    public Set<TextProcessorItem> getProcessors() {
         Set<String> textProcessors = textProcessorsManager.getTextProcessorNames();
-        Set<ProcessorsList> result = new HashSet<>();
+        Set<TextProcessorItem> result = new HashSet<>();
         textProcessors.forEach(row -> {
-            ProcessorsList processor = new ProcessorsList(row);
+            TextProcessorItem processor = new TextProcessorItem(row);
             result.add(processor);
         });
         return result;

@@ -18,6 +18,9 @@ package com.graphaware.nlp.configuration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.dsl.result.ProcessorInstanceItem;
+import com.graphaware.nlp.pipeline.AbstractPipelineProcessor;
+import java.io.IOException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -37,7 +40,10 @@ public class DynamicConfiguration {
     private static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
     private static final String SETTING_KEY_PREFIX = "SETTING_";
     private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
-
+    private static final String PIPELINE_PROCESSOR_KEY_PREFIX = "PIPELINE_PROCESSOR_";
+    
+    private final GraphDatabaseService database;
+    private final GraphKeyValueStore keyValueStore;
     private Map<String, Object> userProvidedConfiguration;
     protected final GraphDatabaseService database;
     protected final GraphKeyValueStore keyValueStore;
@@ -120,11 +126,37 @@ public class DynamicConfiguration {
                     PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
                     list.add(pipelineSpecification);
                 } catch (Exception e) {
-                    throw new RuntimeException(e.getMessage());
+                    throw new RuntimeException(e);
                 }
             }
         });
 
+        return list;
+    }
+    
+    public void storePipelineProcessor(AbstractPipelineProcessor processor) {
+        try {
+            String serialized = mapper.writeValueAsString(processor.getInfo());
+            String key = PIPELINE_PROCESSOR_KEY_PREFIX + processor.getName();
+            update(key, serialized);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<ProcessorInstanceItem> loadPipelineProcessor() {
+        List<ProcessorInstanceItem> list = new ArrayList<>();
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(PIPELINE_PROCESSOR_KEY_PREFIX)) {
+                try {
+                    ProcessorInstanceItem pipelineSpecification = mapper.readValue(config.get(k).toString(), ProcessorInstanceItem.class);
+                    list.add(pipelineSpecification);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         return list;
     }
 

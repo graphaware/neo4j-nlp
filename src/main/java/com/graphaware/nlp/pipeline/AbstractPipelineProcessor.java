@@ -15,16 +15,20 @@
  */
 package com.graphaware.nlp.pipeline;
 
+import com.graphaware.nlp.dsl.result.ProcessorInstanceItem;
+import java.util.Map;
+
 public abstract class AbstractPipelineProcessor<C extends PipelineConfiguration> {
     
     private final String name;
-    private final PipelineConfiguration configuration;
+    private PipelineConfiguration configuration;
     private boolean valid;
 
-    public AbstractPipelineProcessor(String name, PipelineConfiguration configuration) {
+    public AbstractPipelineProcessor(String name) {
         this.name = name;
-        this.configuration = configuration;
     }
+    
+    public abstract void init(Map<String, Object> parameters);
 
     public String getName() {
         return name;
@@ -42,4 +46,7 @@ public abstract class AbstractPipelineProcessor<C extends PipelineConfiguration>
         return configuration;
     }
     
+    public ProcessorInstanceItem getInfo() {
+        return new ProcessorInstanceItem(this.getClass().getName(), name, configuration.getMap(), valid);
+    }
 }
