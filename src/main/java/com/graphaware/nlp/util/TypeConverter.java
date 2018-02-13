@@ -64,4 +64,26 @@ public class TypeConverter {
             }
         }
     }
+
+    public static int getIntegerValue(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        if (value instanceof Double) {
+            return ((Double) value).intValue();
+        } 
+        if (value instanceof Float) {
+            return ((Float) value).intValue();
+        }
+        if (value instanceof Integer) {
+            return ((Integer) value);
+        } else {
+            try {
+                return Integer.valueOf(String.valueOf(value));
+            } catch (Exception ex) {
+                LOG.error("Error while parsing float value from string: " + value, ex);
+                return 0;
+            }
+        }
+    }
 }
