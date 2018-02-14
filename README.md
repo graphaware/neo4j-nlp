@@ -18,6 +18,7 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | Microsoft Concept Enricher | ✔ | ✔ |
 | Keyword Extraction | ✔ | ✔ |
 | Topics Extraction | | ✔ |
+| Word Embeddings (Word2Vec) | ✔ | ✔ |
 | Similarity Computation | ✔ | ✔ |
 | PDF Parsing | ✔ | ✔ |
 | Apache Spark Binding for Distributed Algorithms | | ✔ |
