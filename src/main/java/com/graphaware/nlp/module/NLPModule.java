@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.module;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
@@ -23,8 +24,7 @@ import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
 
 /**
  * {@link com.graphaware.runtime.module.TxDrivenModule} that assigns UUID's to
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NLPModule extends BaseTxDrivenModule<Void> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NLPModule.class);
+    private static final Log LOG = LoggerFactory.getLogger(NLPModule.class);
     
     private final NLPConfiguration nlpMLConfiguration;
 
@@ -48,6 +48,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     @Override
     public void initialize(GraphDatabaseService database) {
+        LOG.info("Initializing NLP Module");
         super.initialize(database);
         nlpManager = NLPManager.getInstance();
         nlpManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));

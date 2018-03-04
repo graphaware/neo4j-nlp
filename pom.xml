@@ -88,7 +88,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <resttest.version>${parent.version}.18</resttest.version>
+    <resttest.version>${project.parent.version}.18</resttest.version>
   </properties>
   
   <dependencies>
