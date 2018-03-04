@@ -76,4 +76,18 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
                 }));
     }
 
+    @Test
+    public void testBatchAnnotation() throws Exception {
+        clearDb();
+        executeInTransaction("UNWIND {texts} AS text CREATE (n:Tweet) SET n.text = text", Collections.singletonMap("texts", SHORT_TEXTS), emptyConsumer());
+        executeInTransaction("CALL ga.nlp.batchAnnotate({query:'MATCH (n:Tweet) RETURN n', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'}) YIELD result RETURN result", (result -> {
+            assertTrue(result.hasNext());
+        }));
+        Thread.sleep(1000);
+        executeInTransaction("MATCH (n:AnnotatedText) RETURN count(n) AS c", (result -> {
+            assertEquals(10, (long) result.next().get("c"), 1L);
+        }));
+
+    }
+
 }

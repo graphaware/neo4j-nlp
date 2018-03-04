@@ -1,15 +1,22 @@
 package com.graphaware.nlp.dsl.request;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.util.ProcedureRequestUtils;
+import org.codehaus.jackson.map.SerializationConfig;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties
 public abstract class AbstractProcedureRequest implements ProcedureRequest {
 
-    protected static final ObjectMapper mapper = new ObjectMapper();
+    protected static final ObjectMapper mapper;
+    static {
+        mapper = new ObjectMapper();
+        mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
+    }
 
     @Override
     public List<String> mandatoryKeys() {

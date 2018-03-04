@@ -15,10 +15,7 @@
  */
 package com.graphaware.nlp.dsl.request;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 
@@ -27,6 +24,8 @@ public class AnnotationRequest extends AbstractProcedureRequest {
     private String text;
 
     private Object id;
+
+    private String query;
 
     private String textProcessor;
 
@@ -46,9 +45,10 @@ public class AnnotationRequest extends AbstractProcedureRequest {
 
     }
 
-    public AnnotationRequest(String text, Object id, String textProcessor, String pipeline, boolean force, boolean checkLanguage) {
+    public AnnotationRequest(String text, Object id, String query, String textProcessor, String pipeline, boolean force, boolean checkLanguage) {
         this.text = text;
         this.id = id;
+        this.query = query;
         this.textProcessor = textProcessor;
         this.pipeline = pipeline;
         this.force = force;
@@ -61,6 +61,7 @@ public class AnnotationRequest extends AbstractProcedureRequest {
                 ID_KEY,
                 TEXT_PROCESSOR_KEY,
                 TEXT_KEY,
+                QUERY_KEY,
                 PIPELINE_KEY,
                 FORCE_KEY,
                 CHECK_LANGUAGE_KEY,
@@ -72,10 +73,7 @@ public class AnnotationRequest extends AbstractProcedureRequest {
 
     @Override
     public List<String> mandatoryKeys() {
-        return Arrays.asList(
-                TEXT_KEY,
-                ID_KEY
-        );
+        return Collections.emptyList();
     }
 
     public static AnnotationRequest fromMap(Map<String, Object> map) {
@@ -123,5 +121,9 @@ public class AnnotationRequest extends AbstractProcedureRequest {
 
     public List<String> getExcludedPOS() {
         return excludedPOS;
+    }
+
+    public String getQuery() {
+        return query;
     }
 }

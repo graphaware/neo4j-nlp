@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.dsl.procedure;
 
+import com.graphaware.nlp.concurrent.ConcurrentAnnotator;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
@@ -26,6 +27,8 @@ import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -50,5 +53,18 @@ public class AnnotateProcedure extends AbstractDSL {
         FilterRequest request = FilterRequest.fromMap(filterRequest);
         Object result = getNLPManager().filter(request);
         return Stream.of(new SingleResult(result));
+    }
+
+    @Procedure(name = "ga.nlp.batchAnnotate", mode = Mode.WRITE)
+    public Stream<SingleResult> batchAnnotate(@Name("request") Map<String, Object> request) {
+        try {
+            AnnotationRequest annotationRequest = AnnotationRequest.fromMap(request);
+            ConcurrentAnnotator annotator = (ConcurrentAnnotator) getNLPManager().getExtension(ConcurrentAnnotator.class);
+            annotator.annotateInBatch(annotationRequest);
+
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
