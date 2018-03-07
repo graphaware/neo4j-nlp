@@ -36,7 +36,7 @@ public class PipelineTask
     @Override
     public void init(Map<String, Object> parameters) {
         setConfiguration(new PipelineTextProcessorConfiguration(parameters));
-        PipelineManager.getInstance().getPipelineInput()
+//        PipelineManager.getInstance().getPipelineInput();
     }
 
     public void setInput(PipelineInput input) {
