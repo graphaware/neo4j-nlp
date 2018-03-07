@@ -239,7 +239,7 @@ public final class NLPManager {
         );
     }
 
-    protected String checkTextLanguage(String text, boolean failIfUnsupported) {
+    public String checkTextLanguage(String text, boolean failIfUnsupported) {
         LanguageManager languageManager = LanguageManager.getInstance();
         String detectedLanguage = languageManager.detectLanguage(text);
 

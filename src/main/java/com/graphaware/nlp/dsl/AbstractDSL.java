@@ -24,16 +24,12 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.procedure.Context;
 
 import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
-import org.neo4j.kernel.api.security.SecurityContext;
 
 public abstract class AbstractDSL {
 
     @Context
     public GraphDatabaseService database;
     
-    @Context
-    public SecurityContext securityContext;
-
     public static ObjectMapper mapper = new ObjectMapper();
 
     protected NLPManager getNLPManager() {

@@ -13,21 +13,15 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.dsl.result;
+package com.graphaware.nlp.annotation;
 
-public class ProcessorItem {
-    public final String className;
-    public final String name;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    public ProcessorItem(String className, String name) {
-        this.className = className;
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name + " [" + className + " ]";
-    }
-    
-    
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface NLPInput {
+    String name();
 }

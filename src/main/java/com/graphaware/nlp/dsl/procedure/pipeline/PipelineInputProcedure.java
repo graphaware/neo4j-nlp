@@ -17,46 +17,80 @@ package com.graphaware.nlp.dsl.procedure.pipeline;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.PipelineInstanceItemInfo;
+import com.graphaware.nlp.dsl.result.PipelineItemInfo;
+import com.graphaware.nlp.pipeline.input.PipelineInput;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PipelineInputProcedure extends AbstractDSL {
-    
+
+    private static final Logger LOG = LoggerFactory.getLogger(PipelineInputProcedure.class);
+
+    @Procedure(name = "ga.nlp.pipeline.input.class.list", mode = Mode.READ)
+    @Description("Create a Pipeline Processor")
+    public Stream<PipelineItemInfo> available() {
+        try {
+            Set<PipelineItemInfo> pipelineInput = getPipelineManager().getPipelineInputs();
+            return pipelineInput.stream();
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineInputProcedure", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     @Procedure(name = "ga.nlp.pipeline.input.create", mode = Mode.WRITE)
     @Description("Create a Pipeline input")
-    public Stream<NodeResult> create(@Name(value = "name") String name,
-            @Name(value = "class", defaultValue = "") String classname, 
-            @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
-        return null;
+    public Stream<PipelineInstanceItemInfo> create(@Name(value = "name") String name,
+            @Name(value = "class", defaultValue = "") String classname,
+            @Name(value = "parameters", defaultValue = "") Map<String, Object> parameters) {
+        try {
+            PipelineInput pipelineInput = getPipelineManager().createPipelineInput(name, classname, parameters);
+            return Stream.of(pipelineInput.getInfo());
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineInputProcedure", e);
+            throw new RuntimeException(e);
+        }
     }
-    
-    @Procedure(name = "ga.nlp.pipeline.input.list", mode = Mode.READ)
+
+    @Procedure(name = "ga.nlp.pipeline.input.instance.list", mode = Mode.READ)
     @Description("List Pipelines input")
-    public Stream<NodeResult> list() {
-        return null;
+    public Stream<PipelineInstanceItemInfo> list() {
+        try {
+            Set<PipelineInstanceItemInfo> pipelineProcessors = getPipelineManager().getPipelineInputInstances();
+            return pipelineProcessors.stream();
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineInputProcedure", e);
+            throw new RuntimeException(e);
+        }
     }
-    
+
     @Procedure(name = "ga.nlp.pipeline.input.get", mode = Mode.READ)
     @Description("Get Pipeline info")
     public Stream<NodeResult> get() {
         return null;
     }
-    
+
     @Procedure(name = "ga.nlp.pipeline.input.update", mode = Mode.WRITE)
     @Description("Update a Pipeline update")
     public Stream<NodeResult> update(@Name(value = "name") String name,
-            @Name(value = "class", defaultValue = "") String classname, 
-            @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
+            @Name(value = "class", defaultValue = "") String classname,
+            @Name(value = "parameters", defaultValue = "") Map<String, Object> parameters
+    ) {
         return null;
     }
-    
+
     @Procedure(name = "ga.nlp.pipeline.input.delete", mode = Mode.WRITE)
     @Description("Delete a Pipeline")
-    public Stream<NodeResult> delete(@Name(value = "name") String name) {
+    public Stream<NodeResult> delete(@Name(value = "name") String name
+    ) {
         return null;
-    }    
+    }
 }

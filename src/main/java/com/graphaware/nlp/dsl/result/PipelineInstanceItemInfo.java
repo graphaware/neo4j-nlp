@@ -13,15 +13,27 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.annotation;
+package com.graphaware.nlp.dsl.result;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.Map;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface PipelineOuput {
-    String name();
+public class PipelineInstanceItemInfo {
+    public final String className;
+    public final String name;
+    public final Map<String, Object> parameters;
+    public final boolean valid;
+
+    public PipelineInstanceItemInfo(String className, String name, 
+            Map<String, Object> parameters,
+            boolean valid) {
+        this.className = className;
+        this.name = name;
+        this.parameters = parameters;
+        this.valid = valid;
+    }
+
+    @Override
+    public String toString() {
+        return name + " [" + className + " ]";
+    }    
 }

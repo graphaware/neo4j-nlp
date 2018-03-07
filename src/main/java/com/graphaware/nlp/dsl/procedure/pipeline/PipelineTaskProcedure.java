@@ -54,7 +54,7 @@ public class PipelineTaskProcedure  extends AbstractDSL {
         return null;
     }
     
-    @Procedure(name = "ga.nlp.pipeline.task.update", mode = Mode.WRITE)
+    @Procedure(name = "ga.nlp.pipeline.task.delete", mode = Mode.WRITE)
     @Description("Delete a Pipeline")
     public Stream<NodeResult> delete(@Name(value = "name") String name) {
         return null;

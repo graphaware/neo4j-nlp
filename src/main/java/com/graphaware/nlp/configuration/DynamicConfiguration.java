@@ -18,8 +18,9 @@ package com.graphaware.nlp.configuration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.dsl.result.ProcessorInstanceItem;
-import com.graphaware.nlp.pipeline.AbstractPipelineProcessor;
+import com.graphaware.nlp.dsl.result.PipelineInstanceItemInfo;
+import com.graphaware.nlp.pipeline.PipelineItem;
+import com.graphaware.nlp.pipeline.processor.PipelineProcessor;
 import java.io.IOException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -40,13 +41,10 @@ public class DynamicConfiguration {
     private static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
     private static final String SETTING_KEY_PREFIX = "SETTING_";
     private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
-    private static final String PIPELINE_PROCESSOR_KEY_PREFIX = "PIPELINE_PROCESSOR_";
-    
+
     private final GraphDatabaseService database;
     private final GraphKeyValueStore keyValueStore;
     private Map<String, Object> userProvidedConfiguration;
-    protected final GraphDatabaseService database;
-    protected final GraphKeyValueStore keyValueStore;
     protected final ObjectMapper mapper = new ObjectMapper();
 
     public DynamicConfiguration(GraphDatabaseService database) {
@@ -94,7 +92,7 @@ public class DynamicConfiguration {
     public void removeSettingValue(String key) {
         String k = SETTING_KEY_PREFIX + key;
         if (userProvidedConfiguration.containsKey(k)) {
-            removeKey( STORE_KEY + k);
+            removeKey(STORE_KEY + k);
             userProvidedConfiguration.remove(k);
         }
     }
@@ -133,24 +131,24 @@ public class DynamicConfiguration {
 
         return list;
     }
-    
-    public void storePipelineProcessor(AbstractPipelineProcessor processor) {
+
+    public void storePipelineItem(PipelineItem item) {
         try {
-            String serialized = mapper.writeValueAsString(processor.getInfo());
-            String key = PIPELINE_PROCESSOR_KEY_PREFIX + processor.getName();
+            String serialized = mapper.writeValueAsString(item.getInfo());
+            String key = item.getPrefix() + item.getName();
             update(key, serialized);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<ProcessorInstanceItem> loadPipelineProcessor() {
-        List<ProcessorInstanceItem> list = new ArrayList<>();
+    public List<PipelineInstanceItemInfo> loadPipelineInstanceItems(String prefix) {
+        List<PipelineInstanceItemInfo> list = new ArrayList<>();
         Map<String, Object> config = getAllConfigValuesFromStore();
         config.keySet().forEach(k -> {
-            if (k.startsWith(PIPELINE_PROCESSOR_KEY_PREFIX)) {
+            if (k.startsWith(prefix)) {
                 try {
-                    ProcessorInstanceItem pipelineSpecification = mapper.readValue(config.get(k).toString(), ProcessorInstanceItem.class);
+                    PipelineInstanceItemInfo pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineInstanceItemInfo.class);
                     list.add(pipelineSpecification);
                 } catch (IOException e) {
                     throw new RuntimeException(e);

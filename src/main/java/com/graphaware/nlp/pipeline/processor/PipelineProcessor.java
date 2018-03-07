@@ -13,15 +13,25 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.annotation;
+package com.graphaware.nlp.pipeline.processor;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.graphaware.nlp.pipeline.PipelineConfiguration;
+import com.graphaware.nlp.pipeline.PipelineItem;
+import com.graphaware.nlp.pipeline.input.PipelineInputEntry;
+import org.neo4j.graphdb.GraphDatabaseService;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface PipelineInput {
-    String name();
+public abstract class PipelineProcessor<C extends PipelineConfiguration> extends PipelineItem<C> {
+
+    public static final String PIPELINE_PROCESSOR_KEY_PREFIX = "PIPELINE_PROCESSOR_";
+
+    public PipelineProcessor(String name, GraphDatabaseService database) {
+        super(name, database);
+    }
+
+    public abstract void process(PipelineInputEntry entry);
+
+    @Override
+    public String getPrefix() {
+        return PIPELINE_PROCESSOR_KEY_PREFIX;
+    }
 }
