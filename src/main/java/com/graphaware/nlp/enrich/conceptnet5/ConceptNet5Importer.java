@@ -61,18 +61,7 @@ public class ConceptNet5Importer {
         this.depthSearch = builder.depthSearch;
     }
 
-//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor) {
-//        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
-//    }
-//
-//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, TextProcessor nlpProcessor) {
-//        return importHierarchy(source, lang, filterLang, depthSearch, nlpProcessor, DEFAULT_ADMITTED_RELATIONSHIP);
-//    }
-//
-//    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, String... admittedRelations) {
-//        return importHierarchy(source, lang, filterLang, depth, nlpProcessor, Arrays.asList(admittedRelations));
-//    }
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS, int limit) {
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
         if (null == admittedRelations || admittedRelations.isEmpty()) {
             throw new RuntimeException("Admitted Relationships is empty");
         }
@@ -87,6 +76,7 @@ public class ConceptNet5Importer {
                 values = client.queryByStart(finalWord, rel, lang, limit);
                 values.getEdges().stream().forEach((concept) -> {
                     if (checkAdmittedRelations(concept, admittedRelations)
+                            && concept.getWeight() > minWeight
                             && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
                             && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
 
@@ -103,7 +93,7 @@ public class ConceptNet5Importer {
                                     || posList.isEmpty()
                                     || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
                                 if (depth > 1) {
-                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit);
+                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit, minWeight);
                                 }
                                 source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                                 res.add(annotateTag);

@@ -34,6 +34,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     public final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
     private static final int DEFAULT_RESULTS_LIMIT = 100;
     private static final String DEFAULT_ENRICHER = ConceptNet5Enricher.ENRICHER_NAME;
+    private static final Double DEFAULT_MIN_WEIGHT = 0.0d;
 
     private int depth = DEFAULT_DEPTH;
     private String language = DEFAULT_LANGUAGE;
@@ -44,6 +45,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     private List<String> admittedPos = DEFAULT_ADMITTED_POS;
     private int resultsLimit = DEFAULT_RESULTS_LIMIT;
     private String enricherName = DEFAULT_ENRICHER;
+    private Double minWeight = DEFAULT_MIN_WEIGHT;
     
     private Node annotatedNode;
     private Node tag;
@@ -64,7 +66,8 @@ public class ConceptRequest extends AbstractProcedureRequest {
                 LIMIT_KEY,
                 TEXT_PROCESSOR_KEY,
                 LANGUAGE_KEY,
-                ENRICHER_KEY
+                ENRICHER_KEY,
+                MIN_WEIGHT
         );
     }
 
@@ -156,6 +159,14 @@ public class ConceptRequest extends AbstractProcedureRequest {
         this.enricherName = enricherName;
     }
 
+    public Double getMinWeight() {
+        return minWeight;
+    }
+
+    public void setMinWeight(Double minWeight) {
+        this.minWeight = minWeight;
+    }
+
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
 
         ConceptRequest request = new ConceptRequest();
@@ -187,6 +198,10 @@ public class ConceptRequest extends AbstractProcedureRequest {
         }
         if (conceptRequest.containsKey(ENRICHER_KEY)) {
             request.setEnricherName(conceptRequest.get(ENRICHER_KEY).toString());
+        }
+
+        if (conceptRequest.containsKey(MIN_WEIGHT)) {
+            request.setMinWeight((Double) conceptRequest.get(MIN_WEIGHT));
         }
 
         request.setProcessor((String) conceptRequest.get(TEXT_PROCESSOR_KEY));
