@@ -35,10 +35,10 @@ public class PipelineInputProcedure extends AbstractDSL {
     private static final Logger LOG = LoggerFactory.getLogger(PipelineInputProcedure.class);
 
     @Procedure(name = "ga.nlp.pipeline.input.class.list", mode = Mode.READ)
-    @Description("Create a Pipeline Processor")
+    @Description("List pipeline input classes available")
     public Stream<PipelineItemInfo> available() {
         try {
-            Set<PipelineItemInfo> pipelineInput = getPipelineManager().getPipelineInputs();
+            Set<PipelineItemInfo> pipelineInput = getPipelineManager().getPipelineInputClasses();
             return pipelineInput.stream();
         } catch (Exception e) {
             LOG.error("ERROR in PipelineInputProcedure", e);
@@ -64,8 +64,8 @@ public class PipelineInputProcedure extends AbstractDSL {
     @Description("List Pipelines input")
     public Stream<PipelineInstanceItemInfo> list() {
         try {
-            Set<PipelineInstanceItemInfo> pipelineProcessors = getPipelineManager().getPipelineInputInstances();
-            return pipelineProcessors.stream();
+            Set<PipelineInstanceItemInfo> pipelineInput = getPipelineManager().getPipelineInputInstances();
+            return pipelineInput.stream();
         } catch (Exception e) {
             LOG.error("ERROR in PipelineInputProcedure", e);
             throw new RuntimeException(e);

@@ -138,12 +138,20 @@ public class PipelineManager {
         return instances.get(id);
     }
 
-    public Set<PipelineItemInfo> getPipelineProcessors() {
+    public Set<PipelineItemInfo> getPipelineProcessorClasses() {
         return getPipelineItemInfo(pipelineProcessorClasses);
     }
 
-    public Set<PipelineItemInfo> getPipelineInputs() {
+    public Set<PipelineItemInfo> getPipelineInputClasses() {
         return getPipelineItemInfo(pipelineInputClasses);
+    }
+    
+    public Set<PipelineItemInfo> getPipelineOutputClasses() {
+        return getPipelineItemInfo(pipelineOutputClasses);
+    }
+    
+    public Set<PipelineItemInfo> getPipelineTaskClasses() {
+        return getPipelineItemInfo(pipelineTaskClasses);
     }
 
     private <T extends PipelineItem> Set<PipelineItemInfo> getPipelineItemInfo(Map<String, Class<T>> classes) {
@@ -172,7 +180,7 @@ public class PipelineManager {
     }
 
     public Set<PipelineInstanceItemInfo> getPipelineProcessorInstances() {
-        return getPipelineInstanceInfo(pipelineInputInstances);
+        return getPipelineInstanceInfo(pipelineProcessorInstances);
     }
 
     public Set<PipelineInstanceItemInfo> getPipelineInputInstances() {

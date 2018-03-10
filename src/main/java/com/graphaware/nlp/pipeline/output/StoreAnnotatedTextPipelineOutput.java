@@ -5,9 +5,11 @@
  */
 package com.graphaware.nlp.pipeline.output;
 
+import com.graphaware.nlp.annotation.NLPOutput;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 
+@NLPOutput(name = "StoreAnnotatedTextPipelineOutput")
 public class StoreAnnotatedTextPipelineOutput extends PipelineOutput<StoreAnnotatedTextPipelineConfiguration> {
 
     public StoreAnnotatedTextPipelineOutput(String name, GraphDatabaseService database) {

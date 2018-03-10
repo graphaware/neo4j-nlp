@@ -38,7 +38,7 @@ public class PipelineProcessorProcedure extends AbstractDSL {
     @Description("Create a Pipeline Processor")
     public Stream<PipelineItemInfo> available() {
         try {
-            Set<PipelineItemInfo> pipelineProcessors = getPipelineManager().getPipelineProcessors();
+            Set<PipelineItemInfo> pipelineProcessors = getPipelineManager().getPipelineProcessorClasses();
             return pipelineProcessors.stream();
         } catch (Exception e) {
             LOG.error("ERROR in PipelineProcessorProcedure", e);
@@ -60,10 +60,16 @@ public class PipelineProcessorProcedure extends AbstractDSL {
         }
     }
 
-    @Procedure(name = "ga.nlp.pipeline.processor.list", mode = Mode.READ)
+    @Procedure(name = "ga.nlp.pipeline.processor.instance.list", mode = Mode.READ)
     @Description("List Pipelines")
-    public Stream<NodeResult> list() {
-        return null;
+    public Stream<PipelineInstanceItemInfo> list() {
+        try {
+            Set<PipelineInstanceItemInfo> pipelineProcessors = getPipelineManager().getPipelineProcessorInstances();
+            return pipelineProcessors.stream();
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineInputProcedure", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Procedure(name = "ga.nlp.pipeline.processor.get", mode = Mode.READ)
