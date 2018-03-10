@@ -5,6 +5,7 @@
  */
 package com.graphaware.nlp.pipeline.task;
 
+import com.graphaware.nlp.annotation.NLPTask;
 import com.graphaware.nlp.dsl.procedure.pipeline.PipelineInputProcedure;
 import com.graphaware.nlp.pipeline.PipelineItem;
 import com.graphaware.nlp.pipeline.PipelineManager;
@@ -18,8 +19,9 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@NLPTask(name = "PipelineTask")
 public class PipelineTask
-        extends PipelineItem<PipelineTextProcessorConfiguration> implements Runnable {
+        extends PipelineItem<PipelineTaskConfiguration> implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(PipelineInputProcedure.class);
 
@@ -35,20 +37,21 @@ public class PipelineTask
 
     @Override
     public void init(Map<String, Object> parameters) {
-        setConfiguration(new PipelineTextProcessorConfiguration(parameters));
-//        PipelineManager.getInstance().getPipelineInput();
-    }
-
-    public void setInput(PipelineInput input) {
-        this.input = input;
-    }
-
-    public void setProcess(PipelineProcessor process) {
-        this.process = process;
-    }
-
-    public void setOutput(PipelineOutput output) {
-        this.output = output;
+        setConfiguration(new PipelineTaskConfiguration(parameters));
+        String inputName = getConfiguration().getInput();
+        String outputName = getConfiguration().getOutput();
+        String processName = getConfiguration().getProcessor();
+        if (inputName == null || outputName == null || processName == null) {
+            throw new RuntimeException("The task cannot be initialized. "
+                    + "Some parameters are null");
+        }
+        this.input = PipelineManager.getInstance().getPipelineInput(inputName);
+        this.output = PipelineManager.getInstance().getPipelineOutput(outputName);
+        this.process = PipelineManager.getInstance().getPipelineProcessor(processName);
+        if (input == null || output == null || process == null) {
+            throw new RuntimeException("The task cannot be initialized. "
+                    + "Some parameters are invalid");
+        }
     }
 
     @Override

@@ -17,21 +17,46 @@ package com.graphaware.nlp.dsl.procedure.pipeline;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.PipelineInstanceItemInfo;
+import com.graphaware.nlp.dsl.result.PipelineItemInfo;
+import com.graphaware.nlp.pipeline.task.PipelineTask;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PipelineTaskProcedure  extends AbstractDSL {
+    private static final Logger LOG = LoggerFactory.getLogger(PipelineTaskProcedure.class);
+
+    @Procedure(name = "ga.nlp.pipeline.task.class.list", mode = Mode.READ)
+    @Description("List pipeline task classes available")
+    public Stream<PipelineItemInfo> available() {
+        try {
+            Set<PipelineItemInfo> pipelineTask = getPipelineManager().getPipelineTaskClasses();
+            return pipelineTask.stream();
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
+    }
     
     @Procedure(name = "ga.nlp.pipeline.task.create", mode = Mode.WRITE)
     @Description("Create a Pipeline input")
-    public Stream<NodeResult> create(@Name(value = "name") String name,
+    public Stream<PipelineInstanceItemInfo> create(@Name(value = "name") String name,
             @Name(value = "class", defaultValue = "") String classname, 
             @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
-        return null;
+        try {
+            PipelineTask pipelineTask = getPipelineManager().createPipelineTask(name, classname, parameters);
+            return Stream.of(pipelineTask.getInfo());
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
     }
     
     @Procedure(name = "ga.nlp.pipeline.task.list", mode = Mode.READ)
