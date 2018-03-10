@@ -55,4 +55,20 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
             assertTrue(result.hasNext());
         }));
     }
+
+    @Test
+    public void testEnrichmentTakeMinWeightIntoAccount() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam went to college.', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+            assertTrue(result.hasNext());
+        }));
+
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.enrich.concept({enricher: 'conceptnet5', node: n, depth: 1, language:'en', minWeight:100.0}) YIELD result RETURN result", (result -> {
+            assertTrue(result.hasNext());
+        }));
+
+        executeInTransaction("MATCH (n:Tag {value:'college'})-[:IS_RELATED_TO]->(x) RETURN x", (result -> {
+            assertFalse(result.hasNext());
+        }));
+    }
 }

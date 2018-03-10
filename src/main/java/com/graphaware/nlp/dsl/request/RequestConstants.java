@@ -26,4 +26,5 @@ public final class RequestConstants {
     public static final String ANNOTATORS = "annotators";
     public static final String EXCLUDED_NER = "excludedNER";
     public static final String EXCLUDED_POS = "excludedPOS";
+    public static final String MIN_WEIGHT = "minWeight";
 }

@@ -17,16 +17,13 @@ package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.common.util.Pair;
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.enrich.AbstractEnricher;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
-import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import com.graphaware.nlp.util.ProcessorUtils;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
@@ -99,7 +96,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
             }
         }
         tags.stream().forEach((tag) -> {
-            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit()));
+            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
             conceptTags.add(tag);
         });
 

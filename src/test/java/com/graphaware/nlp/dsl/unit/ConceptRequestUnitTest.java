@@ -37,4 +37,18 @@ public class ConceptRequestUnitTest {
         map.put("admittedRelationship", new ArrayList<>());
         ConceptRequest request = ConceptRequest.fromMap(map);
     }
+
+    @Test
+    public void testRequestWithLimitLongCanBeCaster() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("tag", new NodeProxy());
+        map.put("admittedRelationships", Arrays.asList("IsA","PartOf"));
+        map.put("admittedPos", Arrays.asList("NNS","NN"));
+        map.put("language", "en");
+        map.put("splitTag", true);
+        map.put("limit", 50L);
+
+        ConceptRequest request = ConceptRequest.fromMap(map);
+        assertEquals(50, request.getResultsLimit());
+    }
 }
