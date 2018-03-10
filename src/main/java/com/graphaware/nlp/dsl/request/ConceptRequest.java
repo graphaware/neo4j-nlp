@@ -183,7 +183,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
             request.setFilterByLanguage((Boolean) conceptRequest.get(FILTER_BY_LANGUAGE_KEY));
         }
         if (conceptRequest.containsKey(LIMIT_KEY)) {
-            request.setResultsLimit( (int) conceptRequest.get(LIMIT_KEY));
+            request.setResultsLimit( ((Long) conceptRequest.get(LIMIT_KEY)).intValue());
         }
         if (conceptRequest.containsKey(ENRICHER_KEY)) {
             request.setEnricherName(conceptRequest.get(ENRICHER_KEY).toString());
