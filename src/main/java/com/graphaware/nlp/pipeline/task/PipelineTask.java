@@ -11,8 +11,8 @@ import com.graphaware.nlp.pipeline.PipelineItem;
 import com.graphaware.nlp.pipeline.PipelineManager;
 import com.graphaware.nlp.pipeline.processor.PipelineProcessor;
 import com.graphaware.nlp.pipeline.input.PipelineInput;
+import com.graphaware.nlp.pipeline.input.PipelineInputEntry;
 import com.graphaware.nlp.pipeline.output.PipelineOutput;
-import com.graphaware.nlp.pipeline.processor.PipelineTextProcessorConfiguration;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -58,8 +58,9 @@ public class PipelineTask
     public void run() {
         Iterator inputIterator = input.iterator();
         while (inputIterator.hasNext()) {
-            Object next = inputIterator.next();
-
+            PipelineInputEntry next = (PipelineInputEntry) inputIterator.next();
+            String text = next.getText();
+            Object id = next.getId();
         }
     }
 

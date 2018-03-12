@@ -19,7 +19,9 @@ import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.PipelineInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.PipelineItemInfo;
+import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.pipeline.task.PipelineTask;
+import com.graphaware.nlp.pipeline.task.TaskManager;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -59,10 +61,16 @@ public class PipelineTaskProcedure  extends AbstractDSL {
         }
     }
     
-    @Procedure(name = "ga.nlp.pipeline.task.list", mode = Mode.READ)
+    @Procedure(name = "ga.nlp.pipeline.task.instance.list", mode = Mode.READ)
     @Description("List Pipelines")
-    public Stream<NodeResult> list() {
-        return null;
+    public Stream<PipelineInstanceItemInfo> list() {
+        try {
+            Set<PipelineInstanceItemInfo> pipelineTasks = getPipelineManager().getPipelineTaskInstances();
+            return pipelineTasks.stream();
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
     }
     
     @Procedure(name = "ga.nlp.pipeline.task.get", mode = Mode.READ)
@@ -87,8 +95,18 @@ public class PipelineTaskProcedure  extends AbstractDSL {
     
     @Procedure(name = "ga.nlp.pipeline.task.start", mode = Mode.WRITE)
     @Description("Start a Task")
-    public Stream<NodeResult> start(@Name(value = "name") String name) {
-        return null;
+    public Stream<SingleResult> start(@Name(value = "name") String name) {
+        try {
+            PipelineTask pipelineTask = getPipelineManager().getPipelineTask(name);
+            if (pipelineTask == null) {
+                throw new RuntimeException("Pipeline task not found");
+            }
+            TaskManager.getInstance().execute(pipelineTask);
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            LOG.error("ERROR in PipelineTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
     } 
     
     @Procedure(name = "ga.nlp.pipeline.task.stop", mode = Mode.WRITE)

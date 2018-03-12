@@ -67,7 +67,7 @@ public class PipelineProcessorProcedure extends AbstractDSL {
             Set<PipelineInstanceItemInfo> pipelineProcessors = getPipelineManager().getPipelineProcessorInstances();
             return pipelineProcessors.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineInputProcedure", e);
+            LOG.error("ERROR in PipelineProcessorProcedure", e);
             throw new RuntimeException(e);
         }
     }
