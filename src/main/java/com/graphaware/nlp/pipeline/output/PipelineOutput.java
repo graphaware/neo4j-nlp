@@ -7,6 +7,7 @@ package com.graphaware.nlp.pipeline.output;
 
 import com.graphaware.nlp.pipeline.PipelineConfiguration;
 import com.graphaware.nlp.pipeline.PipelineItem;
+import com.graphaware.nlp.pipeline.processor.PipelineProcessorOutputEntry;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 /**
@@ -21,6 +22,8 @@ public abstract class PipelineOutput<C extends PipelineConfiguration>
     public PipelineOutput(String name, GraphDatabaseService database) {
         super(name, database);
     }
+    
+    public abstract void process(PipelineProcessorOutputEntry entry);
 
     @Override
     public String getPrefix() {

@@ -9,9 +9,14 @@ import com.graphaware.nlp.pipeline.AbstractPipelineConfiguration;
 import java.util.Map;
 
 public class StoreAnnotatedTextPipelineConfiguration extends AbstractPipelineConfiguration {
+    private final static String POST_QUERY = "query";
     
     public StoreAnnotatedTextPipelineConfiguration(Map<String, Object> configuration) {
         super(configuration);
+    }
+    
+    public String getQuery() {
+        return (String)getConfiguration().get(POST_QUERY);
     }
     
 }

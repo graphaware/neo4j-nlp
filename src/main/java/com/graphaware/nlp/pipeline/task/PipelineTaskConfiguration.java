@@ -17,6 +17,7 @@ public class PipelineTaskConfiguration extends AbstractPipelineConfiguration {
     public static final String PIPELINE_INPUT_NAME = "input";
     public static final String PIPELINE_OUTPUT_NAME = "output";
     public static final String PIPELINE_PROCESSOR_NAME = "processor";
+    public static final String SYNCRONOUS = "sync";
 
     public PipelineTaskConfiguration(Map<String, Object> configuration) {
         super(configuration);
@@ -32,6 +33,10 @@ public class PipelineTaskConfiguration extends AbstractPipelineConfiguration {
 
     public String getProcessor() {
         return (String) getConfiguration().get(PIPELINE_PROCESSOR_NAME);
+    }
+    
+    public boolean isSync() {
+        return (Boolean) getConfiguration().getOrDefault(SYNCRONOUS, true);
     }
 
 }

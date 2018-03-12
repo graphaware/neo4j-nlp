@@ -43,7 +43,7 @@ public class PipelineTaskTest extends NLPIntegrationTest {
         executeInTransaction("UNWIND {texts} AS text CREATE (n:Lesson) SET n.text = text", Collections.singletonMap("texts", SHORT_TEXTS), emptyConsumer());
         executeInTransaction("CALL ga.nlp.pipeline.input.create('testInput', "
                 + "'com.graphaware.nlp.pipeline.input.QueryBasedPipelineIput', "
-                + "{query: 'MATCH (n:Lesson) where not exists((n)-->(:AnnotatedText)) return n.text as text, id(n) as id'})",
+                + "{query: 'MATCH (n:Lesson) where not exists((n)-->(:AnnotatedText)) return n.text as text, toString(id(n)) as id'})",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
@@ -53,7 +53,8 @@ public class PipelineTaskTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.pipeline.processor.create('testProcess', "
                 + "'com.graphaware.nlp.pipeline.processor.PipelineTextProcessor', "
                 + "{"
-                + "textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', "
+                + "textProcessor: 'com.graphaware.nlp.stub.StubTextProcessor', "
+                + "pipeline: 'tokenizer', "
                 + "name: 'customStopWords', "
                 + "processingSteps: {tokenize: true, dependency: true}, "
                 + "stopWords: '+,have, use, can, should, from, may, result, all, during, must, when, time, could, require, work, need, provide, nasa, support, perform, include, which, would, other, level, more, make, between, you, do, about, above, after, again, against, am, any, because, been, before, being, below, both, did, do, does, doing, down, each, few, further, had, has, having, he, her, here, hers, herself, him, himself, his, how, i, its, itself, just, me, most, my, myself, nor, now, off, once, only, our, ours, ourselves, out, over, own, same, she, so, some, than, theirs, them, themselves, those, through, too, under, until, up, very, we, were, what, where, while, who, whom, why, you, your, yours, yourself, yourselves, small, big, little, much, more, some, several, also, any, both, rdquo, ldquo, raquo', "
@@ -66,7 +67,10 @@ public class PipelineTaskTest extends NLPIntegrationTest {
                 }));
         executeInTransaction("CALL ga.nlp.pipeline.output.create('testOutput', "
                 + "'com.graphaware.nlp.pipeline.output.StoreAnnotatedTextPipelineOutput', "
-                + "{query: 'MATCH (n:Lesson) where not exists((n)-->(:AnnotatedText)) return n'})",
+                + "{query: 'MATCH (n:Lesson), (result) "
+                + "where id(n) = toInteger({entryId}) AND id(result) = toInteger({annotatedTextId}) "
+                + "WITH n, result "
+                + "MERGE (n)-[r:HAS_ANNOTATED_TEXT]->(result) '})",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
@@ -78,7 +82,8 @@ public class PipelineTaskTest extends NLPIntegrationTest {
                 + "{"
                 + "input: 'testInput', "
                 + "output: 'testOutput', "
-                + "processor: 'testProcess'"
+                + "processor: 'testProcess', "
+                + "sync: true"
                 + "})",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
@@ -90,6 +95,17 @@ public class PipelineTaskTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.pipeline.task.start('testTask')",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
+                }));
+        
+        executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->(p) return n,p",
+                ((Result result) -> {
+                    assertTrue(result.hasNext());
+                    int c = 0;
+                    while (result.hasNext()) {
+                        result.next();
+                        c++;
+                    }
+                    Assert.assertEquals(10, c);
                 }));
     }
 

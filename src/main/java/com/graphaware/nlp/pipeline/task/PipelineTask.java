@@ -6,6 +6,7 @@
 package com.graphaware.nlp.pipeline.task;
 
 import com.graphaware.nlp.annotation.NLPTask;
+import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.procedure.pipeline.PipelineInputProcedure;
 import com.graphaware.nlp.pipeline.PipelineItem;
 import com.graphaware.nlp.pipeline.PipelineManager;
@@ -13,6 +14,7 @@ import com.graphaware.nlp.pipeline.processor.PipelineProcessor;
 import com.graphaware.nlp.pipeline.input.PipelineInput;
 import com.graphaware.nlp.pipeline.input.PipelineInputEntry;
 import com.graphaware.nlp.pipeline.output.PipelineOutput;
+import com.graphaware.nlp.pipeline.processor.PipelineProcessorOutputEntry;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -56,11 +58,16 @@ public class PipelineTask
 
     @Override
     public void run() {
+        doProcess();
+    }
+
+    public void doProcess() {
         Iterator inputIterator = input.iterator();
         while (inputIterator.hasNext()) {
             PipelineInputEntry next = (PipelineInputEntry) inputIterator.next();
-            String text = next.getText();
-            Object id = next.getId();
+            PipelineProcessorOutputEntry processor = process.process(next);// Check if null
+            AnnotatedText annotateText = processor.getAnnotateText();
+            output.process(new PipelineProcessorOutputEntry(annotateText, next.getId()));
         }
     }
 
@@ -68,5 +75,8 @@ public class PipelineTask
     public String getPrefix() {
         return PIPELINE_TASK_KEY_PREFIX;
     }
-
+    
+    public boolean isSync() {
+        return getConfiguration().isSync();
+    }
 }

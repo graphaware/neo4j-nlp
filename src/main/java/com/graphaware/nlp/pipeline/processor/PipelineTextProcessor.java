@@ -31,12 +31,14 @@ public class PipelineTextProcessor extends PipelineProcessor<PipelineTextProcess
     }
 
     @Override
-    public void process(PipelineInputEntry entry) {
+    public PipelineProcessorOutputEntry process(PipelineInputEntry entry) {
         if (isValid()) {
             String lang = NLPManager.getInstance().checkTextLanguage(entry.getText(), getConfiguration().checkLanguage());
             AnnotatedText annotateText = textProcessor.annotateText(entry.getText(), getConfiguration().getPipeline(), lang, null);
+            return new PipelineProcessorOutputEntry(annotateText, entry.getId());
         } else {
             LOG.warn("The Processor " + this.getName()+ " is in an invalid state");
+            return null;
         }
     }
 

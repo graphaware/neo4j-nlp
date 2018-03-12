@@ -28,7 +28,7 @@ public abstract class PipelineProcessor<C extends PipelineConfiguration> extends
         super(name, database);
     }
 
-    public abstract void process(PipelineInputEntry entry);
+    public abstract PipelineProcessorOutputEntry process(PipelineInputEntry entry);
 
     @Override
     public String getPrefix() {

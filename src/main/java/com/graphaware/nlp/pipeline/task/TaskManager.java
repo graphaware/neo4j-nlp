@@ -5,26 +5,32 @@
  */
 package com.graphaware.nlp.pipeline.task;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TaskManager {
+
     private final ExecutorService executors;
-    
+
     private TaskManager() {
         executors = Executors.newFixedThreadPool(10);
     }
-    
+
     public static TaskManager getInstance() {
         return TaskManagerHolder.INSTANCE;
     }
-    
+
     private static class TaskManagerHolder {
+
         private static final TaskManager INSTANCE = new TaskManager();
     }
-    
+
     public void execute(PipelineTask task) {
-        executors.execute(task);
+        if (!task.isSync()) {
+            executors.execute(task);
+        } else {
+            task.doProcess();
+        }
+            
     }
 }
