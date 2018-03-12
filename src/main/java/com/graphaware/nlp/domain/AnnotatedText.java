@@ -34,6 +34,8 @@ public class AnnotatedText {
 
     private int numTerms;
 
+    private String id;
+
     private List<Sentence> sentences = new ArrayList<>();
 
     public List<Sentence> getSentences() {
@@ -136,6 +138,13 @@ public class AnnotatedText {
                 return tag.getLemma().equalsIgnoreCase(value);
             }
         }
+    }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
