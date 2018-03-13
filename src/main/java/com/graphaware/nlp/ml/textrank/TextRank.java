@@ -23,6 +23,7 @@ import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.util.QueryUtils;
 import org.neo4j.graphdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +41,11 @@ public class TextRank {
     // a query for creating co-occurrences per sentence
     // query based on orignal TextRank: it doesn't care about sentence boundaries (it connects last word of a sentence with 1st word of the next sentence)
     private static final String COOCCURRENCE_QUERY
-            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+            = "MATCH (a:__ANNOTATED_TEXT__)-[:CONTAINS_SENTENCE]->(s:__SENTENCE__)-[:SENTENCE_TAG_OCCURRENCE]->(to)\n"
             + "WHERE id(a) = {id}\n"
             + "WITH to\n"
             + "ORDER BY to.startPosition\n"
-            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:__TAG__)\n"
             //+ "WHERE size(t.value) > 2\n"
             + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH collect(t) as tags, collect(to) as tagsPosition\n"
@@ -54,11 +55,11 @@ public class TextRank {
             + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_BY_SENTENCE
-            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
+            = "MATCH (a:__ANNOTATED_TEXT__)-[:CONTAINS_SENTENCE]->(s:__SENTENCE__)-[:SENTENCE_TAG_OCCURRENCE]->(to)\n"
             + "WHERE id(a) = {id} \n"
             + "WITH s, to\n"
             + "ORDER BY s.sentenceNumber, to.startPosition\n"
-            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:__TAG__)\n"
             //+ "WHERE size(t.value) > 2\n"
             + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH s, collect(t) as tags, collect(to) as tagsPosition\n"
@@ -69,27 +70,27 @@ public class TextRank {
             + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_FROM_DEPENDENCIES
-            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)//-[r]->(to2:TagOccurrence)\n"
+            = "MATCH (a:__ANNOTATED_TEXT__)-[:CONTAINS_SENTENCE]->(s:__SENTENCE__)-[:SENTENCE_TAG_OCCURRENCE]->(to)//-[r]->(to2:__TAG__Occurrence)\n"
             + "WHERE id(a) = {id}\n"
             + "WITH to\n"
-            //+ "MATCH (to)-[r]-(to2:TagOccurrence)\n"
-            + "OPTIONAL MATCH (to)-[r]-(to2:TagOccurrence)\n"
+            //+ "MATCH (to)-[r]-(to2:__TAG__Occurrence)\n"
+            + "OPTIONAL MATCH (to)-[r]-(to2:__TAG_OCCURRENCE__)\n"
             + "WHERE to <> to2 AND to.startPosition < to2.startPosition\n"
             + "WITH to, to2, r\n"
-            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
+            + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:__TAG__)\n"
             //+ "WHERE size(t.value) > 2 //and (size(t.pos)=0 OR any(p in t.pos where p in {}))\n"
             + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
-            //+ "MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-            + "OPTIONAL MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
+            //+ "MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:__TAG__)\n"
+            + "OPTIONAL MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:__TAG__)\n"
             //+ "WHERE size(t2.value) > 2 //and (size(t2.pos)=0 OR any(p in t2.pos where p in {}))\n"
             + "WHERE size(t2.value) > 2 AND NOT(toLower(t2.value) IN {stopwords}) AND NOT ANY(pos IN t2.pos WHERE t2.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t2) WHERE l IN {forbiddenNEs})\n"
             + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, to.startPosition as sourceStartPosition, to2.startPosition as destinationStartPosition, t.pos as pos1, t2.pos as pos2, collect(type(r))\n"
             + "ORDER BY sourceStartPosition, destinationStartPosition";
 
-    private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
+    private static final String GET_TAG_QUERY = "MATCH (node:__TAG__)<-[:TAG_OCCURRENCE_TAG]-(to:__TAG_OCCURRENCE__)<-[:SENTENCE_TAG_OCCURRENCE]-(:__SENTENCE__)<-[:CONTAINS_SENTENCE]-(a:__ANNOTATED_TEXT__)\n"
             //+ "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
             + "WHERE id(a) = {id}  and not (toLower(node.value) IN {stopwords})" // new
-            + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
+            + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:__TAG_OCCURRENCE__)-[:TAG_OCCURRENCE_TAG]->(t2:__TAG__)\n"
             + "WHERE not exists(t2.pos) or size(t2.pos) = 0 or any(p in t2.pos where p in {posList}) and not (toLower(t2.value) IN {stopwords})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
             + "collect(id(t2)) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
@@ -118,18 +119,19 @@ public class TextRank {
     private double relevanceSigma;
     private double tfidfAvg;
     private double tfidfSigma;
+    private final DynamicConfiguration configuration;
 
-    public TextRank(GraphDatabaseService database, 
-            boolean removeStopWords, 
-            boolean directionsMatter, 
-            boolean respectSentences, 
-            boolean useDependencies, 
+    public TextRank(GraphDatabaseService database,
+            boolean removeStopWords,
+            boolean directionsMatter,
+            boolean respectSentences,
+            boolean useDependencies,
             boolean cooccurrencesFromDependencies,
             boolean cleanKeywords,
-            int cooccurrenceWindow, 
-            double topxTags, 
-            Label keywordLabel, 
-            Set<String> stopWords, 
+            int cooccurrenceWindow,
+            double topxTags,
+            Label keywordLabel,
+            Set<String> stopWords,
             List<String> admittedPOSs,
             List<String> forbiddenNEs,
             List<String> forbiddenPOSs) {
@@ -149,6 +151,7 @@ public class TextRank {
         this.admittedPOSs = admittedPOSs;
         this.forbiddenNEs = forbiddenNEs;
         this.forbiddenPOSs = forbiddenPOSs;
+        this.configuration = NLPManager.getInstance().getConfiguration();
 
         initializePipelineWithoutNEs();
     }
@@ -170,9 +173,9 @@ public class TextRank {
         params.put("id", annotatedText.getId());
         String query;
         if (respectSentences) {
-            query = COOCCURRENCE_QUERY_BY_SENTENCE;
+            query = getQuery(COOCCURRENCE_QUERY_BY_SENTENCE);
         } else {
-            query = COOCCURRENCE_QUERY;
+            query = getQuery(COOCCURRENCE_QUERY);
         }
 
         Result res = null;
@@ -237,11 +240,11 @@ public class TextRank {
     public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText, boolean fromDependencies) {
         String query;
         if (fromDependencies)
-            query = COOCCURRENCE_QUERY_FROM_DEPENDENCIES;
+            query = getQuery(COOCCURRENCE_QUERY_FROM_DEPENDENCIES);
         else if (respectSentences) {
-            query = COOCCURRENCE_QUERY_BY_SENTENCE;
+            query = getQuery(COOCCURRENCE_QUERY_BY_SENTENCE);
         } else {
-            query = COOCCURRENCE_QUERY;
+            query = getQuery(COOCCURRENCE_QUERY);
         }
 
         // use tf*idf for creating a list of stopwords
@@ -524,7 +527,7 @@ public class TextRank {
         Map<Long, KeywordExtractedItem> keywordMap = new HashMap<>();
         List<Long> wrongNEs = new ArrayList<>();
         try (Transaction tx = database.beginTx()) {
-            Result res = database.execute(GET_TAG_QUERY, params);
+            Result res = database.execute(getQuery(GET_TAG_QUERY), params);
             while (res != null && res.hasNext()) {
                 Map<String, Object> next = res.next();
                 long tagId = (long) next.get("tagId");
@@ -721,7 +724,7 @@ public class TextRank {
     private void peristKeyword(Map<String, Keyword> results, Node annotatedText) {
         LOG.info("--- Results: ");
         KeywordPersister persister = NLPManager.getInstance().getPersister(Keyword.class);
-        persister.setLabel(keywordLabel);
+        persister.setLabel(configuration.getLabelFor(Labels.Keyword));
         results.entrySet().stream()
                 .forEach(en -> {
                     // check keyword consistency
@@ -756,17 +759,19 @@ public class TextRank {
 
     public boolean postprocess() {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
-        String query = "match (k:" + keywordLabel.name() + ")\n"
+        String query = "match (k:" + configuration.getLabelFor(Labels.Keyword) + ")\n"
                 + "where k.numTerms > 1\n"
                 + "with k, k.keywordsList as ks_orig\n"
                 + "match (k2:" + keywordLabel.name() + ")\n"
-                + "where k2.numTerms > k.numTerms and not exists( (k)-[:DESCRIBES]->(:AnnotatedText)<-[:DESCRIBES]-(k2) )\n"
+                + "where k2.numTerms > k.numTerms and not exists( (k)-[:DESCRIBES]->(:__ANNOTATED_TEXT__)<-[:DESCRIBES]-(k2) )\n"
                 + "with ks_orig, k, k2, k2.keywordsList as ks_check\n"
                 + "where all(el in ks_orig where el in ks_check)\n"
-                + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
+                + "match (k2)-[r2:DESCRIBES]->(a:__ANNOTATED_TEXT__)\n"
                 + "MERGE (k)-[rNew:DESCRIBES]->(a)\n"
                 + "ON CREATE SET rNew.count = r2.count_exactMatch, rNew.count_exactMatch = 0\n"
                 + "ON MATCH SET  rNew.count = rNew.count + r2.count_exactMatch";
+
+        query = getQuery(query);
 
         try (Transaction tx = database.beginTx();) {
             LOG.info("Running identification of sub-keyphrases ...");
@@ -778,7 +783,7 @@ public class TextRank {
         }
 
         // add HAS_SUBGROUP relationships between keywords, ex.: (station) -[HAS_SUBGROUP]-> (space station) -[HAS_SUBGROUP]-> (international space station)
-        query = "match (k:" + keywordLabel.name() + ")\n"
+        query = "match (k:" + configuration.getLabelFor(Labels.Keyword) + ")\n"
                 + "with k, k.keywordsList as ks_orig\n"
                 + "match (k2:" + keywordLabel.name() + ")\n"
                 + "where k2.numTerms > k.numTerms\n"
@@ -820,13 +825,15 @@ public class TextRank {
             });
         }
 
-        String query = "MATCH (doc:AnnotatedText)\n"
+        String query = "MATCH (doc:__ANNOTATED_TEXT__)\n"
                 + "WITH count(doc) as documentsCount\n"
-                + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[ht:HAS_TAG]->(t:Tag)\n"
+                + "MATCH (a:__ANNOTATED_TEXT__)-[:CONTAINS_SENTENCE]->(:__SENTENCE__)-[ht:HAS_TAG]->(t:__TAG__)\n"
                 + "WHERE id(a) = {id} \n"
                 + "WITH t, sum(ht.tf) as tf, documentsCount\n"
-                + "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(:Sentence)-[:HAS_TAG]->(t)\n"
+                + "MATCH (a:__ANNOTATED_TEXT__)-[:CONTAINS_SENTENCE]->(:__SENTENCE__)-[:HAS_TAG]->(t)\n"
                 + "RETURN id(t) as tag, t.id as tagVal, tf, count(distinct a) as docCountForTag, documentsCount\n";
+
+        query = getQuery(query);
 
         try (Transaction tx = database.beginTx();) {
             Result res = database.execute(query, Collections.singletonMap("id", annotatedText.getId()));
@@ -973,6 +980,10 @@ public class TextRank {
         }
 
         return newResults;
+    }
+
+    private String getQuery(String query) {
+        return QueryUtils.processQuery(query, configuration);
     }
 
     public static class Builder {
