@@ -3,6 +3,8 @@ package com.graphaware.nlp.dsl;
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.util.ImportUtils;
 import org.junit.Test;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -21,7 +23,7 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
         }));
 
         executeInTransaction("MATCH (n:Keyword)-[:DESCRIBES]->(at) RETURN n, at", (result -> {
-            assertTrue("No Keyword nodes found.", result.hasNext());
+            assertTrue(result.hasNext());
         }));
 
     }
@@ -35,8 +37,25 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
         }));
 
         executeInTransaction("MATCH (n:Keyword)-[:DESCRIBES]->(at) RETURN n, at", (result -> {
-            assertTrue("No Keyword nodes found.", result.hasNext());
+            assertTrue(result.hasNext());
         }));
+    }
+
+    @Test
+    public void testTextRankWithCustomKeywordLabelShouldWork() throws Exception {
+        clearDb();
+        createGraph();
+        executeInTransaction("CALL ga.nlp.config.set('LABEL_Keyword', 'KYWORD')", (result -> {
+            assertTrue(result.hasNext());
+        }));
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText: n}) YIELD result RETURN result", (result -> {
+            assertTrue(result.hasNext());
+        }));
+
+        executeInTransaction("MATCH (n:KYWORD) RETURN n", (result -> {
+            assertTrue(result.hasNext());
+        }));
+
     }
 
     private void createGraph() throws Exception {

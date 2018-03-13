@@ -19,10 +19,10 @@ public class QueryUtils {
 
     public static Map<String, String> getAllDynamicLabels(DynamicConfiguration configuration) {
         Map<String, String> labels = new HashMap<>();
-        labels.put("__ANNOTATED_TEXT__", configuration.getLabelFor(Labels.AnnotatedText).toString());
-        labels.put("__SENTENCE__", configuration.getLabelFor(Labels.Sentence).toString());
-        labels.put("__TAG_OCCURRENCE__", configuration.getLabelFor(Labels.TagOccurrence).toString());
-        labels.put("__TAG__", configuration.getLabelFor(Labels.Tag).toString());
+        labels.put("__ANNOTATED_TEXT__", configuration.getLabelFor(Labels.AnnotatedText).name());
+        labels.put("__SENTENCE__", configuration.getLabelFor(Labels.Sentence).name());
+        labels.put("__TAG_OCCURRENCE__", configuration.getLabelFor(Labels.TagOccurrence).name());
+        labels.put("__TAG__", configuration.getLabelFor(Labels.Tag).name());
 
         return labels;
     }
