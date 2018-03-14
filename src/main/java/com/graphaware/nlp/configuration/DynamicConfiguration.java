@@ -18,9 +18,9 @@ package com.graphaware.nlp.configuration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.dsl.result.PipelineInstanceItemInfo;
-import com.graphaware.nlp.pipeline.PipelineItem;
-import com.graphaware.nlp.pipeline.processor.PipelineProcessor;
+import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
+import com.graphaware.nlp.workflow.WorkflowItem;
+import com.graphaware.nlp.workflow.processor.WorkflowProcessor;
 import java.io.IOException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -132,7 +132,7 @@ public class DynamicConfiguration {
         return list;
     }
 
-    public void storePipelineItem(PipelineItem item) {
+    public void storePipelineItem(WorkflowItem item) {
         try {
             String serialized = mapper.writeValueAsString(item.getInfo());
             String key = item.getPrefix() + item.getName();
@@ -142,13 +142,13 @@ public class DynamicConfiguration {
         }
     }
 
-    public List<PipelineInstanceItemInfo> loadPipelineInstanceItems(String prefix) {
-        List<PipelineInstanceItemInfo> list = new ArrayList<>();
+    public List<WorkflowInstanceItemInfo> loadPipelineInstanceItems(String prefix) {
+        List<WorkflowInstanceItemInfo> list = new ArrayList<>();
         Map<String, Object> config = getAllConfigValuesFromStore();
         config.keySet().forEach(k -> {
             if (k.startsWith(prefix)) {
                 try {
-                    PipelineInstanceItemInfo pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineInstanceItemInfo.class);
+                    WorkflowInstanceItemInfo pipelineSpecification = mapper.readValue(config.get(k).toString(), WorkflowInstanceItemInfo.class);
                     list.add(pipelineSpecification);
                 } catch (IOException e) {
                     throw new RuntimeException(e);

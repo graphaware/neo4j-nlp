@@ -19,7 +19,7 @@ import com.graphaware.nlp.configuration.DynamicConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPModule;
-import com.graphaware.nlp.pipeline.PipelineManager;
+import com.graphaware.nlp.workflow.WorkflowManager;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.procedure.Context;
 
@@ -36,7 +36,7 @@ public abstract class AbstractDSL {
         return NLPManager.getInstance();
     }
     
-    protected PipelineManager getPipelineManager() {
+    protected WorkflowManager getPipelineManager() {
         return getStartedRuntime(database).getModule(NLPModule.class).getPipelineManager();
     }
 

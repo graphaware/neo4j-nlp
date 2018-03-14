@@ -19,7 +19,7 @@ import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.event.DatabaseTransactionEvent;
-import com.graphaware.nlp.pipeline.PipelineManager;
+import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
 import com.graphaware.runtime.module.DeliberateTransactionRollbackException;
 import com.graphaware.tx.event.improved.api.ImprovedTransactionData;
@@ -41,7 +41,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     private NLPManager nlpManager;
     
-    private PipelineManager pipelineManager;
+    private WorkflowManager pipelineManager;
 
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
@@ -55,7 +55,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
         nlpManager = NLPManager.getInstance();
         nlpManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));
         
-        pipelineManager = PipelineManager.getInstance();
+        pipelineManager = WorkflowManager.getInstance();
         pipelineManager.init(database, nlpMLConfiguration, new DynamicConfiguration(database));        
     }
 
@@ -67,7 +67,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
         return nlpManager;
     }
 
-    public PipelineManager getPipelineManager() {
+    public WorkflowManager getPipelineManager() {
         return pipelineManager;
     }
     

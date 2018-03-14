@@ -52,7 +52,10 @@ public class LanguageManager {
         supportedLanguages.add(LANGUAGE_EN);
     }
 
-    private void initialize() {
+    public void initialize() {
+        if (initialized) {
+            return;
+        }
         LOG.info("Initializing Language Detector ...");
         try {
             List<LanguageProfile> languageProfiles = new LanguageProfileReader().readAllBuiltIn();
