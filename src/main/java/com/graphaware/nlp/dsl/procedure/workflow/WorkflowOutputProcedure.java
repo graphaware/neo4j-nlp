@@ -17,6 +17,7 @@ package com.graphaware.nlp.dsl.procedure.workflow;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
 import com.graphaware.nlp.workflow.output.WorkflowOutput;
@@ -35,51 +36,55 @@ public class WorkflowOutputProcedure extends AbstractDSL {
     private static final Logger LOG = LoggerFactory.getLogger(WorkflowOutputProcedure.class);
 
     @Procedure(name = "ga.nlp.workflow.output.class.list", mode = Mode.READ)
-    @Description("List workflow output classes available")
+    @Description("List WorkflowOutput classes available")
     public Stream<WorkflowItemInfo> available() {
         try {
-            Set<WorkflowItemInfo> workflowOutput = getPipelineManager().getPipelineOutputClasses();
+            Set<WorkflowItemInfo> workflowOutput = getWorkflowManager().getWorkflowOutputClasses();
             return workflowOutput.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineOutputProcedure", e);
+            LOG.error("ERROR in WorkflowOutputProcedure", e);
             throw new RuntimeException(e);
         }
     }
 
     @Procedure(name = "ga.nlp.workflow.output.create", mode = Mode.WRITE)
-    @Description("Create a Pipeline input")
+    @Description("Create a WorkflowOutput")
     public Stream<WorkflowInstanceItemInfo> create(@Name(value = "name") String name,
             @Name(value = "class", defaultValue = "") String classname,
             @Name(value = "parameters", defaultValue = "") Map<String, Object> parameters) {
         try {
-            WorkflowOutput workflowInput = getPipelineManager().createPipelineOutput(name, classname, parameters);
+            WorkflowOutput workflowInput = getWorkflowManager().createWorkflowOutput(name, classname, parameters);
             return Stream.of(workflowInput.getInfo());
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineOutputProcedure", e);
+            LOG.error("ERROR in WorkflowOutputProcedure", e);
             throw new RuntimeException(e);
         }
     }
 
     @Procedure(name = "ga.nlp.workflow.output.instance.list", mode = Mode.READ)
-    @Description("List Pipelines")
+    @Description("List WorkflowOutput")
     public Stream<WorkflowInstanceItemInfo> list() {
         try {
-            Set<WorkflowInstanceItemInfo> workflowOutput = getPipelineManager().getPipelineOutputInstances();
+            Set<WorkflowInstanceItemInfo> workflowOutput = getWorkflowManager().getWorkflowOutputInstances();
             return workflowOutput.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineInputProcedure", e);
+            LOG.error("ERROR in WorkflowOutputProcedure", e);
             throw new RuntimeException(e);
         }
     }
 
     @Procedure(name = "ga.nlp.workflow.output.get", mode = Mode.READ)
-    @Description("Get Pipeline info")
-    public Stream<NodeResult> get() {
+    @Description("Get WorkflowOutput")
+    public Stream<WorkflowInstanceItemInfo> get(@Name(value = "name") String name) {
+        WorkflowOutput workflowOutput = getWorkflowManager().getWorkflowOutput(name);
+        if (workflowOutput != null) {
+            return Stream.of(workflowOutput.getInfo());
+        }
         return null;
     }
 
     @Procedure(name = "ga.nlp.workflow.output.update", mode = Mode.WRITE)
-    @Description("Update a Pipeline update")
+    @Description("Update a WorkflowOutput")
     public Stream<NodeResult> update(@Name(value = "name") String name,
             @Name(value = "class", defaultValue = "") String classname,
             @Name(value = "parameters", defaultValue = "") Map<String, Object> parameters) {
@@ -87,9 +92,14 @@ public class WorkflowOutputProcedure extends AbstractDSL {
     }
 
     @Procedure(name = "ga.nlp.workflow.output.delete", mode = Mode.WRITE)
-    @Description("Delete a Pipeline")
-    public Stream<NodeResult> delete(@Name(value = "name") String name) {
-        return null;
-    }
+    @Description("Delete a WorkflowOutput")
+    public Stream<SingleResult> delete(@Name(value = "name") String name) {
+        WorkflowOutput workflowOutput = getWorkflowManager().deleteWorkflowOutput(name);
+        if (workflowOutput != null) {
+            return Stream.of(SingleResult.success());
+        } else {
+            return Stream.of(SingleResult.fail());
+        }
+    } 
 
 }

@@ -7,5 +7,8 @@ package com.graphaware.nlp.workflow.task;
 
 public enum TaskStatus {
     IDLE,
-    RUNNING;
+    RUNNING,
+    FAILED,
+    CANCELLED,
+    SUCCEEDED;
 }

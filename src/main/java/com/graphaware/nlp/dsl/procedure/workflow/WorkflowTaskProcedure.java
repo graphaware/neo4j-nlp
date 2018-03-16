@@ -16,7 +16,6 @@
 package com.graphaware.nlp.dsl.procedure.workflow;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
-import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
 import com.graphaware.nlp.dsl.result.SingleResult;
@@ -39,10 +38,10 @@ public class WorkflowTaskProcedure  extends AbstractDSL {
     @Description("List workflow task classes available")
     public Stream<WorkflowItemInfo> available() {
         try {
-            Set<WorkflowItemInfo> workflowTask = getPipelineManager().getPipelineTaskClasses();
+            Set<WorkflowItemInfo> workflowTask = getWorkflowManager().getWorkflowTaskClasses();
             return workflowTask.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineTaskProcedure", e);
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
             throw new RuntimeException(e);
         }
     }
@@ -53,72 +52,100 @@ public class WorkflowTaskProcedure  extends AbstractDSL {
             @Name(value = "class", defaultValue = "") String classname, 
             @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
         try {
-            WorkflowTask workflowTask = getPipelineManager().createPipelineTask(name, classname, parameters);
+            WorkflowTask workflowTask = getWorkflowManager().createWorkflowTask(name, classname, parameters);
             return Stream.of(workflowTask.getInfo());
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineTaskProcedure", e);
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
             throw new RuntimeException(e);
         }
     }
     
-    @Procedure(name = "ga.nlp.workflow.task.instance.list", mode = Mode.READ)
+    @Procedure(name = "ga.nlp.workflow.task.list", mode = Mode.READ)
     @Description("List Pipelines")
     public Stream<WorkflowInstanceItemInfo> list() {
         try {
-            Set<WorkflowInstanceItemInfo> workflowTasks = getPipelineManager().getPipelineTaskInstances();
+            Set<WorkflowInstanceItemInfo> workflowTasks = getWorkflowManager().getWorkflowTaskInstances();
             return workflowTasks.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineTaskProcedure", e);
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
             throw new RuntimeException(e);
         }
     }
     
     @Procedure(name = "ga.nlp.workflow.task.get", mode = Mode.READ)
     @Description("Get Pipeline info")
-    public Stream<NodeResult> get() {
+    public Stream<WorkflowInstanceItemInfo> get(@Name(value = "name") String name) {
+        WorkflowTask workflowTask = getWorkflowManager().getWorkflowTask(name);
+        if (workflowTask != null) {
+            return Stream.of(workflowTask.getInfo());
+        }
         return null;
     }
     
     @Procedure(name = "ga.nlp.workflow.task.update", mode = Mode.WRITE)
     @Description("Update a Pipeline update")
-    public Stream<NodeResult> update(@Name(value = "name") String name,
+    public Stream<SingleResult> update(@Name(value = "name") String name,
             @Name(value = "class", defaultValue = "") String classname, 
             @Name(value = "parameters", defaultValue = "" ) Map<String, Object> parameters) {
         return null;
     }
     
     @Procedure(name = "ga.nlp.workflow.task.delete", mode = Mode.WRITE)
-    @Description("Delete a Pipeline")
-    public Stream<NodeResult> delete(@Name(value = "name") String name) {
-        return null;
+    @Description("Delete a Workflow Task")
+    public Stream<SingleResult> delete(@Name(value = "name") String name) {
+        WorkflowTask workflowTask = getWorkflowManager().deleteWorkflowTask(name);
+        if (workflowTask != null) {
+            return Stream.of(SingleResult.success());
+        } else {
+            return Stream.of(SingleResult.fail());
+        }
     } 
     
     @Procedure(name = "ga.nlp.workflow.task.start", mode = Mode.WRITE)
     @Description("Start a Task")
     public Stream<SingleResult> start(@Name(value = "name") String name) {
         try {
-            WorkflowTask workflowTask = getPipelineManager().getPipelineTask(name);
+            WorkflowTask workflowTask = getWorkflowManager().getWorkflowTask(name);
             if (workflowTask == null) {
                 throw new RuntimeException("Pipeline task not found");
             }
             TaskManager.getInstance().execute(workflowTask);
             return Stream.of(SingleResult.success());
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineTaskProcedure", e);
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
             throw new RuntimeException(e);
         }
     } 
     
     @Procedure(name = "ga.nlp.workflow.task.stop", mode = Mode.WRITE)
     @Description("Start a Task")
-    public Stream<NodeResult> stop(@Name(value = "name") String name) {
-        return null;
+    public Stream<WorkflowInstanceItemInfo> stop(@Name(value = "name") String name) {
+        try {
+            WorkflowTask workflowTask = getWorkflowManager().getWorkflowTask(name);
+            if (workflowTask == null) {
+                throw new RuntimeException("Pipeline task not found");
+            }
+            TaskManager.getInstance().stop(workflowTask);
+            return Stream.of(workflowTask.getInfo());
+        } catch (Exception e) {
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
     } 
     
     @Procedure(name = "ga.nlp.workflow.task.status", mode = Mode.READ)
     @Description("Start a Task")
-    public Stream<NodeResult> status(@Name(value = "name") String name) {
-        return null;
+    public Stream<WorkflowInstanceItemInfo> status(@Name(value = "name") String name) {
+        try {
+            WorkflowTask workflowTask = getWorkflowManager().getWorkflowTask(name);
+            if (workflowTask == null) {
+                throw new RuntimeException("Pipeline task not found");
+            }
+            return Stream.of(workflowTask.getInfo());
+        } catch (Exception e) {
+            LOG.error("ERROR in WorkflowTaskProcedure", e);
+            throw new RuntimeException(e);
+        }
     } 
     
 }

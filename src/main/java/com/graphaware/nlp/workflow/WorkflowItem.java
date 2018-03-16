@@ -24,7 +24,7 @@ public abstract class WorkflowItem<C extends WorkflowConfiguration> {
     public abstract String getPrefix();
 
     public abstract void init(Map<String, Object> parameters);
-
+    
     public String getName() {
         return name;
     }

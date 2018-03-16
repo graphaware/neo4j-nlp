@@ -17,9 +17,11 @@ package com.graphaware.nlp.dsl.procedure.workflow;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
 import com.graphaware.nlp.workflow.input.WorkflowInput;
+import com.graphaware.nlp.workflow.output.WorkflowOutput;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -38,10 +40,10 @@ public class WorkflowInputProcedure extends AbstractDSL {
     @Description("List workflow input classes available")
     public Stream<WorkflowItemInfo> available() {
         try {
-            Set<WorkflowItemInfo> workflowInput = getPipelineManager().getPipelineInputClasses();
+            Set<WorkflowItemInfo> workflowInput = getWorkflowManager().getWorkflowInputClasses();
             return workflowInput.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineInputProcedure", e);
+            LOG.error("ERROR in WorkflowInputProcedure", e);
             throw new RuntimeException(e);
         }
     }
@@ -52,10 +54,10 @@ public class WorkflowInputProcedure extends AbstractDSL {
             @Name(value = "class", defaultValue = "") String classname,
             @Name(value = "parameters", defaultValue = "") Map<String, Object> parameters) {
         try {
-            WorkflowInput workflowInput = getPipelineManager().createPipelineInput(name, classname, parameters);
+            WorkflowInput workflowInput = getWorkflowManager().createWorkflowInput(name, classname, parameters);
             return Stream.of(workflowInput.getInfo());
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineInputProcedure", e);
+            LOG.error("ERROR in WorkflowInputProcedure", e);
             throw new RuntimeException(e);
         }
     }
@@ -64,17 +66,21 @@ public class WorkflowInputProcedure extends AbstractDSL {
     @Description("List Pipelines input")
     public Stream<WorkflowInstanceItemInfo> list() {
         try {
-            Set<WorkflowInstanceItemInfo> workflowInput = getPipelineManager().getPipelineInputInstances();
+            Set<WorkflowInstanceItemInfo> workflowInput = getWorkflowManager().getWorkflowInputInstances();
             return workflowInput.stream();
         } catch (Exception e) {
-            LOG.error("ERROR in PipelineInputProcedure", e);
+            LOG.error("ERROR in WorkflowInputProcedure", e);
             throw new RuntimeException(e);
         }
     }
 
     @Procedure(name = "ga.nlp.workflow.input.get", mode = Mode.READ)
-    @Description("Get Pipeline info")
-    public Stream<NodeResult> get() {
+    @Description("Get WorkflowInput")
+    public Stream<WorkflowInstanceItemInfo> get(@Name(value = "name") String name) {
+        WorkflowInput workflowInput = getWorkflowManager().getWorkflowInput(name);
+        if (workflowInput != null) {
+            return Stream.of(workflowInput.getInfo());
+        }
         return null;
     }
 
@@ -88,9 +94,13 @@ public class WorkflowInputProcedure extends AbstractDSL {
     }
 
     @Procedure(name = "ga.nlp.workflow.input.delete", mode = Mode.WRITE)
-    @Description("Delete a Pipeline")
-    public Stream<NodeResult> delete(@Name(value = "name") String name
-    ) {
-        return null;
+    @Description("Delete a WorkflowInput")
+    public Stream<SingleResult> delete(@Name(value = "name") String name) {
+        WorkflowInput workflowInput = getWorkflowManager().deleteWorkflowInput(name);
+        if (workflowInput != null) {
+            return Stream.of(SingleResult.success());
+        } else {
+            return Stream.of(SingleResult.fail());
+        }
     }
 }

@@ -36,7 +36,7 @@ public abstract class AbstractDSL {
         return NLPManager.getInstance();
     }
     
-    protected WorkflowManager getPipelineManager() {
+    protected WorkflowManager getWorkflowManager() {
         return getStartedRuntime(database).getModule(NLPModule.class).getPipelineManager();
     }
 
