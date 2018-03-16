@@ -60,7 +60,7 @@ public class WorkflowTaskProcedure  extends AbstractDSL {
         }
     }
     
-    @Procedure(name = "ga.nlp.workflow.task.list", mode = Mode.READ)
+    @Procedure(name = "ga.nlp.workflow.task.instance.list", mode = Mode.READ)
     @Description("List Pipelines")
     public Stream<WorkflowInstanceItemInfo> list() {
         try {
