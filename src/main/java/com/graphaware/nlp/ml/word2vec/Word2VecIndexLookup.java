@@ -29,7 +29,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
-import org.slf4j.LoggerFactory;
+import com.graphaware.common.log.LoggerFactory;
+import org.neo4j.logging.Log;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -38,7 +39,7 @@ import java.util.Set;
 
 public class Word2VecIndexLookup {
 
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
+    private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
     private final String storePath;
     private final IndexReader indexReader;

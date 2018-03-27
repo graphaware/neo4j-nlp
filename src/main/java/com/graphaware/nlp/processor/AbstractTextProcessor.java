@@ -31,7 +31,7 @@ public abstract class AbstractTextProcessor implements TextProcessor{
     public static final String STEP_SENTIMENT = "sentiment";
 
     public static final String DEFAULT_STOP_WORD_LIST = "start,starts,period,periods,a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,o,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with";
-    public static final String PUNCT_REGEX_PATTERN = "^([\\p{L}0-9]+)([-_'][\\p{L}0-9]+)*$";
+    public static final String PUNCT_REGEX_PATTERN = "^([\\p{L}0-9]+)([-_' ][\\p{L}0-9]+)*$";
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
 

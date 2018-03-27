@@ -15,19 +15,20 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Word2VecModel {
-    private static final Logger LOG = LoggerFactory.getLogger(Word2VecModel.class);
+//    private static final Log LOG = LoggerFactory.getLogger(Word2VecModel.class);
 
     protected static final String IMPORT_DIRECTORY = "import/";
     protected static final String WORD2VEC_SOURCE_DIRECTORY = IMPORT_DIRECTORY + "word2vecSource/";
     protected static final String WORD2VEC_DEST_DIRECTORY = IMPORT_DIRECTORY + "word2vecIndex/";
+
+    private static final Log LOG = com.graphaware.common.log.LoggerFactory.getLogger(Word2VecModel.class);
 
     private final Map<String, Word2VecIndexLookup> models;
     private String defaultModel;
@@ -53,6 +54,7 @@ public class Word2VecModel {
 
     public void createModelFromPaths(String sourcePath, String destPath, String modelName, String language) {
         List<String> modelsName = Word2VecIndexCreator.inspectDirectoryAndLoad(sourcePath, destPath, language);
+        LOG.info("Checking models for source : " + sourcePath + " and destination " + destPath);
         if (modelsName != null) {
             modelsName.forEach(model -> {
                 Word2VecIndexLookup index = new Word2VecIndexLookup(destPath + model);

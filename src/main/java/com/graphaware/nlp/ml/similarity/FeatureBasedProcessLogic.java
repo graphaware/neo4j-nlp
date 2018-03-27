@@ -24,8 +24,8 @@ import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
 import org.neo4j.graphdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
 
 public class FeatureBasedProcessLogic {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FeatureBasedProcessLogic.class);
+    private static final Log LOG = LoggerFactory.getLogger(FeatureBasedProcessLogic.class);
 
     private final static String DEFAULT_VECTOR_QUERY = "MATCH (doc:AnnotatedText)\n"
             + "WITH count(doc) as documentsCount\n"

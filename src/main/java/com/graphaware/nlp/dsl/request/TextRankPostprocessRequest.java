@@ -15,14 +15,14 @@
  */
 package com.graphaware.nlp.dsl.request;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.Map;
 
 public class TextRankPostprocessRequest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextRankPostprocessRequest.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextRankPostprocessRequest.class);
 
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
 

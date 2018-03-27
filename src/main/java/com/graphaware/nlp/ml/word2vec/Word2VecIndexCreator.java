@@ -16,6 +16,7 @@
 
 package com.graphaware.nlp.ml.word2vec;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.util.TypeConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -30,7 +31,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Word2VecIndexCreator {
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
+    private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
     public static final String VECTOR_FIELD = "values";
     public static final String WORD_FIELD = "word";
@@ -63,6 +64,7 @@ public class Word2VecIndexCreator {
             }
             iwc.setRAMBufferSizeMB(256.0);
             try (IndexWriter writer = new IndexWriter(dir, iwc)) {
+                LOG.info("Starting indexing in " + indexPath);
                 indexWord2Vec(writer, sourceFile, language);
                 writer.forceMerge(1);
             }
@@ -106,6 +108,8 @@ public class Word2VecIndexCreator {
     }
     
     public static List<String> inspectDirectoryAndLoad(String path, String destPath, String language) {
+        LOG.info("Inspect directories and LOAD");
+
         List<String> modelNames = new ArrayList<>();
         if (path == null || path.length() == 0) {
             LOG.error("Scanning for word2Vec files: wrong path specified.");
@@ -143,7 +147,10 @@ public class Word2VecIndexCreator {
 
     private static boolean isIgnorableFile(String filename) {
         List<String> ignores = Arrays.asList(".DS_Store");
-
-        return ignores.contains(filename);
+        if (!filename.contains(".txt")) {
+            return true;
+        } else {
+            return ignores.contains(filename);
+        }
     }
 }

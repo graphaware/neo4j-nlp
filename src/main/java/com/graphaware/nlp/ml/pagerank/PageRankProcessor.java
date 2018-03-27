@@ -23,15 +23,15 @@ import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.Map;
 
 @NLPModuleExtension(name = "PageRankProcessor")
 public class PageRankProcessor extends AbstractExtension implements NLPExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
 
     public SingleResult process(PageRankRequest request) {
         String nodeType = request.getNodeType();

@@ -21,13 +21,13 @@ import com.graphaware.nlp.dsl.request.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 @NLPModuleExtension(name = "TextRankProcessor")
 public class TextRankProcessor extends AbstractExtension implements NLPExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextRankProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
     public SingleResult process(TextRankRequest request) {
         TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());

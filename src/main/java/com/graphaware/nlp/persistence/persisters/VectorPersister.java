@@ -22,12 +22,12 @@ import com.graphaware.nlp.persistence.constants.Labels;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 public class VectorPersister extends AbstractPersister implements Persister<VectorContainer> {
     
-    private static final Logger LOG = LoggerFactory.getLogger(VectorPersister.class);
+    private static final Log LOG = LoggerFactory.getLogger(VectorPersister.class);
 
     public VectorPersister(GraphDatabaseService database, PersistenceRegistry registry) {
         super(database, registry);

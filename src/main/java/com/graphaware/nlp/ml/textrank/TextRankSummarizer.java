@@ -23,8 +23,8 @@ import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
 import org.neo4j.graphdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class TextRankSummarizer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextRank.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextRank.class);
 
     private final GraphDatabaseService database;
     private final Label keywordLabel;

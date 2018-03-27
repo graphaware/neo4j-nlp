@@ -21,8 +21,8 @@ import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
 import org.neo4j.graphdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 
 public class VectorProcessLogic {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VectorProcessLogic.class);
+    private static final Log LOG = LoggerFactory.getLogger(VectorProcessLogic.class);
 
     protected final Similarity similarityFunction;
     protected final GraphDatabaseService database;

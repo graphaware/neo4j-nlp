@@ -23,15 +23,15 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class ConceptNet5Client {
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
+    private static final Log LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
 
     private final String conceptNet5EndPoint;
     private final ClientConfig cfg;

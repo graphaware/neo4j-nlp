@@ -27,8 +27,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @NLPModuleExtension(name = "Word2VecProcessor")
 public class Word2VecProcessor extends AbstractExtension implements NLPExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Word2VecProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(Word2VecProcessor.class);
     private static final String RELATIONSHIP_IS_RELATED_TO_SUB_TAG = "subTag";
 
     private Word2VecModel word2VecModel;

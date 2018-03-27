@@ -18,7 +18,7 @@ package com.graphaware.nlp.processor;
 
 public class TextProcessorProcedure {
 //
-//    private static final Logger LOG = LoggerFactory.getLogger(TextProcessorProcedure.class);
+//    private static final Log LOG = LoggerFactory.getLogger(TextProcessorProcedure.class);
 //    public static final String SUCCESS = "success";
 //
 //    private String defaultTextProcessorName;

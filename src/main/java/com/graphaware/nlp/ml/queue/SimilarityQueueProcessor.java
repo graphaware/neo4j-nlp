@@ -17,8 +17,8 @@ package com.graphaware.nlp.ml.queue;
 
 import com.graphaware.nlp.persistence.constants.Properties;
 import org.neo4j.graphdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class SimilarityQueueProcessor implements Runnable {
 
     private final BlockingQueue<SimilarityItemProcessEntry> queue;
     private final GraphDatabaseService database;
-    private static final Logger LOG = LoggerFactory.getLogger(SimilarityQueueProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(SimilarityQueueProcessor.class);
 
     public SimilarityQueueProcessor(GraphDatabaseService database) {
         this.queue = new LinkedBlockingQueue<>();

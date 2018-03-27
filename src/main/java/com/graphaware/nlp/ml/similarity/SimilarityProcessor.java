@@ -15,13 +15,13 @@
  */
 package com.graphaware.nlp.ml.similarity;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.dsl.request.SimilarityRequest;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @NLPModuleExtension(name = "SimilarityProcessor")
 public class SimilarityProcessor extends AbstractExtension implements NLPExtension {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimilarityProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(SimilarityProcessor.class);
 
     private FeatureBasedProcessLogic featureBusinessLogic;
     private VectorProcessLogic vectorBusinessLogic;

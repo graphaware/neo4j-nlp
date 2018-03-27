@@ -20,8 +20,8 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +29,7 @@ import java.util.Map;
 
 public class PageRank {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PageRank.class);
+    private static final Log LOG = LoggerFactory.getLogger(PageRank.class);
 
     protected final GraphDatabaseService database;
     private Map<Long, Double> nodeWeights;

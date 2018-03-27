@@ -20,8 +20,8 @@ import com.google.common.cache.CacheBuilder;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,7 +33,7 @@ import static com.graphaware.nlp.util.TextUtils.removeParenthesis;
 
 public class ConceptNet5Importer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
+    private static final Log LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
     public static final String DEFAULT_LANGUAGE = "en";

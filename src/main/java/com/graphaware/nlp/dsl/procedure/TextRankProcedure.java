@@ -27,12 +27,12 @@ import org.neo4j.procedure.Procedure;
 
 import java.util.Map;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 public class TextRankProcedure extends AbstractDSL {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextRankProcedure.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextRankProcedure.class);
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
     @Description("TextRank procedure")

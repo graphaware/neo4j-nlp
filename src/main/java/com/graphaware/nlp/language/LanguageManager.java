@@ -25,8 +25,8 @@ import com.optimaize.langdetect.profiles.LanguageProfileReader;
 import com.optimaize.langdetect.text.CommonTextObjectFactories;
 import com.optimaize.langdetect.text.TextObject;
 import com.optimaize.langdetect.text.TextObjectFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -41,7 +41,7 @@ import static com.graphaware.nlp.domain.Constants.LANGUAGE_NA;
  */
 public class LanguageManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LanguageManager.class);
+    private static final Log LOG = LoggerFactory.getLogger(LanguageManager.class);
     private boolean initialized = false;
     private LanguageDetector languageDetector;
     private TextObjectFactory textObjectFactory;

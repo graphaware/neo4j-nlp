@@ -27,12 +27,12 @@ import org.neo4j.procedure.Procedure;
 
 import java.util.Map;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 public class SimilarityProcedure extends AbstractDSL {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VectorProcessLogic.class);
+    private static final Log LOG = LoggerFactory.getLogger(VectorProcessLogic.class);
 
 //    @Procedure(name = "ga.nlp.ml.similarity.cosine", mode = Mode.WRITE)
 //    @Description("Compute similarity between Annotated Text")

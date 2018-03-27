@@ -16,14 +16,14 @@
 package com.graphaware.nlp.dsl.request;
 
 import org.neo4j.graphdb.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.Map;
 
 public class TextRankRequest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextRankRequest.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextRankRequest.class);
 
     //private final static String PARAMETER_NAME_QUERY = "query";
     private final static String PARAMETER_ANNOTATED_TEXT = "annotatedText";

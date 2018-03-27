@@ -17,12 +17,12 @@ package com.graphaware.nlp.util;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 public class TypeConverter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TypeConverter.class);
+    private static final Log LOG = LoggerFactory.getLogger(TypeConverter.class);
 
     public static byte[] toByteArray(double[] doubleArray) {
         int times = Double.SIZE / Byte.SIZE;

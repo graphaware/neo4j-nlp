@@ -16,8 +16,8 @@
 package com.graphaware.nlp.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotatedText {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotatedText.class);
+    private static final Log LOG = LoggerFactory.getLogger(AnnotatedText.class);
     private static final long serialVersionUID = -1L;
 
     private String text;

@@ -18,8 +18,8 @@ package com.graphaware.nlp.processor;
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.util.ServiceLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ import java.util.Set;
 
 public class TextProcessorsManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
+    private static final Log LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
     private static final String DEFAULT_TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
 
     private final Map<String, TextProcessor> textProcessors = new HashMap<>();

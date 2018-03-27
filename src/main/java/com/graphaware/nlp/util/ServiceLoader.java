@@ -18,8 +18,8 @@ package com.graphaware.nlp.util;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.processor.TextProcessor;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -33,7 +33,7 @@ import java.util.Set;
 public class ServiceLoader {
 
     private static Reflections reflections;
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceLoader.class);
+    private static final Log LOG = LoggerFactory.getLogger(ServiceLoader.class);
 
     public static NLPExtension loadNLPExtension(String extensionClazz) {
         NLPExtension extension;

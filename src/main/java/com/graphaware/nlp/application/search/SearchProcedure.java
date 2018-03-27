@@ -17,7 +17,7 @@ package com.graphaware.nlp.application.search;
 
 public class SearchProcedure {
 
-//    private static final Logger LOG = LoggerFactory.getLogger(SearchProcedure.class);
+//    private static final Log LOG = LoggerFactory.getLogger(SearchProcedure.class);
 //
 //    private final TextProcessor textProcessor;
 //    private final GraphDatabaseService database;
