@@ -5,6 +5,7 @@
  */
 package com.graphaware.nlp.workflow.output;
 
+import com.graphaware.nlp.annotation.NLPOutput;
 import com.graphaware.nlp.workflow.processor.WorkflowProcessorOutputEntry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,6 +13,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@NLPOutput(name = "DeferredStoreAnnotatedTextWorkflowOutput")
 public class DeferredStoreAnnotatedTextWorkflowOutput extends StoreAnnotatedTextWorkflowOutput {
 
     private static final Logger LOG = LoggerFactory.getLogger(DeferredStoreAnnotatedTextWorkflowOutput.class);
@@ -27,7 +29,7 @@ public class DeferredStoreAnnotatedTextWorkflowOutput extends StoreAnnotatedText
     }
 
     @Override
-    public void process(WorkflowProcessorOutputEntry entry) {
+    public void handle(WorkflowProcessorOutputEntry entry) {
         queue.offer(entry);
     }
 
@@ -43,7 +45,7 @@ public class DeferredStoreAnnotatedTextWorkflowOutput extends StoreAnnotatedText
         public void run() {
             try {
                 WorkflowProcessorOutputEntry entry = queue.take();
-                store.process(entry);
+                store.handle(entry);
 
             } catch (InterruptedException ex) {
                 LOG.warn("Interrupted excetpion", ex);

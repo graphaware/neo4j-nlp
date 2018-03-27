@@ -20,15 +20,13 @@ import com.graphaware.nlp.workflow.input.WorkflowInputEntry;
 import org.neo4j.graphdb.GraphDatabaseService;
 import com.graphaware.nlp.workflow.WorkflowConfiguration;
 
-public abstract class WorkflowProcessor<C extends WorkflowConfiguration> extends WorkflowItem<C> {
+public abstract class WorkflowProcessor<C extends WorkflowConfiguration> extends WorkflowItem<C, WorkflowInputEntry> {
 
     public static final String PIPELINE_PROCESSOR_KEY_PREFIX = "PIPELINE_PROCESSOR_";
 
     public WorkflowProcessor(String name, GraphDatabaseService database) {
         super(name, database);
     }
-
-    public abstract WorkflowProcessorOutputEntry process(WorkflowInputEntry entry);
 
     @Override
     public String getPrefix() {

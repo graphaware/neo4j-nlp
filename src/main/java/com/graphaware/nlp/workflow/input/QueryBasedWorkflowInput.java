@@ -31,26 +31,40 @@ public class QueryBasedWorkflowInput
         return new IteratorWrapper(rs);
     }
 
+    @Override
+    public void handle(Void entry) {
+        //The input is the starting point 
+    }
+
     
     class IteratorWrapper implements Iterator<WorkflowInputEntry<String>> {
         
         private final Result rs;
+        private boolean endOfQueue;
 
         public IteratorWrapper(Result rs) {
             this.rs = rs;
+            this.endOfQueue = false;
         }
         
         @Override
         public boolean hasNext() {
+            if (endOfQueue) {
+                return false;
+            }
             boolean hasNext = rs.hasNext();
             if (!hasNext) {
+                endOfQueue = true;
                 rs.close();
             }
-            return hasNext;
+            return true;
         }
 
         @Override
         public WorkflowInputEntry<String> next() {
+            if (endOfQueue) {
+                return new WorkflowInputEndOfQueueEntry<>();
+            }
             Map<String, Object> nextElement = rs.next();
             return new WorkflowInputEntry<>(
                     (String)nextElement.get("text"), 

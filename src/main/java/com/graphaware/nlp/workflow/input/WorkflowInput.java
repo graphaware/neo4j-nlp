@@ -10,7 +10,7 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import com.graphaware.nlp.workflow.WorkflowConfiguration;
 
 public abstract class WorkflowInput<C extends WorkflowConfiguration, T>
-        extends WorkflowItem<C>
+        extends WorkflowItem<C, Void>
         implements Iterable<WorkflowInputEntry<T>> {
 
     public static final String PIPELINE_INPUT_KEY_PREFIX = "PIPELINE_INPUT_";

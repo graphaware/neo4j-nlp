@@ -11,6 +11,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.workflow.input.WorkflowInputEntry;
 import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.workflow.input.WorkflowInputEndOfQueueEntry;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.slf4j.Logger;
@@ -34,16 +35,19 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
     }
 
     @Override
-    public WorkflowProcessorOutputEntry process(WorkflowInputEntry entry) {
+    public void handle(WorkflowInputEntry entry) {
+        if (entry instanceof WorkflowInputEndOfQueueEntry) {
+            super.checkAndHandle(new WorkflowProcessorEndOfQueueEntry());
+        }
         if (isValid()) {
             long start = -System.currentTimeMillis();
             String lang = NLPManager.getInstance().checkTextLanguage(entry.getText(), getConfiguration().checkLanguage());
             System.out.println("Time for getting lang: " + (System.currentTimeMillis() + start));
             AnnotatedText annotateText = textProcessor.annotateText(entry.getText(), getConfiguration().getPipeline(), lang, null);
-            return new WorkflowProcessorOutputEntry(annotateText, entry.getId());
+            super.checkAndHandle(new WorkflowProcessorOutputEntry(annotateText, entry.getId()));
         } else {
             LOG.warn("The Processor " + this.getName()+ " is in an invalid state");
-            return null;
+            super.checkAndHandle(null);
         }
     }
 

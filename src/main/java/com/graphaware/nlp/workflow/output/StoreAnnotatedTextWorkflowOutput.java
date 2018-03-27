@@ -28,7 +28,7 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
     }
 
     @Override
-    public void process(WorkflowProcessorOutputEntry entry) {
+    public void handle(WorkflowProcessorOutputEntry entry) {
         try (Transaction tx = getDatabase().beginTx()) {
             Node newAnnotatedNode = persistAnnotatedText(entry.getAnnotateText(), (String) entry.getId(), "");
             String query = getConfiguration().getQuery();

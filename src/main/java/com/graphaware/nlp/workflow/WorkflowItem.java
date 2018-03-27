@@ -9,7 +9,7 @@ import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 
-public abstract class WorkflowItem<C extends WorkflowConfiguration> {
+public abstract class WorkflowItem<C extends WorkflowConfiguration, T> extends AbstractMessageHandler<T>{
 
     private final String name;
     private final GraphDatabaseService database;

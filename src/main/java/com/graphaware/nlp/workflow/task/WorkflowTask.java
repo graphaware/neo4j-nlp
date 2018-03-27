@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 @NLPTask(name = "WorkflowTask")
 public class WorkflowTask
-        extends WorkflowItem<WorkflowTaskConfiguration> {
+        extends WorkflowItem<WorkflowTaskConfiguration, Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WorkflowInputProcedure.class);
 
@@ -59,6 +59,8 @@ public class WorkflowTask
             throw new RuntimeException("The task cannot be initialized. "
                     + "Some parameters are invalid");
         }
+        this.input.setSuccessor(process);
+        this.process.setSuccessor(output);
     }
 
     public void doProcess() {
@@ -74,11 +76,7 @@ public class WorkflowTask
             while (inputIterator.hasNext()
                     && !cancelled) {
                 WorkflowInputEntry next = (WorkflowInputEntry) inputIterator.next();
-                WorkflowProcessorOutputEntry processorOutput = process.process(next);
-                if (processorOutput != null) {
-                    AnnotatedText annotateText = processorOutput.getAnnotateText();
-                    output.process(new WorkflowProcessorOutputEntry(annotateText, next.getId()));
-                }
+                process.handle(next);
             }
         } catch (Exception ex) {
             LOG.error("The task " + getName() + " failed", ex);
@@ -143,6 +141,11 @@ public class WorkflowTask
                 getConfiguration().getConfiguration(),
                 isValid(),
                 status);
+    }
+
+    @Override
+    public void handle(Void entry) {
+        
     }
     
     

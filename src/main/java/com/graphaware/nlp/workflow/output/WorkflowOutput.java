@@ -15,7 +15,7 @@ import com.graphaware.nlp.workflow.WorkflowConfiguration;
  * @author ale
  */
 public abstract class WorkflowOutput<C extends WorkflowConfiguration>
-        extends WorkflowItem<C> {
+        extends WorkflowItem<C, WorkflowProcessorOutputEntry> {
 
     public static final String PIPELINE_OUTPUT_KEY_PREFIX = "PIPELINE_OUTPUT_";
 
@@ -23,8 +23,6 @@ public abstract class WorkflowOutput<C extends WorkflowConfiguration>
         super(name, database);
     }
     
-    public abstract void process(WorkflowProcessorOutputEntry entry);
-
     @Override
     public String getPrefix() {
         return PIPELINE_OUTPUT_KEY_PREFIX;
