@@ -20,6 +20,7 @@ import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
@@ -98,5 +99,16 @@ public class AbstractEnricher {
 
     protected Persister getPersister(Class clazz) {
         return persistenceRegistry.getPersister(clazz);
+    }
+
+    protected TextProcessor getProcessor(String processor) {
+        if (null != processor) {
+            return manager.getTextProcessorsManager().getTextProcessor(processor);
+        }
+
+        String pipeline = manager.getPipeline(null);
+        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
+
+        return manager.getTextProcessorsManager().getTextProcessor(pipelineSpecification.getTextProcessor());
     }
 }

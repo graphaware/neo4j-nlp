@@ -1,7 +1,9 @@
 package com.graphaware.nlp.integration;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -9,6 +11,13 @@ import java.util.Collections;
 import static org.junit.Assert.*;
 
 public class NasaLessonsDatasetTest extends NLPIntegrationTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     @Test
     public void testAnnotation() {

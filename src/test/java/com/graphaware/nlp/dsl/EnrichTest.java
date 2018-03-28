@@ -10,17 +10,24 @@ import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.stub.StubTextProcessor;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.ResourceIterator;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 
-/**
- *
- * @author ale
- */
 public class EnrichTest extends NLPIntegrationTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     private static final String TEXT = "On 8 May 2013, "
             + "one week before the Pakistani election, the third author, "

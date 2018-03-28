@@ -34,11 +34,11 @@ public class TextProcessorManagerTest {
         assertTrue(textProcessorsManager.getTextProcessor("com.graphaware.nlp.stub.StubTextProcessor") instanceof StubTextProcessor);
     }
 
-    @Test
-    public void testRetrievingProcessorWithNameAndPipeline() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
-        assertTrue(textProcessorsManager.retrieveTextProcessor("com.graphaware.nlp.stub.StubTextProcessor", "tokenizer") instanceof StubTextProcessor);
-    }
+//    @Test
+//    public void testRetrievingProcessorWithNameAndPipeline() {
+//        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+//        assertTrue(textProcessorsManager.retrieveTextProcessor("com.graphaware.nlp.stub.StubTextProcessor", "tokenizer") instanceof StubTextProcessor);
+//    }
 
     @Test(expected = RuntimeException.class)
     public void testRetrieveProcessorWithUnknownPipelineThrowException() {
@@ -52,10 +52,10 @@ public class TextProcessorManagerTest {
         textProcessorsManager.retrieveTextProcessor(null, null);
     }
 
-    @Test
-    public void testRetrieveProcessorWithNullAndValidPipelineReturnsProcessor() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
-        assertTrue(textProcessorsManager.retrieveTextProcessor(null, "tokenizer") instanceof StubTextProcessor);
-    }
+//    @Test
+//    public void testRetrieveProcessorWithNullAndValidPipelineReturnsProcessor() {
+//        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+//        assertTrue(textProcessorsManager.retrieveTextProcessor(null, "tokenizer") instanceof StubTextProcessor);
+//    }
 
 }

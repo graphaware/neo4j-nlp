@@ -15,12 +15,12 @@
  */
 package com.graphaware.nlp.dsl.procedure;
 
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.ProcessorsList;
 import com.graphaware.nlp.dsl.result.SingleResult;
-import com.graphaware.nlp.processor.PipelineInfo;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -64,8 +64,20 @@ public class TextProcessorsProcedure extends AbstractDSL {
     
     @Procedure("ga.nlp.processor.getPipelines")
     @Description("Returns the pipeline informations")
-    public Stream<PipelineInfo> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
-        return getNLPManager().getPipelineInformations(pipelineName).stream();
+    public Stream<PipelineSpecification> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
+        return getNLPManager().getPipelineSpecifications(pipelineName).stream();
+    }
+
+    @Procedure(value = "ga.nlp.processor.pipeline.default", mode = Mode.WRITE)
+    @Description("Specify the pipeline to be used by default")
+    public Stream<SingleResult> setDefaultPipeline(@Name("name") String name) {
+        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(name);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("Pipeline " + name + " does not exist");
+        }
+        getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, name);
+
+        return Stream.of(SingleResult.success());
     }
 
     @Procedure(name = "ga.nlp.processor.train", mode = Mode.WRITE)

@@ -104,4 +104,8 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         return map;
     }
 
+    protected void createPipeline(String textProcessor, String pipelineName) {
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, processingSteps:{tokenizer:true, ner:true, phrase:true}})", buildSeqParameters(pipelineName, textProcessor), emptyConsumer());
+    }
+
 }

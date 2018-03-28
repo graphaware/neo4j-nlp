@@ -4,7 +4,10 @@ import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Sentence;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -16,6 +19,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.*;
 
 public class AnnotatedTextPersistenceTest extends NLPIntegrationTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     @Test
     public void testTagsHavingTwoDifferentPOSInDifferentSentencesShouldReflectBothPOS() {

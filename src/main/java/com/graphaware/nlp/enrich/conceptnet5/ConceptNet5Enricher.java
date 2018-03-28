@@ -76,7 +76,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
         List<String> admittedRelationships = request.getAdmittedRelationships();
         List<String> admittedPos = request.getAdmittedPos();
 
-        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), TextProcessor.DEFAULT_PIPELINE);
+        TextProcessor processor = getProcessor(request.getProcessor());
         List<Tag> tags = new ArrayList<>();
         while (tagsIterator.hasNext()) {
             Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());

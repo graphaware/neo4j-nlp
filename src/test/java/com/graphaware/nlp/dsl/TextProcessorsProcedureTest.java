@@ -3,7 +3,6 @@ package com.graphaware.nlp.dsl;
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
-import org.apache.commons.lang3.builder.ToStringExclude;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
@@ -16,7 +15,7 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
     @Test
     public void testGetPipelineInformationsProcedure() {
         executeInTransaction("CALL ga.nlp.processor.getPipelines", (result -> {
-            assertTrue(result.hasNext());
+            assertFalse(result.hasNext());
         }));
     }
 
@@ -60,7 +59,7 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"'})", emptyConsumer());
         executeInTransaction("CALL ga.nlp.processor.getPipelines", (result -> {
             assertTrue(result.hasNext());
-            assertEquals(2, result.stream().count());
+            assertEquals(1, result.stream().count());
         }));
 
         executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
@@ -88,8 +87,9 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.processor.getPipelines('custom-1')", (result -> {
             assertTrue(result.hasNext());
             while (result.hasNext()) {
-                Map<String, Object> record = (Map<String, Object>) result.next();
-                Map<String, Object> specs = (Map<String, Object>) record.get("specifications");
+                Map<String, Object> record = result.next();
+                System.out.println(record);
+                Map<String, Object> specs = (Map<String, Object>) record.get("processingSteps");
                 assertEquals("my-model", specs.get("customSentiment"));
             }
         }));

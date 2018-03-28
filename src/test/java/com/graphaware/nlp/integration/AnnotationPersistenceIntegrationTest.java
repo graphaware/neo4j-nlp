@@ -40,6 +40,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         clearDatabase();
         manager = NLPManager.getInstance();
         manager.init(getDatabase(), NLPConfiguration.defaultConfiguration(), new DynamicConfiguration(getDatabase()));
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
     }
 
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
@@ -234,7 +235,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
                     StubTextProcessor.class.getName(),
-                    null,
+                    "tokenizer",
                     false,
                     true);
             tx.success();

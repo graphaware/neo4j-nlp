@@ -35,8 +35,6 @@ public abstract class AbstractTextProcessor implements TextProcessor{
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
 
-    protected final Map<String, PipelineInfo> pipelineInfos = new HashMap<>();
-
     @Override
     public boolean checkLemmaIsValid(String value) {
         Matcher match = patternCheck.matcher(value);

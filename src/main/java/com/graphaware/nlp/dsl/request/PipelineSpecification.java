@@ -29,24 +29,33 @@ public class PipelineSpecification {
 
     private static final long DEFAULT_THREAD_NUMBER = 4;
 
-    private String name;
+    public String name;
 
-    private String textProcessor;
+    public String textProcessor;
 
-    private Map<String, Object> processingSteps = new HashMap<>();
+    public Map<String, Object> processingSteps = new HashMap<>();
 
-    private String stopWords;
+    public String stopWords;
 
-    private long threadNumber;
+    public long threadNumber;
 
-    private List<String> excludedNER = new ArrayList<>();
+    public List<String> excludedNER = new ArrayList<>();
 
-    private List<String> excludedPOS = new ArrayList<>();
+    public List<String> excludedPOS = new ArrayList<>();
 
     public PipelineSpecification() {
-
     }
-    
+
+    public PipelineSpecification(String name, String textProcessor, Map<String, Object> processingSteps, String stopWords, long threadNumber, List<String> excludedNER, List<String> excludedPOS) {
+        this.name = name;
+        this.textProcessor = textProcessor;
+        this.processingSteps = processingSteps;
+        this.stopWords = stopWords;
+        this.threadNumber = threadNumber;
+        this.excludedNER = excludedNER;
+        this.excludedPOS = excludedPOS;
+    }
+
     public static PipelineSpecification fromMap(Map<String, Object> map) {
         PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(), map.containsKey("textProcessor") ? map.get("textProcessor").toString() : null);
         pipelineSpecification.setThreadNumber(map.containsKey("threadNumber") ? ((Number) map.get("threadNumber")).longValue() : DEFAULT_THREAD_NUMBER);
@@ -104,7 +113,7 @@ public class PipelineSpecification {
     }
 
     public long getThreadNumber() {
-        return threadNumber;
+        return threadNumber != 0 ? threadNumber : DEFAULT_THREAD_NUMBER;
     }
 
     public void setThreadNumber(long threadNumber) {

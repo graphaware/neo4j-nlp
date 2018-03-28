@@ -1,6 +1,8 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +24,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "word2VecIndex_" + System.currentTimeMillis();
         getWord2VecProcessor().getWord2VecModel().createModelFromPaths(w2vSourcePath, w2vDestinPath, "numberbatch", "en");
         clearDb();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
     }
 
     @Test
