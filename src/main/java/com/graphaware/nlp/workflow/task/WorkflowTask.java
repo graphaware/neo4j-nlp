@@ -6,7 +6,6 @@
 package com.graphaware.nlp.workflow.task;
 
 import com.graphaware.nlp.annotation.NLPTask;
-import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.dsl.procedure.workflow.WorkflowInputProcedure;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.workflow.WorkflowItem;
@@ -15,7 +14,6 @@ import com.graphaware.nlp.workflow.processor.WorkflowProcessor;
 import com.graphaware.nlp.workflow.input.WorkflowInput;
 import com.graphaware.nlp.workflow.input.WorkflowInputEntry;
 import com.graphaware.nlp.workflow.output.WorkflowOutput;
-import com.graphaware.nlp.workflow.processor.WorkflowProcessorOutputEntry;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;

@@ -21,7 +21,6 @@ import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
 import com.graphaware.nlp.workflow.input.WorkflowInput;
-import com.graphaware.nlp.workflow.output.WorkflowOutput;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;

@@ -15,9 +15,11 @@ public class WorkflowProcessorTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.workflow.processor.class.list()",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
-                    Map<String, Object> next = result.next();
-                    Assert.assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", next.get("className"));
+                    while (result.hasNext()) {
+                        Map<String, Object> next = result.next();
+                        Assert.assertTrue(((String)next.get("name")).contains("com.graphaware.nlp.workflow.processor"));
+                        Assert.assertTrue(((String)next.get("className")).contains("com.graphaware.nlp.workflow.processor"));
+                    }
                 }));
     }
 
@@ -38,11 +40,6 @@ public class WorkflowProcessorTest extends NLPIntegrationTest {
                     Assert.assertEquals("testProcess", (String) next.get("name"));
                     Assert.assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", (String) next.get("className"));
                 }));
-    }
-
-    @Test
-    public void testInstanceList() {
-        clearDb();
         executeInTransaction("CALL ga.nlp.workflow.processor.instance.list()",
                 ((Result result) -> {
                     assertTrue(result.hasNext());

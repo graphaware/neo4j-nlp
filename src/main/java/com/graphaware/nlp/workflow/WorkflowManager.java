@@ -56,17 +56,22 @@ public class WorkflowManager {
     private NLPConfiguration nlpConfiguration;
     private GraphDatabaseService database;
     private DynamicConfiguration configuration;
+    
+    private static WorkflowManager instance = null;
 
     private WorkflowManager() {
     }
 
     public static WorkflowManager getInstance() {
-        return PipelineManagerHolder.INSTANCE;
-    }
+        if (WorkflowManager.instance == null) {
+            synchronized (WorkflowManager.class) {
+                if (WorkflowManager.instance == null) {
+                    WorkflowManager.instance = new WorkflowManager();
+                }
+            }
+        }
 
-    private static class PipelineManagerHolder {
-
-        private static final WorkflowManager INSTANCE = new WorkflowManager();
+        return WorkflowManager.instance;
     }
 
     public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration, DynamicConfiguration configuration) {

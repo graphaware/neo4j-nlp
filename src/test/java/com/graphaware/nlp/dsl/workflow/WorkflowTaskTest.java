@@ -11,9 +11,9 @@ import org.junit.Test;
 import org.neo4j.graphdb.Result;
 
 public class WorkflowTaskTest extends NLPIntegrationTest {
-    
-    private static final List<String> SHORT_TEXTS =
-            Arrays.asList("You knew China's cities were growing. But the real numbers are stunning http://wef.ch/29IxY7w  #China",
+
+    private static final List<String> SHORT_TEXTS
+            = Arrays.asList("You knew China's cities were growing. But the real numbers are stunning http://wef.ch/29IxY7w  #China",
                     "Globalization for the 99%: can we make it work for all?",
                     "This organisation increased productivity, happiness and trust with just one change http://wef.ch/29PeKxF ",
                     "In pictures: The high-tech villages that live off the grid http://wef.ch/29xuRh8 ",
@@ -91,12 +91,19 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
                     Assert.assertEquals("testTask", (String) next.get("name"));
                     Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
                 }));
-        
+        executeInTransaction("CALL ga.nlp.workflow.task.instance.list()",
+                ((Result result) -> {
+                    assertTrue(result.hasNext());
+                    Map<String, Object> next = result.next();
+                    Assert.assertEquals("testTask", (String) next.get("name"));
+                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
+                }));
+
         executeInTransaction("CALL ga.nlp.workflow.task.start('testTask')",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                 }));
-        
+
         executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->(p) return n,p",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
@@ -111,12 +118,6 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
 
     @Test
     public void testInstanceList() {
-        executeInTransaction("CALL ga.nlp.workflow.task.instance.list()",
-                ((Result result) -> {
-                    assertTrue(result.hasNext());
-                    Map<String, Object> next = result.next();
-                    Assert.assertEquals("testTask", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
-                }));
+
     }
 }

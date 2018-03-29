@@ -33,11 +33,6 @@ public class WorkflowInputTest extends NLPIntegrationTest {
                     Assert.assertEquals("testInput", (String) next.get("name"));
                     Assert.assertEquals("com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput", (String) next.get("className"));
                 }));
-    }
-
-    @Test
-    public void testInstanceList() {
-        clearDb();
         executeInTransaction("CALL ga.nlp.workflow.input.instance.list()",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
