@@ -40,9 +40,9 @@ public interface TextProcessor {
 
     AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification);
 
-    Tag annotateSentence(String text, String lang);
+    Tag annotateSentence(String text, String lang, PipelineSpecification pipelineSpecification);
 
-    Tag annotateTag(String text, String lang);
+    Tag annotateTag(String text, String lang, PipelineSpecification pipelineSpecification);
 
     List<Tag> annotateTags(String text, String lang);
 

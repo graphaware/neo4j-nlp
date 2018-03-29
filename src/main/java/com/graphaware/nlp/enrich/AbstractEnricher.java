@@ -47,7 +47,7 @@ public class AbstractEnricher {
     protected Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
-            annotateTag = nlpProcessor.annotateTag(parentConcept, language);
+            annotateTag = nlpProcessor.annotateTag(parentConcept, language, getDefaultPipeline());
         }
         if (annotateTag == null) {
             annotateTag = new Tag(parentConcept, language);
@@ -110,5 +110,16 @@ public class AbstractEnricher {
         PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
 
         return manager.getTextProcessorsManager().getTextProcessor(pipelineSpecification.getTextProcessor());
+    }
+
+    protected PipelineSpecification getDefaultPipeline() {
+        NLPManager manager = NLPManager.getInstance();
+        String pipeline = manager.getPipeline(null);
+        PipelineSpecification pipelineSpecification = manager.getConfiguration().loadPipeline(pipeline);
+        if (pipelineSpecification == null) {
+            throw new RuntimeException("No default pipeline");
+        }
+
+        return pipelineSpecification;
     }
 }

@@ -81,12 +81,12 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public Tag annotateSentence(String text, String lang) {
+    public Tag annotateSentence(String text, String lang, PipelineSpecification pipelineSpecification) {
         return null;
     }
 
     @Override
-    public Tag annotateTag(String text, String lang) {
+    public Tag annotateTag(String text, String lang, PipelineSpecification pipelineSpecification) {
         return null;
     }
 

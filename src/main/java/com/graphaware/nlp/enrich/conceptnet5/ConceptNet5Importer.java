@@ -17,7 +17,9 @@ package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.processor.TextProcessor;
 import org.neo4j.logging.Log;
@@ -133,7 +135,7 @@ public class ConceptNet5Importer {
     private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
-            annotateTag = nlpProcessor.annotateTag(parentConcept, language);
+            annotateTag = nlpProcessor.annotateTag(parentConcept, language, getDefaultPipeline());
         }
         if (annotateTag == null) {
             annotateTag = new Tag(parentConcept, language);
@@ -173,5 +175,16 @@ public class ConceptNet5Importer {
 
     public ConceptNet5Client getClient() {
         return client;
+    }
+
+    private PipelineSpecification getDefaultPipeline() {
+        NLPManager manager = NLPManager.getInstance();
+        String pipeline = manager.getPipeline(null);
+        PipelineSpecification pipelineSpecification = manager.getConfiguration().loadPipeline(pipeline);
+        if (pipelineSpecification == null) {
+            throw new RuntimeException("No default pipeline");
+        }
+
+        return pipelineSpecification;
     }
 }
