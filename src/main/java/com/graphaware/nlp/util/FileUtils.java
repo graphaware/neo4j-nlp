@@ -11,4 +11,8 @@ public class FileUtils {
 
         return path;
     }
+
+    public static String resolveFilePath(String rootPath, String file) {
+        return !rootPath.endsWith("/") ? rootPath + "/" + file : rootPath + file;
+    }
 }

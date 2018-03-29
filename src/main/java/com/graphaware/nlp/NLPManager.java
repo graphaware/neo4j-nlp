@@ -309,6 +309,15 @@ public final class NLPManager {
         return processor.test(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage());
     }
 
+    public String getDefaultModelWorkdir() {
+        String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
+        if (p.equals(SettingsConstants.DEFAULT_MODEL_WORKDIR)) {
+            throw new RuntimeException("No default model wordking directory set in configuration");
+        }
+
+        return p;
+    }
+
     private void loadExtensions() {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 

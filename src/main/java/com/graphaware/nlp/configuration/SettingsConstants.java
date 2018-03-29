@@ -5,4 +5,5 @@ public final class SettingsConstants {
     public static final String FALLBACK_LANGUAGE = "fallbackLanguage";
     public static final String DEFAULT_TEXT_PROCESSOR = "defaultProcessor";
     public static final String DEFAULT_PIPELINE = "defaultPipeline";
+    public static final String DEFAULT_MODEL_WORKDIR = "defaultModelWorkdir";
 }

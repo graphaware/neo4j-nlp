@@ -15,14 +15,14 @@
  */
 package com.graphaware.nlp.processor;
 
-import java.util.Arrays;
+import com.graphaware.nlp.NLPManager;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class AbstractTextProcessor implements TextProcessor{
+public abstract class AbstractTextProcessor implements TextProcessor {
 
     public static final String STEP_TOKENIZE = "tokenize";
     public static final String STEP_NER = "ner";
@@ -34,6 +34,7 @@ public abstract class AbstractTextProcessor implements TextProcessor{
     public static final String PUNCT_REGEX_PATTERN = "^([\\p{L}0-9]+)([-_' ][\\p{L}0-9]+)*$";
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
+    protected final Map<String, String> customModelLocations = new HashMap<>();
 
     @Override
     public boolean checkLemmaIsValid(String value) {
@@ -43,5 +44,21 @@ public abstract class AbstractTextProcessor implements TextProcessor{
 
     public static String getPunctRegexPattern() {
         return PUNCT_REGEX_PATTERN;
+    }
+
+    protected void storeModelLocation(String name, String path) {
+        customModelLocations.put(name, path);
+    }
+
+    protected String getModelLocation(String name) {
+        if (!customModelLocations.containsKey(name)) {
+            throw new RuntimeException("No model with name " + name + " found");
+        }
+
+        return customModelLocations.get(name);
+    }
+
+    protected String getModelsWorkdir() {
+        return NLPManager.getInstance().getDefaultModelWorkdir();
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.dsl.procedure;
 
+import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.KeyValueResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
@@ -59,6 +60,14 @@ public class ConfigurationProcedure extends AbstractDSL {
         config.keySet().forEach(k -> {
             getNLPManager().getConfiguration().update(k, config.get(k));
         });
+
+        return Stream.of(SingleResult.success());
+    }
+
+    @Procedure(name = "ga.nlp.config.model.workdir", mode = Mode.WRITE)
+    @Description("Defines the default working directory for custom processor models")
+    public Stream<SingleResult> setDefaultWorkdir(@Name("path") String path) {
+        getNLPManager().getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_MODEL_WORKDIR, path);
 
         return Stream.of(SingleResult.success());
     }
