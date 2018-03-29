@@ -18,6 +18,10 @@ package com.graphaware.nlp.configuration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
+import com.graphaware.nlp.workflow.WorkflowItem;
+import com.graphaware.nlp.workflow.processor.WorkflowProcessor;
+import java.io.IOException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -38,9 +42,9 @@ public class DynamicConfiguration {
     private static final String SETTING_KEY_PREFIX = "SETTING_";
     private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
 
+    private final GraphDatabaseService database;
+    private final GraphKeyValueStore keyValueStore;
     private Map<String, Object> userProvidedConfiguration;
-    protected final GraphDatabaseService database;
-    protected final GraphKeyValueStore keyValueStore;
     protected final ObjectMapper mapper = new ObjectMapper();
 
     public DynamicConfiguration(GraphDatabaseService database) {
@@ -88,7 +92,7 @@ public class DynamicConfiguration {
     public void removeSettingValue(String key) {
         String k = SETTING_KEY_PREFIX + key;
         if (userProvidedConfiguration.containsKey(k)) {
-            removeKey( STORE_KEY + k);
+            removeKey(STORE_KEY + k);
             userProvidedConfiguration.remove(k);
         }
     }
@@ -120,11 +124,37 @@ public class DynamicConfiguration {
                     PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
                     list.add(pipelineSpecification);
                 } catch (Exception e) {
-                    throw new RuntimeException(e.getMessage());
+                    throw new RuntimeException(e);
                 }
             }
         });
 
+        return list;
+    }
+
+    public void storePipelineItem(WorkflowItem item) {
+        try {
+            String serialized = mapper.writeValueAsString(item.getInfo());
+            String key = item.getPrefix() + item.getName();
+            update(key, serialized);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<WorkflowInstanceItemInfo> loadPipelineInstanceItems(String prefix) {
+        List<WorkflowInstanceItemInfo> list = new ArrayList<>();
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(prefix)) {
+                try {
+                    WorkflowInstanceItemInfo pipelineSpecification = mapper.readValue(config.get(k).toString(), WorkflowInstanceItemInfo.class);
+                    list.add(pipelineSpecification);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         return list;
     }
 
@@ -134,6 +164,7 @@ public class DynamicConfiguration {
         config.keySet().forEach(k -> {
             if (k.startsWith(PIPELINE_KEY_PREFIX)) {
                 try {
+                    String s = config.get(k).toString();
                     PipelineSpecification pipelineSpecification = mapper.readValue(config.get(k).toString(), PipelineSpecification.class);
                     if (pipelineSpecification.getName().equals(name)) {
                         result.set(pipelineSpecification);

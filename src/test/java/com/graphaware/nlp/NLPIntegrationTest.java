@@ -4,6 +4,7 @@ import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.DatabaseIntegrationTest;
@@ -43,7 +44,11 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
     }
     
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-       Field instance = NLPManager.class.getDeclaredField("instance");
+       Field nlpManagerinstance = NLPManager.class.getDeclaredField("instance");
+       nlpManagerinstance.setAccessible(true);
+       nlpManagerinstance.set(null, null);
+       
+       Field instance = WorkflowManager.class.getDeclaredField("instance");
        instance.setAccessible(true);
        instance.set(null, null);
     }

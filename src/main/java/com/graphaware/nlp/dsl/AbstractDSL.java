@@ -18,18 +18,26 @@ package com.graphaware.nlp.dsl;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.nlp.workflow.WorkflowManager;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.procedure.Context;
+
+import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
 
 public abstract class AbstractDSL {
 
     @Context
     public GraphDatabaseService database;
-
+    
     public static ObjectMapper mapper = new ObjectMapper();
 
     protected NLPManager getNLPManager() {
         return NLPManager.getInstance();
+    }
+    
+    protected WorkflowManager getWorkflowManager() {
+        return getStartedRuntime(database).getModule(NLPModule.class).getPipelineManager();
     }
 
     protected DynamicConfiguration getConfiguration() {
