@@ -1,8 +1,11 @@
 package com.graphaware.nlp.integration.dsl.function;
 
+import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.dsl.function.AnnotateFunction;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;
@@ -17,15 +20,13 @@ import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AnnotateFunctionTest extends GraphAwareIntegrationTest {
+public class AnnotateFunctionTest extends NLPIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
-        runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
-        runtime.start();
-        runtime.waitUntilStarted();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
     }
 
     @Test

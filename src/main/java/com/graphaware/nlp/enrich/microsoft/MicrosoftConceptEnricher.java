@@ -57,7 +57,7 @@ public class MicrosoftConceptEnricher extends AbstractEnricher implements Enrich
     @Override
     public Node importConcept(ConceptRequest request) {
         List<Tag> conceptTags = new ArrayList<>();
-        TextProcessor processor = textProcessorsManager.retrieveTextProcessor(request.getProcessor(), TextProcessor.DEFAULT_PIPELINE);
+        TextProcessor processor = getProcessor(request.getProcessor());
         List<Tag> tags = new ArrayList<>();
         Pair<Iterator<Node>, Node> pair = getTagsIteratorFromRequest(request);
         Iterator<Node> tagsIterator = pair.first();

@@ -1,7 +1,10 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -11,6 +14,13 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class AnnotateTextProcedureTest extends NLPIntegrationTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     private static final List<String> SHORT_TEXTS =
             Arrays.asList("You knew China's cities were growing. But the real numbers are stunning http://wef.ch/29IxY7w  #China",

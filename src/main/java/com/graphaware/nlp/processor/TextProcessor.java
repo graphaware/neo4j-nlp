@@ -34,13 +34,9 @@ public interface TextProcessor {
 
     List<String> getPipelines();
 
-    List<PipelineInfo> getPipelineInfos();
-
     void createPipeline(PipelineSpecification pipelineSpecification);
 
     boolean checkPipeline(String name);
-
-    AnnotatedText annotateText(String text, String pipelineName, String lang, Map<String, String> extraParameters);
 
     AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification);
 

@@ -1,7 +1,10 @@
 package com.graphaware.nlp.extension;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubExtension;
+import com.graphaware.nlp.stub.StubTextProcessor;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -10,6 +13,13 @@ import org.neo4j.graphdb.Transaction;
 import static org.junit.Assert.*;
 
 public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     @Test
     public void testExtensionsAreRegistered() {

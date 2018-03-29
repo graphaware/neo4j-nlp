@@ -39,7 +39,6 @@ import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.persisters.Persister;
-import com.graphaware.nlp.processor.PipelineInfo;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.util.ProcessorUtils;
@@ -133,25 +132,15 @@ public final class NLPManager {
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
         String lang = checkTextLanguage(text, checkForLanguage);
-        String pipeline = null;
-        TextProcessor processor = null;
-        try {
-            pipeline = getPipeline(pipelineName);
-            processor = textProcessorsManager.retrieveTextProcessor(textProcessor, pipeline);
-        } catch (Exception e) {
-            pipeline = pipelineName;
-            PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipelineName);
-            processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
-            AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
-
-            return processAnnotationPersist(id, text, at, pipelineSpecification);
+        String pipeline = getPipeline(pipelineName);
+        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipelineName + " found.");
         }
+        TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
 
-        AnnotatedText annotatedText = processor.annotateText(
-                text, pipeline, lang, null
-        );
-
-        return processAnnotationPersist(id, text, annotatedText, new PipelineSpecification());
+        return processAnnotationPersist(id, text, at, pipelineSpecification);
     }
 
     public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {
@@ -184,29 +173,15 @@ public final class NLPManager {
         return eventDispatcher;
     }
 
-    public List<PipelineInfo> getPipelineInformations(String pipelineName) {
-        List<PipelineInfo> list = new ArrayList<>();
-        textProcessorsManager.getTextProcessors().values().forEach((processor) -> {
-            processor.getPipelineInfos().forEach(pipelineInfo -> {
-                if (pipelineName.equals("") || pipelineInfo.getName().equals(pipelineName)) {
-                    list.add(pipelineInfo);
-                }
-            });
-        });
+    public List<PipelineSpecification> getPipelineSpecifications() {
+        return configuration.loadCustomPipelines();
+    }
 
-        for (PipelineSpecification ps : configuration.loadCustomPipelines()) {
-            list.add(new PipelineInfo(
-                    ps.getName(),
-                    ps.getTextProcessor(),
-                    Collections.emptyMap(),
-                    ps.getProcessingStepsAsStrings(),
-                    Integer.valueOf(String.valueOf(ps.getThreadNumber())),
-                    Arrays.asList(ps.getStopWords())
-
-            ));
+    public List<PipelineSpecification> getPipelineSpecifications(String name) {
+        if (null == name || "".equals(name)) {
+            return getPipelineSpecifications();
         }
-
-        return list;
+        return Arrays.asList(configuration.loadPipeline(name));
     }
 
     public void removePipeline(String pipeline, String processor) {
@@ -219,8 +194,9 @@ public final class NLPManager {
         String lang = LanguageManager.getInstance().detectLanguage(text);
         String filter = filterRequest.getFilter();
         String pipeline = getPipeline(filterRequest.getPipeline());
-        TextProcessor currentTP = textProcessorsManager.retrieveTextProcessor(filterRequest.getProcessor(), pipeline);
-        AnnotatedText annotatedText = currentTP.annotateText(text, "tokenizer", lang, null);
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        TextProcessor currentTP = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        AnnotatedText annotatedText = currentTP.annotateText(text, lang, pipelineSpecification);
         return annotatedText.filter(filter);
 
     }
@@ -271,6 +247,10 @@ public final class NLPManager {
         if (null == request.getTextProcessor() || textProcessorsManager.getTextProcessor(request.getTextProcessor()) == null) {
             throw new RuntimeException(String.format("Invalid text processor %s", request.getTextProcessor()));
         }
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(request.getName());
+        if (null != pipelineSpecification) {
+            throw new RuntimeException("Pipeline with name " + request.getName() + " already exist");
+        }
         configuration.storeCustomPipeline(request);
     }
 
@@ -296,6 +276,37 @@ public final class NLPManager {
         }
 
         return null;
+    }
+
+    public String getPipeline(String pipelineName) {
+        return ProcessorUtils.getPipeline(pipelineName, configuration);
+    }
+
+    public void setDefaultPipeline(String pipeline) {
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipeline + " exist");
+        }
+
+        configuration.updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, pipeline);
+    }
+
+    public Node computeVectorAndPersist(ComputeVectorRequest request) {
+        SparseVector vector =
+                vectorComputation.getTFMap(request.getInput().getId(), request.getQuery()) ;
+        VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
+        getPersister(vectorNode.getClass()).persist(vectorNode, null, null);
+        return request.getInput();
+    }
+
+    public String train(CustomModelsRequest request) {
+        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
+        return processor.train(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage(), request.getTrainingParameters());
+    }
+
+    public String test(CustomModelsRequest request) {
+        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
+        return processor.test(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage());
     }
 
     private void loadExtensions() {
@@ -324,27 +335,5 @@ public final class NLPManager {
                 textProcessorsManager.createPipeline(pipelineSpecification);
             }
         });
-    }
-
-    private String getPipeline(String pipelineName) {
-        return ProcessorUtils.getPipeline(pipelineName, configuration);
-    }
-
-    public Node computeVectorAndPersist(ComputeVectorRequest request) {
-        SparseVector vector = 
-                vectorComputation.getTFMap(request.getInput().getId(), request.getQuery()) ;
-        VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
-        getPersister(vectorNode.getClass()).persist(vectorNode, null, null);
-        return request.getInput();
-    }
-
-    public String train(CustomModelsRequest request) {
-        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
-        return processor.train(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage(), request.getTrainingParameters());
-    }
-
-    public String test(CustomModelsRequest request) {
-        TextProcessor processor = textProcessorsManager.getTextProcessor(request.getTextProcessor());
-        return processor.test(request.getAlg(), request.getModelID(), request.getInputFile(), request.getLanguage());
     }
 }

@@ -5,9 +5,11 @@ import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.enrich.EnricherAbstractTest;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
+import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -16,6 +18,13 @@ import org.neo4j.graphdb.Transaction;
 import static org.junit.Assert.*;
 
 public class MicrosoftEnricherTest extends EnricherAbstractTest {
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
+    }
 
     @Test
     public void testCanGetConceptsFromMicrosoft() {
