@@ -18,10 +18,6 @@ import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.logging.Log;
 
-/**
- *
- * @author ale
- */
 @NLPProcessor(name = "PipelineTextProcessor")
 public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcessorConfiguration> {
 

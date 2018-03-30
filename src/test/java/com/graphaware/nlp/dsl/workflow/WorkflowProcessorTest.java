@@ -61,4 +61,16 @@ public class WorkflowProcessorTest extends NLPIntegrationTest {
                 }));
     }
 
+    @Test
+    public void testCreationWithShortcutDSL() {
+        executeInTransaction("CALL ga.nlp.workflow.createTextProcessor('myProcessor', {pipeline:'tokenizer'})", (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                Map<String, Object> next = result.next();
+                Assert.assertEquals("myProcessor", (String) next.get("name"));
+                Assert.assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", (String) next.get("className"));
+            }
+        }));
+    }
+
 }

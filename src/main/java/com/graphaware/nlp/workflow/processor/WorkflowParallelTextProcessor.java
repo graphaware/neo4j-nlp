@@ -9,14 +9,14 @@ import com.graphaware.nlp.annotation.NLPProcessor;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
+import com.graphaware.common.log.LoggerFactory;
 
 @NLPProcessor(name = "PipelineTextProcessor")
 public class WorkflowParallelTextProcessor extends WorkflowTextProcessor {
     
     private final BlockingQueue<WorkflowProcessorOutputEntry> queue;
-    private static final Logger LOG = LoggerFactory.getLogger(WorkflowParallelTextProcessor.class);
+    private static final Log LOG = LoggerFactory.getLogger(WorkflowParallelTextProcessor.class);
     
     public WorkflowParallelTextProcessor(String name, GraphDatabaseService database) {
         super(name, database);
