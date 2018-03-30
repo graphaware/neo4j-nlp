@@ -118,16 +118,16 @@ public class WorkflowTask
 
     @Override
     public boolean isValid() {
-        if (!input.isValid()) {
-            LOG.warn("The input " + input.getName() + " for the task " + getName() + " is no valid");
-            return false;
-        } 
-        if (!process.isValid()) {
-            LOG.warn("The processor " + input.getName() + " for the task " + getName() + " is no valid");
+        if (input == null || !input.isValid()) {
+            LOG.warn("The input for the task " + getName() + " is no valid");
             return false;
         }
-        if (!output.isValid()) {
-            LOG.warn("The output " + input.getName() + " for the task " + getName() + " is no valid");
+        if (process == null || !process.isValid()) {
+            LOG.warn("The processor for the task " + getName() + " is no valid");
+            return false;
+        }
+        if (output == null || !output.isValid()) {
+            LOG.warn("The output for the task " + getName() + " is no valid");
             return false;
         }
         return true;
@@ -145,7 +145,7 @@ public class WorkflowTask
 
     @Override
     public void handle(Void entry) {
-        
+
     }
 
     public String getAdditionalInfo() {

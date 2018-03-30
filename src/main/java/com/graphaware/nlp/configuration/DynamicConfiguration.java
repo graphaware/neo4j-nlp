@@ -20,7 +20,6 @@ import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.workflow.WorkflowItem;
-import com.graphaware.nlp.workflow.processor.WorkflowProcessor;
 import java.io.IOException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
@@ -32,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 public class DynamicConfiguration {
 
@@ -50,6 +50,7 @@ public class DynamicConfiguration {
     public DynamicConfiguration(GraphDatabaseService database) {
         this.database = database;
         this.keyValueStore = new GraphKeyValueStore(database);
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         loadUserConfiguration();
     }
 
