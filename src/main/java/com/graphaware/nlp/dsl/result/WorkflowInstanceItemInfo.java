@@ -18,10 +18,15 @@ package com.graphaware.nlp.dsl.result;
 import java.util.Map;
 
 public class WorkflowInstanceItemInfo {
-    public final String className;
-    public final String name;
-    public final Map<String, Object> parameters;
-    public final boolean valid;
+    public String className;
+    public String name;
+    public Map<String, Object> parameters;
+    public boolean valid;
+
+    public WorkflowInstanceItemInfo() {
+    }
+    
+    
 
     public WorkflowInstanceItemInfo(String className, String name, 
             Map<String, Object> parameters,
@@ -32,8 +37,42 @@ public class WorkflowInstanceItemInfo {
         this.valid = valid;
     }
 
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Map<String, Object> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(Map<String, Object> parameters) {
+        this.parameters = parameters;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public void setValid(boolean valid) {
+        this.valid = valid;
+    }
+    
+    
+
     @Override
     public String toString() {
-        return name + " [" + className + " ]";
+        return getName() + " [" + getClassName() + " ]";
     }    
 }

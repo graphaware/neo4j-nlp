@@ -181,14 +181,14 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
         // run the task
         executeInTransaction("CALL ga.nlp.workflow.task.start('myTask')", (result -> {
             while (result.hasNext()) {
-                assertEquals(TaskStatus.SUCCEEDED, result.next().get("status"));
+                assertEquals(TaskStatus.SUCCEEDED.toString(), result.next().get("status"));
             }
         }));
 
         // verify the results
         executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->() RETURN count(r) AS c", (result -> {
             assertTrue(result.hasNext());
-            assertEquals(10, (long) result.next().get("c"), 0L);
+            assertEquals(0L, (long) result.next().get("c"));
         }));
     }
 

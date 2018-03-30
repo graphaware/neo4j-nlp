@@ -8,12 +8,12 @@ package com.graphaware.nlp.workflow.output;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPOutput;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.workflow.processor.WorkflowProcessorEndOfQueueEntry;
 import com.graphaware.nlp.workflow.processor.WorkflowProcessorOutputEntry;
 import java.util.HashMap;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
 
 @NLPOutput(name = "StoreAnnotatedTextPipelineOutput")
 public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnotatedTextWorkflowConfiguration> {
@@ -30,6 +30,9 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
     @Override
     public void handle(WorkflowProcessorOutputEntry entry) {
         try {
+            if (entry instanceof WorkflowProcessorEndOfQueueEntry) {
+                return;
+            }
             Node newAnnotatedNode = persistAnnotatedText(entry.getAnnotateText(), (String) entry.getId(), "");
             String query = getConfiguration().getQuery();
             if (query != null

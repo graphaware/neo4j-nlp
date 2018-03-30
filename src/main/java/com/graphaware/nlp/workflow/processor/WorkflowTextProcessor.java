@@ -35,6 +35,7 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
     public void handle(WorkflowInputEntry entry) {
         if (entry instanceof WorkflowInputEndOfQueueEntry) {
             super.checkAndHandle(new WorkflowProcessorEndOfQueueEntry());
+            return;
         }
         if (isValid()) {
             long start = -System.currentTimeMillis();
@@ -48,8 +49,8 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
             AnnotatedText annotateText = textProcessor.annotateText(entry.getText(), lang, pipelineSpecification);
             super.checkAndHandle(new WorkflowProcessorOutputEntry(annotateText, entry.getId()));
         } else {
-            LOG.warn("The Processor " + this.getName()+ " is in an invalid state");
-            super.checkAndHandle(null);
+            LOG.warn("The Processor " + this.getName() + " is in an invalid state");
+            return;
         }
     }
 

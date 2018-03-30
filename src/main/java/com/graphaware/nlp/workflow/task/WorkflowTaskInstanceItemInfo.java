@@ -13,7 +13,12 @@ import java.util.Map;
  * @author ale
  */
 public class WorkflowTaskInstanceItemInfo extends WorkflowInstanceItemInfo {
-    private final TaskStatus status;
+    private TaskStatus status;
+
+    public WorkflowTaskInstanceItemInfo() {
+        super();
+    }
+    
     
     public WorkflowTaskInstanceItemInfo(String className, String name, Map<String, Object> parameters, boolean valid, TaskStatus status) {
         super(className, name, parameters, valid);
@@ -22,5 +27,9 @@ public class WorkflowTaskInstanceItemInfo extends WorkflowInstanceItemInfo {
 
     public TaskStatus getStatus() {
         return status;
+    }
+
+    public void setStatus(TaskStatus status) {
+        this.status = status;
     }
 }

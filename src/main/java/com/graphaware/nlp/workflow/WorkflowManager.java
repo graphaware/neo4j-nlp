@@ -97,22 +97,22 @@ public class WorkflowManager {
     }
 
     public WorkflowProcessor createWorkflowProcessor(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowItem(id, className, parameters, workflowProcessorClasses, workflowProcessorInstances);
+        return createWorkflowINstanceItem(id, className, parameters, workflowProcessorClasses, workflowProcessorInstances);
     }
 
     public WorkflowInput createWorkflowInput(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowItem(id, className, parameters, workflowInputClasses, workflowInputInstances);
+        return createWorkflowINstanceItem(id, className, parameters, workflowInputClasses, workflowInputInstances);
     }
 
     public WorkflowOutput createWorkflowOutput(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowItem(id, className, parameters, workflowOutputClasses, workflowOutputInstances);
+        return createWorkflowINstanceItem(id, className, parameters, workflowOutputClasses, workflowOutputInstances);
     }
 
     public WorkflowTask createWorkflowTask(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowItem(id, className, parameters, workflowTaskClasses, workflowTaskInstances);
+        return createWorkflowINstanceItem(id, className, parameters, workflowTaskClasses, workflowTaskInstances);
     }
 
-    private <T extends WorkflowItem> T createWorkflowItem(String id,
+    private <T extends WorkflowItem> T createWorkflowINstanceItem(String id,
             String className,
             Map<String, Object> parameters,
             Map<String, Class<T>> classes,
@@ -132,7 +132,7 @@ public class WorkflowManager {
             T newProcessorInstance = constructor.newInstance(id, database);
             newProcessorInstance.init(parameters);
             instances.put(id, newProcessorInstance);
-            storeWorkflowProcessorItem(newProcessorInstance);
+            storeWorkflowInstanceItem(newProcessorInstance);
         } catch (NoSuchMethodException | SecurityException
                 | InstantiationException | IllegalAccessException
                 | IllegalArgumentException | InvocationTargetException ex) {
@@ -227,28 +227,28 @@ public class WorkflowManager {
     private void loadWorkflowProcessorInstances() {
         List<WorkflowInstanceItemInfo> loadPipelineProcessor = configuration.loadPipelineInstanceItems(WorkflowProcessor.WORFKLOW_PROCESSOR_KEY_PREFIX);
         loadPipelineProcessor.stream().forEach((proc) -> {
-            createWorkflowProcessor(proc.name, proc.className, proc.parameters);
+            createWorkflowProcessor(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowInputInstances() {
         List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowInput.WORKFLOW_INPUT_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
-            createWorkflowInput(proc.name, proc.className, proc.parameters);
+            createWorkflowInput(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowOutputInstances() {
         List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowOutput.WORFKLOW_OUTPUT_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
-            createWorkflowOutput(proc.name, proc.className, proc.parameters);
+            createWorkflowOutput(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowTaskInstances() {
         List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
-            createWorkflowTask(proc.name, proc.className, proc.parameters);
+            createWorkflowTask(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
@@ -272,8 +272,8 @@ public class WorkflowManager {
         workflowProcessorClasses.putAll(loadedInstances);
     }
 
-    private void storeWorkflowProcessorItem(WorkflowItem processorItemInstance) {
-        configuration.storePipelineItem(processorItemInstance);
+    private void storeWorkflowInstanceItem(WorkflowItem processorItemInstance) {
+        configuration.storeWorkflowInstanceItem(processorItemInstance);
     }
 
 }

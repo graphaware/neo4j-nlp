@@ -112,7 +112,7 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         workflowInput.setConfiguration(new WorkflowInputQueryConfiguration(new HashMap<>()));
         try (Transaction tx = getDatabase().beginTx()) {
-            configuration.storePipelineItem(workflowInput);
+            configuration.storeWorkflowInstanceItem(workflowInput);
             tx.success();
         }
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());

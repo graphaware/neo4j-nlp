@@ -132,7 +132,7 @@ public class DynamicConfiguration {
         return list;
     }
 
-    public void storePipelineItem(WorkflowItem item) {
+    public void storeWorkflowInstanceItem(WorkflowItem item) {
         try {
             String serialized = mapper.writeValueAsString(item.getInfo());
             String key = item.getPrefix() + item.getName();
