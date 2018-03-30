@@ -1,5 +1,7 @@
 package com.graphaware.nlp.configuration;
 
+import com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput;
+import com.graphaware.nlp.workflow.input.WorkflowInputQueryConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.NLPManager;
@@ -10,11 +12,13 @@ import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 
 import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
 import static org.junit.Assert.*;
@@ -96,6 +100,26 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         .getTextProcessor(StubTextProcessor.class.getName()).getPipelines().contains("custom"));
         assertTrue(getStartedRuntime(getDatabase()).getModule(NLPModule.class).getNlpManager().getConfiguration()
         .hasSettingValue(SettingsConstants.FALLBACK_LANGUAGE));
+    }
+
+    @Test
+    public void testWorfklowItemsInfosShouldBeLoadedFromPreviousState() throws Exception {
+        resetSingleton();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
+        keyValueStore = new GraphKeyValueStore(getDatabase());
+        QueryBasedWorkflowInput workflowInput = new QueryBasedWorkflowInput("test", getDatabase());
+        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
+        workflowInput.setConfiguration(new WorkflowInputQueryConfiguration(new HashMap<>()));
+        try (Transaction tx = getDatabase().beginTx()) {
+            configuration.storePipelineItem(workflowInput);
+            tx.success();
+        }
+        GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
+        runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
+        runtime.start();
+        runtime.waitUntilStarted();
+
     }
 
     private void clearDb() {
