@@ -5,6 +5,7 @@
  */
 package com.graphaware.nlp.workflow.task;
 
+import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPTask;
 import com.graphaware.nlp.dsl.procedure.workflow.WorkflowInputProcedure;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
@@ -17,14 +18,13 @@ import com.graphaware.nlp.workflow.output.WorkflowOutput;
 import java.util.Iterator;
 import java.util.Map;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.neo4j.logging.Log;
 
 @NLPTask(name = "WorkflowTask")
 public class WorkflowTask
         extends WorkflowItem<WorkflowTaskConfiguration, Void> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WorkflowInputProcedure.class);
+    private static final Log LOG = LoggerFactory.getLogger(WorkflowInputProcedure.class);
 
     public static final String WORFKLOW_TASK_KEY_PREFIX = "WORFKLOW_TASK_";
 
@@ -34,6 +34,7 @@ public class WorkflowTask
 
     private TaskStatus status;
     private volatile boolean cancelled = false;
+    private String additionalInfo;
 
     public WorkflowTask(String name, GraphDatabaseService database) {
         super(name, database);
@@ -79,6 +80,7 @@ public class WorkflowTask
         } catch (Exception ex) {
             LOG.error("The task " + getName() + " failed", ex);
             setStatus(TaskStatus.FAILED);
+            additionalInfo = ex.getMessage();
             return;
         }
         if (cancelled) {
@@ -145,7 +147,20 @@ public class WorkflowTask
     public void handle(Void entry) {
         
     }
-    
-    
 
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public WorkflowInput getInput() {
+        return input;
+    }
+
+    public WorkflowProcessor getProcess() {
+        return process;
+    }
+
+    public WorkflowOutput getOutput() {
+        return output;
+    }
 }

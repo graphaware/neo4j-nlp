@@ -16,12 +16,15 @@
 package com.graphaware.nlp.dsl;
 
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.workflow.WorkflowManager;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.procedure.Context;
+
+import java.util.Map;
 
 import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
 
@@ -42,5 +45,18 @@ public abstract class AbstractDSL {
 
     protected DynamicConfiguration getConfiguration() {
         return getNLPManager().getConfiguration();
+    }
+
+    protected void checkStringNotBlankOrFail(String s, String k) {
+        if (!StringUtils.isNotBlank(s)) {
+            throw new RuntimeException("Invalid string for " + k);
+        }
+    }
+
+    protected void checkMapContainsValueAndNotBlank(String k, Map<String, Object> map) {
+        if (!map.containsKey(k)) {
+            throw new RuntimeException("Missing " + k + " in query parameters");
+        }
+        checkStringNotBlankOrFail(map.get(k).toString(), k);
     }
 }

@@ -39,7 +39,7 @@ public class TaskManager {
         private static final TaskManager INSTANCE = new TaskManager();
     }
 
-    public void execute(WorkflowTask task) {
+    public WorkflowTask execute(WorkflowTask task) {
         if (task.getStatus() == TaskStatus.RUNNING) {
             throw new RuntimeException("The task " + task.getName() + " is already running");
         }
@@ -51,6 +51,8 @@ public class TaskManager {
         } else {
             doExecute(task);
         }
+
+        return task;
     }
 
     private void doExecute(WorkflowTask task) {

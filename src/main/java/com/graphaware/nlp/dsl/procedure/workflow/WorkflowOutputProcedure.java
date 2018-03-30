@@ -20,7 +20,10 @@ import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
+import com.graphaware.nlp.workflow.output.StoreAnnotatedTextWorkflowOutput;
 import com.graphaware.nlp.workflow.output.WorkflowOutput;
+
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -59,6 +62,16 @@ public class WorkflowOutputProcedure extends AbstractDSL {
             LOG.error("ERROR in WorkflowOutputProcedure", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Procedure(name = "ga.nlp.workflow.createStoreAnnotationOutput", mode = Mode.WRITE)
+    @Description("Shortcut DSL method for StoreAnnotatedTextWorkflowOutput")
+    public Stream<WorkflowInstanceItemInfo> createStoreAnnotationOutput(@Name("name") String name, @Name(value = "relType", defaultValue = "HAS_ANNOTATED_TEXT") String relType) {
+        String query = "MATCH (n), (x) WHERE id(n) = toInteger({entryId}) AND id(x) = toInteger({annotatedTextId}) MERGE (n)-[:`" + relType.trim() + "`]->(x)";
+        Map<String, Object> parameters = Collections.singletonMap("query", query);
+        String cl = StoreAnnotatedTextWorkflowOutput.class.getName();
+
+        return create(name, cl, parameters);
     }
 
     @Procedure(name = "ga.nlp.workflow.output.instance.list", mode = Mode.READ)

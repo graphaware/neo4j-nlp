@@ -67,6 +67,8 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
             Map<String, Object> p = (parameters == null) ? Collections.emptyMap() : parameters;
             resultConsumer.accept(getDatabase().execute(query, p));
             tx.success();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

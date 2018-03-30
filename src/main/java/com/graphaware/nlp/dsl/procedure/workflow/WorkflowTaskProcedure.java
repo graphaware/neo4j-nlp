@@ -19,6 +19,7 @@ import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
 import com.graphaware.nlp.dsl.result.SingleResult;
+import com.graphaware.nlp.dsl.result.WorkflowTaskResult;
 import com.graphaware.nlp.workflow.task.WorkflowTask;
 import com.graphaware.nlp.workflow.task.TaskManager;
 import java.util.Map;
@@ -103,14 +104,14 @@ public class WorkflowTaskProcedure  extends AbstractDSL {
     
     @Procedure(name = "ga.nlp.workflow.task.start", mode = Mode.WRITE)
     @Description("Start a Task")
-    public Stream<SingleResult> start(@Name(value = "name") String name) {
+    public Stream<WorkflowTaskResult> start(@Name(value = "name") String name) {
         try {
             WorkflowTask workflowTask = getWorkflowManager().getWorkflowTask(name);
             if (workflowTask == null) {
                 throw new RuntimeException("Pipeline task not found");
             }
             TaskManager.getInstance().execute(workflowTask);
-            return Stream.of(SingleResult.success());
+            return Stream.of(new WorkflowTaskResult(workflowTask));
         } catch (Exception e) {
             LOG.error("ERROR in WorkflowTaskProcedure", e);
             throw new RuntimeException(e);

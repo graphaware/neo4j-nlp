@@ -24,6 +24,8 @@ import com.graphaware.nlp.workflow.processor.WorkflowProcessor;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import com.graphaware.nlp.workflow.processor.WorkflowTextProcessor;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -59,6 +61,16 @@ public class WorkflowProcessorProcedure extends AbstractDSL {
             LOG.error("ERROR in WorkflowProcessorProcedure", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Procedure(name = "ga.nlp.workflow.createTextProcessor", mode = Mode.WRITE)
+    @Description("Shortcut DSL method for creating a WorkflowTextProcessor")
+    public Stream<WorkflowInstanceItemInfo> createTextProcessor(@Name("name") String name, @Name("parameters") Map<String, Object> parameters) {
+        checkStringNotBlankOrFail(name, "name");
+        checkMapContainsValueAndNotBlank("pipeline", parameters);
+        String cl = WorkflowTextProcessor.class.getName();
+
+        return create(name, cl, parameters);
     }
 
     @Procedure(name = "ga.nlp.workflow.processor.instance.list", mode = Mode.READ)

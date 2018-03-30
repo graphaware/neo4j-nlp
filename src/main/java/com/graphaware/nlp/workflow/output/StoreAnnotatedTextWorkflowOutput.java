@@ -29,7 +29,7 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
 
     @Override
     public void handle(WorkflowProcessorOutputEntry entry) {
-        //try (Transaction tx = getDatabase().beginTx()) {
+        try {
             Node newAnnotatedNode = persistAnnotatedText(entry.getAnnotateText(), (String) entry.getId(), "");
             String query = getConfiguration().getQuery();
             if (query != null
@@ -39,10 +39,9 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
                 parameters.put("entryId", entry.getId());
                 getDatabase().execute(query, parameters);
             }
-//            tx.success();
-//        } catch (Exception ex) {
-//            throw new RuntimeException("Error while storing annotated text", ex);
-//        }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Node persistAnnotatedText(AnnotatedText annotatedText, String id, String txId) {

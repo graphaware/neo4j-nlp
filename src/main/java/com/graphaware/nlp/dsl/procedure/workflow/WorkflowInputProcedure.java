@@ -20,10 +20,13 @@ import com.graphaware.nlp.dsl.result.NodeResult;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.dsl.result.WorkflowItemInfo;
+import com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput;
 import com.graphaware.nlp.workflow.input.WorkflowInput;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.StringUtils;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -59,6 +62,22 @@ public class WorkflowInputProcedure extends AbstractDSL {
             LOG.error("ERROR in WorkflowInputProcedure", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Procedure(name = "ga.nlp.workflow.createQueryInput", mode = Mode.WRITE)
+    public Stream<WorkflowInstanceItemInfo> createQueryInput(@Name("name") String name, @Name("parameters") Map<String, Object> parameters) {
+        if (!parameters.containsKey("query")) {
+            throw new RuntimeException("the parameters must contain a query key");
+        }
+        if (!StringUtils.isNotBlank(name)) {
+            throw new RuntimeException("Invalid name");
+        }
+        if (!StringUtils.isNotBlank(parameters.get("query").toString())) {
+            throw new RuntimeException("Invalid query");
+        }
+        String cl = QueryBasedWorkflowInput.class.getName();
+
+        return create(name, cl, parameters);
     }
 
     @Procedure(name = "ga.nlp.workflow.input.instance.list", mode = Mode.READ)

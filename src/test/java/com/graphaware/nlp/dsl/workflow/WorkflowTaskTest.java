@@ -8,12 +8,13 @@ import java.util.Map;
 
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
-import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
+
+import static org.junit.Assert.*;
 
 public class WorkflowTaskTest extends NLPIntegrationTest {
 
@@ -45,39 +46,41 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", next.get("className"));
+                    assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", next.get("className"));
                 }));
     }
 
     @Test
     public void testCreation() {
         clearDb();
+        // Ingest some texts
         executeInTransaction("UNWIND {texts} AS text CREATE (n:Lesson) SET n.text = text", Collections.singletonMap("texts", SHORT_TEXTS), emptyConsumer());
+
+        // Create a workflow input for the text as query
         executeInTransaction("CALL ga.nlp.workflow.input.create('testInput', "
                 + "'com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput', "
                 + "{query: 'MATCH (n:Lesson) where not exists((n)-->(:AnnotatedText)) return n.text as text, toString(id(n)) as id'})",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("testInput", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput", (String) next.get("className"));
+                    assertEquals("testInput", (String) next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput", (String) next.get("className"));
                 }));
+
+        // Create a workflow text processor
         executeInTransaction("CALL ga.nlp.workflow.processor.create('testProcess', "
                 + "'com.graphaware.nlp.workflow.processor.WorkflowTextProcessor', "
                 + "{"
-                + "textProcessor: 'com.graphaware.nlp.stub.StubTextProcessor', "
-                + "pipeline: 'tokenizer', "
-                + "name: 'customStopWords', "
-                + "processingSteps: {tokenize: true, dependency: true}, "
-                + "stopWords: '+,have, use, can, should, from, may, result, all, during, must, when, time, could, require, work, need, provide, nasa, support, perform, include, which, would, other, level, more, make, between, you, do, about, above, after, again, against, am, any, because, been, before, being, below, both, did, do, does, doing, down, each, few, further, had, has, having, he, her, here, hers, herself, him, himself, his, how, i, its, itself, just, me, most, my, myself, nor, now, off, once, only, our, ours, ourselves, out, over, own, same, she, so, some, than, theirs, them, themselves, those, through, too, under, until, up, very, we, were, what, where, while, who, whom, why, you, your, yours, yourself, yourselves, small, big, little, much, more, some, several, also, any, both, rdquo, ldquo, raquo', "
-                + "threadNumber: 20})",
+                + "pipeline: 'tokenizer'})",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("testProcess", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", (String) next.get("className"));
+                    assertEquals("testProcess", (String) next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.processor.WorkflowTextProcessor", (String) next.get("className"));
                 }));
+
+        // Create a store output
         executeInTransaction("CALL ga.nlp.workflow.output.create('testOutput', "
                 + "'com.graphaware.nlp.workflow.output.StoreAnnotatedTextWorkflowOutput', "
                 + "{query: 'MATCH (n:Lesson), (result) "
@@ -87,9 +90,11 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("testOutput", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.output.StoreAnnotatedTextWorkflowOutput", (String) next.get("className"));
+                    assertEquals("testOutput", (String) next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.output.StoreAnnotatedTextWorkflowOutput", (String) next.get("className"));
                 }));
+
+        // Create the Task
         executeInTransaction("CALL ga.nlp.workflow.task.create('testTask', "
                 + "'com.graphaware.nlp.workflow.task.WorkflowTask', "
                 + "{"
@@ -101,22 +106,26 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("testTask", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
+                    assertEquals("testTask", (String) next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
                 }));
+
+
         executeInTransaction("CALL ga.nlp.workflow.task.instance.list()",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                     Map<String, Object> next = result.next();
-                    Assert.assertEquals("testTask", (String) next.get("name"));
-                    Assert.assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
+                    assertEquals("testTask", (String) next.get("name"));
+                    assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", (String) next.get("className"));
                 }));
 
+        // Start the task
         executeInTransaction("CALL ga.nlp.workflow.task.start('testTask')",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
                 }));
 
+        // Verify the result
         executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->(p) return n,p",
                 ((Result result) -> {
                     assertTrue(result.hasNext());
@@ -125,8 +134,35 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
                         result.next();
                         c++;
                     }
-                    Assert.assertEquals(10, c);
+                    assertEquals(10, c);
                 }));
+    }
+
+    @Test
+    public void testWorkflowTaskWithShortcutsDSL() {
+        clearDb();
+        executeInTransaction("UNWIND {texts} AS text CREATE (n:Lesson) SET n.text = text", Collections.singletonMap("texts", SHORT_TEXTS), emptyConsumer());
+
+        // query workflow input
+        executeInTransaction("CALL ga.nlp.workflow.createQueryInput('myInput', { query: 'MATCH (n:Lesson) RETURN n.text AS text, toString(id(n)) AS id'})", emptyConsumer());
+        // text processor
+        executeInTransaction("CALL ga.nlp.workflow.createTextProcessor('myProcessor', { pipeline: 'tokenizer'})", emptyConsumer());
+        // store output
+        executeInTransaction("CALL ga.nlp.workflow.createStoreAnnotationOutput('myOutput')", emptyConsumer());
+        // create task
+        executeInTransaction("CALL ga.nlp.workflow.task.create('myTask', 'com.graphaware.nlp.workflow.task.WorkflowTask', {input:'myInput', processor:'myProcessor', output:'myOutput'})", emptyConsumer());
+        // run the task
+        executeInTransaction("CALL ga.nlp.workflow.task.start('myTask')", (result -> {
+            while (result.hasNext()) {
+                System.out.println(result.next());
+            }
+        }));
+        
+        // verify the results
+        executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->() RETURN count(r) AS c", (result -> {
+            assertTrue(result.hasNext());
+            assertEquals(10, (long) result.next().get("c"), 0L);
+        }));
     }
 
     @Test
