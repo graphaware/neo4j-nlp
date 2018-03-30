@@ -10,6 +10,7 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import static org.junit.Assert.assertTrue;
 
+import com.graphaware.nlp.workflow.task.TaskStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
@@ -158,6 +159,32 @@ public class WorkflowTaskTest extends NLPIntegrationTest {
             }
         }));
         
+        // verify the results
+        executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->() RETURN count(r) AS c", (result -> {
+            assertTrue(result.hasNext());
+            assertEquals(10, (long) result.next().get("c"), 0L);
+        }));
+    }
+
+    @Test
+    public void testWorkflowTaskWithShortcutsDSLAndNoDocuments() {
+        clearDb();
+
+        // query workflow input
+        executeInTransaction("CALL ga.nlp.workflow.createQueryInput('myInput', { query: 'MATCH (n:Lesson) RETURN n.text AS text, toString(id(n)) AS id'})", emptyConsumer());
+        // text processor
+        executeInTransaction("CALL ga.nlp.workflow.createTextProcessor('myProcessor', { pipeline: 'tokenizer'})", emptyConsumer());
+        // store output
+        executeInTransaction("CALL ga.nlp.workflow.createStoreAnnotationOutput('myOutput')", emptyConsumer());
+        // create task
+        executeInTransaction("CALL ga.nlp.workflow.task.create('myTask', 'com.graphaware.nlp.workflow.task.WorkflowTask', {input:'myInput', processor:'myProcessor', output:'myOutput'})", emptyConsumer());
+        // run the task
+        executeInTransaction("CALL ga.nlp.workflow.task.start('myTask')", (result -> {
+            while (result.hasNext()) {
+                assertEquals(TaskStatus.SUCCEEDED, result.next().get("status"));
+            }
+        }));
+
         // verify the results
         executeInTransaction("MATCH (n)-[r:HAS_ANNOTATED_TEXT]->() RETURN count(r) AS c", (result -> {
             assertTrue(result.hasNext());
