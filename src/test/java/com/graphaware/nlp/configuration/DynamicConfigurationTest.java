@@ -6,9 +6,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.stub.StubTextProcessor;
+import com.graphaware.nlp.workflow.task.WorkflowTask;
+import com.graphaware.nlp.workflow.task.WorkflowTaskConfiguration;
+import com.graphaware.nlp.workflow.task.WorkflowTaskInstanceItemInfo;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
@@ -21,6 +25,8 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 
 import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
+import java.util.List;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import static org.junit.Assert.*;
 
 public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
@@ -83,12 +89,14 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
     public void testConfigurationValuesShouldBeLoadedFromPreviousState() throws Exception {
         resetSingleton();
         ObjectMapper mapper = new ObjectMapper();
+        mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         keyValueStore = new GraphKeyValueStore(getDatabase());
         PipelineSpecification specification = new PipelineSpecification("custom", StubTextProcessor.class.getName());
         specification.setStopWords("hello,hihi");
         specification.setThreadNumber(4);
         try (Transaction tx = getDatabase().beginTx()) {
-            keyValueStore.set("GA__NLP__PIPELINE_custom", mapper.writeValueAsString(specification));
+            String writeValueAsString = mapper.writeValueAsString(specification);
+            keyValueStore.set("GA__NLP__PIPELINE_custom", writeValueAsString);
             keyValueStore.set("GA__NLP__SETTING_fallbackLanguage", "en");
             tx.success();
         }
@@ -133,6 +141,31 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         Field instance = NLPManager.class.getDeclaredField("instance");
         instance.setAccessible(true);
         instance.set(null, null);
+    }
+    
+    @Test
+    public void testLoadingInstances() throws Exception {
+        resetSingleton();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
+        keyValueStore = new GraphKeyValueStore(getDatabase());
+        WorkflowTask workflowInput = new WorkflowTask("test", getDatabase());
+        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
+        HashMap<String, Object> properties = new HashMap<>();
+        properties.put(WorkflowTaskConfiguration.WORFKLOW_INPUT_NAME, "");
+        properties.put(WorkflowTaskConfiguration.WORFKLOW_OUTPUT_NAME, "");
+        properties.put(WorkflowTaskConfiguration.WORFKLOW_PROCESSOR_NAME, "");
+        workflowInput.setConfiguration(new WorkflowTaskConfiguration(properties));
+        try (Transaction tx = getDatabase().beginTx()) {
+            configuration.storeWorkflowInstanceItem(workflowInput);
+            tx.success();
+        }
+        List<WorkflowInstanceItemInfo> pipelineInstanceItems = configuration.loadPipelineInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
+        assertTrue(pipelineInstanceItems.size() == 1);
+        WorkflowInstanceItemInfo info = pipelineInstanceItems.get(0);
+        assertTrue(info instanceof WorkflowTaskInstanceItemInfo);
+        assertEquals("test", info.getName());
+        assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", info.getClassName());
     }
 
 }
