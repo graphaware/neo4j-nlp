@@ -304,8 +304,20 @@ During this process, each annotated text is described using the TF-IDF encoding 
 Text documents can be TF-IDF encoded as vectors in a multidimensional Euclidean space. The space dimensions correspond to the tags, previously extracted from the documents. The coordinates of a given document in each dimension (i.e., for each tag) are calculated as a product of two sub-measures: term frequency and inverse document frequency.
 
 ```
-CALL ga.nlp.ml.cosine.compute({}) YIELD result
+MATCH (a:AnnotatedText) 
+//WHERE ...
+WITH collect(a) as nodes
+CALL ga.nlp.ml.similarity.cosine({input: <list_of_annotated_texts>[, query: <tfidf_query>, relationshipType: "CUSTOM_SIMILARITY", ...]}) YIELD result
+RETURN result
 ```
+
+Available parameters (default values are in brackets):
+* `input`: list of input nodes - AnnotatedTexts
+* `relationshipType` (SIMILARITY_COSINE): type of similarity relationship
+* `propertyName` (value): name of a relationship property where to save the similarity value
+* `query`: specify your own query for extracting *tf* & *idf* in form `... RETURN id(Tag), tf, idf`
+* `kSize` (500): maximum dimension document vectors
+* `depth`: if you want to use ConceptNet 5 tags, specify path depth until which to go (`(:Tag)-[:IS_RELATED_TO*..<path_depth>]->()`)
 
 ### Parsing PDF Documents
 
