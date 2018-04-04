@@ -313,11 +313,9 @@ RETURN result
 
 Available parameters (default values are in brackets):
 * `input`: list of input nodes - AnnotatedTexts
-* `relationshipType` (SIMILARITY_COSINE): type of similarity relationship
-* `propertyName` (value): name of a relationship property where to save the similarity value
-* `query`: specify your own query for extracting *tf* & *idf* in form `... RETURN id(Tag), tf, idf`
-* `kSize` (500): maximum dimension document vectors
-* `depth`: if you want to use ConceptNet 5 tags, specify path depth until which to go (`(:Tag)-[:IS_RELATED_TO*..<path_depth>]->()`)
+* `relationshipType` (SIMILARITY_COSINE): type of similarity relationship, use it along with `query`
+* `query`: specify your own query for extracting *tf* and *idf* in form `... RETURN id(Tag), tf, idf`
+* `propertyName` (value): name of an existing node property (array of numerical values) which contains already prepared document vector
 
 ### Parsing PDF Documents
 
