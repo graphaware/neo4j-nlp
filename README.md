@@ -129,10 +129,21 @@ The available optional parameters (default values are in brackets):
 * `stopWords`: specify words that are required to be ignored (if the list starts with +, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
 * `threadNumber` (default: 4): for multi-threading
 * `excludedNER`: (default: none) specify a list of NE to not be recognized in upper case, for example for excluding `NER_Money` and `NER_O` on the Tag nodes, use ['O', 'MONEY']
+* `customNER`: list of custom NER model identifiers (as a string, model identifiers separated by “,”)
+
+To set a pipeline as a default pipeline:
+```
+ga.nlp.processor.pipeline.default({name})
+```
 
 To delete a pipeline, use this command:
 ```
 CALL ga.nlp.processor.removePipeline(<pipeline-name>, <text-processor>)
+```
+
+To see details of all existing pipelines:
+```
+CALL ga.nlp.processor.getPipelines
 ```
 
 
@@ -317,6 +328,50 @@ Available parameters (default values are in brackets):
 * `query`: specify your own query for extracting *tf* and *idf* in form `... RETURN id(Tag), tf, idf`
 * `propertyName` (value): name of an existing node property (array of numerical values) which contains already prepared document vector
 
+
+### Word2vec
+
+Word2vec is a shallow two-layer neural network model used to produce word embeddings (words represented as multidimensional semantic vectors) and it is one of the models used in [ConceptNet Numberbatch](https://github.com/commonsense/conceptnet-numberbatch).
+
+To add source model (vectors) into a Lucene index
+```
+CALL ga.nlp.ml.word2vec.addModel(<path_to_source_dir>, <path_to_index>, <identifier>)
+```
+* `<path_to_source_dir>` is a full path to the directory with source vectors to be indexed (must be in `import/` directory of Neo4j instance)
+* `<path_to_index>` is a full path where the index will be stored (must be in `import/` directory of Neo4j instance)
+* `<identifier>` is a custom string that uniquely identifies the model
+
+To list available models:
+```
+CALL ga.nlp.ml.word2vec.listModels
+```
+
+The model can now be used to compute cosine similarities between words:
+```
+WITH ga.nlp.ml.word2vec.wordVector('äpple', 'swedish-numberbatch') AS appleVector,
+ga.nlp.ml.word2vec.wordVector('frukt', 'swedish-numberbatch') AS fruitVector
+RETURN ga.nlp.ml.similarity.cosine(appleVector, fruitVector) AS similarity
+```
+* 1st parameter: word
+* 2nd parameter: model identifier
+
+Or you can ask directly for a word2vec of a node which has a word stored in property `value`:
+```
+MATCH (n1:Tag), (n2:Tag)
+WHERE ...
+WITH ga.nlp.ml.word2vec.vector(n1, <model_name>) AS vector1,
+ga.nlp.ml.word2vec.vector(n2, <model_name>) AS vector2
+RETURN ga.nlp.ml.similarity.cosine(vector1, vector2) AS similarity
+```
+
+We can also permanently store the word2vec vectors to Tag nodes:
+```
+CALL ga.nlp.ml.word2vec.attach({query:'MATCH (t:Tag) RETURN t', modelName:'swedish-numberbatch'})
+```
+* `query`: query which returns tags to which embedding vectors should be attached
+* `modelName`: model to use
+
+
 ### Parsing PDF Documents
 
 ```
@@ -333,7 +388,7 @@ In some cases, pdf documents have some recurrent useless content like page foote
 passing a list of regexes defining the parts to exclude :
 
 ```
-CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"]
+CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"])
 ```
 
 ## License
