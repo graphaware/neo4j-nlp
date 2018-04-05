@@ -337,8 +337,8 @@ To add source model (vectors) into a Lucene index
 ```
 CALL ga.nlp.ml.word2vec.addModel(<path_to_source_dir>, <path_to_index>, <identifier>)
 ```
-* `<path_to_source_dir>` is a full path to the directory with source vectors to be indexed (must be in `import/` directory of Neo4j instance)
-* `<path_to_index>` is a full path where the index will be stored (must be in `import/` directory of Neo4j instance)
+* `<path_to_source_dir>` is a full path to the directory with source vectors to be indexed
+* `<path_to_index>` is a full path where the index will be stored
 * `<identifier>` is a custom string that uniquely identifies the model
 
 To list available models:
