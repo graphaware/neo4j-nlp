@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.ImportUtils;
 import org.junit.Test;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +36,17 @@ import org.neo4j.graphdb.Transaction;
 public class TextRankTest extends NLPIntegrationTest {
 
     private static final List<String> expectedKeywords = Arrays.asList("flight failure", "speed brake", "space shuttle", "ground operation", "actuator", "installation", "flight", "gear", "shuttle", "brake", "speed", "failure", "unusual", "design");
+    private static final String TEXT1 = "On 8 May 2013, "
+            + "one week before the Pakistani election, the third author, "
+            + "in his keynote address at the Sentiment Analysis Symposium, "
+            + "forecast the winner of the Pakistani election. The chart "
+            + "in Figure 1 shows varying sentiment on the candidates for "
+            + "prime minister of Pakistan in that election. The next day, "
+            + "the BBC’s Owen Bennett Jones, reporting from Islamabad, wrote "
+            + "an article titled “Pakistan Elections: Five Reasons Why the "
+            + "Vote is Unpredictable,”1 in which he claimed that the election "
+            + "was too close to call. It was not, and despite his being in Pakistan, "
+            + "the outcome of the election was exactly as we predicted.";
 
     /**
      * Test of TextRank procedure, class TextRank.
@@ -94,16 +106,21 @@ public class TextRankTest extends NLPIntegrationTest {
 
     }
 
-    // this test here is a duplicity of `TextRankProcedureTest.testTextRankWithDefaults()`
-    /*@Test
-    public void testTextRankViaProcedure() throws Exception {
-        createGraph();
-        executeInTransaction("MATCH (a:AnnotatedText)\n" +
-                "call ga.nlp.ml.textRank({annotatedText: a}) YIELD result RETURN result", (result -> {
-                    assertTrue(result.hasNext());
-        }));
+    @Test
+    public void testTextRankWithPreviousAnnotationDefaulted() {
+        createStubPipelineAndSetDefault("default");
+        executeInTransaction("CREATE (n:Document) SET n.text = 'John and I went to IBM today, it was great fun and we learned a lot about computers' WITH n " +
+                "CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText:n}) YIELD result RETURN count(*)", emptyConsumer());
+    }
 
-    }*/
+    @Test
+    public void testTextRankWithPreviousAnnotationNonDefault() {
+        createPipeline(StubTextProcessor.class.getName(), "default");
+        executeInTransaction("CREATE (n:Document) SET n.text = {p0} WITH n " +
+                "CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false, pipeline:'default'}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", buildSeqParameters(TEXT1), emptyConsumer());
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText:n}) YIELD result RETURN count(*)", emptyConsumer());
+    }
 
     @Test
     public void testCreate() throws Exception {

@@ -4,6 +4,7 @@ import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
@@ -113,6 +114,11 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
 
     protected void createPipeline(String textProcessor, String pipelineName) {
         executeInTransaction("CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, processingSteps:{tokenizer:true, ner:true, phrase:true}})", buildSeqParameters(pipelineName, textProcessor), emptyConsumer());
+    }
+
+    protected void createStubPipelineAndSetDefault(String name) {
+        createPipeline(StubTextProcessor.class.getName(), name);
+        executeInTransaction("CALL ga.nlp.processor.pipeline.default({n})", Collections.singletonMap("n", name), emptyConsumer());
     }
 
 }

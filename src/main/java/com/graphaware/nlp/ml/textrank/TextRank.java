@@ -95,7 +95,7 @@ public class TextRank {
             + "collect(id(t2)) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
             + "ORDER BY sP asc";
 
-    private static final String PIPELINE_WITHOUT_NER = "tokenizerNoNEs";
+    private static final String PIPELINE_WITHOUT_NER = "CORE.TEXTRANK_PIPELINE";
 
     private final GraphDatabaseService database;
     private final boolean removeStopWords;
@@ -154,14 +154,15 @@ public class TextRank {
     }
 
     private void initializePipelineWithoutNEs() {
-        //System.out.println(" >>> default processor: " + NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor().getAlias());
-        Map<String, Object> params = new HashMap<>();
-        params.put("tokenize", true);
-        params.put("ner", false);
-        PipelineSpecification ps = new PipelineSpecification(PIPELINE_WITHOUT_NER, null);
-        ps.setProcessingSteps(params);
-        NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor()
-            .createPipeline(ps);
+        if (!NLPManager.getInstance().hasPipeline(PIPELINE_WITHOUT_NER)) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("tokenize", true);
+            params.put("ner", false);
+            String processor = NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor().getClass().getName();
+            PipelineSpecification ps = new PipelineSpecification(PIPELINE_WITHOUT_NER, processor);
+            ps.setProcessingSteps(params);
+            NLPManager.getInstance().addPipeline(ps);
+        }
     }
 
     @Deprecated

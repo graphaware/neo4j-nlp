@@ -181,7 +181,13 @@ public final class NLPManager {
         if (null == name || "".equals(name)) {
             return getPipelineSpecifications();
         }
-        return Arrays.asList(configuration.loadPipeline(name));
+
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(name);
+        if (null != pipelineSpecification) {
+            return Arrays.asList(pipelineSpecification);
+        }
+
+        return new ArrayList<>();
     }
 
     public void removePipeline(String pipeline, String processor) {
@@ -198,7 +204,6 @@ public final class NLPManager {
         TextProcessor currentTP = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
         AnnotatedText annotatedText = currentTP.annotateText(text, lang, pipelineSpecification);
         return annotatedText.filter(filter);
-
     }
 
     public void applySentiment(Node node, String textProcessor) {
@@ -280,6 +285,12 @@ public final class NLPManager {
 
     public String getPipeline(String pipelineName) {
         return ProcessorUtils.getPipeline(pipelineName, configuration);
+    }
+
+    public boolean hasPipeline(String name) {
+        List<PipelineSpecification> pipelines = getPipelineSpecifications(name);
+
+        return pipelines.size() > 0;
     }
 
     public void setDefaultPipeline(String pipeline) {
