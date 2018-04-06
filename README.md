@@ -17,6 +17,7 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | ConceptNet5 Enricher | ✔ | ✔ |
 | Microsoft Concept Enricher | ✔ | ✔ |
 | Keyword Extraction | ✔ | ✔ |
+| TextRank Summarization | ✔ | ✔ |
 | Topics Extraction | | ✔ |
 | Word Embeddings (Word2Vec) | ✔ | ✔ |
 | Similarity Computation | ✔ | ✔ |
@@ -263,6 +264,39 @@ Available optional parameters (default values are in brackets):
 
 For a detailed `TextRank` algorithm description, please refer to our blog post about
 [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html).
+
+### TextRank Summarization
+
+Similar approach to the keyword extraction can be employed to implement simple summarization. A densely connect graph of sentences is created, with Sentence-Sentence relationships representing their similarity based on shared words (number of shared words vs sum of logarithms of number of words in a sentence). PageRank is then used as a centrality measure to rank the relative importance of sentences in the document.
+
+To run this algorithm:
+```
+MATCH (a:AnnotatedText)
+CALL ga.nlp.ml.textRank.summarize({annotatedText: a}) YIELD result
+RETURN result
+```
+Available parameters:
+* `annotatedText`
+* `iterations` (30): number of PageRank iterations
+* `damp` (0.85): PageRank damping factor
+* `threshold` (0.0001): PageRank convergence threshold
+
+The summarisation procedure saves new properties to Sentence nodes: `summaryRelevance` (PageRank value of given sentence) and `summaryRank` (ranking; 1 = highest ranked sentence). Example query for retrieving summary:
+```
+match (n:Kapitel)-[:HAS_ANNOTATED_TEXT]->(a:AnnotatedText)
+where id(n) = 233
+match (a)-[:CONTAINS_SENTENCE]->(s:Sentence)
+with a, count(*) as nSentences
+match (a)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:HAS_TAG]->(t:Tag)
+with a, s, count(distinct t) as nTags, (CASE WHEN nSentences*0.1 > 10 THEN 10 ELSE toInteger(nSentences*0.1) END) as nLimit
+where nTags > 4
+with a, s, nLimit
+order by s.summaryRank
+with a, collect({text: s.text, pos: s.sentenceNumber})[..nLimit] as summary
+unwind summary as sent
+return sent.text
+order by sent.pos
+```
 
 ### Sentiment Detection
 
