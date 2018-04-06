@@ -35,16 +35,16 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 public class DynamicConfiguration {
 
-    private static final String STORE_KEY = "GA__NLP__";
-    private static final String LABEL_KEY_PREFIX = "LABEL_";
-    private static final String RELATIONSHIP_TYPE_KEY_PREFIX = "RELATIONSHIP_";
-    private static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
-    private static final String SETTING_KEY_PREFIX = "SETTING_";
-    private static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
+    protected static final String STORE_KEY = "GA__NLP__";
+    protected static final String LABEL_KEY_PREFIX = "LABEL_";
+    protected static final String RELATIONSHIP_TYPE_KEY_PREFIX = "RELATIONSHIP_";
+    protected static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
+    protected static final String SETTING_KEY_PREFIX = "SETTING_";
+    protected static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
 
-    private final GraphDatabaseService database;
-    private final GraphKeyValueStore keyValueStore;
-    private Map<String, Object> userProvidedConfiguration;
+    protected final GraphDatabaseService database;
+    protected final GraphKeyValueStore keyValueStore;
+    protected Map<String, Object> userProvidedConfiguration;
     protected final ObjectMapper mapper = new ObjectMapper();
 
     public DynamicConfiguration(GraphDatabaseService database) {
