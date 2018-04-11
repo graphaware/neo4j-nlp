@@ -41,6 +41,20 @@ public class ConfigurationProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testRemoveConfigValueViaProcedure() {
+        executeInTransaction("CALL ga.nlp.config.set('LABEL_Tag', 'Token')", (result -> {
+            assertTrue(result.hasNext());
+            assertEquals("SUCCESS", result.next().get("result"));
+            assertEquals("Token", getNLPManager().getConfiguration().getLabelFor(Label.label("Tag")).toString());
+        }));
+        assertTrue(getNLPManager().getConfiguration().hasStoreValue("LABEL_Tag"));
+        executeInTransaction("CALL ga.nlp.config.remove('LABEL_Tag')", (result -> {
+            assertTrue(result.hasNext());
+        }));
+        assertFalse(getNLPManager().getConfiguration().hasStoreValue("LABEL_Tag"));
+    }
+
+    @Test
     public void testSetMultipleConfigurationValuesViaProcedure() {
         Map<String, Object> map = new HashMap<>();
         map.put("LABEL_Sentence", "NLPSentence");

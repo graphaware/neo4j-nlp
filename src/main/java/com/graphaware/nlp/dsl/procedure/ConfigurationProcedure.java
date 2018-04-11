@@ -54,6 +54,13 @@ public class ConfigurationProcedure extends AbstractDSL {
         return Stream.of(SingleResult.success());
     }
 
+    @Procedure(name = "ga.nlp.config.remove", mode = Mode.WRITE)
+    public Stream<SingleResult> removeSettingValue(@Name("key") String key) {
+        getNLPManager().getConfiguration().removeValue(key);
+
+        return Stream.of(SingleResult.success());
+    }
+
     @Procedure(name = "ga.nlp.config.setAll", mode = Mode.WRITE)
     @Description("Set all the given user defined configuration settings")
     public Stream<SingleResult> setAllConfigValues(@Name("config") Map<String, Object> config) {

@@ -90,11 +90,31 @@ public class DynamicConfiguration {
         return userProvidedConfiguration.containsKey(SETTING_KEY_PREFIX + key);
     }
 
+    public boolean hasStoreValue(String k) {
+        boolean result;
+        try (Transaction tx = database.beginTx()) {
+            result = keyValueStore.hasKey(STORE_KEY + k);
+            tx.success();
+        }
+
+        return result;
+    }
+
     public void removeSettingValue(String key) {
         String k = SETTING_KEY_PREFIX + key;
         if (userProvidedConfiguration.containsKey(k)) {
             removeKey(STORE_KEY + k);
             userProvidedConfiguration.remove(k);
+        }
+    }
+
+    public void removeValue(String k) {
+        try (Transaction tx = database.beginTx()) {
+            String ck = STORE_KEY + k;
+            if (keyValueStore.hasKey(ck)) {
+                keyValueStore.remove(ck);
+            }
+            tx.success();
         }
     }
 
