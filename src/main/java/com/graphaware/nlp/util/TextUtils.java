@@ -1,5 +1,6 @@
 package com.graphaware.nlp.util;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,15 @@ public class TextUtils {
         }
         m.appendTail(sb);
         return sb.toString();
+    }
+
+    public static String replaceEach(List<String> searches, String original) {
+        String ns = original;
+        for (String s : searches) {
+            ns = ns.replace(s, "");
+        }
+
+        return ns;
     }
 
 }

@@ -16,36 +16,28 @@
 package com.graphaware.nlp.parser.pdf;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.extension.AbstractExtension;
+import com.graphaware.nlp.parser.AbstractParser;
 import com.graphaware.nlp.parser.domain.Page;
-import com.graphaware.nlp.util.FileUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.pdf.PDFParser;
-import org.neo4j.kernel.configuration.Config;
-import org.neo4j.kernel.internal.GraphDatabaseAPI;
-import org.springframework.core.io.ClassPathResource;
-
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @NLPModuleExtension(name = "parser.pdf.tika")
-public class TikaPDFParser extends AbstractExtension {
+public class TikaPDFParser extends AbstractParser {
 
     private final PDFParser pdfParser = new PDFParser();
 
-    public List<Page> parse(String filename, List<String> filterPatterns) throws Exception {
+    @Override
+    public List<Page> parse(InputStream fs, List<String> filterPatterns) throws Exception {
         List<Page> pages = new ArrayList<>();
-        InputStream stream = getFileStream(filename);
         PageContentHandler handler = new PageContentHandler(filterPatterns);
         Metadata metadata = new Metadata();
         pdfParser.setSortByPosition(true);
-        pdfParser.parse(stream, handler, metadata, new ParseContext());
+        pdfParser.parse(fs, handler, metadata, new ParseContext());
 
         Map<Integer, List<String>> content =  handler.getImprovedContent();
         for (Integer i : content.keySet()) {
@@ -58,17 +50,4 @@ public class TikaPDFParser extends AbstractExtension {
 
         return pages;
     }
-
-
-    private InputStream getFileStream(String filename) throws Exception {
-
-        String path = FileUtils.getFileUri(filename);
-        if (path.startsWith("http")) {
-            URL url = new URL(path);
-            return url.openStream();
-        }
-
-        return new FileInputStream(new File(path));
-    }
-
 }
