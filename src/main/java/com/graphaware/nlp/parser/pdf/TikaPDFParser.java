@@ -16,24 +16,18 @@
 package com.graphaware.nlp.parser.pdf;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.extension.AbstractExtension;
-import com.graphaware.nlp.parser.Parser;
+import com.graphaware.nlp.parser.AbstractParser;
 import com.graphaware.nlp.parser.domain.Page;
-import com.graphaware.nlp.util.FileUtils;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.pdf.PDFParser;
-
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @NLPModuleExtension(name = "parser.pdf.tika")
-public class TikaPDFParser extends AbstractExtension implements Parser {
+public class TikaPDFParser extends AbstractParser {
 
     private final PDFParser pdfParser = new PDFParser();
 
@@ -56,21 +50,4 @@ public class TikaPDFParser extends AbstractExtension implements Parser {
 
         return pages;
     }
-
-    public List<Page> parse(String filename, List<String> filterPatterns) throws Exception {
-        return this.parse(getFileStream(filename), filterPatterns);
-    }
-
-
-    private InputStream getFileStream(String filename) throws Exception {
-
-        String path = FileUtils.getFileUri(filename);
-        if (path.startsWith("http")) {
-            URL url = new URL(path);
-            return url.openStream();
-        }
-
-        return new FileInputStream(new File(path));
-    }
-
 }

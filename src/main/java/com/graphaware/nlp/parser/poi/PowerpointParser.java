@@ -1,27 +1,18 @@
-package com.graphaware.nlp.parser.powerpoint;
+package com.graphaware.nlp.parser.poi;
 
 import com.graphaware.nlp.annotation.NLPModuleExtension;
-import com.graphaware.nlp.extension.AbstractExtension;
-import com.graphaware.nlp.parser.Parser;
+import com.graphaware.nlp.parser.AbstractParser;
 import com.graphaware.nlp.parser.domain.Page;
-import com.graphaware.nlp.util.FileUtils;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 @NLPModuleExtension(name = "ga.nlp.parser.powerpoint")
-public class PowerpointParser extends AbstractExtension implements Parser {
-
-    public List<Page> parse(String filename, List<String> filterPatterns) throws Exception {
-        return parse(getFileStream(filename), filterPatterns);
-    }
+public class PowerpointParser extends AbstractParser {
 
     @Override
     public List<Page> parse(InputStream fs, List<String> filterPatterns) throws Exception {
@@ -38,16 +29,5 @@ public class PowerpointParser extends AbstractExtension implements Parser {
         });
 
         return pages;
-    }
-
-    private InputStream getFileStream(String filename) throws Exception {
-
-        String path = FileUtils.getFileUri(filename);
-        if (path.startsWith("http")) {
-            URL url = new URL(path);
-            return url.openStream();
-        }
-
-        return new FileInputStream(new File(path));
     }
 }

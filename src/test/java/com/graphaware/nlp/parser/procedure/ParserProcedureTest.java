@@ -72,4 +72,22 @@ public class ParserProcedureTest extends NLPIntegrationTest {
             assertTrue((Long) result.next().get("c") > 0);
         }));
     }
+
+    @Test
+    public void testParsingWordDoc() {
+        clearDb();
+        String f = getClass().getClassLoader().getResource("vui.docx").getPath();
+        System.out.println("Loading file from " + f);
+        executeInTransaction("CALL ga.nlp.parser.word({file})\n" +
+                "YIELD number, paragraphs\n" +
+                "UNWIND paragraphs AS paragraph\n" +
+                "WITH number, paragraph WHERE trim(paragraph) <> \"\"\n" +
+                "CREATE (d:Document) SET d.text = paragraph, d.pageNumber = number", Collections.singletonMap("file", f), (result -> {
+
+        }));
+        executeInTransaction("MATCH (d:Document) RETURN count(d) AS c", (result -> {
+            assertTrue(result.hasNext());
+            assertTrue((Long) result.next().get("c") > 0);
+        }));
+    }
 }

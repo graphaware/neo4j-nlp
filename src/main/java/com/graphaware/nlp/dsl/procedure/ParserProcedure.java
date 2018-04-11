@@ -16,9 +16,11 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.parser.Parser;
 import com.graphaware.nlp.parser.domain.Page;
 import com.graphaware.nlp.parser.pdf.TikaPDFParser;
-import com.graphaware.nlp.parser.powerpoint.PowerpointParser;
+import com.graphaware.nlp.parser.poi.PowerpointParser;
+import com.graphaware.nlp.parser.poi.WordParser;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
@@ -31,27 +33,32 @@ public class ParserProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.parser.pdf")
     public Stream<Page> parsePdf(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
         TikaPDFParser parser = (TikaPDFParser) getNLPManager().getExtension(TikaPDFParser.class);
-        List<String> filters = filterPatterns.equals("") ? new ArrayList<>() : filterPatterns;
-        try {
-            List<Page> pages = parser.parse(filename, filters);
 
-            return pages.stream();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getPages(parser, filename, filterPatterns).stream();
     }
 
     @Procedure(name = "ga.nlp.parser.powerpoint")
     public Stream<Page> parsePowerpoint(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
         PowerpointParser parser = (PowerpointParser) getNLPManager().getExtension(PowerpointParser.class);
+
+        return getPages(parser, filename, filterPatterns).stream();
+    }
+
+    @Procedure(name = "ga.nlp.parser.word")
+    public Stream<Page> parseWord(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
+        WordParser parser = (WordParser) getNLPManager().getExtension(WordParser.class);
+
+        return getPages(parser, filename, filterPatterns).stream();
+    }
+
+    private List<Page> getPages(Parser parser, String filename, List<String> filterPatterns) {
         List<String> filters = filterPatterns.equals("") ? new ArrayList<>() : filterPatterns;
         try {
             List<Page> pages = parser.parse(filename, filters);
 
-            return pages.stream();
+            return pages;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
 }

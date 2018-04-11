@@ -9,4 +9,6 @@ public interface Parser {
 
     List<Page> parse(InputStream fs, List<String> filterPatterns) throws Exception;
 
+    List<Page> parse(String filename, List<String> filterPatterns) throws Exception;
+
 }
