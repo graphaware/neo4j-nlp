@@ -95,6 +95,17 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         }));
     }
 
+    @Test
+    public void testCustomPipelineWithTrainedModelStoreModelInConfig() {
+        clearDb();
+        removeCustomPipelines();
+        String modelsPath = getClass().getClassLoader().getResource("").getPath();
+        executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(modelsPath), emptyConsumer());
+        String q = "CALL ga.nlp.processor.train({textProcessor: '" + StubTextProcessor.class.getName() + "', modelIdentifier: \"testmodel\", alg: \"ner\", inputFile: 'model.tsv', trainingParameters: {iter: 10}})";
+        executeInTransaction(q, emptyConsumer());
+        assertNotNull(getNLPManager().getConfiguration().getModelPaths("testmodel"));
+    }
+
     private void removeCustomPipelines() {
         try (Transaction tx = getDatabase().beginTx()) {
             getNLPManager().getConfiguration().loadCustomPipelines().forEach(pipelineSpecification -> {

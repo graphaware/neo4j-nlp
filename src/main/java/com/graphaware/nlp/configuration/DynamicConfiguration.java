@@ -41,6 +41,7 @@ public class DynamicConfiguration {
     protected static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
     protected static final String SETTING_KEY_PREFIX = "SETTING_";
     protected static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
+    protected static final String MODEL_KEY_PREFIX = "MODEL_";
 
     protected final GraphDatabaseService database;
     protected final GraphKeyValueStore keyValueStore;
@@ -223,10 +224,6 @@ public class DynamicConfiguration {
         loadUserConfiguration();
     }
 
-    private void loadUserConfiguration() {
-        userProvidedConfiguration = getAllConfigValuesFromStore();
-    }
-
     private void removeKey(String key) {
         try (Transaction tx = database.beginTx()) {
             if (keyValueStore.hasKey(key)) {
@@ -249,5 +246,22 @@ public class DynamicConfiguration {
         }
 
         return map;
+    }
+
+    public void saveModelPath(String key, String modelPaths) {
+        update(MODEL_KEY_PREFIX + key, modelPaths);
+    }
+
+    public String getModelPaths(String key) {
+        String value = null;
+        if (hasStoreValue(MODEL_KEY_PREFIX + key)) {
+            value = getAllConfigValuesFromStore().get(MODEL_KEY_PREFIX + key).toString();
+        }
+
+        return value;
+    }
+
+    private void loadUserConfiguration() {
+        userProvidedConfiguration = getAllConfigValuesFromStore();
     }
 }

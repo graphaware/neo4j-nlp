@@ -16,9 +16,6 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.NLPManager;
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +35,8 @@ public abstract class AbstractTextProcessor implements TextProcessor {
     public static final String PUNCT_REGEX_PATTERN = "^([\\p{L}0-9]+)([-_' ][\\p{L}0-9]+)*$";
 
     protected final Pattern patternCheck = Pattern.compile(PUNCT_REGEX_PATTERN, Pattern.CASE_INSENSITIVE);
-    protected final Map<String, String> customModelLocations = new HashMap<>();
+
+    private final NLPManager nlpManager = NLPManager.getInstance();
 
     @Override
     public boolean checkLemmaIsValid(String value) {
@@ -51,18 +49,27 @@ public abstract class AbstractTextProcessor implements TextProcessor {
     }
 
     protected void storeModelLocation(String name, String path) {
-        customModelLocations.put(name, path);
+        save(name, path);
     }
 
     protected String getModelLocation(String name) {
-        if (!customModelLocations.containsKey(name)) {
-            throw new RuntimeException("No model with name " + name + " found");
-        }
-
-        return customModelLocations.get(name);
+        return load(name);
     }
 
     protected String getModelsWorkdir() {
-        return NLPManager.getInstance().getDefaultModelWorkdir();
+        return nlpManager.getDefaultModelWorkdir();
+    }
+
+    private void save(String k, String modelPaths) {
+        nlpManager.getConfiguration().saveModelPath(k, modelPaths);
+    }
+
+    private String load(String key) {
+        String modelPaths = nlpManager.getConfiguration().getModelPaths(key);
+        if (null == modelPaths) {
+            throw new RuntimeException("No model path saved for " + key);
+        }
+
+        return modelPaths;
     }
 }

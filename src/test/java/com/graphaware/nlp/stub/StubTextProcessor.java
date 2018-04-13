@@ -116,6 +116,9 @@ public class StubTextProcessor extends AbstractTextProcessor {
 
     @Override
     public String train(String alg, String modelId, String file, String lang, Map<String, Object> params) {
+        String modelFile = getModelsWorkdir() + "/" + file + ".gz";
+        storeModelLocation(modelId, modelFile);
+
         return null;
     }
 
