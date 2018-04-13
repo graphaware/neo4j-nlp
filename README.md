@@ -126,11 +126,11 @@ The available optional parameters (default values are in brackets):
   * `relations` (default: false): run relations identification between two tokens
   * `dependency`  (default: false, StanfordNLP only): extract typed dependencies (ex.: amod - adjective modifier, conj - conjunct, ...)
   * `cleanxml`  (default: false, StanfordNLP only): remove XML tags
-  * `truecase`  (default: false, StanfordNLP only): recognizes the "true" case of tokens (how they would be capitalized in well-edited text) 
+  * `truecase`  (default: false, StanfordNLP only): recognizes the "true" case of tokens (how they would be capitalized in well-edited text)
+  * `customNER`: list of custom NER model identifiers (as a string, model identifiers separated by “,”)
 * `stopWords`: specify words that are required to be ignored (if the list starts with +, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
 * `threadNumber` (default: 4): for multi-threading
 * `excludedNER`: (default: none) specify a list of NE to not be recognized in upper case, for example for excluding `NER_Money` and `NER_O` on the Tag nodes, use ['O', 'MONEY']
-* `customNER`: list of custom NER model identifiers (as a string, model identifiers separated by “,”)
 
 To set a pipeline as a default pipeline:
 ```
