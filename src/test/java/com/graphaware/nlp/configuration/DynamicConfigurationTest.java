@@ -1,5 +1,6 @@
 package com.graphaware.nlp.configuration;
 
+import com.graphaware.nlp.AbstractEmbeddedTest;
 import com.graphaware.nlp.workflow.input.QueryBasedWorkflowInput;
 import com.graphaware.nlp.workflow.input.WorkflowInputQueryConfiguration;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -17,7 +18,6 @@ import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
@@ -29,16 +29,7 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 import static org.junit.Assert.*;
 
-public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
-
-    private GraphKeyValueStore keyValueStore;
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        clearDb();
-        this.keyValueStore = new GraphKeyValueStore(getDatabase());
-    }
+public class DynamicConfigurationTest extends AbstractEmbeddedTest {
 
     @Test
     public void testConfigurationCanStoreAndRetrievePipelines() {
@@ -100,6 +91,7 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
             keyValueStore.set("GA__NLP__SETTING_fallbackLanguage", "en");
             tx.success();
         }
+
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         runtime.start();
@@ -123,18 +115,12 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
             configuration.storeWorkflowInstanceItem(workflowInput);
             tx.success();
         }
+
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
         runtime.start();
         runtime.waitUntilStarted();
 
-    }
-
-    private void clearDb() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            getDatabase().execute("MATCH (n) DETACH DELETE n");
-            tx.success();
-        }
     }
 
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
@@ -167,5 +153,4 @@ public class DynamicConfigurationTest extends EmbeddedDatabaseIntegrationTest {
         assertEquals("test", info.getName());
         assertEquals("com.graphaware.nlp.workflow.task.WorkflowTask", info.getClassName());
     }
-
 }

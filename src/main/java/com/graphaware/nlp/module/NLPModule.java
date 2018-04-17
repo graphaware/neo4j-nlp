@@ -19,6 +19,7 @@ import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.NLPEvents;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.configuration.MigrationHandler;
 import com.graphaware.nlp.event.DatabaseTransactionEvent;
 import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.module.BaseTxDrivenModule;
@@ -53,11 +54,12 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public void initialize(GraphDatabaseService database) {
         LOG.info("Initializing NLP Module");
         super.initialize(database);
-        nlpManager = NLPManager.getInstance();
         DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(database);
+        checkMigrations(dynamicConfiguration);
+        nlpManager = NLPManager.getInstance();
         nlpManager.init(database, nlpMLConfiguration, dynamicConfiguration);
         pipelineManager = WorkflowManager.getInstance();
-        pipelineManager.init(database, nlpMLConfiguration, dynamicConfiguration);        
+        pipelineManager.init(database, nlpMLConfiguration, dynamicConfiguration);
     }
 
     public NLPConfiguration getNlpMLConfiguration() {
@@ -76,6 +78,11 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
     public Void beforeCommit(ImprovedTransactionData itd) throws DeliberateTransactionRollbackException {
         getNlpManager().getEventDispatcher().notify(NLPEvents.TRANSACTION_BEFORE_COMMIT, new DatabaseTransactionEvent(itd));
         return null;
+    }
+
+    private void checkMigrations(DynamicConfiguration dynamicConfiguration) {
+        MigrationHandler migrationHandler = new MigrationHandler(database, dynamicConfiguration);
+        migrationHandler.migrate();
     }
 
 }
