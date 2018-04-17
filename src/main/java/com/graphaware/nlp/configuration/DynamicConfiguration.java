@@ -35,13 +35,13 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 public class DynamicConfiguration {
 
-    protected static final String STORE_KEY = "GA__NLP__";
-    protected static final String LABEL_KEY_PREFIX = "LABEL_";
-    protected static final String RELATIONSHIP_TYPE_KEY_PREFIX = "RELATIONSHIP_";
-    protected static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
-    protected static final String SETTING_KEY_PREFIX = "SETTING_";
-    protected static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
-    protected static final String MODEL_KEY_PREFIX = "MODEL_";
+    public static final String STORE_KEY = "GA__NLP__";
+    public static final String LABEL_KEY_PREFIX = "LABEL_";
+    public static final String RELATIONSHIP_TYPE_KEY_PREFIX = "RELATIONSHIP_";
+    public static final String PROPERTY_KEY_PREFIX = "PROPERTY_";
+    public static final String SETTING_KEY_PREFIX = "SETTING_";
+    public static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
+    public static final String MODEL_KEY_PREFIX = "MODEL_";
 
     protected final GraphDatabaseService database;
     protected final GraphKeyValueStore keyValueStore;
