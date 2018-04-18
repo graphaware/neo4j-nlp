@@ -21,36 +21,21 @@ import java.util.Map;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 import java.util.HashMap;
-import org.neo4j.graphdb.Node;
 
-public class ComputeVectorRequest extends AbstractProcedureRequest {
+public class ComputeVectorTrainRequest extends AbstractProcedureRequest {
 
     private static String DEFAULT_TYPE = "query";
-    private static String DEFAULT_PROPERTY = "vector";
     private static Map<String, Object> DEFAULT_PARAMETERS = new HashMap<>();
     
-    private Node input;
     private String type;
     private Map<String, Object> parameters;
-    private String propertyName;
-    private String label;
-    
-    public ComputeVectorRequest() {
-    }
 
-    public ComputeVectorRequest(Node input, String type, Map<String, Object> parameters, String propertyName) {
-        this.input = input;
+    public ComputeVectorTrainRequest() {
+    }
+    
+    public ComputeVectorTrainRequest(String type, Map<String, Object> parameters) {
         this.type = type;
         this.parameters = parameters;
-        this.propertyName = propertyName;
-    }
-
-    public Node getInput() {
-        return input;
-    }
-
-    public void setInput(Node input) {
-        this.input = input;
     }
 
     public String getType() {
@@ -69,59 +54,36 @@ public class ComputeVectorRequest extends AbstractProcedureRequest {
         this.parameters = parameters;
     }
 
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    
     @Override
     public List<String> validMapKeys() {
         return Arrays.asList(
-                NODE_KEY,
                 TYPE_KEY,
-                PARAMETERS_KEY,
-                PROPERTY_KEY,
-                LABEL_KEY
+                PARAMETERS_KEY
         );
     }
 
     @Override
     public List<String> mandatoryKeys() {
         return Arrays.asList(
-                NODE_KEY
         );
     }
 
-    public static ComputeVectorRequest fromMap(Map<String, Object> map) {
-        ComputeVectorRequest request = new ComputeVectorRequest();
-        request.setInput((Node)map.get(NODE_KEY));
+    public static ComputeVectorTrainRequest fromMap(Map<String, Object> map) {
+        ComputeVectorTrainRequest request = new ComputeVectorTrainRequest();
         String type = (String)map.get(TYPE_KEY);
         if (type == null) {
             type = DEFAULT_TYPE;
         }
-        request.setType(type);
-        String property = (String)map.get(PROPERTY_KEY);
-        if (property == null) {
-            property = DEFAULT_PROPERTY;
+        
+        if (type == null) {
+            type = DEFAULT_TYPE;
         }
-        request.setPropertyName(property);   
+        
+        request.setType(type);
         Map parameters = (Map)map.get(PARAMETERS_KEY);
         if (parameters == null) {
             parameters = DEFAULT_PARAMETERS;
         }
-        request.setLabel((String)map.getOrDefault(LABEL_KEY, null));
         request.setParameters(parameters);        
         request.validateMap(map);
         return request;

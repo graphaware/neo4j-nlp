@@ -17,7 +17,9 @@ package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
 import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
+import com.graphaware.nlp.dsl.request.ComputeVectorTrainRequest;
 import com.graphaware.nlp.dsl.result.NodeResult;
+import com.graphaware.nlp.dsl.result.SingleResult;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.neo4j.graphdb.Node;
@@ -37,6 +39,18 @@ public class ComputeVectorProcedure extends AbstractDSL {
             return Stream.of(new NodeResult(result));
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+    
+    @Procedure(name = "ga.nlp.vector.train", mode = Mode.WRITE)
+    @Description("Train the model fro computing the vector")
+    public Stream<SingleResult> train(@Name("computeVectorTrainRequest") Map<String, Object> computeVectorTrainRequest) {
+        try {
+            ComputeVectorTrainRequest request = ComputeVectorTrainRequest.fromMap(computeVectorTrainRequest);
+            getNLPManager().computeVectorTrainAndPersist(request);
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

@@ -4,9 +4,12 @@ public final class RequestConstants {
     public static final String NODE_KEY = "node";
     public static final String INPUT_KEY = "input";
     public static final String QUERY_KEY = "query";
+    public static final String LABEL_KEY = "label";
     public static final String PROPERTY_KEY = "property";
     public static final String TEXT_KEY = "text";
     public static final String TAG_KEY = "tag";
+    public static final String TYPE_KEY = "type";
+    public static final String PARAMETERS_KEY = "parameters";
     public static final String DEPTH_KEY = "depth";
     public static final String ADMITTED_RELATIONSHIPS_KEY = "admittedRelationships";
     public static final String ADMITTED_PART_OF_SPEECH_KEY = "admittedPos";

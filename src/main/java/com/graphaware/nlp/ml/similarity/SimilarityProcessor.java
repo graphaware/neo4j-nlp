@@ -49,7 +49,7 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
 
         int processed;
         if (request.getPropertyName() != null) {
-            processed = computeUsingProperty(request.getInput(), request.getPropertyName(), request.getRelationshipType(), request.getkSize());
+            processed = computeUsingProperty(request.getInput(), request.getLabel(), request.getPropertyName(), request.getRelationshipType(), request.getkSize());
         } else {
             Long depth = request.getDepth();
             if (depth != null && depth > 0) {
@@ -107,9 +107,9 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
         return processed;
     }
 
-    private int computeUsingProperty(List<Node> input, String propertyName, String relationshipType, int kSize) {
+    private int computeUsingProperty(List<Node> input, String label, String propertyName, String relationshipType, int kSize) {
         int processed = 0;
-        processed = vectorBusinessLogic.computeFeatureSimilarityForNodes(input, propertyName, relationshipType, kSize);
+        processed = vectorBusinessLogic.computeFeatureSimilarityForNodes(input, label, propertyName, relationshipType, kSize);
         return processed;
     }
 }

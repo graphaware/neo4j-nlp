@@ -59,14 +59,15 @@ public class VectorProcessLogic {
         return result;
     }
 
-    public int computeFeatureSimilarityForNodes(List<Node> nodes, String propertyName, String similarityType, int kSize) {
+    public int computeFeatureSimilarityForNodes(List<Node> nodes, String label, String propertyName, String similarityType, int kSize) {
         long startTime = System.currentTimeMillis();
         final AtomicInteger countProcessed = new AtomicInteger(0);
         final AtomicInteger countStored = new AtomicInteger(0);
         final AtomicInteger nodeAnalyzed = new AtomicInteger(0);
+        LOG.info("computeFeatureSimilarityForNodes -> " + (nodes != null ? nodes.size() : "nodes is null"));
         if (nodes == null) {
             nodes = new ArrayList<>();
-            ResourceIterator<Node> properties = database.findNodes(Labels.AnnotatedText);
+            ResourceIterator<Node> properties = database.findNodes(Label.label(label));
             while (properties.hasNext()) {
                 nodes.add(properties.next());
             }
@@ -77,7 +78,7 @@ public class VectorProcessLogic {
             if (nodeProcessed % 500 == 0) {
                 LOG.warn("Node Processed: " + nodeProcessed + " over " + totalNodeSize);
             }
-            computeFeatureSimilarityForNode(node, propertyName, similarityType, countProcessed, countStored, kSize);
+            computeFeatureSimilarityForNode(node, label, propertyName, similarityType, countProcessed, countStored, kSize);
         });
         long totalTime = System.currentTimeMillis() - startTime;
         LOG.warn("Total node processed: " + nodeAnalyzed.get() + " over " + totalNodeSize + " in " + totalTime);
@@ -85,10 +86,10 @@ public class VectorProcessLogic {
         return countProcessed.get();
     }
 
-    private void computeFeatureSimilarityForNode(Node node, String propertyName, String similarityType, AtomicInteger countProcessed, AtomicInteger countStored, int kSize) {
+    private void computeFeatureSimilarityForNode(Node node, String label, String propertyName, String similarityType, AtomicInteger countProcessed, AtomicInteger countStored, int kSize) {
         FixedSizeOrderedList<SimilarityItem> kNN = new FixedSizeOrderedList<>(kSize);
         try (Transaction tx0 = database.beginTx()) {
-            ResourceIterator<Node> otherProperties = database.findNodes(Labels.AnnotatedText);
+            ResourceIterator<Node> otherProperties = database.findNodes(Label.label(label));
             List<Node> secondNodes = new ArrayList<>();
             otherProperties.stream().forEach((secondNode) -> {
                 secondNodes.add(secondNode);

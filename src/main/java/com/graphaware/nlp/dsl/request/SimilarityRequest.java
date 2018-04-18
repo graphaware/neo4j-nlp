@@ -25,11 +25,13 @@ import org.neo4j.graphdb.Node;
 public class SimilarityRequest extends AbstractProcedureRequest {
 
     private final static int DEFAULT_K_SIZE = 500;
+    private final static String DEFAULT_LABEL = "AnnotatedText";
     private final static String SIMILARITY_TYPE = "SIMILARITY_COSINE";
 
     private List<Node> input;
     private Long depth;
     private String query;
+    private String label;
     private String relationshipType;
     private String propertyName;
     private int kSize;
@@ -77,6 +79,14 @@ public class SimilarityRequest extends AbstractProcedureRequest {
         this.propertyName = propertyName;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+    
     @Override
     public List<String> validMapKeys() {
         return Arrays.asList(
@@ -84,6 +94,7 @@ public class SimilarityRequest extends AbstractProcedureRequest {
                 QUERY_KEY,
                 PROPERTY_KEY,
                 DEPTH_KEY,
+                LABEL_KEY,
                 RELATIONSHIP_TYPE_KEY,
                 K_SIZE_KEY
         );
@@ -113,10 +124,11 @@ public class SimilarityRequest extends AbstractProcedureRequest {
         } else {
             request.setkSize(DEFAULT_K_SIZE);
         }
+        request.setLabel((String)map.getOrDefault(LABEL_KEY, DEFAULT_LABEL));
         request.validateMap(map);
         return request;
     }
-
+    
     public int getkSize() {
         return kSize;
     }

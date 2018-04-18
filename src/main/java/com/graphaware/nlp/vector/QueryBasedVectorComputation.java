@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.vector;
 
+import com.graphaware.nlp.annotation.NLPVectorComputationProcess;
 import static com.graphaware.nlp.util.TypeConverter.getFloatValue;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,9 +23,13 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.Result;
 
-public class QueryBasedVectorComputation {
+@NLPVectorComputationProcess(name = "QueryBasedVectorComputation")
+public class QueryBasedVectorComputation implements VectorComputation {
+    private static final String TYPE = "query";
+    
+    private static final String QUERY_PARAMETER = "query";
 
-    private final GraphDatabaseService database;
+    private GraphDatabaseService database;
 
     public final static String DEFAULT_VECTOR_QUERY = "MATCH (doc:AnnotatedText)\n"
             + "WITH count(doc) as documentsCount\n"
@@ -34,21 +39,11 @@ public class QueryBasedVectorComputation {
             + "WITH tag, ht.tf as tf, count(distinct document) as documentsCountForTag, documentsCount\n"
             + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f + 1.0f*documentsCount)/documentsCountForTag as idf";
 
-    public QueryBasedVectorComputation(GraphDatabaseService database) {
-        this.database = database;
-    }
-
-    public SparseVector getTFMap(long node) throws QueryExecutionException {
-        return getTFMap(node, DEFAULT_VECTOR_QUERY);
-    }
-
-    public SparseVector getTFMap(long node, String query) throws QueryExecutionException {
+    @Override
+    public SparseVector computeSparseVector(long node, Map<String, Object> parameters) throws QueryExecutionException {
+        String query = (String) parameters.getOrDefault(QUERY_PARAMETER, DEFAULT_VECTOR_QUERY);
         Map<Long, Float> fmap;
-        if (query != null) {
-            fmap = createFeatureMap(node, query);
-        } else {
-            fmap = createFeatureMap(node, DEFAULT_VECTOR_QUERY);
-        }
+        fmap = createFeatureMap(node, query);
         return SparseVector.fromMap(fmap);
     }
 
@@ -65,5 +60,20 @@ public class QueryBasedVectorComputation {
             result.put(id, tf * idf);
         }
         return result;
+    }
+
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    @Override
+    public void setDatabase(GraphDatabaseService database) {
+        this.database = database;
+    }
+
+    @Override
+    public void train(Map<String, Object> parameters) {
+        throw new RuntimeException("The selected VectorComputation doesn't support train."); //To change body of generated methods, choose Tools | Templates.
     }
 }

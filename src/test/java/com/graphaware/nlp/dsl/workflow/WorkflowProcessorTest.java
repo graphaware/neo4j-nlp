@@ -42,7 +42,7 @@ public class WorkflowProcessorTest extends NLPIntegrationTest {
                 + "'com.graphaware.nlp.workflow.processor.WorkflowTextProcessor', "
                 + "{"
                 + "textProcessor: 'com.graphaware.nlp.stub.StubTextProcessor', "
-                + "name: 'customStopWords', "
+                + "pipeline: 'customStopWords', "
                 + "processingSteps: {tokenize: true, dependency: true}, "
                 + "stopWords: '+,have, use, can, should, from, may, result, all, during, must, when, time, could, require, work, need, provide, nasa, support, perform, include, which, would, other, level, more, make, between, you, do, about, above, after, again, against, am, any, because, been, before, being, below, both, did, do, does, doing, down, each, few, further, had, has, having, he, her, here, hers, herself, him, himself, his, how, i, its, itself, just, me, most, my, myself, nor, now, off, once, only, our, ours, ourselves, out, over, own, same, she, so, some, than, theirs, them, themselves, those, through, too, under, until, up, very, we, were, what, where, while, who, whom, why, you, your, yours, yourself, yourselves, small, big, little, much, more, some, several, also, any, both, rdquo, ldquo, raquo', "
                 + "threadNumber: 20})",

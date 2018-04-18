@@ -34,8 +34,8 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
     }
     
     @Override
-    public Node persist(VectorContainer object, String id, String txId) {
-        return getOrCreate(object, id, txId);
+    public Node persist(VectorContainer object, String label, String txId) {
+        return getOrCreate(object, label, txId);
     }
 
     @Override
@@ -56,14 +56,19 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
     }
 
     @Override
-    public Node getOrCreate(VectorContainer object, String id, String txId) {
+    public Node getOrCreate(VectorContainer object, String label, String txId) {
         Node node = database.getNodeById(object.getNodeId());
 
         if (null == node) {
             throw new RuntimeException("Node should exist to store a vector");
         } 
-        
-        node.addLabel(configuration().getLabelFor(Labels.VectorContainer));
+        Label vectorContainerLabel;
+        if (label != null) {
+            vectorContainerLabel = Label.label(label);
+        } else {
+            vectorContainerLabel = configuration().getLabelFor(Labels.VectorContainer);
+        }
+        node.addLabel(vectorContainerLabel);
         node.setProperty(object.getPropertyName(), object.getVector().getArray());
         
         return node;

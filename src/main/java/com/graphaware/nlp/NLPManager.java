@@ -17,12 +17,14 @@ package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
+import com.graphaware.nlp.annotation.NLPVectorComputationProcess;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.dsl.request.AnnotationRequest;
 import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
+import com.graphaware.nlp.dsl.request.ComputeVectorTrainRequest;
 import com.graphaware.nlp.dsl.request.FilterRequest;
 import com.graphaware.nlp.dsl.request.CustomModelsRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
@@ -43,8 +45,8 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
-import com.graphaware.nlp.vector.QueryBasedVectorComputation;
 import com.graphaware.nlp.vector.SparseVector;
+import com.graphaware.nlp.vector.VectorComputation;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
@@ -70,8 +72,8 @@ public final class NLPManager {
     private PersistenceRegistry persistenceRegistry;
 
     private EnrichmentRegistry enrichmentRegistry;
-    
-    private QueryBasedVectorComputation vectorComputation;
+
+    private Map<String, VectorComputation> vectorComputationProcesses = new HashMap<>();
 
     private final Map<Class, NLPExtension> extensions = new HashMap<>();
 
@@ -106,7 +108,7 @@ public final class NLPManager {
         this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
-        this.vectorComputation = new QueryBasedVectorComputation(database);
+        loadVectorComputationProcesses();
         loadExtensions();
         registerEventListeners();
         initialized = true;
@@ -303,11 +305,30 @@ public final class NLPManager {
     }
 
     public Node computeVectorAndPersist(ComputeVectorRequest request) {
-        SparseVector vector =
-                vectorComputation.getTFMap(request.getInput().getId(), request.getQuery()) ;
-        VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
-        getPersister(vectorNode.getClass()).persist(vectorNode, null, null);
-        return request.getInput();
+        try {
+            VectorComputation vectorComputation = vectorComputationProcesses.get(request.getType());
+            if (vectorComputation == null) {
+                throw new RuntimeException("Cannot find the VectorComputation instance with type: " + request.getType());
+            }
+            SparseVector vector
+                    = vectorComputation.computeSparseVector(request.getInput().getId(), request.getParameters());
+            if (vector != null) {
+                VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
+                getPersister(vectorNode.getClass()).persist(vectorNode, request.getLabel(), null);
+            }
+            return request.getInput();
+        } catch (Exception ex) {
+            LOG.error("Error in computeVectorAndPersist", ex);
+            throw ex;
+        }
+    }
+
+    public void computeVectorTrainAndPersist(ComputeVectorTrainRequest request) {
+        VectorComputation vectorComputation = vectorComputationProcesses.get(request.getType());
+        if (vectorComputation == null) {
+            throw new RuntimeException("Cannot find the VectorComputation instance with type: " + request.getType());
+        }
+        vectorComputation.train(request.getParameters());
     }
 
     public String train(CustomModelsRequest request) {
@@ -354,6 +375,15 @@ public final class NLPManager {
             if (textProcessorsManager.getTextProcessorNames().contains(pipelineSpecification.getTextProcessor())) {
                 textProcessorsManager.createPipeline(pipelineSpecification);
             }
+        });
+    }
+
+    private void loadVectorComputationProcesses() {
+        Map<String, VectorComputation> extensionMap = ServiceLoader.loadInstances(NLPVectorComputationProcess.class);
+        extensionMap.keySet().forEach(k -> {
+            VectorComputation extension = extensionMap.get(k);
+            extension.setDatabase(database);
+            vectorComputationProcesses.put(extension.getType(), extensionMap.get(k));
         });
     }
 }
