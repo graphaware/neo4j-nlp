@@ -503,8 +503,9 @@ public class TextRank {
 
         // get tf*idf: useful for cleanFinalKeywords()
         final Map<Long, TfIdfObject> tfidfMap = new HashMap<>();
-        if (useDependencies)
-            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+        if (useDependencies) {
+//            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+        }
 
         // for z-scores: calculate mean and sigma of relevances and tf*idf
         relevanceAvg = pageRanks.entrySet().stream().mapToDouble(e -> e.getValue()).average().orElse(0.);
