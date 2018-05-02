@@ -40,7 +40,7 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
     public void testTextRankWithCustomSettings() throws Exception {
         clearDb();
         createGraph();
-        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText: n, iterations: 30, damp: 0.85, treshold: 0.0001}) YIELD result RETURN result", (result -> {
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText: n, iterations: 30, damp: 0.85, threshold: 0.0001}) YIELD result RETURN result", (result -> {
             assertTrue("ga.nlp.ml.textRank() procedure failed.", result.hasNext());
         }));
 
