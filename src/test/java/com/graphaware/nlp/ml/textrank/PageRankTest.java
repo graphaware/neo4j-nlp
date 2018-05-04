@@ -40,8 +40,9 @@ public class PageRankTest extends NLPIntegrationTest {
         try (Transaction tx = getDatabase().beginTx()) {
             Result result = getDatabase().execute(
                     "match (a:AnnotatedText) where a.id=\"test118\"\n"
-                            + "call ga.nlp.ml.pageRank({relationshipType: \"Related_to\", "
-                            + "nodeType: \"Test\", damp: " + damp + "}) yield result\n"
+                            + "call ga.nlp.ml.pageRank({query: \"MATCH (t1:Test)-[r:Related_to]->(t2:Test)\n"
+                + "RETURN id(t1) as start, id(t2) as dest, r.weight as weight, count(*)\", "
+                            + " damp: " + damp + "}) yield result\n"
                                     + "return result\n"
             );
             assertTrue(result.hasNext());
