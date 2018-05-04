@@ -46,6 +46,25 @@ public class TypeConverter {
         return list.toArray(new String[0]);
     }
 
+    public static double getDoubleValue(Object value) {
+        if (value == null) {
+            return 1.0d;
+        }
+        if (value instanceof Float) {
+            return ((Float) value).doubleValue();
+        }
+        if (value instanceof Double) {
+            return ((Double) value);
+        } else {
+            try {
+                return Double.valueOf(String.valueOf(value));
+            } catch (Exception ex) {
+                LOG.error("Error while parsing double value from string: " + value, ex);
+                return 1.0d;
+            }
+        }
+    }
+    
     public static float getFloatValue(Object value) {
         if (value == null) {
             return 1.0f;

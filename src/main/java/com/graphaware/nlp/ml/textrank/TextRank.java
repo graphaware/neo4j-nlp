@@ -15,6 +15,8 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import com.graphaware.nlp.ml.pagerank.CoOccurrenceItem;
+import com.graphaware.nlp.ml.pagerank.PageRank;
 import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;

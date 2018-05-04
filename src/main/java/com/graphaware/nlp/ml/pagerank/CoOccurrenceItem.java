@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.ml.textrank;
+package com.graphaware.nlp.ml.pagerank;
 
 import com.graphaware.common.util.Pair;
 import java.util.ArrayList;

@@ -20,8 +20,6 @@ import com.graphaware.nlp.dsl.request.PageRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
-import com.graphaware.nlp.ml.textrank.CoOccurrenceItem;
-import com.graphaware.nlp.ml.textrank.PageRank;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
@@ -34,17 +32,14 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
     private static final Log LOG = LoggerFactory.getLogger(TextProcessorsManager.class);
 
     public SingleResult process(PageRankRequest request) {
-        String nodeType = request.getNodeType();
-        String relType = request.getRelationshipType();
-        String relWeight = request.getRelationshipWeight();
+        String query = request.getQuery();
         int iter = request.getIteration().intValue();
         double damp = request.getDamp();
         double threshold = request.getThreshold();
         boolean respectDirections = request.getRespectDirections();
 
         PageRank pagerank = new PageRank(getDatabase());
-        pagerank.respectDirections(respectDirections);
-        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences = pagerank.processGraph(nodeType, relType, relWeight);
+        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences = pagerank.createGraph(query, respectDirections);
         if (coOccurrences.isEmpty()) {
             return SingleResult.fail();
         }
@@ -54,7 +49,7 @@ public class PageRankProcessor extends AbstractExtension implements NLPExtension
         }
         pageranks.entrySet().stream().forEach(en -> LOG.info("PR(" + en.getKey() + ") = " + en.getValue()));
         LOG.info("Sum of PageRanks: " + pageranks.values().stream().mapToDouble(Number::doubleValue).sum());
-        pagerank.storeOnGraph(pageranks, nodeType);
+        pagerank.storeOnGraph(pageranks);
 
         return SingleResult.success();
     }

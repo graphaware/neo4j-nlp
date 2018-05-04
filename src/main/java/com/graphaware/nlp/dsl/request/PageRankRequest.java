@@ -21,43 +21,20 @@ public class PageRankRequest {
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
     private static final double DEFAULT_THRESHOLD = 0.0001;
     private static final boolean DEFAULT_RESPECT_DIRECTIONS = true;
-    private static final String DEFAULT_NODE_TYPE = "Tag";
+    /*private static final String DEFAULT_NODE_TYPE = "Tag";
     private static final String DEFAULT_CO_OCCURRENCE_RELATIONTHIP = "CO_OCCURRENCE";
-    private static final String DEFAULT_WEIGHT_PROPERTY = "weight";
+    private static final String DEFAULT_WEIGHT_PROPERTY = "weight";*/
     
-    private String nodeType = DEFAULT_NODE_TYPE;
-    private String relationshipType = DEFAULT_CO_OCCURRENCE_RELATIONTHIP;
-    private String relationshipWeight = DEFAULT_WEIGHT_PROPERTY;
+    private static final String DEFAULT_QUERY = "MATCH (t1:Tag)-[r:CO_OCCURRENCE]->(t2:Tag)\n"
+                + "RETURN id(t1) as start, id(t2) as dest, r.weight as weight, count(*)\n";;
+    
+    private String query = DEFAULT_QUERY;
     private Long iteration = DEFAULT_ITERATIONS;
     private Double damp = DEFAULT_DUMPING_FACTOR;
     private Double threshold = DEFAULT_THRESHOLD;
     private Boolean respectDirections = DEFAULT_RESPECT_DIRECTIONS;
     
     public PageRankRequest() {
-    }
-
-    public String getNodeType() {
-        return nodeType;
-    }
-
-    public void setNodeType(String nodeType) {
-        this.nodeType = nodeType;
-    }
-
-    public String getRelationshipType() {
-        return relationshipType;
-    }
-
-    public void setRelationshipType(String relationshipType) {
-        this.relationshipType = relationshipType;
-    }
-
-    public String getRelationshipWeight() {
-        return relationshipWeight;
-    }
-
-    public void setRelationshipWeight(String relationshipWeight) {
-        this.relationshipWeight = relationshipWeight;
     }
 
     public Long getIteration() {
@@ -91,4 +68,13 @@ public class PageRankRequest {
     public void setRespectDirections(Boolean dirs) {
         this.respectDirections = dirs;
     }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
+    }
+    
 }

@@ -13,7 +13,7 @@
  * the GNU General Public License along with this program.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-package com.graphaware.nlp.ml.textrank;
+package com.graphaware.nlp.ml.pagerank;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -22,6 +22,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
+import static com.graphaware.nlp.util.TypeConverter.getDoubleValue;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,19 +34,13 @@ public class PageRank {
 
     protected final GraphDatabaseService database;
     private Map<Long, Double> nodeWeights;
-    private boolean directionsMatter;
 
     public PageRank(GraphDatabaseService database) {
         this.database = database;
-        this.directionsMatter = true;
     }
 
     public void setNodeWeights(Map<Long, Double> w) {
         this.nodeWeights = w;
-    }
-
-    public void respectDirections(boolean respectDirections) {
-        this.directionsMatter = respectDirections;
     }
 
     public Map<Long, Double> run(Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, int iter, double dampFactor, double threshold) {
@@ -97,25 +92,18 @@ public class PageRank {
         return pagerank;
     }
 
-    public Map<Long, Map<Long, CoOccurrenceItem>> processGraph(String nodeType, String relType, String weightProperties) {
-        String query = "MATCH (t1:" + nodeType + ")-[r:" + relType + "]->(t2:" + nodeType + ")\n"
-                + "RETURN id(t1) as node1, id(t2) as node2, r as rel, count(*)\n";
+    public Map<Long, Map<Long, CoOccurrenceItem>> createGraph(String query, boolean respectDirections) {
         LOG.info("Running query: " + query);
         Map<Long, Map<Long, CoOccurrenceItem>> results = new HashMap<>();
         try (Transaction tx = database.beginTx();) {
             Result res = database.execute(query);
             while (res != null && res.hasNext()) {
                 Map<String, Object> next = res.next();
-                Long tag1 = (Long) next.get("node1");
-                Long tag2 = (Long) next.get("node2");
-                double w = 1.; //not used
-                Relationship rel = (Relationship) next.get("rel");
-                if (weightProperties != null
-                        && rel.hasProperty(weightProperties)) {
-                    w = (int) rel.getProperty(weightProperties);
-                }
+                Long tag1 = (Long) next.get("start");
+                Long tag2 = (Long) next.get("dest");
+                double w = getDoubleValue(next.get("weight"));
                 addTagToCoOccurrence(results, tag1, tag2, w);
-                if (!directionsMatter)
+                if (!respectDirections)
                     addTagToCoOccurrence(results, tag2, tag1, w);
             }
             tx.success();
@@ -125,15 +113,15 @@ public class PageRank {
         return results;
     }
 
-    public void storeOnGraph(Map<Long, Double> pageranks, String nodeType) {
-        for (Long tag : pageranks.keySet()) {
+    public void storeOnGraph(Map<Long, Double> pageranks) {
+        pageranks.keySet().forEach((tag) -> {
             try (Transaction tx = database.beginTx();) {
-                database.execute("MATCH (t:" + nodeType + ") WHERE id(t)=" + tag + "\n SET t.pagerank = " + pageranks.get(tag));
+                database.execute("MATCH (t) WHERE id(t)=" + tag + "\n SET t.pagerank = " + pageranks.get(tag));
                 tx.success();
             } catch (Exception e) {
                 LOG.error("storeOnGraph() failed: " + e.getMessage());
             }
-        }
+        });
     }
 
     private void addTagToCoOccurrence(Map<Long, Map<Long, CoOccurrenceItem>> results, Long tag1, Long tag2, double w) {

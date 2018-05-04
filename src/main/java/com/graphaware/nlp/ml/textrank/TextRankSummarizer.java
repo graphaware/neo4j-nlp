@@ -15,13 +15,10 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
-import com.graphaware.common.util.Pair;
-import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.ml.pagerank.CoOccurrenceItem;
+import com.graphaware.nlp.ml.pagerank.PageRank;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
-import com.graphaware.nlp.domain.Keyword;
-import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
-import com.graphaware.nlp.persistence.persisters.KeywordPersister;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
@@ -29,7 +26,6 @@ import com.graphaware.common.log.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class TextRankSummarizer {
@@ -132,7 +128,7 @@ public class TextRankSummarizer {
 
     public boolean evaluate(Node annotatedText, int iter, double damp, double threshold) {
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createGraph(annotatedText);
-        if (coOccurrence == null || coOccurrence.size() == 0) {
+        if (coOccurrence == null || coOccurrence.isEmpty()) {
             LOG.info("Graph of co-occurrences is empty, aborting ...");
             return true;
         }
