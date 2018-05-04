@@ -16,22 +16,19 @@
 package com.graphaware.nlp.ml.textrank;
 
 import com.graphaware.nlp.NLPIntegrationTest;
-//import com.graphaware.nlp.extension.AbstractExtension;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.ImportUtils;
-import org.junit.Test;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class TextRankTest extends NLPIntegrationTest {
 
@@ -53,7 +50,8 @@ public class TextRankTest extends NLPIntegrationTest {
      */
     @Test
     public void testTextRank() throws Exception {
-        createGraph();
+        clearDb();
+        createGraph("exported.cypher");
 
         // Run TextRank
         try (Transaction tx = getDatabase().beginTx()) {
@@ -101,9 +99,50 @@ public class TextRankTest extends NLPIntegrationTest {
             return;
         }
 
-        // clean after ourselves
-        getDatabase().execute("MATCH (n) DETACH DELETE n");
+    }
 
+    @Test
+    public void testTextRankWithArticle() throws Exception {
+        clearDb();
+        createGraph("textrank-article.cypher");
+
+        // Run TextRank
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result result = getDatabase().execute("match (a:AnnotatedText) return a");
+            assertTrue("TextRank: didn't find AnnotatedText (error in graph initialization).", result.hasNext());
+            if (!result.hasNext()) {
+                return;
+            }
+            Node annText = (Node) result.next().get("a");
+            TextRank textrank = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration())
+                    .setTopXTags(1.0f / 3)
+                    .build();
+            assertNotNull("AnnotatedText not found.", annText);
+            assertNotNull("TextRank.Builder failed: textrank is null", textrank);
+            boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
+            assertTrue("TextRank failed, returned false.", res);
+            tx.success();
+        }
+
+        // evaluate results
+        Set<String> keywords = new HashSet<>();
+        try (Transaction tx = getDatabase().beginTx()) {
+            Result result = getDatabase().execute(
+                    "MATCH (k:Keyword)-[:DESCRIBES]->(a:AnnotatedText)\n"
+                            + "RETURN k.id AS id, k.value AS value\n");
+            while (result != null && result.hasNext()) {
+                Map<String, Object> next = result.next();
+                String tag = next.get("value").toString();
+                System.out.println(tag);
+                keywords.add(tag);
+            }
+            tx.success();
+        }
+
+        assertFalse(keywords.contains("say"));
+        assertFalse(keywords.contains("of"));
+        assertFalse(keywords.contains("after"));
+        assertFalse(keywords.contains("who"));
     }
 
     @Test
@@ -124,19 +163,17 @@ public class TextRankTest extends NLPIntegrationTest {
 
     @Test
     public void testCreate() throws Exception {
-        createGraph();
+        createGraph("exported.cypher");
     }
 
-    private void createGraph() throws Exception {
+    private void createGraph(String filename) throws Exception {
         // clean database before creating our own graph
         getDatabase().execute("MATCH (n) DETACH DELETE n");
 
-        String content = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("exported.cypher").toURI())));
+        String content = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource(filename).toURI())));
         List<String> queries = ImportUtils.getImportQueriesFromApocExport(content);
         queries.forEach(q -> {
-            //System.out.println(q);
             executeInTransaction(q, (result -> {
-
             }));
         });
     }

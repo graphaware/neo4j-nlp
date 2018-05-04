@@ -23,10 +23,11 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | Similarity Computation | ✔ | ✔ |
 | PDF Parsing | ✔ | ✔ |
 | Apache Spark Binding for Distributed Algorithms | | ✔ |
+| Doc2Vec implementation | | ✔ |
 | User Interface | | ✔ |
 | ML Prediction capabilities | | ✔ |
 | Entity Merging | | ✔ |
-| Questions generator | | ✔ |
+| Questions2Statement generator | | ✔ |
 | Conversational Features | | ✔ |
 
 Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
@@ -35,7 +36,7 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 ## Installation
 
-#### Latest version number : **3.3.2.52.6**
+#### Latest version number : **3.3.2.52.7** - Compatible with Neo4j 3.3.2+
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
@@ -79,6 +80,12 @@ CREATE CONSTRAINT ON (n:Sentence) ASSERT n.id IS UNIQUE;
 CREATE INDEX ON :Tag(value);
 ```
 
+Or use the dedicated procedure :
+
+```
+CALL ga.nlp.schema.create()
+```
+
 ### Quick Documentation in Neo4j Browser
 
 Once the extension is loaded, you can see basic documentation on all available procedures by running
@@ -108,7 +115,7 @@ For example, the basic `tokenizer` pipeline has the following components :
 * Part Of Speech Tagging
 * Named Entity Recognition
 
-It is also possible to create a custom pipeline:
+It is mandatory to create your pipeline first :
 
 ```
 CALL ga.nlp.processor.addPipeline({textProcessor: 'com.graphaware.nlp.processor.stanford.StanfordTextProcessor', name: 'customStopWords', processingSteps: {tokenize: true, ner: true, dependency: false}, stopWords: '+,result, all, during', 
@@ -132,17 +139,21 @@ The available optional parameters (default values are in brackets):
 * `threadNumber` (default: 4): for multi-threading
 * `excludedNER`: (default: none) specify a list of NE to not be recognized in upper case, for example for excluding `NER_Money` and `NER_O` on the Tag nodes, use ['O', 'MONEY']
 
+
 To set a pipeline as a default pipeline:
+
 ```
 ga.nlp.processor.pipeline.default({name})
 ```
 
 To delete a pipeline, use this command:
+
 ```
 CALL ga.nlp.processor.removePipeline(<pipeline-name>, <text-processor>)
 ```
 
 To see details of all existing pipelines:
+
 ```
 CALL ga.nlp.processor.getPipelines
 ```
@@ -202,12 +213,13 @@ If you have a big set of data to annotate, we recommend to use [APOC](https://gi
 
 ```
 CALL apoc.periodic.iterate(
-"MATCH (n:News) RETURN n LIMIT 500",
+"MATCH (n:News) RETURN n",
 "CALL ga.nlp.annotate({text: n.text, id: id(n)})
-YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", {})
+YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", {batchSize:1, iterateList:true})
 ```
 
-Do not run run the procedure in parallel to avoid deadlocks.
+It is **important** to keep the `batchSize` and `iterateList` options as mentioned in the example. Running the annotation
+procedure in parallel will create deadlocks.
 
 ### Enrich your original knowledge
 
@@ -222,7 +234,7 @@ This enricher will extend the meaning of tokens (Tag nodes) in the graph.
 
 ```
 MATCH (n:Tag)
-CALL ga.nlp.enrich.concept({enricher: 'conceptnet5', tag: n, depth:2, admittedRelationships:["IsA","PartOf"]})
+CALL ga.nlp.enrich.concept({enricher: 'conceptnet5', tag: n, depth:1, admittedRelationships:["IsA","PartOf"]})
 YIELD result
 RETURN result
 ```

@@ -36,13 +36,15 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPModule.class);
     
-    private final NLPConfiguration nlpMLConfiguration;
+    protected final NLPConfiguration nlpMLConfiguration;
 
-    private final GraphDatabaseService database;
+    protected final GraphDatabaseService database;
 
-    private NLPManager nlpManager;
+    protected NLPManager nlpManager;
     
-    private WorkflowManager pipelineManager;
+    protected WorkflowManager pipelineManager;
+
+    protected DynamicConfiguration dynamicConfiguration;
 
     public NLPModule(String moduleId, NLPConfiguration configuration, GraphDatabaseService database) {
         super(moduleId);
@@ -52,14 +54,18 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
 
     @Override
     public void initialize(GraphDatabaseService database) {
-        LOG.info("Initializing NLP Module");
+        LOG.info("Initializing Community NLP Module");
         super.initialize(database);
-        DynamicConfiguration dynamicConfiguration = new DynamicConfiguration(database);
+        createConfiguration();
         checkMigrations(dynamicConfiguration);
         nlpManager = NLPManager.getInstance();
         nlpManager.init(database, nlpMLConfiguration, dynamicConfiguration);
         pipelineManager = WorkflowManager.getInstance();
         pipelineManager.init(database, nlpMLConfiguration, dynamicConfiguration);
+    }
+
+    protected void createConfiguration() {
+        dynamicConfiguration = new DynamicConfiguration(database);
     }
 
     public NLPConfiguration getNlpMLConfiguration() {

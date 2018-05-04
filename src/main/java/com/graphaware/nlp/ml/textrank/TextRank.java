@@ -20,6 +20,7 @@ import com.graphaware.nlp.ml.pagerank.PageRank;
 import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
@@ -504,8 +505,9 @@ public class TextRank {
 
         // get tf*idf: useful for cleanFinalKeywords()
         final Map<Long, TfIdfObject> tfidfMap = new HashMap<>();
-        if (useDependencies)
-            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+        if (useDependencies) {
+//            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+        }
 
         // for z-scores: calculate mean and sigma of relevances and tf*idf
         relevanceAvg = pageRanks.entrySet().stream().mapToDouble(e -> e.getValue()).average().orElse(0.);
@@ -659,6 +661,7 @@ public class TextRank {
             results = cleanFinalKeywords(results, n_oneThird);
         }
         peristKeyword(results, annotatedText);
+        removalProcess(annotatedText);
 
         return true;
     }
@@ -978,6 +981,21 @@ public class TextRank {
         return newResults;
     }
 
+    private void removalProcess(Node annotatedText) {
+        String query = "MATCH (n:AnnotatedText)<-[:DESCRIBES]-(k) WHERE id(n) = {id} AND size(k.keywordsList) = 1 WITH n, k WHERE true " +
+                "MATCH (t:Tag) WHERE t.id = k.id " +
+                "AND ANY(x IN t.pos WHERE x STARTS WITH {verb} OR x IN {blacklist}) " +
+                "DETACH DELETE k";
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("id", annotatedText.getId());
+        parameters.put("verb", "VB");
+        parameters.put("blacklist", Arrays.asList("JJ","JJR","JJS","RB","RBR","RBS","RP","WR","IN","WP"));
+        try (Transaction tx = database.beginTx()) {
+            database.execute(query, parameters);
+            tx.success();
+        }
+    }
+
     public static class Builder {
 
         private static final String[] STOP_WORDS = {"new", "old", "large", "big", "vast", "small", "many", "few", "good", "better", "best", "bad", "worse", "worst"};
@@ -1114,6 +1132,7 @@ public class TextRank {
         private List<Long> relatedTags;
         private List<Number> relTagStartingPoints;
         private List<Number> relTagEndingPoints;
+        private List<String> pos;
 
         public KeywordExtractedItem(long tagId) {
             this.tagId = tagId;
@@ -1177,6 +1196,14 @@ public class TextRank {
 
         public void setRelevance(double relevance) {
             this.relevance = relevance;
+        }
+
+        public List<String> getPos() {
+            return pos;
+        }
+
+        public void setPos(List<String> pos) {
+            this.pos = pos;
         }
 
         public void update(KeywordExtractedItem item) {
