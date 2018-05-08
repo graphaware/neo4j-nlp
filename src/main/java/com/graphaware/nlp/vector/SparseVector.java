@@ -23,11 +23,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class SparseVector {
+public class SparseVector implements GenericVector {
 
-    private final Integer cardinality;
-    private final List<Long> index;
-    private final List<Float> values;
+    private Integer cardinality;
+    private List<Long> index;
+    private List<Float> values;
+    
+    public SparseVector() {        
+    }
 
     public SparseVector(int cardinality, List<Long> index, List<Float> values) {
         this.cardinality = cardinality;
@@ -35,7 +38,7 @@ public class SparseVector {
         this.values = values;
     }
 
-    public static SparseVector fromMap(Map<Long, Float> map) {
+    public static GenericVector fromMap(Map<Long, Float> map) {
         int cardinality = map.size();
         List<Long> index = map.keySet().stream()
                 .sorted()
@@ -46,11 +49,25 @@ public class SparseVector {
         return new SparseVector(cardinality, index, values);
     }
 
-    public static SparseVector fromList(List<Float> vector) {
+    public static GenericVector fromList(List<Float> vector) {
         int cardinality = vector.get(0).intValue();
         List<Long> index = vector.subList(1, cardinality + 1).stream().map((x) -> x.longValue()).collect(Collectors.toList());
         List<Float> values = vector.subList(cardinality + 1, 2 * cardinality + 1).stream().collect(Collectors.toList());
         return new SparseVector(cardinality, index, values);
+    }
+    
+    @Override
+    public void setArray(float[] vector) {
+        this.cardinality = Float.valueOf(vector[0]).intValue();
+        this.index = new ArrayList<>();
+        this.values = new ArrayList<>();
+        for (int i = 1; i < vector.length; i++) {
+            if (i >= 1 && i < cardinality + 1) {
+               index.add(Float.valueOf(vector[i]).longValue());
+            } else {
+               values.add(vector[i]);
+            }
+        }
     }
 
     public List<Float> getList() {
@@ -66,6 +83,7 @@ public class SparseVector {
         return vectorAsList;
     }
     
+    @Override
     public float[] getArray() {
         float[] vector = new float[cardinality * 2 + 1];
         vector[0] = cardinality.floatValue();
@@ -91,35 +109,46 @@ public class SparseVector {
         return values;
     }
 
-    public float dot(SparseVector other) {
-        if (this.cardinality == 0 ||
-                other.cardinality == 0) {
+    @Override
+    public float dot(GenericVector other) {
+        if (!(other instanceof SparseVector)) {
+            throw new RuntimeException("other is not an instance of SparseVector");
+        }
+        
+        SparseVector otherSparseVector = (SparseVector)other;
+
+        if (this.values == null || 
+                this.cardinality == 0 ||
+                otherSparseVector.values == null || 
+                otherSparseVector.cardinality == 0) {
             return 0f;
         }
+        
         final AtomicReference<Float> sum = new AtomicReference<>(0f);
         int xIndex = 0;
         int yIndex = 0;
 
         while (true) {
-            if (index.get(xIndex).longValue() == other.getIndex().get(yIndex).longValue()) {
+            if (index.get(xIndex).longValue() == otherSparseVector.getIndex().get(yIndex).longValue()) {
                 float curValue = sum.get();
-                curValue += values.get(xIndex) * other.getValues().get(yIndex);
+                curValue += values.get(xIndex) * otherSparseVector.getValues().get(yIndex);
                 sum.set(curValue);
                 xIndex++;
                 yIndex++;
-            } else if (index.get(xIndex) > other.getIndex().get(yIndex)) {
+            } else if (index.get(xIndex) > otherSparseVector.getIndex().get(yIndex)) {
                 yIndex++;
             } else {
                 xIndex++;
             }
             if (xIndex == cardinality
-                    || yIndex == other.getCardinality()) {
+                    || yIndex == otherSparseVector.getCardinality()) {
                 break;
             }
         }
         return sum.get();
     }
 
+    @Override
     public float norm() {
         return Double.valueOf(Math.sqrt(this.dot(this))).floatValue();
     }

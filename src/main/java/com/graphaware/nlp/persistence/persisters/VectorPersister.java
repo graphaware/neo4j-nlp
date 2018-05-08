@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
@@ -24,6 +23,8 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.vector.VectorFactory;
+import com.graphaware.nlp.vector.VectorHandler;
 
 public class VectorPersister extends AbstractPersister implements Persister<VectorContainer> {
     
@@ -39,8 +40,12 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
     }
 
     @Override
-    public VectorContainer fromNode(Node node) {
-        throw new UnsupportedOperationException("This shouldn't be necessary");
+    public VectorContainer fromNode(Node node, Object... properties) {
+        String basePropertyname = (String)properties[0];
+        String type = (String)node.getProperty(getTypePropertyName(basePropertyname));
+        float[] vector = (float[]) node.getProperty(getArrayPropertyName(basePropertyname));
+        VectorHandler createVector = VectorFactory.createVector(type, vector);
+        return new VectorContainer(node.getId(), basePropertyname, createVector);
     }
 
     @Override
@@ -69,9 +74,18 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
             vectorContainerLabel = configuration().getLabelFor(Labels.VectorContainer);
         }
         node.addLabel(vectorContainerLabel);
-        node.setProperty(object.getPropertyName(), object.getVector().getArray());
+        node.setProperty(getTypePropertyName(object.getPropertyName()), object.getVectorHandler().getType());
+        node.setProperty(getArrayPropertyName(object.getPropertyName()), object.getVectorHandler().getArray());
         
         return node;
+    }
+
+    private static String getTypePropertyName(String basePropertyname) {
+        return basePropertyname + "_type";
+    }
+    
+    private static String getArrayPropertyName(String basePropertyname) {
+        return basePropertyname + "_array";
     }
 
     @Override

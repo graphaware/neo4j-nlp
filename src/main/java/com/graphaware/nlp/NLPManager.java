@@ -45,8 +45,8 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
-import com.graphaware.nlp.vector.SparseVector;
 import com.graphaware.nlp.vector.VectorComputation;
+import com.graphaware.nlp.vector.VectorHandler;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
@@ -310,7 +310,7 @@ public final class NLPManager {
             if (vectorComputation == null) {
                 throw new RuntimeException("Cannot find the VectorComputation instance with type: " + request.getType());
             }
-            SparseVector vector
+            VectorHandler vector
                     = vectorComputation.computeSparseVector(request.getInput().getId(), request.getParameters());
             if (vector != null) {
                 VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);

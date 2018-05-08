@@ -61,7 +61,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     }
 
     @Override
-    public AnnotatedText fromNode(Node node) {
+    public AnnotatedText fromNode(Node node, Object... properties) {
         if (!node.hasLabel(configuration().getLabelFor(Labels.AnnotatedText))) {
             throw new RuntimeException("Expected an " + configuration().getLabelFor(Labels.AnnotatedText) + " node.");
         }

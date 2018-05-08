@@ -41,7 +41,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     @Override
-    public Tag fromNode(Node node) {
+    public Tag fromNode(Node node, Object... properties) {
         checkNodeIsATag(node);
         return new Tag(String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE))),
                 String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE))));
