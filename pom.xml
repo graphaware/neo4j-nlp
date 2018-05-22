@@ -18,11 +18,11 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.3.3.52</version>
+    <version>3.4.0.52</version>
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.3.3.52.8-SNAPSHOT</version>
+  <version>3.4.0.52.9-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
@@ -41,7 +41,7 @@
     <connection>scm:git:git@github.com:graphaware/neo4j-nlp.git</connection>
     <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp.git</developerConnection>
     <url>git@github.com:graphaware/neo4j-nlp.git</url>
-    <tag>HEAD</tag>
+    <tag>nlp-3.4.0.52.8</tag>
   </scm>
 
   <developers>
