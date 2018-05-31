@@ -10,6 +10,7 @@ import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -17,6 +18,7 @@ import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class MicrosoftEnricherTest extends EnricherAbstractTest {
 
     @Before

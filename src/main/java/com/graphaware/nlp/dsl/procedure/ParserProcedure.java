@@ -16,6 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.parser.AbstractParser;
 import com.graphaware.nlp.parser.Parser;
 import com.graphaware.nlp.parser.domain.Page;
 import com.graphaware.nlp.parser.pdf.TikaPDFParser;
@@ -25,40 +26,50 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class ParserProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.parser.pdf")
-    public Stream<Page> parsePdf(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
+    public Stream<Page> parsePdf(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns, @Name(value = "options", defaultValue = "") Map<String, Object> options) {
         TikaPDFParser parser = (TikaPDFParser) getNLPManager().getExtension(TikaPDFParser.class);
 
-        return getPages(parser, filename, filterPatterns).stream();
+        return getPages(parser, filename, filterPatterns, options).stream();
     }
 
     @Procedure(name = "ga.nlp.parser.powerpoint")
-    public Stream<Page> parsePowerpoint(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
+    public Stream<Page> parsePowerpoint(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns,  @Name(value = "options", defaultValue = "") Map<String, Object> options) {
         PowerpointParser parser = (PowerpointParser) getNLPManager().getExtension(PowerpointParser.class);
 
-        return getPages(parser, filename, filterPatterns).stream();
+        return getPages(parser, filename, filterPatterns, options).stream();
     }
 
     @Procedure(name = "ga.nlp.parser.word")
-    public Stream<Page> parseWord(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns) {
+    public Stream<Page> parseWord(@Name("file") String filename, @Name(value = "filterPatterns", defaultValue = "") List<String> filterPatterns,  @Name(value = "options", defaultValue = "") Map<String, Object> options) {
         WordParser parser = (WordParser) getNLPManager().getExtension(WordParser.class);
 
-        return getPages(parser, filename, filterPatterns).stream();
+        return getPages(parser, filename, filterPatterns, options).stream();
     }
 
-    private List<Page> getPages(Parser parser, String filename, List<String> filterPatterns) {
+    private List<Page> getPages(Parser parser, String filename, List<String> filterPatterns, Map<String, Object> options) {
         List<String> filters = filterPatterns.equals("") ? new ArrayList<>() : filterPatterns;
+        Map<String, Object> parserOptions = options.equals("") ? new HashMap<>() : options;
+        augmentParserOptions(parserOptions);
         try {
-            List<Page> pages = parser.parse(filename, filters);
+            List<Page> pages = parser.parse(filename, filters, parserOptions);
 
             return pages;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void augmentParserOptions(Map<String, Object> parserOptions) {
+        if (getConfiguration().hasSettingValue("DEFAULT_UA")) {
+            parserOptions.put(AbstractParser.USER_AGENT_OPTION, getConfiguration().getSettingValueFor("DEFAULT_UA"));
         }
     }
 }
