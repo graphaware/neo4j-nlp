@@ -26,6 +26,8 @@ import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.vector.VectorFactory;
 import com.graphaware.nlp.vector.VectorHandler;
 
+import java.util.Optional;
+
 public class VectorPersister extends AbstractPersister implements Persister<VectorContainer> {
     
     private static final Log LOG = LoggerFactory.getLogger(VectorPersister.class);
@@ -66,18 +68,22 @@ public class VectorPersister extends AbstractPersister implements Persister<Vect
 
         if (null == node) {
             throw new RuntimeException("Node should exist to store a vector");
-        } 
+        }
+        storeVector(node, object.getPropertyName(), object.getVectorHandler().getType(), object.getVectorHandler().getArray(), Optional.ofNullable(label));
+        
+        return node;
+    }
+
+    public void storeVector(Node node, String propertyName, String type, float[] vector, Optional<String> label) {
         Label vectorContainerLabel;
-        if (label != null) {
-            vectorContainerLabel = Label.label(label);
+        if (label.isPresent()) {
+            vectorContainerLabel = Label.label(label.get());
         } else {
             vectorContainerLabel = configuration().getLabelFor(Labels.VectorContainer);
         }
         node.addLabel(vectorContainerLabel);
-        node.setProperty(getTypePropertyName(object.getPropertyName()), object.getVectorHandler().getType());
-        node.setProperty(getArrayPropertyName(object.getPropertyName()), object.getVectorHandler().getArray());
-        
-        return node;
+        node.setProperty(getTypePropertyName(propertyName), type);
+        node.setProperty(getArrayPropertyName(propertyName), vector);
     }
 
     private static String getTypePropertyName(String basePropertyname) {

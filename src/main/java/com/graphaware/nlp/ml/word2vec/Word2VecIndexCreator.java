@@ -94,9 +94,9 @@ public class Word2VecIndexCreator {
                         wordToUse = wordToUse.replace("/c/" + language + "/", "").trim();
                     }
                     doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
-                    double[] vector = new double[split.length - 1];
+                    float[] vector = new float[split.length - 1];
                     for (int i = 0; i < split.length - 1; i++) {
-                        vector[i] = Double.parseDouble(split[i + 1]);
+                        vector[i] = Float.parseFloat(split[i + 1]);
                     }
                     doc.add(new StoredField(VECTOR_FIELD, TypeConverter.toByteArray(vector)));
                     writer.addDocument(doc);

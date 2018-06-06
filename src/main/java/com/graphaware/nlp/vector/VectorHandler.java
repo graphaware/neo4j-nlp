@@ -24,8 +24,13 @@ public class VectorHandler {
         this.type = this.getClass().getName();
     }
 
-    public VectorHandler(String type, GenericVector vector) {
+    /*public VectorHandler(String type, GenericVector vector) {
         this.type = type;
+        this.vector = vector;
+    }*/
+
+    public VectorHandler(GenericVector vector) {
+        this.type = this.getClass().getName();
         this.vector = vector;
     }
 

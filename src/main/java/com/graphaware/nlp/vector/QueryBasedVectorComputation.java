@@ -45,7 +45,7 @@ public class QueryBasedVectorComputation implements VectorComputation {
         Map<Long, Float> fmap;
         fmap = createFeatureMap(node, query);
         GenericVector vector = SparseVector.fromMap(fmap);
-        return new VectorHandler(vector.getClass().getName(), vector);
+        return new VectorHandler(vector);
     }
 
     private Map<Long, Float> createFeatureMap(long firstNode, String query) throws QueryExecutionException {

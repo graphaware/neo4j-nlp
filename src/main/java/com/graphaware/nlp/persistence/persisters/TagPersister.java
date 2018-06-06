@@ -15,14 +15,17 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.util.TagUtils;
 import com.graphaware.nlp.util.TypeConverter;
+import com.graphaware.nlp.vector.VectorHandler;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -156,8 +159,16 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     private void storeExtraProperties(Tag tag, Node tagNode) {
-        for (String k : tag.getExtraProperties().keySet()) {
-            tagNode.setProperty(k, tag.getExtraProperties().get(k));
+        for (Map.Entry<String, Object> entry : tag.getExtraProperties().entrySet()) {
+
+            if (entry.getValue() instanceof VectorHandler) {
+                VectorPersister persister = NLPManager.getInstance().getPersister(VectorContainer.class);
+                VectorHandler vectorHandler = (VectorHandler) entry.getValue();
+                persister.storeVector(tagNode, entry.getKey(), vectorHandler.getType(), vectorHandler.getArray(), Optional.empty());
+            } else {
+                tagNode.setProperty(entry.getKey(), entry.getValue());
+            }
+
         }
     }
 

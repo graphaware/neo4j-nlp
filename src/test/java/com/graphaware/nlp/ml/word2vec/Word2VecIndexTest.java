@@ -26,7 +26,7 @@ public class Word2VecIndexTest {
     @Test
     public void textIndexing() throws Exception {
         Word2VecIndexLookup lookup = new Word2VecIndexLookup(indexPath);
-        double[] searchIndex = lookup.searchIndex("agriculturist");
-        assertTrue(-0.0129d == searchIndex[2]);
+        float[] searchIndex = lookup.searchIndex("agriculturist");
+        assertTrue(-0.0129f == searchIndex[2]);
     }
 }

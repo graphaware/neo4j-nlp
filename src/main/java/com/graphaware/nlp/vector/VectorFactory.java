@@ -10,11 +10,12 @@ public class VectorFactory {
     public static VectorHandler createVector(String type, float[] vector) {
 
         try {
+            //TODO: add cache for clazz
             Class<? extends GenericVector> clazz = (Class<? extends GenericVector>) Class
                     .forName(type);
             GenericVector actualVector = clazz.newInstance();
             actualVector.setArray(vector);
-            return new VectorHandler(type, actualVector);
+            return new VectorHandler(actualVector);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             String message = "Error while creating the vector of type: " + type;
             LOG.error(message, ex);
