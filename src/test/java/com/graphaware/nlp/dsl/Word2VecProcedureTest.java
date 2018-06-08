@@ -40,7 +40,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:Tag {value:'agriculturist'}) RETURN n", (result -> {
             assertTrue(result.hasNext());
             Map<String, Object> record = result.next();
-            assertTrue(((Node) record.get("n")).hasProperty("word2vec"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_type"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_array"));
         }));
     }
 
@@ -76,7 +77,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:Tag {value:'astronaut'}) RETURN n", (result -> {
             assertTrue(result.hasNext());
             Map<String, Object> record = result.next();
-            assertTrue(((Node) record.get("n")).hasProperty("word2vec"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_type"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_array"));
         }));
     }
 

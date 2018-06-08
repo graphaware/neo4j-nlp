@@ -83,7 +83,7 @@ CREATE INDEX ON :Tag(value);
 Or use the dedicated procedure :
 
 ```
-CALL ga.nlp.schema.create()
+CALL ga.nlp.createSchema()
 ```
 
 ### Quick Documentation in Neo4j Browser

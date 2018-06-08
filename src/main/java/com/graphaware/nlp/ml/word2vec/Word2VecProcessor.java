@@ -89,7 +89,7 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
                 float[] vector = word2VecModel.getWordToVec(tag.getLemma().toLowerCase(), request.getModelName());
                 if (vector != null) {
                     VectorHandler vectorHandler = new VectorHandler(new DenseVector(vector));
-                    tag.addProperties(request.getPropertyName(), vector);
+                    tag.addProperties(request.getPropertyName(), vectorHandler);
                     extendedTags.add(tag);
                 }
             });

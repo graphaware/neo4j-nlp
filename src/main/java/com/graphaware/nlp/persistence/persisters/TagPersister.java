@@ -46,8 +46,17 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     @Override
     public Tag fromNode(Node node, Object... properties) {
         checkNodeIsATag(node);
-        return new Tag(String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE))),
+        Tag tag = new Tag(String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE))),
                 String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE))));
+        String[] ne = (String[]) node.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
+        if (ne != null) {
+            tag.setNe(Arrays.asList(ne));
+        }
+        String[] pos = (String[]) node.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
+        if (pos != null) {
+            tag.setPos(Arrays.asList(pos));
+        }
+        return tag;
     }
 
     @Override
@@ -96,11 +105,11 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         }
 
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY))) {
-            String[] pos = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
-            if (tag.getNeAsList().size() != pos.length) {
+            String[] ne = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
+            if (tag.getNeAsList().size() != ne.length) {
                 return true;
             }
-            List<String> original = Arrays.asList(pos);
+            List<String> original = Arrays.asList(ne);
 
             for (String s : tag.getNeAsList()) {
                 if (!original.contains(s)) {

@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.configuration;
 
+import com.graphaware.nlp.dsl.request.Word2VecModelSpecification;
 import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
@@ -42,6 +43,7 @@ public class DynamicConfiguration {
     public static final String SETTING_KEY_PREFIX = "SETTING_";
     public static final String PIPELINE_KEY_PREFIX = "PIPELINE_";
     public static final String MODEL_KEY_PREFIX = "MODEL_";
+    public static final String WORD2VEC_KEY_PREFIX = "WORD2VEC_";
 
     protected final GraphDatabaseService database;
     protected final GraphKeyValueStore keyValueStore;
@@ -264,4 +266,36 @@ public class DynamicConfiguration {
     private void loadUserConfiguration() {
         userProvidedConfiguration = getAllConfigValuesFromStore();
     }
+
+    public void storeWord2VecModel(Word2VecModelSpecification request) {
+        try {
+            String serialized = mapper.writeValueAsString(request);
+            String key = WORD2VEC_KEY_PREFIX + request.getModelName();
+            update(key, serialized);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public List<Word2VecModelSpecification> loadWord2VecModel() {
+        List<Word2VecModelSpecification> list = new ArrayList<>();
+        Map<String, Object> config = getAllConfigValuesFromStore();
+        config.keySet().forEach(k -> {
+            if (k.startsWith(WORD2VEC_KEY_PREFIX)) {
+                try {
+                    Word2VecModelSpecification word2VecAddModel = mapper.readValue(config.get(k).toString(), Word2VecModelSpecification.class);
+                    list.add(word2VecAddModel);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        return list;
+    }
+
+    public void removeWord2VecModel(String modelName) {
+        removeKey(WORD2VEC_KEY_PREFIX + modelName);
+    }
+
 }

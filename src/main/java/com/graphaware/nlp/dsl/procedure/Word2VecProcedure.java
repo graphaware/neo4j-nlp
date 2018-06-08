@@ -16,6 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.dsl.request.Word2VecModelSpecification;
 import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.Word2VecModelResult;
@@ -61,9 +62,8 @@ public class Word2VecProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.word2vec.addModel", mode = Mode.WRITE)
     public Stream<SingleResult> addModel(@Name("sourePath") String sourcePath, @Name("destinationPath") String destinationPath, @Name("modelName") String modelName, @Name(defaultValue = "en", value = "language") String language) {
-        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        word2VecProcessor.getWord2VecModel().createModelFromPaths(sourcePath, destinationPath, modelName, language);
-
+        Word2VecModelSpecification request = new Word2VecModelSpecification(sourcePath, destinationPath, modelName, language);
+        getNLPManager().addWord2VecModel(request);
         return Stream.of(SingleResult.success());
     }
 
