@@ -137,7 +137,9 @@ public final class NLPManager {
             throw new RuntimeException("No pipeline " + pipelineName + " found.");
         }
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        long startTime = -System.currentTimeMillis();
         AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
+        LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
 
         return processAnnotationPersist(id, text, at, pipelineSpecification);
     }

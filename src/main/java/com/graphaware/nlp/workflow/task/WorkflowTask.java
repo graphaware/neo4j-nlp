@@ -83,10 +83,16 @@ public class WorkflowTask
             additionalInfo = ex.getMessage();
             return;
         }
+
         if (cancelled) {
             setStatus(TaskStatus.CANCELLED);
         } else {
-            setStatus(TaskStatus.SUCCEEDED);
+            output.waitToComplete();
+            if (cancelled) {
+                setStatus(TaskStatus.CANCELLED);
+            } else {
+                setStatus(TaskStatus.SUCCEEDED);
+            }
         }
     }
 
@@ -99,8 +105,12 @@ public class WorkflowTask
         return getConfiguration().isSync();
     }
 
-    public void cancel() {
+    @Override
+    public void stop() {
         cancelled = true;
+        input.stop();
+        process.stop();
+        output.stop();
     }
 
     public void reset() {

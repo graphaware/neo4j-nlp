@@ -45,6 +45,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     @Override
     public Node persist(AnnotatedText annotatedText, String id, String txId) {
         LOG.info("Start storing annotatedText " + id);
+        long startTime = -System.currentTimeMillis();
         Node tmpAnnotatedNode = getIfExist(configuration().getLabelFor(Labels.AnnotatedText), Properties.PROPERTY_ID, id);
         final Node annotatedTextNode;
         if (tmpAnnotatedNode != null) {
@@ -56,7 +57,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
         iterateSentencesAndStore(annotatedTextNode, annotatedText, id, txId);
         tmpAnnotatedNode = annotatedTextNode;
 
-        LOG.info("end storing annotatedText " + id);
+        LOG.info("end storing annotatedText " + id + ". It took: " + (System.currentTimeMillis() + startTime));
         return tmpAnnotatedNode;
     }
 

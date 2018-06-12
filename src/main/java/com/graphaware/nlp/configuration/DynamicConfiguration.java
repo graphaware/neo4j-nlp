@@ -21,7 +21,9 @@ import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.dsl.result.WorkflowInstanceItemInfo;
 import com.graphaware.nlp.workflow.WorkflowItem;
+
 import java.io.IOException;
+
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
@@ -32,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 public class DynamicConfiguration {
@@ -166,7 +169,12 @@ public class DynamicConfiguration {
         }
     }
 
-    public List<WorkflowInstanceItemInfo> loadPipelineInstanceItems(String prefix) {
+    public void removeWorkflowInstanceItem(WorkflowItem item) {
+        String key = item.getPrefix() + item.getName();
+        removeKey(key);
+    }
+
+    public List<WorkflowInstanceItemInfo> loadWorkflowInstanceItems(String prefix) {
         List<WorkflowInstanceItemInfo> list = new ArrayList<>();
         Map<String, Object> config = getAllConfigValuesFromStore();
         config.keySet().forEach(k -> {

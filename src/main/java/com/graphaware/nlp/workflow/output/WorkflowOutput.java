@@ -28,4 +28,6 @@ public abstract class WorkflowOutput<C extends WorkflowConfiguration>
         return WORFKLOW_OUTPUT_KEY_PREFIX;
     }
 
+    public abstract void waitToComplete();
+
 }
