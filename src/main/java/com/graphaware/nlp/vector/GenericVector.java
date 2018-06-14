@@ -15,12 +15,9 @@
  */
 package com.graphaware.nlp.vector;
 
-import java.util.Map;
-import org.neo4j.graphdb.GraphDatabaseService;
-
-public interface VectorComputation {
-    public String getType();
-    public void setDatabase(GraphDatabaseService database);
-    public VectorHandler computeSparseVector(long node, Map<String, Object> parameters);    
-    public void train(Map<String, Object> parameters);
+public interface GenericVector {
+    public void setArray(float[] vector);
+    public float[] getArray();
+    public float dot(GenericVector other);
+    public float norm();
 }

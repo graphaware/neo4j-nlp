@@ -28,6 +28,16 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
     }
 
     @Override
+    public void stop() {
+
+    }
+
+    @Override
+    public void waitToComplete() {
+        return;
+    }
+
+    @Override
     public void handle(WorkflowProcessorOutputEntry entry) {
         try {
             if (entry instanceof WorkflowProcessorEndOfQueueEntry) {

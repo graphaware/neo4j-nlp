@@ -22,12 +22,7 @@ import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.VectorContainer;
-import com.graphaware.nlp.dsl.request.AnnotationRequest;
-import com.graphaware.nlp.dsl.request.ComputeVectorRequest;
-import com.graphaware.nlp.dsl.request.ComputeVectorTrainRequest;
-import com.graphaware.nlp.dsl.request.FilterRequest;
-import com.graphaware.nlp.dsl.request.CustomModelsRequest;
-import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.dsl.request.*;
 import com.graphaware.nlp.dsl.result.TextProcessorItem;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.enrich.EnrichmentRegistry;
@@ -37,6 +32,7 @@ import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
+import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
@@ -45,8 +41,8 @@ import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
 import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
-import com.graphaware.nlp.vector.SparseVector;
 import com.graphaware.nlp.vector.VectorComputation;
+import com.graphaware.nlp.vector.VectorHandler;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
@@ -113,6 +109,7 @@ public final class NLPManager {
         registerEventListeners();
         initialized = true;
         registerPipelinesFromConfig();
+        registerWord2VecModelFromConfig();
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -140,7 +137,9 @@ public final class NLPManager {
             throw new RuntimeException("No pipeline " + pipelineName + " found.");
         }
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        long startTime = -System.currentTimeMillis();
         AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
+        LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
 
         return processAnnotationPersist(id, text, at, pipelineSpecification);
     }
@@ -261,6 +260,35 @@ public final class NLPManager {
         configuration.storeCustomPipeline(request);
     }
 
+    public void addWord2VecModel(Word2VecModelSpecification request) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getExtension(Word2VecProcessor.class);
+        word2VecProcessor.getWord2VecModel().createModelFromPaths(
+                request.getSourcePath(),
+                request.getDestinationPath(),
+                request.getModelName(),
+                request.getLanguage());
+        configuration.storeWord2VecModel(request);
+    }
+
+    private void registerWord2VecModelFromConfig() {
+
+        configuration.loadWord2VecModel().forEach(word2VecModelSpecification -> {
+            try {
+                Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getExtension(Word2VecProcessor.class);
+                word2VecProcessor.getWord2VecModel().createModelFromPaths(
+                        word2VecModelSpecification.getSourcePath(),
+                        word2VecModelSpecification.getDestinationPath(),
+                        word2VecModelSpecification.getModelName(),
+                        word2VecModelSpecification.getLanguage());
+            } catch (Exception ex) {
+                LOG.error("Error while loading the model: " + word2VecModelSpecification.getModelName(), ex);
+                configuration.removeWord2VecModel(word2VecModelSpecification.getModelName());
+            }
+        });
+
+    }
+
+
     public Enricher getEnricher(String name) {
         return enrichmentRegistry.resolve(name);
     }
@@ -310,7 +338,7 @@ public final class NLPManager {
             if (vectorComputation == null) {
                 throw new RuntimeException("Cannot find the VectorComputation instance with type: " + request.getType());
             }
-            SparseVector vector
+            VectorHandler vector
                     = vectorComputation.computeSparseVector(request.getInput().getId(), request.getParameters());
             if (vector != null) {
                 VectorContainer vectorNode = new VectorContainer(request.getInput().getId(), request.getPropertyName(), vector);
@@ -386,4 +414,11 @@ public final class NLPManager {
             vectorComputationProcesses.put(extension.getType(), extensionMap.get(k));
         });
     }
+
+    public VectorComputation getVectorComputationProcesses(String type) {
+        return vectorComputationProcesses.get(type);
+    }
+
+
+
 }

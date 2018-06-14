@@ -38,7 +38,7 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
             assertTrue(result.hasNext());
         }));
 
-        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.enrich.concept({enricher: 'microsoft', node: n, depth: 1, language:'en'}) YIELD result RETURN result", (result -> {
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.enrich.concept({enricher: 'conceptnet5', node: n, depth: 1, language:'en'}) YIELD result RETURN result", (result -> {
             assertTrue(result.hasNext());
         }));
     }

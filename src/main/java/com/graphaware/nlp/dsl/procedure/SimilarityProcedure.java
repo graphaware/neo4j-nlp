@@ -34,16 +34,6 @@ public class SimilarityProcedure extends AbstractDSL {
 
     private static final Log LOG = LoggerFactory.getLogger(VectorProcessLogic.class);
 
-//    @Procedure(name = "ga.nlp.ml.similarity.cosine", mode = Mode.WRITE)
-//    @Description("Compute similarity between Annotated Text")
-//    public Stream<SingleResult> similarityOld(@Name("input") List<Node> input, 
-//            @Name("depth") Long depth,
-//            @Name("query") String query,
-//            @Name("relationshipType") String relationshipType) {
-//        SimilarityProcessor similarityProcessor = (SimilarityProcessor) getNLPManager().getExtension(SimilarityProcessor.class);
-//        int processed = similarityProcessor.compute(input, query, relationshipType, depth);
-//        return Stream.of(new SingleResult(processed));
-//    }
     @Procedure(name = "ga.nlp.ml.similarity.cosine", mode = Mode.WRITE)
     @Description("Compute similarity between Annotated Text")
     public Stream<SingleResult> similarity(@Name("similarityRequest") Map<String, Object> similarityRequest) {

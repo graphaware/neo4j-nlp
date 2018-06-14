@@ -18,17 +18,18 @@ package com.graphaware.nlp.ml.similarity;
 import com.graphaware.nlp.ml.queue.SimilarityItem;
 import com.graphaware.nlp.ml.queue.SimilarityItemProcessEntry;
 import com.graphaware.nlp.ml.queue.SimilarityQueueProcessor;
-import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
+import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.domain.VectorContainer;
+import com.graphaware.nlp.vector.GenericVector;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.graphaware.nlp.vector.SparseVector;
 import java.util.concurrent.Executors;
 
 public class VectorProcessLogic {
@@ -50,13 +51,18 @@ public class VectorProcessLogic {
         Executors.newSingleThreadExecutor().execute(queueProcessor);
     }
 
-    private List<Float> getVector(Node node, String propertyName) {
-        float[] vector = (float[]) node.getProperty(propertyName);
-        List<Float> result = new ArrayList<>();
-        for (int i = 0; i < vector.length; i++) {
-            result.add(vector[i]);
-        }
-        return result;
+//    private List<Float> getVectorOld(Node node, String propertyName) {
+//        float[] vector = (float[]) node.getProperty(propertyName);
+//        List<Float> result = new ArrayList<>();
+//        for (int i = 0; i < vector.length; i++) {
+//            result.add(vector[i]);
+//        }
+//        return result;
+//    }
+    
+    private GenericVector getVector(Node node, String propertyName) {
+        VectorContainer getVector = (VectorContainer) NLPManager.getInstance().getPersister(VectorContainer.class).fromNode(node, propertyName);
+        return getVector.getVectorHandler().getVector();
     }
 
     public int computeFeatureSimilarityForNodes(List<Node> nodes, String label, String propertyName, String similarityType, int kSize) {
@@ -113,9 +119,19 @@ public class VectorProcessLogic {
         queueProcessor.offer(new SimilarityItemProcessEntry(node.getId(), kNN));
     }
 
-    public static float getSimilarity(List<Float> x, List<Float> y) {
-        SparseVector xVector = SparseVector.fromList(x);
-        SparseVector yVector = SparseVector.fromList(y);
+//    public static float getSimilarity(List<Float> x, List<Float> y) {
+//        SparseVector xVector = SparseVector.fromList(x);
+//        SparseVector yVector = SparseVector.fromList(y);
+//        float a = xVector.dot(yVector);
+//        float b = xVector.norm() * yVector.norm();
+//        if (b > 0) {
+//            return a / b;
+//        } else {
+//            return 0f;
+//        }
+//    }
+    
+    public static float getSimilarity(GenericVector xVector, GenericVector yVector) {
         float a = xVector.dot(yVector);
         float b = xVector.norm() * yVector.norm();
         if (b > 0) {

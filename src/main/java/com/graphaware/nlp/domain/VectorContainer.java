@@ -16,27 +16,27 @@
 package com.graphaware.nlp.domain;
 
 import static com.graphaware.nlp.domain.Constants.VECTOR_PROPERTY;
-import com.graphaware.nlp.vector.SparseVector;
+import com.graphaware.nlp.vector.VectorHandler;
 
 public class VectorContainer {
 
     private final long nodeId;
     private final String propertyName;
-    private final SparseVector vector;
+    private final VectorHandler vectorHandler;
 
-    public VectorContainer(long nodeId, String propertyName, SparseVector vector) {
+    public VectorContainer(long nodeId, String propertyName, VectorHandler vector) {
         if (propertyName == null) {
             this.propertyName = VECTOR_PROPERTY;
         } else {
             this.propertyName = propertyName;
         }
-        this.vector = vector;
+        this.vectorHandler = vector;
         this.nodeId = nodeId;
     }
 
-    public VectorContainer(long nodeId, SparseVector vector) {
+    public VectorContainer(long nodeId, VectorHandler vector) {
         this.propertyName = VECTOR_PROPERTY;
-        this.vector = vector;
+        this.vectorHandler = vector;
         this.nodeId = nodeId;
     }
 
@@ -44,8 +44,8 @@ public class VectorContainer {
         return propertyName;
     }
 
-    public SparseVector getVector() {
-        return vector;
+    public VectorHandler getVectorHandler() {
+        return vectorHandler;
     }
 
     public long getNodeId() {

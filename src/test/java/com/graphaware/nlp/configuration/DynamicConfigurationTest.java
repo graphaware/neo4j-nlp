@@ -16,7 +16,6 @@ import com.graphaware.nlp.workflow.task.WorkflowTaskConfiguration;
 import com.graphaware.nlp.workflow.task.WorkflowTaskInstanceItemInfo;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
-import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
@@ -146,7 +145,7 @@ public class DynamicConfigurationTest extends AbstractEmbeddedTest {
             configuration.storeWorkflowInstanceItem(workflowInput);
             tx.success();
         }
-        List<WorkflowInstanceItemInfo> pipelineInstanceItems = configuration.loadPipelineInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
+        List<WorkflowInstanceItemInfo> pipelineInstanceItems = configuration.loadWorkflowInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
         assertTrue(pipelineInstanceItems.size() == 1);
         WorkflowInstanceItemInfo info = pipelineInstanceItems.get(0);
         assertTrue(info instanceof WorkflowTaskInstanceItemInfo);

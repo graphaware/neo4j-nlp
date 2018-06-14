@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
@@ -43,7 +42,7 @@ public class KeywordPersister extends AbstractPersister implements Persister<Key
     }
 
     @Override
-    public Keyword fromNode(Node node) {
+    public Keyword fromNode(Node node, Object... properties) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

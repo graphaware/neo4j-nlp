@@ -70,7 +70,7 @@ public class Word2VecModel {
         return models;
     }
 
-    public double[] getWordToVec(String lemma, String modelName) {
+    public float[] getWordToVec(String lemma, String modelName) {
         if (models.isEmpty()) {
             return null;
         }

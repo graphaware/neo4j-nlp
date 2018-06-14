@@ -55,10 +55,10 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     @Override
-    public Sentence fromNode(Node node) {
-        Map<String, Object> properties = node.getAllProperties();
-        String sentence = properties.get(configuration().getPropertyKeyFor(Properties.TEXT)).toString();
-        int sentenceNumber = (int) properties.get(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER));
+    public Sentence fromNode(Node node, Object... properties) {
+        Map<String, Object> nodeProperties = node.getAllProperties();
+        String sentence = nodeProperties.get(configuration().getPropertyKeyFor(Properties.TEXT)).toString();
+        int sentenceNumber = (int) nodeProperties.get(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER));
 
         final Sentence sentenceO = new Sentence(sentence, sentenceNumber);
 

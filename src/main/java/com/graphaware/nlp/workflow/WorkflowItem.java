@@ -57,4 +57,6 @@ public abstract class WorkflowItem<C extends WorkflowConfiguration, T> extends A
                 isValid());
     }
 
+    public abstract void stop();
+
 }

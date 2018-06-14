@@ -40,7 +40,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:Tag {value:'agriculturist'}) RETURN n", (result -> {
             assertTrue(result.hasNext());
             Map<String, Object> record = result.next();
-            assertTrue(((Node) record.get("n")).hasProperty("word2vec"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_type"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_array"));
         }));
     }
 
@@ -76,7 +77,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("MATCH (n:Tag {value:'astronaut'}) RETURN n", (result -> {
             assertTrue(result.hasNext());
             Map<String, Object> record = result.next();
-            assertTrue(((Node) record.get("n")).hasProperty("word2vec"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_type"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_array"));
         }));
     }
 
@@ -85,8 +87,8 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.annotate({text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         executeInTransaction("MATCH (n:Tag) WHERE n.value = 'agriculturist' RETURN ga.nlp.ml.word2vec.vector(n, 'numberbatch') AS vector", (result -> {
             assertTrue(result.hasNext());
-            List<Double> vector = (List<Double>) ((Map<String, Object>) result.next()).get("vector");
-            assertEquals(-0.0129, vector.get(2), 1.0d);
+            List<Float> vector = (List<Float>) ((Map<String, Object>) result.next()).get("vector");
+            assertEquals(-0.0129f, vector.get(2), 1.0f);
         }));
     }
 

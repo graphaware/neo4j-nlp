@@ -68,7 +68,7 @@ public class Word2VecIndexLookup {
         return storePath;
     }
 
-    public double[] searchIndex(String searchString) {
+    public float[] searchIndex(String searchString) {
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
@@ -81,7 +81,7 @@ public class Word2VecIndexLookup {
             ScoreDoc hit = searchResult.scoreDocs[0];
             Document hitDoc = indexSearcher.doc(hit.doc);
             StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
-            return TypeConverter.toDoubleArray(binaryVector.binaryValue().bytes);
+            return TypeConverter.toFloatArray(binaryVector.binaryValue().bytes);
         } catch (ParseException | IOException ex) {
             LOG.error("Error while getting word2vec for " + searchString, ex);
         }
