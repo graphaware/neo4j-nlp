@@ -414,4 +414,11 @@ public final class NLPManager {
             vectorComputationProcesses.put(extension.getType(), extensionMap.get(k));
         });
     }
+
+    public VectorComputation getVectorComputationProcesses(String type) {
+        return vectorComputationProcesses.get(type);
+    }
+
+
+
 }
