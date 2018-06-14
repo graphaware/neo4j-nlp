@@ -22,7 +22,7 @@
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.4.0.52.10-SNAPSHOT</version>
+  <version>3.4.0.52.10</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
@@ -41,7 +41,7 @@
     <connection>scm:git:git@github.com:graphaware/neo4j-nlp.git</connection>
     <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp.git</developerConnection>
     <url>git@github.com:graphaware/neo4j-nlp.git</url>
-    <tag>nlp-3.4.0.52.8</tag>
+    <tag>nlp-3.4.0.52.10</tag>
   </scm>
 
   <developers>
