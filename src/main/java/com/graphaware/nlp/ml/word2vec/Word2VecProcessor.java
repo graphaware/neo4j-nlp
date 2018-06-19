@@ -112,8 +112,12 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
         return word2VecModel.getWordToVec(value, modelName);
     }
 
-    public List<Pair> getNearestNeighbors(String value, String modelName) {
-        return word2VecModel.getModel(modelName).getNearestNeighbors(value);
+    public List<Pair> getNearestNeighbors(String value, Integer limit, String modelName) {
+        return word2VecModel.getModel(modelName).getNearestNeighbors(value, limit);
+    }
+
+    public void loadNearestNeighborsInMemory(String modelName, Integer maxNeighbors) {
+        word2VecModel.getModel(modelName).loadNN(maxNeighbors);
     }
 
     public Word2VecModel getWord2VecModel() {

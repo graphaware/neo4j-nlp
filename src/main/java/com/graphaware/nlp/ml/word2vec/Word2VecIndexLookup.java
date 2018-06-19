@@ -44,8 +44,9 @@ public class Word2VecIndexLookup {
     private final String storePath;
     private final IndexReader indexReader;
     private final IndexSearcher indexSearcher;
-    
     private final Set<String> fieldsToLoad;
+
+    private final Map<String, List<Pair>> inMemoryNN = new HashMap<>();
 
     public Word2VecIndexLookup(String storePath) {
         this.storePath = storePath;
@@ -88,8 +89,26 @@ public class Word2VecIndexLookup {
         return null;
     }
 
-    public List<Pair> getNearestNeighbors(String searchString) {
+    public void loadNN(Integer maxNeighbors) {
+        inMemoryNN.clear();
+        try {
+            Query query = new MatchAllDocsQuery();
+            TopDocs searchResult = indexSearcher.search(query, indexReader.numDocs());
+            for (ScoreDoc scoreDoc : searchResult.scoreDocs) {
+                Document hitDoc = indexSearcher.doc(scoreDoc.doc);
+                String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
+                inMemoryNN.put(word, getTopXNeighbors(getVector(hitDoc), maxNeighbors));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Pair> getNearestNeighbors(String searchString, Integer limit) {
         LOG.info("Searching nearest neighbors for : '" + searchString + "'");
+        if (inMemoryNN.containsKey(searchString)) {
+            return inMemoryNN.get(searchString);
+        }
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
@@ -102,7 +121,7 @@ public class Word2VecIndexLookup {
             ScoreDoc hit = searchResult.scoreDocs[0];
             Document hitDoc = indexSearcher.doc(hit.doc);
 
-            return getTopXNeighbors(getVector(hitDoc));
+            return getTopXNeighbors(getVector(hitDoc), limit);
         } catch (ParseException | IOException ex) {
             LOG.error("Error while getting word2vec for " + searchString, ex);
         }
@@ -110,9 +129,9 @@ public class Word2VecIndexLookup {
         return new ArrayList<>();
     }
 
-    private List<Pair> getTopXNeighbors(float[] originalVector) {
+    private List<Pair> getTopXNeighbors(float[] originalVector, Integer limit) {
         long now = System.currentTimeMillis();
-        FixedSizeOrderedList coll = new FixedSizeOrderedList(10);
+        FixedSizeOrderedList coll = new FixedSizeOrderedList(limit);
         CosineSimilarity cosineSimilarity = new CosineSimilarity();
         try {
             Query query = new MatchAllDocsQuery();
@@ -127,7 +146,7 @@ public class Word2VecIndexLookup {
         }
 
         LOG.info("Computed nearest neighbors in " + (System.currentTimeMillis() - now));
-        return (List<Pair>) coll.stream().limit(10).collect(Collectors.toList());
+        return coll;
     }
 
     private float[] getVector(Document doc) {

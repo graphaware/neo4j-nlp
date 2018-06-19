@@ -148,7 +148,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
         List<String> nn = new ArrayList<>();
         long now = System.currentTimeMillis();
-        executeInTransaction("CALL ga.nlp.ml.word2vec.nn('highest', 'fasttext')", (result -> {
+        executeInTransaction("CALL ga.nlp.ml.word2vec.nn('highest', 10, 'fasttext')", (result -> {
             while (result.hasNext()) {
                 nn.add(result.next().get("word").toString());
             }

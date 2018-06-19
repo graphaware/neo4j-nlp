@@ -58,7 +58,13 @@ public class Word2VecIntegrationTest extends NLPIntegrationTest {
         getWord2VecProcessor().getWord2VecModel().createModelFromPaths(w2vSourcePath, w2vDestinPath, "fasttext", "en");
         assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
         assertNotNull(getWord2VecProcessor().getWord2Vec("highest", "fasttext"));
-        List<Pair> nn = getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").getNearestNeighbors("highest");
+//        getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").loadNN(30);
+        long now = System.currentTimeMillis();
+        List<Pair> nn = getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").getNearestNeighbors("asparagus", 10);
+        System.out.println(System.currentTimeMillis() - now);
         assertEquals(10, nn.size());
+        nn.forEach(pair -> {
+            System.out.println(pair.first().toString() + " : " + pair.second().toString());
+        });
     }
 }
