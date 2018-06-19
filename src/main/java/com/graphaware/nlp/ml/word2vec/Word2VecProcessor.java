@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.domain.Tag;
@@ -109,6 +110,10 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
 
     public float[] getWord2Vec(String value, String modelName) {
         return word2VecModel.getWordToVec(value, modelName);
+    }
+
+    public List<Pair> getNearestNeighbors(String value, String modelName) {
+        return word2VecModel.getModel(modelName).getNearestNeighbors(value);
     }
 
     public Word2VecModel getWord2VecModel() {

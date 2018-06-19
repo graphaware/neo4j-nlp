@@ -417,6 +417,20 @@ CALL ga.nlp.ml.word2vec.attach({query:'MATCH (t:Tag) RETURN t', modelName:'swedi
 * `query`: query which returns tags to which embedding vectors should be attached
 * `modelName`: model to use
 
+You can also get the nearest neighbors with the following procedure :
+
+```
+CALL ga.nlp.ml.word2vec.nn('analyzed', 'fasttext') YIELD word, distance RETURN word, distance
+```
+
+#### Using other models
+
+You can use any word embedding model as long as the following is true :
+
+- Every line contain the word + the vector
+- The file has a `.txt` extension
+
+For example, you can load the models from fasttext and just rename the file from `.vec` to `.txt` : https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 
 ### Parsing PDF Documents
 

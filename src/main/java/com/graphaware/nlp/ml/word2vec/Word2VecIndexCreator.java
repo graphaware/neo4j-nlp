@@ -45,6 +45,7 @@ public class Word2VecIndexCreator {
 
     public static final String VECTOR_FIELD = "values";
     public static final String WORD_FIELD = "word";
+    public static final String NEAREST_NEIGHBORS_FIELD = "nn";
 
     public static boolean loadFromFile(String sourceFile, String indexPath, boolean create, String language) {
         try {
@@ -92,6 +93,9 @@ public class Word2VecIndexCreator {
                     }
                     if (word.startsWith("/c/" + language)) {
                         wordToUse = wordToUse.replace("/c/" + language + "/", "").trim();
+                    }
+                    if (!wordToUse.matches("[\\p{L}]+")) {
+                        continue;
                     }
                     doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
                     float[] vector = new float[split.length - 1];

@@ -15,27 +15,27 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
+import com.graphaware.common.util.Pair;
+import com.graphaware.nlp.ml.similarity.CosineSimilarity;
+import com.graphaware.nlp.util.ComparablePair;
+import com.graphaware.nlp.util.FixedSizeOrderedList;
 import com.graphaware.nlp.util.TypeConverter;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StoredField;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
 import com.graphaware.common.log.LoggerFactory;
 import org.neo4j.logging.Log;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Word2VecIndexLookup {
 
@@ -88,4 +88,51 @@ public class Word2VecIndexLookup {
         return null;
     }
 
+    public List<Pair> getNearestNeighbors(String searchString) {
+        LOG.info("Searching nearest neighbors for : '" + searchString + "'");
+        try {
+            Analyzer analyzer = new KeywordAnalyzer();
+            QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
+            Query query = queryParser.parse(searchString.replace(" ", "_"));
+            TopDocs searchResult = indexSearcher.search(query, 1);
+            LOG.info("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
+            if (searchResult.totalHits != 1) {
+                return null;
+            }
+            ScoreDoc hit = searchResult.scoreDocs[0];
+            Document hitDoc = indexSearcher.doc(hit.doc);
+
+            return getTopXNeighbors(getVector(hitDoc));
+        } catch (ParseException | IOException ex) {
+            LOG.error("Error while getting word2vec for " + searchString, ex);
+        }
+
+        return new ArrayList<>();
+    }
+
+    private List<Pair> getTopXNeighbors(float[] originalVector) {
+        long now = System.currentTimeMillis();
+        FixedSizeOrderedList coll = new FixedSizeOrderedList(10);
+        CosineSimilarity cosineSimilarity = new CosineSimilarity();
+        try {
+            Query query = new MatchAllDocsQuery();
+            TopDocs searchResult = indexSearcher.search(query, indexReader.numDocs());
+            for (ScoreDoc scoreDoc : searchResult.scoreDocs) {
+                Document hitDoc = indexSearcher.doc(scoreDoc.doc);
+                String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
+                coll.add(new ComparablePair(word, cosineSimilarity.cosineSimilarity(originalVector, getVector(hitDoc))));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        LOG.info("Computed nearest neighbors in " + (System.currentTimeMillis() - now));
+        return (List<Pair>) coll.stream().limit(10).collect(Collectors.toList());
+    }
+
+    private float[] getVector(Document doc) {
+        StoredField storedField = (StoredField) doc.getField(Word2VecIndexCreator.VECTOR_FIELD);
+
+        return TypeConverter.toFloatArray(storedField.binaryValue().bytes);
+    }
 }

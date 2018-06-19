@@ -87,4 +87,25 @@ public class Word2VecProcedure extends AbstractDSL {
         Float[] floats = ArrayUtils.toObject(vector);
         return Arrays.asList(floats);
     }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.nn")
+    @Description("Retrieve the nearest neighbors of the given word")
+    public Stream<NearestNeighbor> getNearestNeighbors(@Name("word") String word, @Name(value = "modelName", defaultValue = "") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+
+        return word2VecProcessor.getNearestNeighbors(word, modelName).stream().map(pair -> {
+            return new NearestNeighbor(pair.first().toString(), Double.valueOf(pair.second().toString()));
+        });
+    }
+
+    public class NearestNeighbor {
+        public String word;
+
+        public double distance;
+
+        public NearestNeighbor(String word, double distance) {
+            this.word = word;
+            this.distance = distance;
+        }
+    }
 }
