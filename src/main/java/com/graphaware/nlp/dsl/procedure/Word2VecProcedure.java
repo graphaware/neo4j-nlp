@@ -98,13 +98,27 @@ public class Word2VecProcedure extends AbstractDSL {
         });
     }
 
+    @Procedure(name = "ga.nlp.ml.word2vec.nnFromStore")
+    @Description("Retrieve the nearest neighbors of the given word")
+    public Stream<NearestNeighbor> getNearestNeighborsFromStore(@Name("word") String word, @Name(value = "limit") Long limit, @Name(value = "modelName", defaultValue = "") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+
+        return word2VecProcessor.getNearestNeighborsFromModel(word, limit.intValue(), modelName).stream().map(pair -> {
+            return new NearestNeighbor(pair.first().toString(), Double.valueOf(pair.second().toString()));
+        });
+    }
+
     @Procedure(name = "ga.nlp.ml.word2vec.computeNN")
     @Description("Load Nearest Neighbors in memory for fast lookup")
     public Stream<SingleResult> loadNN(@Name(value = "maxNeighbors") Long maxNeighbors, @Name(value = "modelName", defaultValue = "") String modelName) {
-        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        word2VecProcessor.loadNearestNeighborsInMemory(modelName, maxNeighbors.intValue());
+        try {
+            Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+            word2VecProcessor.computeNearestNeighbors(modelName, maxNeighbors.intValue());
 
-        return Stream.of(SingleResult.success());
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public class NearestNeighbor {

@@ -26,6 +26,7 @@ import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.vector.DenseVector;
 import com.graphaware.nlp.vector.VectorHandler;
+import org.apache.lucene.index.IndexWriter;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
@@ -33,6 +34,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -116,12 +118,20 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
         return word2VecModel.getModel(modelName).getNearestNeighbors(value, limit);
     }
 
-    public void loadNearestNeighborsInMemory(String modelName, Integer maxNeighbors) {
-        word2VecModel.getModel(modelName).loadNN(maxNeighbors);
+    public List<Pair> getNearestNeighborsFromModel(String value, Integer limit, String modelName) {
+        return word2VecModel.getModel(modelName).getNNFromDisk(value, limit);
+    }
+
+    public void computeNearestNeighbors(String modelName, Integer maxNeighbors) throws IOException {
+        word2VecModel.getModel(modelName).loadNN(maxNeighbors, getIndexWriter(modelName));
     }
 
     public Word2VecModel getWord2VecModel() {
         return word2VecModel;
+    }
+
+    public IndexWriter getIndexWriter(String modelName) throws IOException {
+        return Word2VecIndexCreator.getIndexWriter(word2VecModel.getModel(modelName).getStorePath());
     }
 
     private TextProcessor getProcessor(String processor) throws RuntimeException {

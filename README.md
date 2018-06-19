@@ -423,6 +423,20 @@ You can also get the nearest neighbors with the following procedure :
 CALL ga.nlp.ml.word2vec.nn('analyzed', 'fasttext') YIELD word, distance RETURN word, distance
 ```
 
+For large models, for example full fasttext for english, approximately 2 million words, it will be inefficient to compute the nearest neighbors on the fly.
+
+You can store the topX nearest neighbors in the neo4j model instead :
+
+```
+CALL ga.nlp.ml.word2vec.computeNN(<maxNeighbors>, <modelName>)
+```
+
+And retrieve it with
+
+```
+CALL ga.nlp.ml.word2vec.nnFromStore(<word>,<maxNeighbors>,<modelName>)
+```
+
 #### Using other models
 
 You can use any word embedding model as long as the following is true :

@@ -110,6 +110,19 @@ public class Word2VecIndexCreator {
             it.close();
         }
     }
+
+    public static IndexWriter getIndexWriter(String indexPath) throws IOException {
+        Directory dir = FSDirectory.open(Paths.get(indexPath));
+        Analyzer analyzer = new KeywordAnalyzer();
+        IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
+        iwc.setRAMBufferSizeMB(256.0);
+
+        IndexWriter iw = new IndexWriter(dir, iwc);
+        iw.forceMerge(1);
+
+        return iw;
+    }
     
     public static List<String> inspectDirectoryAndLoad(String path, String destPath, String language) {
         LOG.info("Inspect directories and LOAD");

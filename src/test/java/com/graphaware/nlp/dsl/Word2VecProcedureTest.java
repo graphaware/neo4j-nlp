@@ -156,4 +156,29 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         assertEquals(10, nn.size());
         System.out.println("NN computed in " + (System.currentTimeMillis() - now));
     }
+
+    @Test
+    public void testGetNearestNeighborsFromStoreWithProcedure() {
+        String w2vSourcePath = getClass().getClassLoader().getResource("").getPath() + "import/fasttextSource";
+        String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "fastTextIndex_" + System.currentTimeMillis();
+        Map<String, Object> params = new HashMap<>();
+        params.put("source", w2vSourcePath);
+        params.put("dest", w2vDestinPath);
+        params.put("name", "fasttext");
+        executeInTransaction("CALL ga.nlp.ml.word2vec.addModel({source},{dest},{name})", params, (result -> {
+            assertTrue(result.hasNext());
+        }));
+        assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
+        executeInTransaction("CALL ga.nlp.ml.word2vec.computeNN(30, 'fasttext')", emptyConsumer());
+        List<String> nn = new ArrayList<>();
+
+        long now = System.currentTimeMillis();
+        executeInTransaction("CALL ga.nlp.ml.word2vec.nnFromStore('highest', 10, 'fasttext')", (result -> {
+            while (result.hasNext()) {
+                nn.add(result.next().get("word").toString());
+            }
+        }));
+        assertEquals(10, nn.size());
+        System.out.println("NN computed in " + (System.currentTimeMillis() - now));
+    }
 }
