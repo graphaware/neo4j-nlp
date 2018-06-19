@@ -38,7 +38,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Word2VecIndexLookup {
 
@@ -81,25 +84,28 @@ public class Word2VecIndexLookup {
     }
 
     public void loadNN(Integer maxNeighbors, IndexWriter indexWriter) throws IOException {
-        int batch = 0;
+        final AtomicInteger batch = new AtomicInteger(0);
         try {
             IndexSearcher indexSearcher = getIndexSearcher();
             IndexReader indexReader = indexSearcher.getIndexReader();
-            Query query = new MatchAllDocsQuery();
-            TopDocs searchResult = indexSearcher.search(query, indexReader.numDocs());
-            for (ScoreDoc scoreDoc : searchResult.scoreDocs) {
-                Document hitDoc = indexSearcher.doc(scoreDoc.doc);
-                String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
-                List<Pair> nn = getNearestNeighbors(word, maxNeighbors);
-                hitDoc.add(new StoredField(Word2VecIndexCreator.NEAREST_NEIGHBORS_FIELD, asStorableField(nn)));
-                indexWriter.updateDocument(new Term(Word2VecIndexCreator.WORD_FIELD, word), hitDoc);
-                batch++;
-                if (batch > 1000) {
-                    indexWriter.commit();
-                    LOG.info("committed 1000 nearest neighbor operations");
-                    batch = 0;
+            IntStream str = IntStream.range(0, indexReader.maxDoc() + 1);
+            str.parallel().forEach(i -> {
+                try {
+                    Document hitDoc = indexReader.document(i);
+                    String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
+                    List<Pair> nn = getNearestNeighbors(word, maxNeighbors);
+                    hitDoc.add(new StoredField(Word2VecIndexCreator.NEAREST_NEIGHBORS_FIELD, asStorableField(nn)));
+                    indexWriter.updateDocument(new Term(Word2VecIndexCreator.WORD_FIELD, word), hitDoc);
+                    batch.incrementAndGet();
+                    if (batch.get() > 1000) {
+                        indexWriter.commit();
+                        LOG.info("committed 1000 nearest neighbor operations");
+                        batch.set(0);
+                    }
+                } catch (Exception e) {
+                    //
                 }
-            }
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
