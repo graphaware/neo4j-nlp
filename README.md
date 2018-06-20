@@ -420,21 +420,21 @@ CALL ga.nlp.ml.word2vec.attach({query:'MATCH (t:Tag) RETURN t', modelName:'swedi
 You can also get the nearest neighbors with the following procedure :
 
 ```
-CALL ga.nlp.ml.word2vec.nn('analyzed', 'fasttext') YIELD word, distance RETURN word, distance
+CALL ga.nlp.ml.word2vec.nn('analyzed', 10, 'fasttext') YIELD word, distance RETURN word, distance
 ```
 
 For large models, for example full fasttext for english, approximately 2 million words, it will be inefficient to compute the nearest neighbors on the fly.
 
-You can store the topX nearest neighbors in the neo4j model instead :
+You can load the model into memory in order to have faster nearest neighbors ( fasttext 1M word vectors generally takes 27 seconds if needed to read from disk, ~300ms in memory) :
 
 ```
-CALL ga.nlp.ml.word2vec.computeNN(<maxNeighbors>, <modelName>)
+CALL ga.nlp.ml.word2vec.load(<maxNeighbors>, <modelName>)
 ```
 
 And retrieve it with
 
 ```
-CALL ga.nlp.ml.word2vec.nnFromStore(<word>,<maxNeighbors>,<modelName>)
+CALL ga.nlp.ml.word2vec.nn(<word>,<maxNeighbors>,<modelName>)
 ```
 
 #### Using other models
@@ -444,7 +444,7 @@ You can use any word embedding model as long as the following is true :
 - Every line contain the word + the vector
 - The file has a `.txt` extension
 
-For example, you can load the models from fasttext and just rename the file from `.vec` to `.txt` : https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
+For example, you can load the models from fasttext and just rename the file from `.vec` to `.txt` : https://fasttext.cc/docs/en/english-vectors.html
 
 ### Parsing PDF Documents
 

@@ -50,6 +50,7 @@ public class Word2VecIndexLookup {
     private final String storePath;
 
     private final Map<String, float[]> inMemoryNN = new ConcurrentHashMap<>();
+    private final Map<String, List<Pair>> nnCache = new HashMap<>();
 
     public Word2VecIndexLookup(String storePath) {
         this.storePath = storePath;
@@ -130,7 +131,7 @@ public class Word2VecIndexLookup {
         IndexSearcher indexSearcher = getIndexSearcher();
         LOG.info("Searching nearest neighbors for : '" + searchString + "'");
         if (inMemoryNN.containsKey(searchString)) {
-            return getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN);
+            return cacheIfNeeded(searchString, getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN));
         }
         try {
             Analyzer analyzer = new KeywordAnalyzer();
@@ -144,7 +145,7 @@ public class Word2VecIndexLookup {
             ScoreDoc hit = searchResult.scoreDocs[0];
             Document hitDoc = indexSearcher.doc(hit.doc);
 
-            return getTopXNeighbors(getVector(hitDoc), limit);
+            return cacheIfNeeded(searchString, getTopXNeighbors(getVector(hitDoc), limit));
         } catch (ParseException | IOException ex) {
             LOG.error("Error while getting word2vec for " + searchString, ex);
         }
@@ -229,5 +230,13 @@ public class Word2VecIndexLookup {
         }
 
         return indexSearcher;
+    }
+
+    private List<Pair> cacheIfNeeded(String word, List<Pair> nn) {
+        if (!nnCache.containsKey(word)) {
+            nnCache.put(word, nn);
+        }
+
+        return nn;
     }
 }
