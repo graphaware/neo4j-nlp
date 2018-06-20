@@ -277,6 +277,20 @@ Available optional parameters (default values are in brackets):
 For a detailed `TextRank` algorithm description, please refer to our blog post about
 [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html).
 
+Using universal dependencies for keyword enrichment (`useDependencies` option) can result in keywords with unnecessary level of detail, for example a keyword *space shuttle logistics program*. In many use cases we might be interested to also know that given document speaks generally about *space shuttle* (or *logistic program*). To do that, run post-processing with one of these options:
+* `direct` - each key phrase of *n* number of tags is checked against all key phrases from all documents with *1 < m < n* number of tags; if the former contains the latter key phrase, then a `DESCRIBES` relationship is created from the *m*-keyphrase to all annotated texts of the *n*-keyphrase
+* `subgroups` - the same procedure as for `direct`, but instead of connecting higher level keywords directly to *AnnotatedTexts*, they are connected to the lower level keywords with `HAS_SUBGROUP` relationships
+```
+// Important note: create subsequent indices to optimise the post-process method performance
+CREATE INDEX ON :Keyword(numTerms)
+CREATE INDEX ON :Keyword(value)
+
+CALL ga.nlp.ml.textRank.postprocess({keywordLabel: "Keyword", method: "subgroups"})
+YIELD result
+RETURN result
+```
+`keywordLabel` is an optional argument set by default to *"Keyword"*.
+
 ### TextRank Summarization
 
 Similar approach to the keyword extraction can be employed to implement simple summarization. A densely connect graph of sentences is created, with Sentence-Sentence relationships representing their similarity based on shared words (number of shared words vs sum of logarithms of number of words in a sentence). PageRank is then used as a centrality measure to rank the relative importance of sentences in the document.

@@ -25,14 +25,20 @@ public class TextRankPostprocessRequest {
     private static final Log LOG = LoggerFactory.getLogger(TextRankPostprocessRequest.class);
 
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
+    private final static String PARAMETER_METHOD = "method";
 
     private String keywordLabel;
+    private String method;
 
     private static final String DEFAULT_KEYWORD_LABEL = "Keyword";
 
     public static TextRankPostprocessRequest fromMap(Map<String, Object> textRankRequest) {
         TextRankPostprocessRequest result = new TextRankPostprocessRequest();
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
+        if (textRankRequest.containsKey(PARAMETER_METHOD))
+            result.setMethod((String) textRankRequest.get(PARAMETER_METHOD));
+        else
+            throw new RuntimeException("Missing parameter '" + PARAMETER_METHOD + "', aborting.");
 
         return result;
     }
@@ -44,5 +50,13 @@ public class TextRankPostprocessRequest {
 
     public void setKeywordLabel(String label) {
         this.keywordLabel = label;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
     }
 }

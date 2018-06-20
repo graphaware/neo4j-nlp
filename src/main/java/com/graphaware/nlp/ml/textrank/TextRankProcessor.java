@@ -58,7 +58,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         LOG.info("Starting TextRank post-processing ...");
         TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
         textrankBuilder.setKeywordLabel(request.getKeywordLabel());
-        if (!textrankBuilder.build().postprocess())
+        if (!textrankBuilder.build().postprocess(request.getMethod()))
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();

@@ -48,13 +48,12 @@ public class TextRank {
             + "WITH to\n"
             + "ORDER BY to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-            //+ "WHERE size(t.value) > 2\n"
-            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN to.pos WHERE pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH collect(t) as tags, collect(to) as tagsPosition\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_BY_SENTENCE
             = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
@@ -62,17 +61,16 @@ public class TextRank {
             + "WITH s, to\n"
             + "ORDER BY s.sentenceNumber, to.startPosition\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-            //+ "WHERE size(t.value) > 2\n"
-            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN to.pos WHERE pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             + "WITH s, collect(t) as tags, collect(to) as tagsPosition\n"
             + "ORDER BY s.sentenceNumber\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
             + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, tags[i].pos as pos1, tags[i+1].pos as pos2";
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_FROM_DEPENDENCIES
-            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)//-[r]->(to2:TagOccurrence)\n"
+            = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
             + "WHERE id(a) = {id}\n"
             + "WITH to\n"
             //+ "MATCH (to)-[r]-(to2:TagOccurrence)\n"
@@ -80,20 +78,17 @@ public class TextRank {
             + "WHERE to <> to2 AND to.startPosition < to2.startPosition\n"
             + "WITH to, to2, r\n"
             + "MATCH (to)-[:TAG_OCCURRENCE_TAG]->(t:Tag)\n"
-            //+ "WHERE size(t.value) > 2 //and (size(t.pos)=0 OR any(p in t.pos where p in {}))\n"
-            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN t.pos WHERE t.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
+            + "WHERE size(t.value) > 2 AND NOT(toLower(t.value) IN {stopwords}) AND NOT ANY(pos IN to.pos WHERE pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t) WHERE l IN {forbiddenNEs})\n"
             //+ "MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
             + "OPTIONAL MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-            //+ "WHERE size(t2.value) > 2 //and (size(t2.pos)=0 OR any(p in t2.pos where p in {}))\n"
-            + "WHERE size(t2.value) > 2 AND NOT(toLower(t2.value) IN {stopwords}) AND NOT ANY(pos IN t2.pos WHERE t2.pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t2) WHERE l IN {forbiddenNEs})\n"
-            + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, to.startPosition as sourceStartPosition, to2.startPosition as destinationStartPosition, t.pos as pos1, t2.pos as pos2, collect(type(r))\n"
+            + "WHERE size(t2.value) > 2 AND NOT(toLower(t2.value) IN {stopwords}) AND NOT ANY(pos IN to2.pos WHERE pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t2) WHERE l IN {forbiddenNEs})\n"
+            + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, to.startPosition as sourceStartPosition, to2.startPosition as destinationStartPosition, to.pos as pos1, to2.pos as pos2, collect(type(r))\n"
             + "ORDER BY sourceStartPosition, destinationStartPosition";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
-            //+ "WHERE id(a) = {id} and id(node) IN {nodeList}\n"
-            + "WHERE id(a) = {id}  and not (toLower(node.value) IN {stopwords})" // new
+            + "WHERE id(a) = {id} AND NOT (toLower(node.value) IN {stopwords})"
             + "OPTIONAL MATCH (to)<-[:COMPOUND|AMOD]-(to2:TagOccurrence)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
-            + "WHERE not exists(t2.pos) or size(t2.pos) = 0 or any(p in t2.pos where p in {posList}) and not (toLower(t2.value) IN {stopwords})\n"
+            + "WHERE NOT exists(to2.pos) OR size(to2.pos) = 0 OR ANY(p IN to2.pos WHERE p IN {posList}) AND NOT (toLower(t2.value) IN {stopwords})\n"
             + "RETURN node.id as tag, to.startPosition as sP, to.endPosition as eP, id(node) as tagId, "
             + "collect(id(t2)) as rel_tags, collect(to2.startPosition) as rel_tos,  collect(to2.endPosition) as rel_toe, labels(node) as labels\n"
             + "ORDER BY sP asc";
@@ -117,10 +112,10 @@ public class TextRank {
     private final List<String> forbiddenPOSs;
     private Map<Long, List<Long>> neExpanded;
     private final Map<Long, String> idToValue = new HashMap<>();
-    private double relevanceAvg;
-    private double relevanceSigma;
-    private double tfidfAvg;
-    private double tfidfSigma;
+    //private double relevanceAvg;
+    //private double relevanceSigma;
+    //private double tfidfAvg;
+    //private double tfidfSigma;
 
     public TextRank(GraphDatabaseService database, 
             boolean removeStopWords, 
@@ -504,21 +499,25 @@ public class TextRank {
         }
 
         // get tf*idf: useful for cleanFinalKeywords()
+        // Careful: very slow for larger datasets
         final Map<Long, TfIdfObject> tfidfMap = new HashMap<>();
-        if (useDependencies) {
-//            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
+        /*if (useDependencies) {
+            initializeNodeWeights_TfIdf(tfidfMap, annotatedText, null);
         }
 
-        // for z-scores: calculate mean and sigma of relevances and tf*idf
+        // for z-scores in cleanFinalKeywords(): calculate mean and sigma of relevances and tf*idf
         relevanceAvg = pageRanks.entrySet().stream().mapToDouble(e -> e.getValue()).average().orElse(0.);
         relevanceSigma = Math.sqrt(pageRanks.entrySet().stream().mapToDouble(e -> Math.pow((e.getValue() - relevanceAvg), 2)).average().orElse(0.));
         tfidfAvg = tfidfMap.entrySet().stream().mapToDouble(e -> e.getValue().getTfIdf()).average().orElse(0.);
-        tfidfSigma = Math.sqrt(tfidfMap.entrySet().stream().mapToDouble(e -> Math.pow(e.getValue().getTfIdf() - tfidfAvg, 2)).average().orElse(0.));
+        tfidfSigma = Math.sqrt(tfidfMap.entrySet().stream().mapToDouble(e -> Math.pow(e.getValue().getTfIdf() - tfidfAvg, 2)).average().orElse(0.));*/
 
         int n_oneThird = (int) (pageRanks.size() * topxTags);
         List<Long> topThird = getTopX(pageRanks, n_oneThird);
 
-        pageRanks.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
+        LOG.info("Keyword candidates are top " + n_oneThird + " tags from this list:");
+        pageRanks.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
         
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
@@ -551,8 +550,8 @@ public class TextRank {
                 keywordsOccurrences.add(item);
                 if (!keywordMap.containsKey(tagId)) {
                     keywordMap.put(tagId, item);
-                } else { // new
-                    keywordMap.get(tagId).update(item); // new
+                } else {
+                    keywordMap.get(tagId).update(item);
                 }
                 //System.out.println(" Adding for " + item.getValue() + ": " + item.getRelatedTags());
             }
@@ -661,7 +660,7 @@ public class TextRank {
             results = cleanFinalKeywords(results, n_oneThird);
         }
         peristKeyword(results, annotatedText);
-        removalProcess(annotatedText);
+        //removalProcess(annotatedText);
 
         return true;
     }
@@ -725,7 +724,7 @@ public class TextRank {
     }
 
     private void peristKeyword(Map<String, Keyword> results, Node annotatedText) {
-        LOG.info("--- Results: ");
+        List<String> printKeywords = new ArrayList<>();
         KeywordPersister persister = NLPManager.getInstance().getPersister(Keyword.class);
         persister.setLabel(keywordLabel);
         results.entrySet().stream()
@@ -742,8 +741,9 @@ public class TextRank {
                         rel.setProperty("count", en.getValue().getTotalCount());
                         rel.setProperty("relevance", en.getValue().getRelevance());
                     }
-                    LOG.info(en.getKey().split("_")[0]);
+                    printKeywords.add(en.getKey().split("_")[0]);
                 });
+        LOG.info("--- TextRank results: \n  " + printKeywords.stream().collect(Collectors.joining("\n  ")));
     }
 
     private Set<Long> getRelTagsIntoDepth(KeywordExtractedItem kwOccurrence, List<KeywordExtractedItem> kwOccurrences) {
@@ -760,45 +760,58 @@ public class TextRank {
         return relTags;//.stream().map(el -> valToId.get(el)).collect(Collectors.toSet());
     }
 
-    public boolean postprocess() {
+    public boolean postprocess(String method) {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
-        String query = "match (k:" + keywordLabel.name() + ")\n"
-                + "where k.numTerms > 1\n"
-                + "with k, k.keywordsList as ks_orig\n"
-                + "match (k2:" + keywordLabel.name() + ")\n"
-                + "where k2.numTerms > k.numTerms and not exists( (k)-[:DESCRIBES]->(:AnnotatedText)<-[:DESCRIBES]-(k2) )\n"
-                + "with ks_orig, k, k2, k2.keywordsList as ks_check\n"
-                + "where all(el in ks_orig where el in ks_check)\n"
-                + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
-                + "MERGE (k)-[rNew:DESCRIBES]->(a)\n"
-                + "ON CREATE SET rNew.count = r2.count_exactMatch, rNew.count_exactMatch = 0\n"
-                + "ON MATCH SET  rNew.count = rNew.count + r2.count_exactMatch";
-
-        try (Transaction tx = database.beginTx();) {
-            LOG.info("Running identification of sub-keyphrases ...");
-            database.execute(query);
-            tx.success();
-        } catch (Exception e) {
-            LOG.error("Error while running TextRank post-processing (identification of sub-keyphrases): ", e);
-            return false;
-        }
-
-        // add HAS_SUBGROUP relationships between keywords, ex.: (station) -[HAS_SUBGROUP]-> (space station) -[HAS_SUBGROUP]-> (international space station)
-        query = "match (k:" + keywordLabel.name() + ")\n"
-                + "with k, k.keywordsList as ks_orig\n"
-                + "match (k2:" + keywordLabel.name() + ")\n"
-                + "where k2.numTerms > k.numTerms\n"
-                + "with ks_orig, k, k2, k2.keywordsList as ks_check\n"
-                + "where all(el in ks_orig where el in ks_check)\n"
-                + "MERGE (k)-[r:HAS_SUBGROUP]->(k2)";
-
-        try (Transaction tx = database.beginTx();) {
-            LOG.info("Discovering HAS_SUBGROUP relationships between keywords and keyphrases ...");
-            database.execute(query);
-            tx.success();
-        } catch (Exception e) {
-            LOG.error("Error while running TextRank post-processing (discovering HAS_SUBGROUP relationships): ", e);
-            return false;
+        if (method.equals("direct")) {
+            /*String query = "match (k:" + keywordLabel.name() + ")\n"
+                    + "where k.numTerms > 1\n"
+                    + "with k, k.value as ks_orig\n"
+                    + "match (k2:" + keywordLabel.name() + ")\n"
+                    + "where k2.numTerms > k.numTerms and not exists( (k)-[:DESCRIBES]->(:AnnotatedText)<-[:DESCRIBES]-(k2) )\n"
+                    + "with ks_orig, k, k2, k2.value as ks_check\n"
+                    //+ "where all(el in ks_orig where el in ks_check)\n"
+                    + "where ks_check CONTAINS ks_orig\n"
+                    + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
+                    + "MERGE (k)-[rNew:DESCRIBES]->(a)\n"
+                    + "ON CREATE SET rNew.count = r2.count_exactMatch, rNew.count_exactMatch = 0\n"
+                    + "ON MATCH SET  rNew.count = rNew.count + r2.count_exactMatch";*/
+    
+            String query = "match (k:" + keywordLabel.name() + ")\n"
+                    + "where k.numTerms > 1\n"
+                    + "with k, k.value as ks_orig\n"
+                    + "match (k2:" + keywordLabel.name() + ")\n"
+                    + "where k2.numTerms > k.numTerms and k2.value CONTAINS ks_orig\n"
+                    + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
+                    + "where not (k)-[:DESCRIBES]->(a)\n"
+                    + "create (k)-[rNew:DESCRIBES {count: k2.count, count_exactMatch: k2.count_exactMatch}]->(a)";
+    
+            try (Transaction tx = database.beginTx();) {
+                LOG.info("Running identification of sub-keyphrases ...");
+                database.execute(query);
+                tx.success();
+            } catch (Exception e) {
+                LOG.error("Error while running TextRank post-processing (identification of sub-keyphrases): ", e);
+                return false;
+            }
+        } else if (method.equals("subgroups")) {
+            // add HAS_SUBGROUP relationships between keywords, ex.: (station) -[HAS_SUBGROUP]-> (space station) -[HAS_SUBGROUP]-> (international space station)
+            String query = "match (k:" + keywordLabel.name() + ")\n"
+                    + "where k.numTerms > 1\n"
+                    + "with k, k.value as ks_orig\n"
+                    + "match (k2:" + keywordLabel.name() + ")\n"
+                    + "where k2.numTerms > k.numTerms and not (k)-[:HAS_SUBGROUP]->(k2) and k2.value CONTAINS ks_orig\n"
+                    + "create (k)-[r:HAS_SUBGROUP]->(k2)";
+    
+            try (Transaction tx = database.beginTx();) {
+                LOG.info("Discovering HAS_SUBGROUP relationships between keywords and keyphrases ...");
+                database.execute(query);
+                tx.success();
+            } catch (Exception e) {
+                LOG.error("Error while running TextRank post-processing (discovering HAS_SUBGROUP relationships): ", e);
+                return false;
+            }
+        } else {
+            throw new RuntimeException("Unknown post-processing method. Available methods: 'direct', 'subgroups'");
         }
 
         return true;
@@ -853,7 +866,6 @@ public class TextRank {
                 } else {
                     nodeWeights.put(tag, new TfIdfObject(tf, idf));
                 }
-                
                 //LOG.info((String) next.get("tagVal") + ": tf = " + tf + ", idf = " + idf + " (docCountTag = " + docCountTag + "), tf*idf = " + tf*idf);
             }
             tx.success();
@@ -932,34 +944,13 @@ public class TextRank {
                         //&& entry.getValue().getWordsCount() == 1 // new
                         //&& entry.getValue().getMeanRelevance() < innerEntry.getValue().getMeanRelevance() // new
                     ) {
-                    //newResults.remove(entry.getKey());
-                    int nDiff = innerEntry.getValue().getWordsCount() - entry.getValue().getWordsCount();
+                    if (entry.getValue().getWordsCount() == 1) // remove single-word keywords when they occur _within_ some key phrase
+                        newResults.remove(entry.getKey());
+                    /*int nDiff = innerEntry.getValue().getWordsCount() - entry.getValue().getWordsCount();
                     double entryMult = entry.getValue().getRelevance() * entry.getValue().getTfIdf(); ///entry.getValue().getWordsCount();
                     double innentryMult = innerEntry.getValue().getRelevance() * innerEntry.getValue().getTfIdf(); ///innerEntry.getValue().getWordsCount();
-                    if (entry.getValue().getWordsCount() == 1 )//&& innentryMult/entryMult > (1 + 1.0f * nDiff/entry.getValue().getWordsCount()))
-                        newResults.remove(entry.getKey());
-                    /*else {
-                        //double v = ((entry.getValue().getRelevance() - relevanceAvg)/relevanceSigma + (entry.getValue().getTfIdf() - tfidfAvg)/tfidfSigma) / entry.getValue().getWordsCount();
-                        //double vInn = ((innerEntry.getValue().getRelevance() - relevanceAvg)/relevanceSigma + (innerEntry.getValue().getTfIdf() - tfidfAvg)/tfidfSigma ) / innerEntry.getValue().getWordsCount();
-                        double v = entry.getValue().getRelevance() / entry.getValue().getWordsCount();
-                        double vInn = innerEntry.getValue().getRelevance() / innerEntry.getValue().getWordsCount();
-                        if (vInn > 1.2 * v)
-                            newResults.remove(entry.getKey());
-                        else if (vInn < 0.8 * v)
-                            newResults.remove(innerEntry.getKey());
-                    }*/
-                    //else if (1.0f * innerEntry.getValue().getNTopRated() / innerEntry.getValue().getWordsCount() < 0.5)
-                    //    newResults.remove(innerEntry.getKey());
-                    //if ( (innerEntry.getValue().getTfIdf() - entry.getValue().getTfIdf()) > 1.0 * nDiff && innerEntry.getValue().getTfIdf() / entry.getValue().getTfIdf() > (1 + 0.2 * nDiff))
-                    //    newResults.remove(entry.getKey());
-                    //if ( !( Math.abs(entry.getValue().getRelevance() - innerEntry.getValue().getRelevance()) < (0.10 * innerEntry.getValue().getWordsCount()) * entry.getValue().getRelevance() ) )//|| entry.getValue().getWordsCount() == 1 )
-                    //    newResults.remove(entry.getKey());
-                    //if ( Math.abs(entry.getValue().getRelevance() - innerEntry.getValue().getRelevance()) > 0.8 * entry.getValue().getMeanRelevance() )
-                    //    newResults.remove(entry.getKey());
-                    //if ( innentryMult / innerEntry.getValue().getWordsCount() > entryMult/entry.getValue().getWordsCount() )
-                    //    newResults.remove(entry.getKey());
-                    //else if ( innentryMult / innerEntry.getValue().getWordsCount() < 0.9 * entryMult/entry.getValue().getWordsCount() )
-                    //    newResults.remove(innerEntry.getKey());
+                    if (entry.getValue().getWordsCount() == 1 && innentryMult/entryMult > (1 + 1.0f * nDiff/entry.getValue().getWordsCount()))
+                        newResults.remove(entry.getKey());*/
                 }
             });
         });
@@ -968,10 +959,11 @@ public class TextRank {
         // Crucial piece of code for TextRank with dependencies enrichment
         if (useDependencies && cooccurrencesFromDependencies) {
             Map<String, Double> pom = newResults.entrySet().stream()
-                //.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount()/e.getValue().getWordsCount() ));
-                //.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getIdf() ));
-                //.collect(Collectors.toMap( Map.Entry::getKey, e -> (e.getValue().getRelevance() - relevanceAvg)/relevanceSigma + (e.getValue().getTfIdf() - tfidfAvg)/tfidfSigma ));
-                .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getTfIdf() ));
+                ////.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount()/e.getValue().getWordsCount() ));
+                ////.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getIdf() ));
+                ////.collect(Collectors.toMap( Map.Entry::getKey, e -> (e.getValue().getRelevance() - relevanceAvg)/relevanceSigma + (e.getValue().getTfIdf() - tfidfAvg)/tfidfSigma ));
+                //.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getTfIdf() ));
+                .collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() ));
             pom.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .skip(topx)
@@ -981,27 +973,13 @@ public class TextRank {
         return newResults;
     }
 
-    private void removalProcess(Node annotatedText) {
-        String query = "MATCH (n:AnnotatedText)<-[:DESCRIBES]-(k) WHERE id(n) = {id} AND size(k.keywordsList) = 1 WITH n, k WHERE true " +
-                "MATCH (t:Tag) WHERE t.id = k.id " +
-                "AND ANY(x IN t.pos WHERE x STARTS WITH {verb} OR x IN {blacklist}) " +
-                "DETACH DELETE k";
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("id", annotatedText.getId());
-        parameters.put("verb", "VB");
-        parameters.put("blacklist", Arrays.asList("JJ","JJR","JJS","RB","RBR","RBS","RP","WR","IN","WP"));
-        try (Transaction tx = database.beginTx()) {
-            database.execute(query, parameters);
-            tx.success();
-        }
-    }
 
     public static class Builder {
 
         private static final String[] STOP_WORDS = {"new", "old", "large", "big", "vast", "small", "many", "few", "good", "better", "best", "bad", "worse", "worst"};
-        private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"};
-        private static final String[] FORBIDDEN_NE = {"NER_Number", "NER_Ordinal", "NER_Percent", "NER_Date", "NER_Duration"}; //"NER_Date", "NER_Duration"
-        private static final String[] FORBIDDEN_POS = {"CC", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"};
+        private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"}; // for final keyword selection
+        private static final String[] FORBIDDEN_NE = {"NER_Number", "NER_Ordinal", "NER_Percent", "NER_Date", "NER_Duration"}; //"NER_Date", "NER_Duration" // for construction of graph of co-occurrences
+        private static final String[] FORBIDDEN_POS = {"CC", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RP", "RB", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"}; // for construction of graph of co-occurrences
         private static final String[] STOP_WORDS_MEDIUM = {"now", "later", "least", "well", "always", "new", "old", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "larger", "smaller", "big", "lower", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "might", "may", "shall", "can", "could", "would", "will", "such", "like", "other", "another", "far", "away"};
         private static final String[] STOP_WORDS_LARGE = {"now", "recently", "late", "later", "lately", "recent", "finally", "often", "always", "new", "old", "novel", "least", "last", "well", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "large", "larger", "small", "smaller", "big", "vast", "little", "lower", "long", "short", "wide", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "make", "might", "may", "shall", "can", "could", "would", "will", "entire", "entirely", "overall", "useful", "usefully", "easy", "easier", "certain", "such", "like", "difficult", "necessary", "unnecessary", "full", "fully", "empty", "successful", "successfully", "unsuccessful", "unsuccessfully", "especially", "usual", "usually", "other", "another", "far", "away"};
 
