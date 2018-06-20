@@ -257,7 +257,9 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
                     Node phraseNode = getPhraseNode(phrase);
                     Node referenceNode = getPhraseNode(reference);
                     if (phraseNode != null && referenceNode != null) {
-                        phraseNode.createRelationshipTo(referenceNode, RelationshipType.withName("COREFERENCE"));
+                        if (!relationshipExistBetween(phraseNode, referenceNode, RelationshipType.withName("COREFERENCE"))) {
+                            phraseNode.createRelationshipTo(referenceNode, RelationshipType.withName("COREFERENCE"));
+                        }
                     }
                 }
             });

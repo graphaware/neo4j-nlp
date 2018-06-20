@@ -21,10 +21,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import org.codehaus.jackson.map.SerializationConfig;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Label;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,5 +72,15 @@ public abstract class AbstractPersister {
         }
 
         return all.isEmpty() ? null : all.get(0);
+    }
+
+    protected boolean relationshipExistBetween(Node a, Node b, RelationshipType relationshipType) {
+        for (Relationship relationship : a.getRelationships(relationshipType, Direction.OUTGOING)) {
+            if (relationship.getEndNode().getId() == b.getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
