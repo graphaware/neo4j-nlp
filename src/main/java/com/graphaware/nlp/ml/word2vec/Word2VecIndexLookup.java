@@ -158,6 +158,10 @@ public class Word2VecIndexLookup {
         return new ArrayList<>();
     }
 
+    public void cleanCache() {
+        nnCache.clear();
+    }
+
     private List<Pair> getTopXNeighbors(float[] originalVector, Integer limit) {
         IndexSearcher indexSearcher = getIndexSearcher();
         IndexReader indexReader = indexSearcher.getIndexReader();

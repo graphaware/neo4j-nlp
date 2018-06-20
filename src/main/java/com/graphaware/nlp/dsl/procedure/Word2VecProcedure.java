@@ -121,6 +121,15 @@ public class Word2VecProcedure extends AbstractDSL {
         }
     }
 
+    @Procedure(name = "ga.nlp.ml.word2vec.clearCache")
+    @Description("Clear the word embeddings cache")
+    public Stream<SingleResult> clearCache(@Name(value = "modelName") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        word2VecProcessor.getWord2VecModel().getModel(modelName).cleanCache();
+
+        return Stream.of(SingleResult.success());
+    }
+
     public class NearestNeighbor {
         public String word;
 
