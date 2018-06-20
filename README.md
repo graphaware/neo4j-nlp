@@ -427,6 +427,15 @@ For large models, for example full fasttext for english, approximately 2 million
 
 You can load the model into memory in order to have faster nearest neighbors ( fasttext 1M word vectors generally takes 27 seconds if needed to read from disk, ~300ms in memory) :
 
+Make sure to have efficient heap memory dedicated to Neo4j :
+
+```
+dbms.memory.heap.initial_size=3000m
+dbms.memory.heap.max_size=5000m
+```
+
+Load the model into memory :
+
 ```
 CALL ga.nlp.ml.word2vec.load(<maxNeighbors>, <modelName>)
 ```
