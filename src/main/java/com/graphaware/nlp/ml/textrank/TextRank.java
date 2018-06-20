@@ -956,8 +956,8 @@ public class TextRank {
         });
 
         // Use (PR * tf*idf) for selecting top 1/3 of keywords / key phrases
-        // Crucial piece of code for TextRank with dependencies enrichment
-        if (useDependencies && cooccurrencesFromDependencies) {
+        // Crucial piece of code for TextRank with dependencies enrichment, because the enrichment can cause more than 1/3 (topx) Keywords to be constructed
+        if (useDependencies) {
             Map<String, Double> pom = newResults.entrySet().stream()
                 ////.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getTfIdf()/e.getValue().getWordsCount()/e.getValue().getWordsCount() ));
                 ////.collect(Collectors.toMap( Map.Entry::getKey, e -> e.getValue().getRelevance() * e.getValue().getIdf() ));
