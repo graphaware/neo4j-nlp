@@ -34,6 +34,7 @@ public class SchemaProcedure extends AbstractDSL {
         results.add(new KeyValueResult(format(tagLabel, property, UNIQUE), createConstraint(tagLabel, property)));
         results.add(new KeyValueResult(format(keywordLabel, property, UNIQUE), createConstraint(keywordLabel, property)));
         results.add(new KeyValueResult(format(tagLabel, textProperty, ""), createIndex(tagLabel, textProperty)));
+        results.add(new KeyValueResult(format(keywordLabel, "numTerms", ""), createIndex(keywordLabel, "numTerms")));
 
         return results.stream();
 

@@ -68,4 +68,9 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
         }
     }
 
+    @Override
+    public void stop() {
+
+    }
+
 }

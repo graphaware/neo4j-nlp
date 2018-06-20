@@ -40,11 +40,12 @@ public class QueryBasedVectorComputation implements VectorComputation {
             + "RETURN distinct id(tag) as tagId, sum(tf) as tf, (1.0f + 1.0f*documentsCount)/documentsCountForTag as idf";
 
     @Override
-    public SparseVector computeSparseVector(long node, Map<String, Object> parameters) throws QueryExecutionException {
+    public VectorHandler computeSparseVector(long node, Map<String, Object> parameters) throws QueryExecutionException {
         String query = (String) parameters.getOrDefault(QUERY_PARAMETER, DEFAULT_VECTOR_QUERY);
         Map<Long, Float> fmap;
         fmap = createFeatureMap(node, query);
-        return SparseVector.fromMap(fmap);
+        GenericVector vector = SparseVector.fromMap(fmap);
+        return new VectorHandler(vector);
     }
 
     private Map<Long, Float> createFeatureMap(long firstNode, String query) throws QueryExecutionException {

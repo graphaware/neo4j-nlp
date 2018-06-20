@@ -33,6 +33,15 @@ public class TypeConverter {
         return bytes;
     }
 
+    public static byte[] toByteArray(float[] floats) {
+        int times = Float.SIZE / Byte.SIZE;
+        byte[] bytes = new byte[floats.length * times];
+        for (int i = 0; i < floats.length; i++) {
+            ByteBuffer.wrap(bytes, i * times, times).putFloat(floats[i]);
+        }
+        return bytes;
+    }
+
     public static double[] toDoubleArray(byte[] byteArray) {
         int times = Double.SIZE / Byte.SIZE;
         double[] doubles = new double[byteArray.length / times];
@@ -40,6 +49,15 @@ public class TypeConverter {
             doubles[i] = ByteBuffer.wrap(byteArray, i * times, times).getDouble();
         }
         return doubles;
+    }
+
+    public static float[] toFloatArray(byte[] byteArray) {
+        int times = Float.SIZE / Byte.SIZE;
+        float[] floats = new float[byteArray.length / times];
+        for (int i = 0; i < floats.length; i++) {
+            floats[i] = ByteBuffer.wrap(byteArray, i * times, times).getFloat();
+        }
+        return floats;
     }
 
     public static String[] convertStringListToArray(List<String> list) {

@@ -25,6 +25,11 @@ public class QueryBasedWorkflowInput
     }
 
     @Override
+    public void stop() {
+
+    }
+
+    @Override
     public Iterator<WorkflowInputEntry<String>> iterator() {
         String query = getConfiguration().getQuery();
         Result rs = getDatabase().execute(query);

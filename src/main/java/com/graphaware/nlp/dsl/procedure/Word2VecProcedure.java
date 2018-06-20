@@ -16,6 +16,7 @@
 package com.graphaware.nlp.dsl.procedure;
 
 import com.graphaware.nlp.dsl.AbstractDSL;
+import com.graphaware.nlp.dsl.request.Word2VecModelSpecification;
 import com.graphaware.nlp.dsl.request.Word2VecRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.dsl.result.Word2VecModelResult;
@@ -61,30 +62,72 @@ public class Word2VecProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.word2vec.addModel", mode = Mode.WRITE)
     public Stream<SingleResult> addModel(@Name("sourePath") String sourcePath, @Name("destinationPath") String destinationPath, @Name("modelName") String modelName, @Name(defaultValue = "en", value = "language") String language) {
-        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        word2VecProcessor.getWord2VecModel().createModelFromPaths(sourcePath, destinationPath, modelName, language);
-
+        Word2VecModelSpecification request = new Word2VecModelSpecification(sourcePath, destinationPath, modelName, language);
+        getNLPManager().addWord2VecModel(request);
         return Stream.of(SingleResult.success());
     }
 
     @UserFunction(name = "ga.nlp.ml.word2vec.vector")
     @Description("Retrieve the embedding vector for the given Tag node")
-    public List<Double> retrieveVector(@Name("tag") Node tag, @Name(value = "modelName", defaultValue = "") String modelName) {
+    public List<Float> retrieveVector(@Name("tag") Node tag, @Name(value = "modelName", defaultValue = "") String modelName) {
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        Double[] doubleArray = ArrayUtils.toObject(word2VecProcessor.getWord2Vec(tag.getProperty("value").toString(), modelName));
+        Float[] doubleArray = ArrayUtils.toObject(word2VecProcessor.getWord2Vec(tag.getProperty("value").toString(), modelName));
         return Arrays.asList(doubleArray);
     }
 
     @UserFunction(name = "ga.nlp.ml.word2vec.wordVector")
     @Description("Retrieve the embedding vector for the given word ")
-    public List<Double> retrieveVectorForWord(@Name("word") String word, @Name(value = "modelName", defaultValue = "") String modelName) {
+    public List<Float> retrieveVectorForWord(@Name("word") String word, @Name(value = "modelName", defaultValue = "") String modelName) {
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
-        double[] vector = word2VecProcessor.getWord2Vec(word, modelName);
+        float[] vector = word2VecProcessor.getWord2Vec(word, modelName);
         if (vector == null) {
             return null;
         }
-        
-        Double[] doubleArray = ArrayUtils.toObject(vector);
-        return Arrays.asList(doubleArray);
+
+        Float[] floats = ArrayUtils.toObject(vector);
+        return Arrays.asList(floats);
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.nn")
+    @Description("Retrieve the nearest neighbors of the given word")
+    public Stream<NearestNeighbor> getNearestNeighbors(@Name("word") String word, @Name(value = "limit") Long limit, @Name(value = "modelName", defaultValue = "") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+
+        return word2VecProcessor.getNearestNeighbors(word, limit.intValue(), modelName).stream().map(pair -> {
+            return new NearestNeighbor(pair.first().toString(), Double.valueOf(pair.second().toString()));
+        });
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.load")
+    @Description("Load Nearest Neighbors in memory for fast lookup")
+    public Stream<SingleResult> loadNN(@Name(value = "modelName", defaultValue = "") String modelName) {
+        try {
+            Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+            word2VecProcessor.computeNearestNeighbors(modelName);
+
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.clearCache")
+    @Description("Clear the word embeddings cache")
+    public Stream<SingleResult> clearCache(@Name(value = "modelName") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        word2VecProcessor.getWord2VecModel().getModel(modelName).cleanCache();
+
+        return Stream.of(SingleResult.success());
+    }
+
+    public class NearestNeighbor {
+        public String word;
+
+        public double distance;
+
+        public NearestNeighbor(String word, double distance) {
+            this.word = word;
+            this.distance = distance;
+        }
     }
 }

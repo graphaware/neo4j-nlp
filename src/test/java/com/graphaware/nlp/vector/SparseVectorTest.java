@@ -37,7 +37,7 @@ public class SparseVectorTest {
         map.put(100L, 1.2f);
         map.put(5L, 1.3f);
 
-        SparseVector vector = SparseVector.fromMap(map);
+        SparseVector vector = (SparseVector) SparseVector.fromMap(map);
         System.out.println("> " + vector);
         assertEquals(4, vector.getCardinality().intValue());
         assertEquals(1l, vector.getIndex().get(0).longValue());
@@ -54,7 +54,7 @@ public class SparseVectorTest {
     @Test
     public void testFromList() {
         List<Float> list = Arrays.asList(3.0f, 11f, 12f, 100f, 0.1f, 0.2f, 3.0f);
-        SparseVector vector = SparseVector.fromList(list);
+        SparseVector vector = (SparseVector) SparseVector.fromList(list);
         System.out.println("> " + vector);
         assertEquals(3, vector.getCardinality().intValue());
         assertEquals(11l, vector.getIndex().get(0).longValue());
@@ -71,7 +71,7 @@ public class SparseVectorTest {
     @Test
     public void testGetList() {
         List<Float> list = Arrays.asList(4.0f, 10f, 11f, 12f, 100f, 0.1f, 0.2f, 3.0f, 0.2f);
-        SparseVector vector = SparseVector.fromList(list);
+        SparseVector vector = (SparseVector) SparseVector.fromList(list);
         System.out.println("> " + vector);
         assertFalse(list.retainAll(vector.getList()));
     }
@@ -80,14 +80,14 @@ public class SparseVectorTest {
     public void testDot() {
         List<Float> a = Arrays.asList(4.0f, 0f, 2f, 4f, 5f, 1f, 10f, 20.0f, 3f);
         List<Float> b = Arrays.asList(3.0f, 1f, 2f, 5f, 1f, 1f, 1f);
-        SparseVector aV = SparseVector.fromList(a);
-        SparseVector bV = SparseVector.fromList(b);
+        SparseVector aV = (SparseVector) SparseVector.fromList(a);
+        SparseVector bV = (SparseVector) SparseVector.fromList(b);
         assertEquals(13f, aV.dot(bV), 0.0f);
         assertEquals(13f, bV.dot(aV), 0.0f);
         List<Float> c = Arrays.asList(7.0f, 0f, 2f, 4f, 5f, 6f, 7f, 8f, 1f, 10f, 20.0f, 3f, 1f, 1f, 1f);
         List<Float> d = Arrays.asList(4.0f, 1f, 2f, 5f, 8f, 1f, 1f, 1f, 4f);
-        SparseVector cV = SparseVector.fromList(c);
-        SparseVector dV = SparseVector.fromList(d);
+        SparseVector cV = (SparseVector) SparseVector.fromList(c);
+        SparseVector dV = (SparseVector) SparseVector.fromList(d);
         assertEquals(17f, cV.dot(dV), 0.0f);
         assertEquals(17f, dV.dot(cV), 0.0f);
     }
@@ -108,11 +108,11 @@ public class SparseVectorTest {
                 2.5633492f, 1.945495f, 3.149615f, 3.994713f, 3.994713f, 3.295743f,
                 3.994713f, 1.4977833f);
         List<Float> b = Arrays.asList(4.0f, 3520.0f, 17535.0f, 22446.0f, 115150.0f, 3.9306583f, 1.9735237f, 3.392653f, 1.945495f);
-        SparseVector aV = SparseVector.fromList(a);
-        SparseVector bV = SparseVector.fromList(b);
+        SparseVector aV = (SparseVector) SparseVector.fromList(a);
+        SparseVector bV = (SparseVector) SparseVector.fromList(b);
         float dot = aV.dot(bV);
         System.out.println("Dot: " + dot);
-        float similarity = VectorProcessLogic.getSimilarity(a, b);
+        float similarity = VectorProcessLogic.getSimilarity(aV, bV);
         System.out.println("similarity: " + similarity);
 
 //        assertEquals(13f, aV.dot(bV), 0.0f);

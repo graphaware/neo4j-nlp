@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.domain.Tag;
@@ -23,6 +24,9 @@ import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.vector.DenseVector;
+import com.graphaware.nlp.vector.VectorHandler;
+import org.apache.lucene.index.IndexWriter;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
@@ -30,6 +34,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -84,9 +89,10 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
             List<Tag> extendedTags = new ArrayList<>();
             tags.stream().forEach((tag) -> {
                 LOG.info("Searching for: " + tag.getLemma().toLowerCase());
-                double[] vector = word2VecModel.getWordToVec(tag.getLemma().toLowerCase(), request.getModelName());
+                float[] vector = word2VecModel.getWordToVec(tag.getLemma().toLowerCase(), request.getModelName());
                 if (vector != null) {
-                    tag.addProperties(request.getPropertyName(), vector);
+                    VectorHandler vectorHandler = new VectorHandler(new DenseVector(vector));
+                    tag.addProperties(request.getPropertyName(), vectorHandler);
                     extendedTags.add(tag);
                 }
             });
@@ -94,7 +100,6 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
             extendedTags.stream().forEach((newTag) -> {
                 if (newTag != null) {
                     getPersister(Tag.class).getOrCreate(newTag, newTag.getId(), String.valueOf(System.currentTimeMillis()));
-
                     affectedTag.incrementAndGet();
                 }
             });
@@ -105,8 +110,16 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
         }
     }
 
-    public double[] getWord2Vec(String value, String modelName) {
+    public float[] getWord2Vec(String value, String modelName) {
         return word2VecModel.getWordToVec(value, modelName);
+    }
+
+    public List<Pair> getNearestNeighbors(String value, Integer limit, String modelName) {
+        return word2VecModel.getModel(modelName).getNearestNeighbors(value, limit);
+    }
+
+    public void computeNearestNeighbors(String modelName) {
+        word2VecModel.getModel(modelName).loadNN();
     }
 
     public Word2VecModel getWord2VecModel() {

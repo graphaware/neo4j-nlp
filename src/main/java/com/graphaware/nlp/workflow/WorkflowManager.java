@@ -97,26 +97,26 @@ public class WorkflowManager {
     }
 
     public WorkflowProcessor createWorkflowProcessor(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowINstanceItem(id, className, parameters, workflowProcessorClasses, workflowProcessorInstances);
+        return createWorkflowInstanceItem(id, className, parameters, workflowProcessorClasses, workflowProcessorInstances);
     }
 
     public WorkflowInput createWorkflowInput(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowINstanceItem(id, className, parameters, workflowInputClasses, workflowInputInstances);
+        return createWorkflowInstanceItem(id, className, parameters, workflowInputClasses, workflowInputInstances);
     }
 
     public WorkflowOutput createWorkflowOutput(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowINstanceItem(id, className, parameters, workflowOutputClasses, workflowOutputInstances);
+        return createWorkflowInstanceItem(id, className, parameters, workflowOutputClasses, workflowOutputInstances);
     }
 
     public WorkflowTask createWorkflowTask(String id, String className, Map<String, Object> parameters) {
-        return createWorkflowINstanceItem(id, className, parameters, workflowTaskClasses, workflowTaskInstances);
+        return createWorkflowInstanceItem(id, className, parameters, workflowTaskClasses, workflowTaskInstances);
     }
 
-    private <T extends WorkflowItem> T createWorkflowINstanceItem(String id,
-            String className,
-            Map<String, Object> parameters,
-            Map<String, Class<T>> classes,
-            Map<String, T> instances) {
+    private <T extends WorkflowItem> T createWorkflowInstanceItem(String id,
+                                                                  String className,
+                                                                  Map<String, Object> parameters,
+                                                                  Map<String, Class<T>> classes,
+                                                                  Map<String, T> instances) {
         if (!classes.containsKey(className)) {
             throw new RuntimeException("Processor Item class with name " + className + " not found!");
         }
@@ -144,19 +144,27 @@ public class WorkflowManager {
     }
     
     public WorkflowInput deleteWorkflowInput(String id) {
-        return workflowInputInstances.remove(id);
+        WorkflowInput removed = workflowInputInstances.remove(id);
+        configuration.removeWorkflowInstanceItem(removed);
+        return removed;
     }
     
     public WorkflowOutput deleteWorkflowOutput(String id) {
-        return workflowOutputInstances.remove(id);
+        WorkflowOutput removed = workflowOutputInstances.remove(id);
+        configuration.removeWorkflowInstanceItem(removed);
+        return removed;
     }
     
     public WorkflowProcessor deleteWorkflowProcessor(String id) {
-        return workflowProcessorInstances.remove(id);
+        WorkflowProcessor removed = workflowProcessorInstances.remove(id);
+        configuration.removeWorkflowInstanceItem(removed);
+        return removed;
     }
     
     public WorkflowTask deleteWorkflowTask(String id) {
-        return workflowTaskInstances.remove(id);
+        WorkflowTask removed = workflowTaskInstances.remove(id);
+        configuration.removeWorkflowInstanceItem(removed);
+        return removed;
     }
 
     public Set<WorkflowItemInfo> getWorkflowProcessorClasses() {
@@ -225,28 +233,28 @@ public class WorkflowManager {
     }
 
     private void loadWorkflowProcessorInstances() {
-        List<WorkflowInstanceItemInfo> loadPipelineProcessor = configuration.loadPipelineInstanceItems(WorkflowProcessor.WORFKLOW_PROCESSOR_KEY_PREFIX);
+        List<WorkflowInstanceItemInfo> loadPipelineProcessor = configuration.loadWorkflowInstanceItems(WorkflowProcessor.WORFKLOW_PROCESSOR_KEY_PREFIX);
         loadPipelineProcessor.stream().forEach((proc) -> {
             createWorkflowProcessor(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowInputInstances() {
-        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowInput.WORKFLOW_INPUT_KEY_PREFIX);
+        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadWorkflowInstanceItems(WorkflowInput.WORKFLOW_INPUT_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
             createWorkflowInput(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowOutputInstances() {
-        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowOutput.WORFKLOW_OUTPUT_KEY_PREFIX);
+        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadWorkflowInstanceItems(WorkflowOutput.WORFKLOW_OUTPUT_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
             createWorkflowOutput(proc.getName(), proc.getClassName(), proc.getParameters());
         });
     }
 
     private void loadWorkflowTaskInstances() {
-        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadPipelineInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
+        List<WorkflowInstanceItemInfo> loadPipelineInstances = configuration.loadWorkflowInstanceItems(WorkflowTask.WORFKLOW_TASK_KEY_PREFIX);
         loadPipelineInstances.stream().forEach((proc) -> {
             createWorkflowTask(proc.getName(), proc.getClassName(), proc.getParameters());
         });

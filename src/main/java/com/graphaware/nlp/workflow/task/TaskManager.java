@@ -30,7 +30,7 @@ public class TaskManager {
 
     public void stop(WorkflowTask workflowTask) {
         if (workflowTask.getStatus() == TaskStatus.RUNNING) {
-            workflowTask.cancel();
+            workflowTask.stop();
         }
     }
 

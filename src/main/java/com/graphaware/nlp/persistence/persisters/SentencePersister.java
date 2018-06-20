@@ -48,6 +48,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         storeSentenceTagOccurrences(sentence, newSentenceNode, txId);
         storeUniversalDependenciesForSentence(sentence, newSentenceNode);
         storePhrases(sentence, newSentenceNode, txId);
+        storeCoreferences(sentence);
         assignSentimentLabel(sentence, newSentenceNode);
         sentenceNode = newSentenceNode;
 
@@ -55,10 +56,10 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     @Override
-    public Sentence fromNode(Node node) {
-        Map<String, Object> properties = node.getAllProperties();
-        String sentence = properties.get(configuration().getPropertyKeyFor(Properties.TEXT)).toString();
-        int sentenceNumber = (int) properties.get(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER));
+    public Sentence fromNode(Node node, Object... properties) {
+        Map<String, Object> nodeProperties = node.getAllProperties();
+        String sentence = nodeProperties.get(configuration().getPropertyKeyFor(Properties.TEXT)).toString();
+        int sentenceNumber = (int) nodeProperties.get(configuration().getPropertyKeyFor(Properties.SENTENCE_NUMBER));
 
         final Sentence sentenceO = new Sentence(sentence, sentenceNumber);
 
@@ -228,10 +229,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     private Node getOrCreatePhrase(Phrase phrase, String txId) {
-        Node node = database.findNode(configuration().getLabelFor(Labels.Phrase),
-                configuration().getPropertyKeyFor(Properties.CONTENT_VALUE),
-                phrase.getContent()
-        );
+        Node node = getPhraseNode(phrase);
 
         if (node == null) {
             node = database.createNode(configuration().getLabelFor(Labels.Phrase));
@@ -241,6 +239,31 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         }
 
         return node;
+    }
+
+    private Node getPhraseNode(Phrase phrase) {
+       return database.findNode(configuration().getLabelFor(Labels.Phrase),
+                configuration().getPropertyKeyFor(Properties.CONTENT_VALUE),
+                phrase.getContent()
+        );
+    }
+
+    private void storeCoreferences(Sentence sentence) {
+        sentence.getPhraseOccurrences().values().forEach(phraseOccurrenceAtPosition -> {
+            phraseOccurrenceAtPosition.values().forEach(occurrence -> {
+                Phrase phrase = occurrence.getElement();
+                Phrase reference = phrase.getReference();
+                if (reference != null) {
+                    Node phraseNode = getPhraseNode(phrase);
+                    Node referenceNode = getPhraseNode(reference);
+                    if (phraseNode != null && referenceNode != null) {
+                        if (!relationshipExistBetween(phraseNode, referenceNode, RelationshipType.withName("COREFERENCE"))) {
+                            phraseNode.createRelationshipTo(referenceNode, RelationshipType.withName("COREFERENCE"));
+                        }
+                    }
+                }
+            });
+        });
     }
 
     private void updatePhrase(Phrase phrase, Node phraseNode) {

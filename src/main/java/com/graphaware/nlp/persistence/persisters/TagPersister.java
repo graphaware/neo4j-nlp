@@ -15,14 +15,17 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
+import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.util.TagUtils;
 import com.graphaware.nlp.util.TypeConverter;
+import com.graphaware.nlp.vector.VectorHandler;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -41,10 +44,19 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     @Override
-    public Tag fromNode(Node node) {
+    public Tag fromNode(Node node, Object... properties) {
         checkNodeIsATag(node);
-        return new Tag(String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE))),
+        Tag tag = new Tag(String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.CONTENT_VALUE))),
                 String.valueOf(node.getProperty(configuration().getPropertyKeyFor(Properties.LANGUAGE))));
+        String[] ne = (String[]) node.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
+        if (ne != null) {
+            tag.setNe(Arrays.asList(ne));
+        }
+        String[] pos = (String[]) node.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
+        if (pos != null) {
+            tag.setPos(Arrays.asList(pos));
+        }
+        return tag;
     }
 
     @Override
@@ -93,11 +105,11 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
         }
 
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY))) {
-            String[] pos = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
-            if (tag.getNeAsList().size() != pos.length) {
+            String[] ne = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
+            if (tag.getNeAsList().size() != ne.length) {
                 return true;
             }
-            List<String> original = Arrays.asList(pos);
+            List<String> original = Arrays.asList(ne);
 
             for (String s : tag.getNeAsList()) {
                 if (!original.contains(s)) {
@@ -156,8 +168,16 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     }
 
     private void storeExtraProperties(Tag tag, Node tagNode) {
-        for (String k : tag.getExtraProperties().keySet()) {
-            tagNode.setProperty(k, tag.getExtraProperties().get(k));
+        for (Map.Entry<String, Object> entry : tag.getExtraProperties().entrySet()) {
+
+            if (entry.getValue() instanceof VectorHandler) {
+                VectorPersister persister = NLPManager.getInstance().getPersister(VectorContainer.class);
+                VectorHandler vectorHandler = (VectorHandler) entry.getValue();
+                persister.storeVector(tagNode, entry.getKey(), vectorHandler.getType(), vectorHandler.getArray(), Optional.empty());
+            } else {
+                tagNode.setProperty(entry.getKey(), entry.getValue());
+            }
+
         }
     }
 

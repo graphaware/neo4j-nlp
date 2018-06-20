@@ -46,6 +46,17 @@ public class CosineSimilarity implements Similarity {
         }
     }
 
+    public double getSimilarity(float[] xVector, float[] yVector) {
+        double a = getDotProduct(xVector, yVector);
+        double b = getNorm(xVector) * getNorm(yVector);
+
+        if (b > 0) {
+            return a / b;
+        } else {
+            return 0;
+        }
+    }
+
     private float getDotProduct(final Map<Long, Float> xVector, final Map<Long, Float> yVector) {
 
         final AtomicReference<Float> sum = new AtomicReference<>(0f);
@@ -73,6 +84,19 @@ public class CosineSimilarity implements Similarity {
         return sum.get();
     }
 
+
+    private double getDotProduct(final float[] xVector, final float[] yVector) {
+
+        final AtomicReference<Float> sum = new AtomicReference<>(0f);
+        IntStream.range(0, xVector.length)
+                .boxed().forEach((key) -> {
+            float curValue = sum.get();
+            curValue += xVector[key] * yVector[key];
+            sum.set(curValue);
+        });
+        return sum.get();
+    }
+
     private float getNorm(Map<Long, Float> xVector) {
         final AtomicReference<Float> sum = new AtomicReference<>(0f);
         xVector.values().stream().forEach((value) -> {
@@ -91,6 +115,28 @@ public class CosineSimilarity implements Similarity {
             sum.set(curValue);
         });
         return Math.sqrt(sum.get().doubleValue());
+    }
+
+    private double getNorm(float[] xVector) {
+        final AtomicReference<Float> sum = new AtomicReference<>(0f);
+        for (float value: xVector) {
+            float curValue = sum.get();
+            curValue += value * value;
+            sum.set(curValue);
+        }
+        return Math.sqrt(sum.get().doubleValue());
+    }
+
+    public double cosineSimilarity(float[] vectorA, float[] vectorB) {
+        double dotProduct = 0.0d;
+        double normA = 0.0d;
+        double normB = 0.0d;
+        for (int i = 0; i < vectorA.length; i++) {
+            dotProduct += vectorA[i] * vectorB[i];
+            normA += Math.pow(vectorA[i], 2);
+            normB += Math.pow(vectorB[i], 2);
+        }
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
 }

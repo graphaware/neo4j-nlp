@@ -36,7 +36,6 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
     private FeatureBasedProcessLogic featureBusinessLogic;
     private VectorProcessLogic vectorBusinessLogic;
 
-    //private static final Boolean PARAMETER_NAME_ADJ_ADV = "adjectives_adverbs";
     @Override
     public void postLoaded() {
         featureBusinessLogic = new FeatureBasedProcessLogic(getDatabase());

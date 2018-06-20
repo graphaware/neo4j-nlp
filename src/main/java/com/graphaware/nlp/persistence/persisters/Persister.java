@@ -23,7 +23,7 @@ public interface Persister<T> {
     
     Node persist(T object);
 
-    T fromNode(Node node);
+    T fromNode(Node node, Object... properties);
 
     boolean exists(String id);
 
