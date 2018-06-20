@@ -87,4 +87,47 @@ public class Word2VecProcedure extends AbstractDSL {
         Float[] floats = ArrayUtils.toObject(vector);
         return Arrays.asList(floats);
     }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.nn")
+    @Description("Retrieve the nearest neighbors of the given word")
+    public Stream<NearestNeighbor> getNearestNeighbors(@Name("word") String word, @Name(value = "limit") Long limit, @Name(value = "modelName", defaultValue = "") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+
+        return word2VecProcessor.getNearestNeighbors(word, limit.intValue(), modelName).stream().map(pair -> {
+            return new NearestNeighbor(pair.first().toString(), Double.valueOf(pair.second().toString()));
+        });
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.load")
+    @Description("Load Nearest Neighbors in memory for fast lookup")
+    public Stream<SingleResult> loadNN(@Name(value = "modelName", defaultValue = "") String modelName) {
+        try {
+            Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+            word2VecProcessor.computeNearestNeighbors(modelName);
+
+            return Stream.of(SingleResult.success());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.ml.word2vec.clearCache")
+    @Description("Clear the word embeddings cache")
+    public Stream<SingleResult> clearCache(@Name(value = "modelName") String modelName) {
+        Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
+        word2VecProcessor.getWord2VecModel().getModel(modelName).cleanCache();
+
+        return Stream.of(SingleResult.success());
+    }
+
+    public class NearestNeighbor {
+        public String word;
+
+        public double distance;
+
+        public NearestNeighbor(String word, double distance) {
+            this.word = word;
+            this.distance = distance;
+        }
+    }
 }

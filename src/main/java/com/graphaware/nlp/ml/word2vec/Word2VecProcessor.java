@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.word2vec;
 
+import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
 import com.graphaware.nlp.domain.Tag;
@@ -25,6 +26,7 @@ import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.vector.DenseVector;
 import com.graphaware.nlp.vector.VectorHandler;
+import org.apache.lucene.index.IndexWriter;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.QueryExecutionException;
 import org.neo4j.graphdb.ResourceIterator;
@@ -32,6 +34,7 @@ import org.neo4j.graphdb.Result;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -109,6 +112,14 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
 
     public float[] getWord2Vec(String value, String modelName) {
         return word2VecModel.getWordToVec(value, modelName);
+    }
+
+    public List<Pair> getNearestNeighbors(String value, Integer limit, String modelName) {
+        return word2VecModel.getModel(modelName).getNearestNeighbors(value, limit);
+    }
+
+    public void computeNearestNeighbors(String modelName) {
+        word2VecModel.getModel(modelName).loadNN();
     }
 
     public Word2VecModel getWord2VecModel() {

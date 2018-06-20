@@ -16,6 +16,7 @@
 package com.graphaware.nlp.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 public class FixedSizeOrderedList<T extends Comparable> extends ArrayList<T> {
@@ -42,6 +43,16 @@ public class FixedSizeOrderedList<T extends Comparable> extends ArrayList<T> {
         if (this.size() > maxSize) {
             this.remove(maxSize);
         }
+        return true;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends T> c) {
+        c.forEach(e -> {
+            this.add(e);
+        });
+
+
         return true;
     }
 }

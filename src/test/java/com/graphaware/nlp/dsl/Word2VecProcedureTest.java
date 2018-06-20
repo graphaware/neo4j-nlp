@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.neo4j.graphdb.Node;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
             while (result.hasNext()) {
                 Map<String, Object> record = result.next();
                 assertEquals("numberbatch", record.get("name"));
-                assertEquals(100, (long) record.get("indexCount"));
+                assertEquals(86, (long) record.get("indexCount"));
             }
         }));
     }
@@ -106,5 +107,78 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
         executeInTransaction("RETURN ga.nlp.ml.word2vec.wordVector('agriculturist') AS vector", (result -> {
             assertTrue(result.hasNext());
         }));
+    }
+
+    @Test
+    public void testAddingFastTextModelWithProcedure() {
+        String w2vSourcePath = getClass().getClassLoader().getResource("").getPath() + "import/fasttextSource";
+        String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "fastTextIndex_" + System.currentTimeMillis();
+        Map<String, Object> params = new HashMap<>();
+        params.put("source", w2vSourcePath);
+        params.put("dest", w2vDestinPath);
+        params.put("name", "fasttext");
+        executeInTransaction("CALL ga.nlp.ml.word2vec.addModel({source},{dest},{name})", params, (result -> {
+            assertTrue(result.hasNext());
+        }));
+        assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
+        executeInTransaction("CALL ga.nlp.annotate({text: 'The Empire State Building is the highest building in New York City.', id: '123-fff', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.ml.word2vec.attach({query:\"MATCH (t:Tag) return t\", modelName:'fasttext'}) YIELD result \n" +
+                "return result;", (result -> {
+            assertTrue(result.hasNext());
+        }));
+        executeInTransaction("MATCH (n:Tag {value:'highest'}) RETURN n", (result -> {
+            assertTrue(result.hasNext());
+            Map<String, Object> record = result.next();
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_type"));
+            assertTrue(((Node) record.get("n")).hasProperty("word2vec_array"));
+        }));
+    }
+
+    @Test
+    public void testGetNearestNeighborsWithProcedure() {
+        String w2vSourcePath = getClass().getClassLoader().getResource("").getPath() + "import/fasttextSource";
+        String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "fastTextIndex_" + System.currentTimeMillis();
+        Map<String, Object> params = new HashMap<>();
+        params.put("source", w2vSourcePath);
+        params.put("dest", w2vDestinPath);
+        params.put("name", "fasttext");
+        executeInTransaction("CALL ga.nlp.ml.word2vec.addModel({source},{dest},{name})", params, (result -> {
+            assertTrue(result.hasNext());
+        }));
+        assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
+        List<String> nn = new ArrayList<>();
+        long now = System.currentTimeMillis();
+        executeInTransaction("CALL ga.nlp.ml.word2vec.nn('highest', 10, 'fasttext')", (result -> {
+            while (result.hasNext()) {
+                nn.add(result.next().get("word").toString());
+            }
+        }));
+        assertEquals(10, nn.size());
+        System.out.println("NN computed in " + (System.currentTimeMillis() - now));
+    }
+
+    @Test
+    public void testGetNearestNeighborsFromStoreWithProcedure() {
+        String w2vSourcePath = getClass().getClassLoader().getResource("").getPath() + "import/fasttextSource";
+        String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "fastTextIndex_" + System.currentTimeMillis();
+        Map<String, Object> params = new HashMap<>();
+        params.put("source", w2vSourcePath);
+        params.put("dest", w2vDestinPath);
+        params.put("name", "fasttext");
+        executeInTransaction("CALL ga.nlp.ml.word2vec.addModel({source},{dest},{name})", params, (result -> {
+            assertTrue(result.hasNext());
+        }));
+        assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
+        executeInTransaction("CALL ga.nlp.ml.word2vec.load('fasttext')", emptyConsumer());
+        List<String> nn = new ArrayList<>();
+
+        long now = System.currentTimeMillis();
+        executeInTransaction("CALL ga.nlp.ml.word2vec.nn('highest', 10, 'fasttext')", (result -> {
+            while (result.hasNext()) {
+                nn.add(result.next().get("word").toString());
+            }
+        }));
+        assertEquals(10, nn.size());
+        System.out.println("NN computed in " + (System.currentTimeMillis() - now));
     }
 }

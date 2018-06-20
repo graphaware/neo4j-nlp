@@ -66,6 +66,18 @@ public class Word2VecModel {
         }
     }
 
+    public Word2VecIndexLookup getModel(String modelName) {
+        if (null == modelName || modelName.equals("") && defaultModel != null) {
+            return models.get(defaultModel);
+        }
+
+        if (models.containsKey(modelName)) {
+            return models.get(modelName);
+        }
+
+        throw new RuntimeException("Word2vec model not found");
+    }
+
     public Map<String, Word2VecIndexLookup> getModels() {
         return models;
     }
