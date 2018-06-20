@@ -131,6 +131,11 @@ public class Word2VecIndexLookup {
         IndexSearcher indexSearcher = getIndexSearcher();
         LOG.info("Searching nearest neighbors for : '" + searchString + "'");
         if (inMemoryNN.containsKey(searchString)) {
+
+            if (nnCache.containsKey(searchString)) {
+                return nnCache.get(searchString);
+            }
+
             return cacheIfNeeded(searchString, getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN));
         }
         try {
