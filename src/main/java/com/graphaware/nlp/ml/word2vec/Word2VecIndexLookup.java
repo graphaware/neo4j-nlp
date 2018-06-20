@@ -20,7 +20,6 @@ import com.graphaware.nlp.ml.similarity.CosineSimilarity;
 import com.graphaware.nlp.util.ComparablePair;
 import com.graphaware.nlp.util.FixedSizeOrderedList;
 import com.graphaware.nlp.util.TypeConverter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.document.Document;
@@ -34,14 +33,10 @@ import com.graphaware.common.log.LoggerFactory;
 import org.neo4j.logging.Log;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class Word2VecIndexLookup {
 
@@ -84,59 +79,32 @@ public class Word2VecIndexLookup {
         return null;
     }
 
-    public void loadNN(Integer maxNeighbors, IndexWriter indexWriter) throws IOException {
+    public void loadNN() {
         try {
             IndexSearcher indexSearcher = getIndexSearcher();
             IndexReader indexReader = indexSearcher.getIndexReader();
             for (int i = 0; i < indexReader.maxDoc(); ++i) {
-                try {
-                    Document hitDoc = indexReader.document(i);
-                    String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
-                    StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
-                    inMemoryNN.put(word, TypeConverter.toFloatArray(binaryVector.binaryValue().bytes));
-                } catch (Exception e) {
-                    //
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            indexWriter.commit();
-            indexWriter.close();
-
-        }
-    }
-
-    public List<Pair> getNNFromDisk(String w, Integer maxNeighbors) {
-        IndexSearcher indexSearcher = getIndexSearcher();
-        List<Pair> result = new ArrayList<>();
-        try {
-            Analyzer analyzer = new KeywordAnalyzer();
-            QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
-            Query query = queryParser.parse(w.replace(" ", "_"));
-            TopDocs searchResult = indexSearcher.search(query, 1);
-            for (ScoreDoc scoreDoc : searchResult.scoreDocs) {
-                Document hitDoc = indexSearcher.doc(scoreDoc.doc);
-                StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.NEAREST_NEIGHBORS_FIELD);
-                return asPairList(binaryVector.binaryValue().bytes).stream().limit(maxNeighbors).collect(Collectors.toList());
+                Document hitDoc = indexReader.document(i);
+                String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
+                StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
+                inMemoryNN.put(word, TypeConverter.toFloatArray(binaryVector.binaryValue().bytes));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        return result;
     }
 
     public List<Pair> getNearestNeighbors(String searchString, Integer limit) {
         IndexSearcher indexSearcher = getIndexSearcher();
         LOG.info("Searching nearest neighbors for : '" + searchString + "'");
+        String key = searchString + "__" + limit.toString();
         if (inMemoryNN.containsKey(searchString)) {
 
-            if (nnCache.containsKey(searchString)) {
-                return nnCache.get(searchString);
+            if (nnCache.containsKey(key)) {
+                return nnCache.get(key);
             }
 
-            return cacheIfNeeded(searchString, getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN));
+            return cacheIfNeeded(searchString, getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN), limit);
         }
         try {
             Analyzer analyzer = new KeywordAnalyzer();
@@ -150,7 +118,7 @@ public class Word2VecIndexLookup {
             ScoreDoc hit = searchResult.scoreDocs[0];
             Document hitDoc = indexSearcher.doc(hit.doc);
 
-            return cacheIfNeeded(searchString, getTopXNeighbors(getVector(hitDoc), limit));
+            return cacheIfNeeded(searchString, getTopXNeighbors(getVector(hitDoc), limit), limit);
         } catch (ParseException | IOException ex) {
             LOG.error("Error while getting word2vec for " + searchString, ex);
         }
@@ -201,34 +169,6 @@ public class Word2VecIndexLookup {
         return TypeConverter.toFloatArray(storedField.binaryValue().bytes);
     }
 
-    private byte[] asStorableField(List<Pair> nns) {
-        return compress(nns).getBytes(Charset.forName("UTF-8"));
-    }
-
-    private String compress(List<Pair> nns) {
-        List<String> parts = new ArrayList<>();
-        nns.forEach(nn -> {
-            parts.add(nn.first().toString() + "__" + nn.second().toString());
-        });
-
-        return StringUtils.join(parts, ">>>>");
-    }
-
-    private List<Pair> asPairList(byte[] bytes) throws Exception {
-        return uncompress(new String(bytes, "UTF-8"));
-    }
-
-    private List<Pair> uncompress(String s) {
-        List<Pair> coll = new ArrayList<>();
-        String[] elts = s.split(">>>>");
-        for (String el : elts) {
-            List<String> parts = Arrays.asList(el.split("__"));
-            coll.add(new ComparablePair(parts.get(0), parts.get(1)));
-        }
-
-        return coll;
-    }
-
     private IndexSearcher getIndexSearcher() {
         IndexSearcher indexSearcher;
         try {
@@ -241,9 +181,10 @@ public class Word2VecIndexLookup {
         return indexSearcher;
     }
 
-    private List<Pair> cacheIfNeeded(String word, List<Pair> nn) {
-        if (!nnCache.containsKey(word)) {
-            nnCache.put(word, nn);
+    private List<Pair> cacheIfNeeded(String word, List<Pair> nn, Integer limit) {
+        String key = word + "__" + limit.toString();
+        if (!nnCache.containsKey(key)) {
+            nnCache.put(key, nn);
         }
 
         return nn;

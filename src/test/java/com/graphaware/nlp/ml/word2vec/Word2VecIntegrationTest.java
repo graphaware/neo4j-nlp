@@ -70,14 +70,13 @@ public class Word2VecIntegrationTest extends NLPIntegrationTest {
     }
 
     @Test
-    public void testCanComputeNearestNeighborsFromDisk() throws IOException {
+    public void testCanComputeNearestNeighborsFromMemory() throws IOException {
         String w2vSourcePath = getClass().getClassLoader().getResource("").getPath() + "import/fasttextSource";
         String w2vDestinPath = System.getProperty("java.io.tmpdir") + File.separator + "fasttextIndex_" + System.currentTimeMillis();
         getWord2VecProcessor().getWord2VecModel().createModelFromPaths(w2vSourcePath, w2vDestinPath, "fasttext", "en");
         assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
         assertNotNull(getWord2VecProcessor().getWord2Vec("highest", "fasttext"));
-        IndexWriter indexWriter = getWord2VecProcessor().getIndexWriter("fasttext");
-        getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").loadNN(30, indexWriter);
+        getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").loadNN();
         List<Pair> nns = getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").getNearestNeighbors("highest", 10);
         assertEquals(10, nns.size());
         assertEquals("highest", nns.get(0).first());
