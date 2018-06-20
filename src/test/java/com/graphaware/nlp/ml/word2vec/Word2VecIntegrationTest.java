@@ -78,9 +78,8 @@ public class Word2VecIntegrationTest extends NLPIntegrationTest {
         assertNotNull(getWord2VecProcessor().getWord2Vec("highest", "fasttext"));
         IndexWriter indexWriter = getWord2VecProcessor().getIndexWriter("fasttext");
         getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").loadNN(30, indexWriter);
-        long now = System.currentTimeMillis();
-        List<Pair> nns = getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").getNNFromDisk("highest", 10);
-        System.out.println(nns.size());
-        System.out.println(nns.get(0).first());
+        List<Pair> nns = getWord2VecProcessor().getWord2VecModel().getModels().get("fasttext").getNearestNeighbors("highest", 10);
+        assertEquals(10, nns.size());
+        assertEquals("highest", nns.get(0).first());
     }
 }

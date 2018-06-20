@@ -49,7 +49,7 @@ public class Word2VecIndexLookup {
 
     private final String storePath;
 
-    private final Map<String, List<Pair>> inMemoryNN = new ConcurrentHashMap<>();
+    private final Map<String, float[]> inMemoryNN = new ConcurrentHashMap<>();
 
     public Word2VecIndexLookup(String storePath) {
         this.storePath = storePath;
@@ -84,8 +84,6 @@ public class Word2VecIndexLookup {
     }
 
     public void loadNN(Integer maxNeighbors, IndexWriter indexWriter) throws IOException {
-        final AtomicInteger batch = new AtomicInteger(0);
-        Map<String, float[]> vectors = new HashMap<>();
         try {
             IndexSearcher indexSearcher = getIndexSearcher();
             IndexReader indexReader = indexSearcher.getIndexReader();
@@ -94,27 +92,7 @@ public class Word2VecIndexLookup {
                     Document hitDoc = indexReader.document(i);
                     String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
                     StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
-                    vectors.put(word, TypeConverter.toFloatArray(binaryVector.binaryValue().bytes));
-                } catch (Exception e) {
-                    //
-                }
-            }
-
-            for (int i = 0; i < indexReader.maxDoc(); ++i) {
-                try {
-                    Long now = System.currentTimeMillis();
-                    Document hitDoc = indexReader.document(i);
-                    String word = hitDoc.getField(Word2VecIndexCreator.WORD_FIELD).stringValue();
-                    List<Pair> nn = getTopNeighbors(vectors.get(word), maxNeighbors, vectors);
-                    hitDoc.add(new StoredField(Word2VecIndexCreator.NEAREST_NEIGHBORS_FIELD, asStorableField(nn)));
-                    indexWriter.updateDocument(new Term(Word2VecIndexCreator.WORD_FIELD, word), hitDoc);
-                    batch.incrementAndGet();
-                    System.out.println("computed NN in " + (System.currentTimeMillis() - now));
-                    if (batch.get() > 1000) {
-                        indexWriter.commit();
-                        LOG.info("committed 1000 nearest neighbor operations");
-                        batch.set(0);
-                    }
+                    inMemoryNN.put(word, TypeConverter.toFloatArray(binaryVector.binaryValue().bytes));
                 } catch (Exception e) {
                     //
                 }
@@ -126,7 +104,6 @@ public class Word2VecIndexLookup {
             indexWriter.close();
 
         }
-
     }
 
     public List<Pair> getNNFromDisk(String w, Integer maxNeighbors) {
@@ -153,7 +130,7 @@ public class Word2VecIndexLookup {
         IndexSearcher indexSearcher = getIndexSearcher();
         LOG.info("Searching nearest neighbors for : '" + searchString + "'");
         if (inMemoryNN.containsKey(searchString)) {
-            return inMemoryNN.get(searchString).stream().limit(limit).collect(Collectors.toList());
+            return getTopNeighbors(inMemoryNN.get(searchString), limit, inMemoryNN);
         }
         try {
             Analyzer analyzer = new KeywordAnalyzer();
