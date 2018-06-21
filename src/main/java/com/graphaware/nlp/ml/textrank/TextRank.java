@@ -764,7 +764,11 @@ public class TextRank {
     public boolean postprocess(String method, Node annotatedText) {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
 
+        // if an annotated text do not have any keyword, not returning here will assume that we have to run it on the full graph
         Set<Long> inputKeywordIds = getKeywordIds(annotatedText);
+        if (annotatedText != null && inputKeywordIds.size() < 1) {
+            return true;
+        }
 
         if (method.equals("direct")) {
             /*String query = "match (k:" + keywordLabel.name() + ")\n"
@@ -819,6 +823,9 @@ public class TextRank {
                     + "merge (k)-[r:HAS_SUBGROUP]->(k2)";
     
             try (Transaction tx = database.beginTx();) {
+                if (annotatedText != null) {
+                    LOG.info("input annotated text id : " + annotatedText.getId());
+                }
                 LOG.info("Discovering HAS_SUBGROUP relationships between keywords and keyphrases ...");
                 database.execute(query, Collections.singletonMap("ids", inputKeywordIds));
                 tx.success();
