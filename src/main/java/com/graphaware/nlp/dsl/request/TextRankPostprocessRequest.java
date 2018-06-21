@@ -15,9 +15,12 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class TextRankPostprocessRequest {
@@ -26,9 +29,11 @@ public class TextRankPostprocessRequest {
 
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
     private final static String PARAMETER_METHOD = "method";
+    private final static String PARAMETER_ANNOTATED_TEXT = "annotatedText";
 
     private String keywordLabel;
     private String method;
+    private Node annotatedText;
 
     private static final String DEFAULT_KEYWORD_LABEL = "Keyword";
 
@@ -37,6 +42,9 @@ public class TextRankPostprocessRequest {
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
         if (textRankRequest.containsKey(PARAMETER_METHOD))
             result.setMethod((String) textRankRequest.get(PARAMETER_METHOD));
+        if (textRankRequest.containsKey(PARAMETER_ANNOTATED_TEXT)) {
+            result.setAnnotatedText((Node) textRankRequest.get(PARAMETER_ANNOTATED_TEXT));
+        }
         else
             throw new RuntimeException("Missing parameter '" + PARAMETER_METHOD + "', aborting.");
 
@@ -58,5 +66,13 @@ public class TextRankPostprocessRequest {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public Node getAnnotatedText() {
+        return annotatedText;
+    }
+
+    public void setAnnotatedText(Node annotatedText) {
+        this.annotatedText = annotatedText;
     }
 }
