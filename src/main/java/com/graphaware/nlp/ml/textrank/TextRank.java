@@ -819,7 +819,7 @@ public class TextRank {
             query += "k.numTerms > 1\n"
                     + "with k, k.value as ks_orig\n"
                     + "match (k2:" + keywordLabel.name() + ")\n"
-                    + "where k2.numTerms > k.numTerms and not (k)-[:HAS_SUBGROUP]->(k2) and k2.value CONTAINS ks_orig\n"
+                    + "where k2.value STARTS WITH (ks_orig + ' ')\n"
                     + "merge (k)-[r:HAS_SUBGROUP]->(k2)";
     
             try (Transaction tx = database.beginTx();) {
