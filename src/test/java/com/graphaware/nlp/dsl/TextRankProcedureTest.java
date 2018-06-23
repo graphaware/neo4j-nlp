@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -58,11 +59,13 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
             assertTrue("ga.nlp.ml.textRank() procedure failed.", result.hasNext());
         }));
 
-        executeInTransaction("CALL ga.nlp.ml.textRank.postprocess({method:'subgroups'})", emptyConsumer());
-        executeInTransaction("MATCH (n:Keyword)-[:HAS_SUBGROUP]->(x) RETURN n.value AS v", (result -> {
+        executeInTransaction("CALL ga.nlp.ml.textRank.postprocess({method: 'subgroups'})", emptyConsumer());
+        executeInTransaction("MATCH (n:Keyword)-[:HAS_SUBGROUP]->(x) RETURN n.value AS v, x.value AS child", (result -> {
             assertTrue(result.hasNext());
             while (result.hasNext()) {
-                System.out.println(result.next().get("v"));
+                Map<String, Object> record = result.next();
+                System.out.println(record.get("v"));
+                System.out.println(record.get("child"));
             }
         }));
     }

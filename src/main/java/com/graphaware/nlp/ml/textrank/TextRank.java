@@ -817,9 +817,9 @@ public class TextRank {
                 query += "WHERE ";
             }
             query += "k.numTerms > 1\n"
-                    + "with k, k.value as ks_orig\n"
+                    + "with k WHERE true \n"
                     + "match (k2:" + keywordLabel.name() + ")\n"
-                    + "where k2.value ENDS WITH (ks_orig + ' ')\n"
+                    + "where k2.value STARTS WITH (k.value + ' ') OR k2.value ENDS WITH (' ' + k.value)\n"
                     + "merge (k)-[r:HAS_SUBGROUP]->(k2)";
     
             try (Transaction tx = database.beginTx();) {

@@ -42,11 +42,13 @@ public class TextRankPostprocessRequest {
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
         if (textRankRequest.containsKey(PARAMETER_METHOD))
             result.setMethod((String) textRankRequest.get(PARAMETER_METHOD));
+        else {
+            throw new RuntimeException("Missing parameter '" + PARAMETER_METHOD + "', aborting.");
+        }
+
         if (textRankRequest.containsKey(PARAMETER_ANNOTATED_TEXT)) {
             result.setAnnotatedText((Node) textRankRequest.get(PARAMETER_ANNOTATED_TEXT));
         }
-        else
-            throw new RuntimeException("Missing parameter '" + PARAMETER_METHOD + "', aborting.");
 
         return result;
     }
