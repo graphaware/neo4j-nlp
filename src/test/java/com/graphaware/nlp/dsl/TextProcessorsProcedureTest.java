@@ -69,6 +69,16 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testAddPipelineWithCustomWhiteList() {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:'custom-1', textProcessor:'" + StubTextProcessor.class.getName() +"', whitelist:'hello,i,be,work,IBM,ibm', processingSteps:{tokenize:true,ner:true,dependency:true},excludedNER:['MONEY','MISC']})", emptyConsumer());
+        assertTrue(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_custom-1"));
+        PipelineSpecification pipelineSpecification = getNLPManager().getConfiguration()
+                .loadPipeline("custom-1");
+        assertEquals("hello,i,be,work,IBM,ibm", pipelineSpecification.getWhitelist());
+    }
+
+    @Test
     public void testAddingPipelineWithCustomSentimentModel() {
         clearDb();
         removeCustomPipelines();
