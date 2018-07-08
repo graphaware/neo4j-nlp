@@ -37,6 +37,8 @@ public class PipelineSpecification {
 
     public String stopWords;
 
+    public String whitelist;
+
     public long threadNumber;
 
     public List<String> excludedNER = new ArrayList<>();
@@ -122,6 +124,14 @@ public class PipelineSpecification {
 
     public void setProcessingSteps(Map<String, Object> processingSteps) {
         this.processingSteps = processingSteps;
+    }
+
+    public String getWhitelist() {
+        return whitelist;
+    }
+
+    public void setWhitelist(String whitelist) {
+        this.whitelist = whitelist;
     }
 
     public Map<String, Boolean> getProcessingSteps() {
