@@ -131,17 +131,26 @@ public final class NLPManager {
 
     public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
         String lang = checkTextLanguage(text, checkForLanguage);
+        PipelineSpecification pipelineSpecification = getPipelineSpecification(pipelineName);
+        AnnotatedText at = annotate(text, lang, pipelineSpecification);
+        return processAnnotationPersist(id, text, at, pipelineSpecification);
+    }
+
+    public PipelineSpecification getPipelineSpecification(String pipelineName) {
         String pipeline = getPipeline(pipelineName);
         PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
+        return pipelineSpecification;
+    }
+
+    public AnnotatedText annotate(String text, String lang, PipelineSpecification pipelineSpecification) {
         if (null == pipelineSpecification) {
-            throw new RuntimeException("No pipeline " + pipelineName + " found.");
+            throw new RuntimeException("No pipeline " + pipelineSpecification.name + " found.");
         }
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
         long startTime = -System.currentTimeMillis();
         AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
         LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
-
-        return processAnnotationPersist(id, text, at, pipelineSpecification);
+        return at;
     }
 
     public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {
@@ -418,7 +427,4 @@ public final class NLPManager {
     public VectorComputation getVectorComputationProcesses(String type) {
         return vectorComputationProcesses.get(type);
     }
-
-
-
 }
