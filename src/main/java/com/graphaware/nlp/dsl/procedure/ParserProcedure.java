@@ -53,8 +53,8 @@ public class ParserProcedure extends AbstractDSL {
         return getPages(parser, filename, filterPatterns).stream();
     }
 
-    @Procedure(name = "ga.nlp.parser.vtt")
-    public Stream<TranscriptElement> parseVTT(@Name("file") String filename) {
+    @Procedure(name = "ga.nlp.parser.webvtt")
+    public Stream<TranscriptElement> parseWebVTT(@Name("file") String filename) {
         VTTParser parser = (VTTParser) getNLPManager().getExtension(VTTParser.class);
         try {
             return parser.parse(filename).stream();

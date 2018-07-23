@@ -118,7 +118,7 @@ public class ParserProcedureTest extends NLPIntegrationTest {
     public void testParsingVTT() {
         clearDb();
         String f = getClass().getClassLoader().getResource("transcript.vtt").getPath();
-        executeInTransaction("CALL ga.nlp.parser.vtt({p0})", buildSeqParameters(f), (result -> {
+        executeInTransaction("CALL ga.nlp.parser.webvtt({p0})", buildSeqParameters(f), (result -> {
             assertTrue(result.hasNext());
             while (result.hasNext()) {
                 Map<String, Object> record = result.next();

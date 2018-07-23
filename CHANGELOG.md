@@ -2,3 +2,4 @@
 
 - Added the ability to whitelist only certain words in a pipeline
 - Fixed an issue with the PDF Parser not returning the first page
+- Added the ability to parse WebVTT file formats

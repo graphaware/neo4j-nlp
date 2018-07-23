@@ -508,6 +508,13 @@ YIELD result
 RETURN result
 ```
 
+### Parsing WebVTT
+
+WebVTT is the format for Web Video Text Tracks, such as Youtube Transcripts of videos : https://fr.wikipedia.org/wiki/WebVTT
+
+```
+CALL ga.nlp.parser.webvtt("url-to-transcript.vtt") YIELD startTime, endTime, text
+```
 
 ## License
 
