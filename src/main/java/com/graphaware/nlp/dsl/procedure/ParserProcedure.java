@@ -21,6 +21,8 @@ import com.graphaware.nlp.parser.domain.Page;
 import com.graphaware.nlp.parser.pdf.TikaPDFParser;
 import com.graphaware.nlp.parser.poi.PowerpointParser;
 import com.graphaware.nlp.parser.poi.WordParser;
+import com.graphaware.nlp.parser.vtt.TranscriptElement;
+import com.graphaware.nlp.parser.vtt.VTTParser;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
@@ -49,6 +51,16 @@ public class ParserProcedure extends AbstractDSL {
         WordParser parser = (WordParser) getNLPManager().getExtension(WordParser.class);
 
         return getPages(parser, filename, filterPatterns).stream();
+    }
+
+    @Procedure(name = "ga.nlp.parser.vtt")
+    public Stream<TranscriptElement> parseVTT(@Name("file") String filename) {
+        VTTParser parser = (VTTParser) getNLPManager().getExtension(VTTParser.class);
+        try {
+            return parser.parse(filename).stream();
+        } catch (Exception e) {
+            return Stream.empty();
+        }
     }
 
     private List<Page> getPages(Parser parser, String filename, List<String> filterPatterns) {
