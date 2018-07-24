@@ -115,6 +115,14 @@ public class TestNLPGraph {
         }));
     }
 
+    public void assertTagWithValueDoesNotExist(String value) {
+        executeInTransaction("MATCH (n:Tag) WHERE n.value = {value} RETURN n",
+                Collections.singletonMap("value", value),
+                (result) -> {
+            assertFalse(result.hasNext());
+                });
+    }
+
     public void assertTagWithIdExist(String id) {
         executeInTransaction("MATCH (n:Tag) WHERE n.id = {id} RETURN n", Collections.singletonMap("id", id), (result -> {
             assertTrue(result.hasNext());
@@ -124,6 +132,12 @@ public class TestNLPGraph {
     public void assertTagOccurrenceWithValueExist(String value) {
         executeInTransaction("MATCH (n:TagOccurrence) WHERE n.value = {value} RETURN n", Collections.singletonMap("value", value), (result -> {
             assertTrue(result.hasNext());
+        }));
+    }
+
+    public void assertTagOccurrenceWithValueDoesNotExist(String value) {
+        executeInTransaction("MATCH (n:TagOccurrence) WHERE n.value = {value} RETURN n", Collections.singletonMap("value", value), (result -> {
+            assertFalse(result.hasNext());
         }));
     }
 

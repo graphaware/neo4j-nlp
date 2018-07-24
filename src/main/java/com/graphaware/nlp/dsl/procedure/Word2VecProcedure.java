@@ -93,7 +93,10 @@ public class Word2VecProcedure extends AbstractDSL {
     public Stream<NearestNeighbor> getNearestNeighbors(@Name("word") String word, @Name(value = "limit") Long limit, @Name(value = "modelName", defaultValue = "") String modelName) {
         Word2VecProcessor word2VecProcessor = (Word2VecProcessor) getNLPManager().getExtension(Word2VecProcessor.class);
 
-        return word2VecProcessor.getNearestNeighbors(word, limit.intValue(), modelName).stream().map(pair -> {
+        return word2VecProcessor.getNearestNeighbors(word, limit.intValue(), modelName)
+                .stream()
+                .filter(pair -> null != pair)
+                .map(pair -> {
             return new NearestNeighbor(pair.first().toString(), Double.valueOf(pair.second().toString()));
         });
     }
