@@ -291,6 +291,23 @@ RETURN result
 ```
 `keywordLabel` is an optional argument set by default to *"Keyword"*.
 
+The postprocess operation by default is processing on all keywords, which can be very heavy on large graphs. You can specify the annotatedText on which to apply the postprocess operation with the `annotatedText` argument :
+
+```
+MATCH (n:AnnotatedText) WITH n LIMIT 100
+CALL ga.nlp.ml.textRank.postprocess({annotatedText: n, method:'subgroups'}) YIELD result RETURN count(n)
+```
+
+Example for running it efficiently on the full set of Keywords with APOC :
+
+```
+CALL apoc.periodic.iterate(
+'MATCH (n:AnnotatedText) RETURN n',
+'CALL ga.nlp.ml.textRank.postprocess({annotatedText: n, method:"subgroups"}) YIELD result RETURN count(n)',
+{batchSize: 1, iterateList:false}
+)
+```
+
 ### TextRank Summarization
 
 Similar approach to the keyword extraction can be employed to implement simple summarization. A densely connect graph of sentences is created, with Sentence-Sentence relationships representing their similarity based on shared words (number of shared words vs sum of logarithms of number of words in a sentence). PageRank is then used as a centrality measure to rank the relative importance of sentences in the document.
