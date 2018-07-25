@@ -132,15 +132,15 @@ public class PageContentHandler extends ToXMLContentHandler {
 
     private void startParagraph() {
         currentParagraph = new StringBuilder("");
-        paraMaps.put(currentPage, new ArrayList<>());
+        paraMaps.putIfAbsent(currentPage, new ArrayList<>());
     }
 
     private void endParagraph() {
-        if (currentParagraph != null && !currentParagraph.toString().equals("") && paraMaps.containsKey(currentPage-1)) {
+        if (currentParagraph != null && !currentParagraph.toString().equals("") && paraMaps.containsKey(currentPage)) {
             if (filtered()) {
                 return;
             }
-            paraMaps.get(currentPage-1).add(currentParagraph.toString());
+            paraMaps.get(currentPage).add(currentParagraph.toString());
         }
     }
 

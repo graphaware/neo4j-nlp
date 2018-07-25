@@ -291,6 +291,23 @@ RETURN result
 ```
 `keywordLabel` is an optional argument set by default to *"Keyword"*.
 
+The postprocess operation by default is processing on all keywords, which can be very heavy on large graphs. You can specify the annotatedText on which to apply the postprocess operation with the `annotatedText` argument :
+
+```
+MATCH (n:AnnotatedText) WITH n LIMIT 100
+CALL ga.nlp.ml.textRank.postprocess({annotatedText: n, method:'subgroups'}) YIELD result RETURN count(n)
+```
+
+Example for running it efficiently on the full set of Keywords with APOC :
+
+```
+CALL apoc.periodic.iterate(
+'MATCH (n:AnnotatedText) RETURN n',
+'CALL ga.nlp.ml.textRank.postprocess({annotatedText: n, method:"subgroups"}) YIELD result RETURN count(n)',
+{batchSize: 1, iterateList:false}
+)
+```
+
 ### TextRank Summarization
 
 Similar approach to the keyword extraction can be employed to implement simple summarization. A densely connect graph of sentences is created, with Sentence-Sentence relationships representing their similarity based on shared words (number of shared words vs sum of logarithms of number of words in a sentence). PageRank is then used as a centrality measure to rank the relative importance of sentences in the document.
@@ -487,6 +504,27 @@ passing a list of regexes defining the parts to exclude :
 ```
 CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"])
 ```
+
+### Extras
+
+#### Storing only certain Tag/Tokens
+
+In certain situations, it would be useful to store only certain values instead of the full graph, note though that it might reduce the ability to extract insights ( textRank ) for eg :
+
+```
+CALL ga.nlp.processor.addPipeline({
+name:"whitelist",
+whitelist:"hello,john,ibm",
+textProcessor:"com.graphaware.nlp.enterprise.processor.EnterpriseStanfordTextProcessor",
+processingSteps:{tokenize:true, ner:true}})
+```
+
+```
+CALL ga.nlp.annotate({text:"Hello, my name is John and I worked at IBM.", id:"test-123", pipeline:"whitelist", checkLanguage:false})
+YIELD result
+RETURN result
+```
+
 
 ## License
 

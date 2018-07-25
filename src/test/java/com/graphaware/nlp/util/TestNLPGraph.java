@@ -115,6 +115,14 @@ public class TestNLPGraph {
         }));
     }
 
+    public void assertTagWithValueDoesNotExist(String value) {
+        executeInTransaction("MATCH (n:Tag) WHERE n.value = {value} RETURN n",
+                Collections.singletonMap("value", value),
+                (result) -> {
+            assertFalse(result.hasNext());
+                });
+    }
+
     public void assertTagWithIdExist(String id) {
         executeInTransaction("MATCH (n:Tag) WHERE n.id = {id} RETURN n", Collections.singletonMap("id", id), (result -> {
             assertTrue(result.hasNext());
@@ -124,6 +132,12 @@ public class TestNLPGraph {
     public void assertTagOccurrenceWithValueExist(String value) {
         executeInTransaction("MATCH (n:TagOccurrence) WHERE n.value = {value} RETURN n", Collections.singletonMap("value", value), (result -> {
             assertTrue(result.hasNext());
+        }));
+    }
+
+    public void assertTagOccurrenceWithValueDoesNotExist(String value) {
+        executeInTransaction("MATCH (n:TagOccurrence) WHERE n.value = {value} RETURN n", Collections.singletonMap("value", value), (result -> {
+            assertFalse(result.hasNext());
         }));
     }
 
@@ -149,6 +163,21 @@ public class TestNLPGraph {
 
     public void assertAnnotatedTextNodesCount(long count) {
         assertNodesCount("AnnotatedText", count);
+    }
+
+    public void debugAnnotatedTextsCount() {
+        executeInTransaction("MATCH (n:AnnotatedText) RETURN count(n) AS c", (result -> {
+            System.out.println(result.next().get("c").toString());
+        }));
+    }
+
+    public void debugKeywords() {
+        executeInTransaction("MATCH (n:Keyword)-[r:DESCRIBES]->() RETURN n.value AS v, r.relevance AS r", (result -> {
+            while (result.hasNext()) {
+                Map<String, Object> record = result.next();
+                System.out.println(String.format("%s : %s", record.get("v"), record.get("r").toString()));
+            }
+        }));
     }
 
     public void executeInTransaction(String query, Consumer<Result> resultConsumer) {

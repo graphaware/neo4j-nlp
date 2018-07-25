@@ -113,7 +113,7 @@ public class Word2VecIndexLookup {
             TopDocs searchResult = indexSearcher.search(query, 1);
             LOG.info("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
             if (searchResult.totalHits != 1) {
-                return null;
+                return new ArrayList<>();
             }
             ScoreDoc hit = searchResult.scoreDocs[0];
             Document hitDoc = indexSearcher.doc(hit.doc);
