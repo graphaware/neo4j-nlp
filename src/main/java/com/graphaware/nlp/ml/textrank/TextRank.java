@@ -24,6 +24,7 @@ import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
+import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.persistence.persisters.KeywordPersister;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.*;
@@ -760,8 +761,15 @@ public class TextRank {
         return relTags;//.stream().map(el -> valToId.get(el)).collect(Collectors.toSet());
     }
 
-    public boolean postprocess(String method) {
+    public boolean postprocess(String method, Node annotatedText) {
         // if a keyphrase in current document contains a keyphrase from any other document, create also DESCRIBES relationship to that other keyphrase
+
+        // if an annotated text do not have any keyword, not returning here will assume that we have to run it on the full graph
+        Set<Long> inputKeywordIds = getKeywordIds(annotatedText);
+        if (annotatedText != null && inputKeywordIds.size() < 1) {
+            return true;
+        }
+
         if (method.equals("direct")) {
             /*String query = "match (k:" + keywordLabel.name() + ")\n"
                     + "where k.numTerms > 1\n"
@@ -776,18 +784,24 @@ public class TextRank {
                     + "ON CREATE SET rNew.count = r2.count_exactMatch, rNew.count_exactMatch = 0\n"
                     + "ON MATCH SET  rNew.count = rNew.count + r2.count_exactMatch";*/
     
-            String query = "match (k:" + keywordLabel.name() + ")\n"
-                    + "where k.numTerms > 1\n"
+            String query = "match (k:" + keywordLabel.name() + ")\n";
+            if (inputKeywordIds.size() > 0) {
+                query += " WHERE id(k) IN {ids}\n" +
+                        "AND ";
+            } else {
+                query += "WHERE ";
+            }
+            query += "k.numTerms > 1\n"
                     + "with k, k.value as ks_orig\n"
                     + "match (k2:" + keywordLabel.name() + ")\n"
                     + "where k2.numTerms > k.numTerms and k2.value CONTAINS ks_orig\n"
                     + "match (k2)-[r2:DESCRIBES]->(a:AnnotatedText)\n"
-                    + "where not (k)-[:DESCRIBES]->(a)\n"
-                    + "create (k)-[rNew:DESCRIBES {count: k2.count, count_exactMatch: k2.count_exactMatch}]->(a)";
+                    + "where not (k)-[:DESCRIBES]->(a)\n" +
+                    "MERGE (k)-[rn:DESCRIBES]->(a) SET rn.count = k2.count, rn.count_exactMatch = k2.count_exactMatch";
     
             try (Transaction tx = database.beginTx();) {
                 LOG.info("Running identification of sub-keyphrases ...");
-                database.execute(query);
+                database.execute(query, Collections.singletonMap("ids", inputKeywordIds));
                 tx.success();
             } catch (Exception e) {
                 LOG.error("Error while running TextRank post-processing (identification of sub-keyphrases): ", e);
@@ -795,16 +809,25 @@ public class TextRank {
             }
         } else if (method.equals("subgroups")) {
             // add HAS_SUBGROUP relationships between keywords, ex.: (station) -[HAS_SUBGROUP]-> (space station) -[HAS_SUBGROUP]-> (international space station)
-            String query = "match (k:" + keywordLabel.name() + ")\n"
-                    + "where k.numTerms > 1\n"
-                    + "with k, k.value as ks_orig\n"
+            String query = "match (k:" + keywordLabel.name() + ")\n";
+            if (inputKeywordIds.size() > 0) {
+                query += " WHERE id(k) IN {ids}\n" +
+                        "AND ";
+            } else {
+                query += "WHERE ";
+            }
+            query += "k.numTerms > 1\n"
+                    + "with k WHERE true \n"
                     + "match (k2:" + keywordLabel.name() + ")\n"
-                    + "where k2.numTerms > k.numTerms and not (k)-[:HAS_SUBGROUP]->(k2) and k2.value CONTAINS ks_orig\n"
-                    + "create (k)-[r:HAS_SUBGROUP]->(k2)";
+                    + "where k2.value STARTS WITH (k.value + ' ') OR k2.value ENDS WITH (' ' + k.value)\n"
+                    + "merge (k)-[r:HAS_SUBGROUP]->(k2)";
     
             try (Transaction tx = database.beginTx();) {
+                if (annotatedText != null) {
+                    LOG.info("input annotated text id : " + annotatedText.getId());
+                }
                 LOG.info("Discovering HAS_SUBGROUP relationships between keywords and keyphrases ...");
-                database.execute(query);
+                database.execute(query, Collections.singletonMap("ids", inputKeywordIds));
                 tx.success();
             } catch (Exception e) {
                 LOG.error("Error while running TextRank post-processing (discovering HAS_SUBGROUP relationships): ", e);
@@ -815,6 +838,17 @@ public class TextRank {
         }
 
         return true;
+    }
+
+    private Set<Long> getKeywordIds(Node annotatedText) {
+        Set<Long> ids = new HashSet<>();
+        if (annotatedText != null) {
+            annotatedText.getRelationships(Direction.INCOMING, Relationships.DESCRIBES).forEach(relationship -> {
+                ids.add(relationship.getStartNodeId());
+            });
+        }
+
+        return ids;
     }
 
 

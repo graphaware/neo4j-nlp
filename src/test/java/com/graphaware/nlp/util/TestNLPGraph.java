@@ -165,6 +165,21 @@ public class TestNLPGraph {
         assertNodesCount("AnnotatedText", count);
     }
 
+    public void debugAnnotatedTextsCount() {
+        executeInTransaction("MATCH (n:AnnotatedText) RETURN count(n) AS c", (result -> {
+            System.out.println(result.next().get("c").toString());
+        }));
+    }
+
+    public void debugKeywords() {
+        executeInTransaction("MATCH (n:Keyword)-[r:DESCRIBES]->() RETURN n.value AS v, r.relevance AS r", (result -> {
+            while (result.hasNext()) {
+                Map<String, Object> record = result.next();
+                System.out.println(String.format("%s : %s", record.get("v"), record.get("r").toString()));
+            }
+        }));
+    }
+
     public void executeInTransaction(String query, Consumer<Result> resultConsumer) {
         executeInTransaction(query, Collections.emptyMap(), resultConsumer);
     }
