@@ -1,0 +1,881 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.270 --> 00:00:02.240
+- [Presenter] In today's
+installment of the APOC
+
+00:00:02.240 --> 00:00:04.430
+video series, we want to
+talk about data structures,
+
+00:00:04.430 --> 00:00:07.270
+especially maps in Cypher and APOC.
+
+00:00:08.690 --> 00:00:13.490
+So for that, we take our Neo4j browser
+
+00:00:13.490 --> 00:00:17.200
+and want to look at what's
+possible in Cypher itself.
+
+00:00:17.200 --> 00:00:19.400
+So Cypher itself has already literal maps,
+
+00:00:19.400 --> 00:00:24.400
+so you can just create maps
+like a:1 for instance here,
+
+00:00:24.940 --> 00:00:26.890
+or you could even create something like
+
+00:00:26.890 --> 00:00:31.890
+name: "Michael", age: 42
+
+00:00:31.910 --> 00:00:35.190
+as a map, but of course,
+you can also nest them.
+
+00:00:35.190 --> 00:00:36.580
+So you could, for instance, say,
+
+00:00:36.580 --> 00:00:39.800
+okay, I have three kids,
+
+00:00:39.800 --> 00:00:42.240
+Selina, Rana, and Selma.
+
+00:00:42.240 --> 00:00:45.520
+So we see that here there's
+
+00:00:45.520 --> 00:00:47.323
+a nested list inside our map.
+
+00:00:48.820 --> 00:00:51.750
+And of course, this list can also
+
+00:00:51.750 --> 00:00:54.470
+become a nested map itself.
+
+00:00:54.470 --> 00:00:59.140
+So we could say, Selina is 20 years old,
+
+00:00:59.140 --> 00:01:03.143
+Rana is 12, and Selma is 10.
+
+00:01:05.980 --> 00:01:10.280
+And now you see that we
+have a nested map here,
+
+00:01:10.280 --> 00:01:15.210
+where my documents can
+actually nest within je-to.
+
+00:01:15.210 --> 00:01:17.400
+And these data structures are quite handy
+
+00:01:17.400 --> 00:01:19.290
+for a lot of things,
+especially if you have
+
+00:01:19.290 --> 00:01:22.170
+clients that consume adjacent objects,
+
+00:01:22.170 --> 00:01:23.620
+then returning this from Cypher
+
+00:01:23.620 --> 00:01:25.793
+makes it really easy to work with.
+
+00:01:28.530 --> 00:01:31.200
+To make it easy for us
+to work with this data,
+
+00:01:31.200 --> 00:01:32.670
+we just set this as a parameter,
+
+00:01:32.670 --> 00:01:37.670
+so we use param, with
+the arrow syntax here,
+
+00:01:39.430 --> 00:01:41.520
+which means on the right side,
+
+00:01:41.520 --> 00:01:43.720
+we can have arbitrary Cypher code,
+
+00:01:43.720 --> 00:01:46.620
+even in locate functions
+and things like that
+
+00:01:46.620 --> 00:01:48.473
+that set this parameter.
+
+00:01:50.380 --> 00:01:53.700
+Okay, now we have this
+data, param, set here,
+
+00:01:53.700 --> 00:01:57.424
+and now we can see what
+we can do with APOC.
+
+00:01:57.424 --> 00:01:59.460
+Of course, also, Cypher supports
+
+00:01:59.460 --> 00:02:00.590
+creating these maps.
+
+00:02:00.590 --> 00:02:03.790
+You can't, for instance,
+changes keys or values,
+
+00:02:03.790 --> 00:02:07.350
+or you can't merge maps
+and do things like that.
+
+00:02:07.350 --> 00:02:10.620
+So that's why APOC has
+a bunch of functions
+
+00:02:10.620 --> 00:02:13.010
+to handle that for us.
+
+00:02:13.010 --> 00:02:16.247
+So, as usual, we can do apoc.help(".map").
+
+00:02:20.608 --> 00:02:22.600
+And we see that there are
+
+00:02:25.700 --> 00:02:27.980
+quite a number of functions that
+
+00:02:29.040 --> 00:02:31.530
+help us working with maps.
+
+00:02:31.530 --> 00:02:34.310
+So one that we've just seen here
+
+00:02:34.310 --> 00:02:37.469
+is apoc.map.flatten which
+is quite interesting
+
+00:02:37.469 --> 00:02:39.626
+for our current map that we have.
+
+00:02:39.626 --> 00:02:41.870
+So we can just switch and look at our map.
+
+00:02:41.870 --> 00:02:44.590
+So we have just nested a map here,
+
+00:02:44.590 --> 00:02:47.549
+and imagine you want to
+store this all in Neo4j node,
+
+00:02:47.549 --> 00:02:49.810
+so we have to flatten this elastic map
+
+00:02:49.810 --> 00:02:53.150
+because Neo4j itself cannot store
+
+00:02:56.470 --> 00:02:57.463
+nested webs yet.
+
+00:02:58.890 --> 00:03:01.590
+So we just say apoc.map.flatten,
+
+00:03:01.590 --> 00:03:03.920
+and then you see that it actually flattens
+
+00:03:03.920 --> 00:03:06.960
+the inner map into a prefix-dot-suffix,
+
+00:03:06.960 --> 00:03:09.180
+and then stores into the le-gits.
+
+00:03:09.180 --> 00:03:11.220
+At this case, we cross the three
+
+00:03:11.220 --> 00:03:13.400
+and down to the end,
+so you get a flattened
+
+00:03:13.400 --> 00:03:14.900
+structure out of that.
+
+00:03:14.900 --> 00:03:16.210
+It's nice.
+
+00:03:16.210 --> 00:03:17.340
+So what else can we do?
+
+00:03:17.340 --> 00:03:19.210
+We can, of course, take out data
+
+00:03:19.210 --> 00:03:22.290
+and manipulate it.
+
+00:03:22.290 --> 00:03:25.320
+So apoc.map.clean is a function I can use
+
+00:03:25.320 --> 00:03:27.480
+to take input data, for
+instance, from node CSV
+
+00:03:27.480 --> 00:03:32.270
+or a node JSON, and remove
+superfluous keys overused.
+
+00:03:32.270 --> 00:03:34.760
+So, for instance, null values,
+
+00:03:34.760 --> 00:03:38.290
+zeroes, falls, empty strings,
+and things like that.
+
+00:03:38.290 --> 00:03:43.020
+So in our case, we can
+just use apoc.map.clean
+
+00:03:43.930 --> 00:03:45.083
+with our data.
+
+00:03:46.580 --> 00:03:50.880
+And say we want to remove the kids key,
+
+00:03:50.880 --> 00:03:54.170
+and devalue 42, so that
+
+00:03:54.170 --> 00:03:58.000
+should leave us with a map
+that only has the name left.
+
+00:03:58.000 --> 00:04:00.350
+So first come to keys
+that you are doing, skip,
+
+00:04:00.350 --> 00:04:02.270
+and secondly, devalues.
+
+00:04:02.270 --> 00:04:03.840
+Usually we would put
+in also something like
+
+00:04:03.840 --> 00:04:07.347
+null, or empty strings,
+or something like that.
+
+00:04:07.347 --> 00:04:09.810
+And so it at least adjusts with our name.
+
+00:04:09.810 --> 00:04:12.050
+So this is quite useful,
+especially also when
+
+00:04:12.050 --> 00:04:13.920
+you have data that contains
+
+00:04:15.080 --> 00:04:16.540
+information more multiple nodes.
+
+00:04:16.540 --> 00:04:19.230
+So you can clean out
+the keys, for instance,
+
+00:04:19.230 --> 00:04:21.000
+that you don't want to have on one node,
+
+00:04:21.000 --> 00:04:23.493
+and then the other half as well.
+
+00:04:24.870 --> 00:04:28.490
+Okay, but APOC can help
+us also to create data,
+
+00:04:28.490 --> 00:04:30.630
+create maps as well.
+
+00:04:30.630 --> 00:04:34.297
+So we can, for instance,
+just use apoc.map.fromPairs,
+
+00:04:37.230 --> 00:04:41.290
+which pass, maybe pass in
+actually list of pairs.
+
+00:04:41.290 --> 00:04:44.690
+So we have each pair is an key value.
+
+00:04:44.690 --> 00:04:47.073
+So "a",1, "b",2.
+
+00:04:47.990 --> 00:04:49.500
+For instance, we have two pairs,
+
+00:04:49.500 --> 00:04:51.660
+and this list of pairs is turned into map
+
+00:04:51.660 --> 00:04:52.833
+with a and b.
+
+00:04:53.860 --> 00:04:56.740
+Something similars in APOC map
+
+00:04:56.740 --> 00:05:01.740
+from lists, where we
+separate out a list of keys
+
+00:05:04.370 --> 00:05:05.750
+and a list of values.
+
+00:05:05.750 --> 00:05:08.480
+So first comes a list of keys,
+
+00:05:08.480 --> 00:05:09.977
+then secondly comes a list of values,
+
+00:05:09.977 --> 00:05:12.100
+and we have two lists here.
+
+00:05:12.100 --> 00:05:15.480
+And if you run this, we
+get the same map as well.
+
+00:05:15.480 --> 00:05:18.100
+So we can also do ["a","b","c"]
+
+00:05:18.100 --> 00:05:20.920
+and [1,2,3] now, for instance,
+
+00:05:20.920 --> 00:05:22.070
+and this works as well.
+
+00:05:23.470 --> 00:05:27.050
+Okay, and similar to that, we can also do
+
+00:05:28.870 --> 00:05:31.960
+apoc.map.fromValues,
+
+00:05:31.960 --> 00:05:34.950
+which just takes one single list.
+
+00:05:34.950 --> 00:05:39.660
+We-a key in values just
+come one after another.
+
+00:05:39.660 --> 00:05:42.110
+So you can just generate
+something like that from data
+
+00:05:42.110 --> 00:05:46.113
+and then create fromValues with an s.
+
+00:05:48.650 --> 00:05:50.600
+Can generate, something like that.
+
+00:05:50.600 --> 00:05:54.110
+So these three functions
+fromPairs and fromValues
+
+00:05:54.110 --> 00:05:56.370
+also exist as an
+
+00:05:59.066 --> 00:06:00.750
+setLists, setPairs, setValues which takes
+
+00:06:00.750 --> 00:06:04.340
+an existing map and then
+adds our key values,
+
+00:06:04.340 --> 00:06:08.680
+all values, our pairs or
+key value lists to that.
+
+00:06:08.680 --> 00:06:11.100
+So if I take an existing map,
+
+00:06:11.100 --> 00:06:13.727
+for instance, apoc.map.setValues,
+
+00:06:15.766 --> 00:06:17.950
+so if I take my data map that we just had,
+
+00:06:19.000 --> 00:06:23.050
+then it should add a and b to my map here,
+
+00:06:23.050 --> 00:06:24.730
+a and b as you can see.
+
+00:06:24.730 --> 00:06:25.593
+Cut, edit.
+
+00:06:26.480 --> 00:06:30.653
+You can also use apoc.map.merge,
+
+00:06:32.740 --> 00:06:34.310
+return, to merge to it.
+
+00:06:34.310 --> 00:06:38.350
+So for instance, we could
+merge our data map with
+
+00:06:38.350 --> 00:06:42.500
+an a:1, b:2 map, for instance.
+
+00:06:42.500 --> 00:06:45.573
+And this works as well, so we
+can also merge multiple maps.
+
+00:06:49.669 --> 00:06:51.400
+And with mergeList, you would pass in
+
+00:06:51.400 --> 00:06:53.070
+a list of maps that you want to merge.
+
+00:06:53.070 --> 00:06:55.880
+So it's not just two,
+but an arbitrary list,
+
+00:06:55.880 --> 00:06:58.033
+and this merges them together as well.
+
+00:06:59.310 --> 00:07:00.290
+Okay, what else can we do?
+
+00:07:00.290 --> 00:07:02.493
+We can, of course, modify maps.
+
+00:07:02.493 --> 00:07:04.653
+So you can, for instance, remove a key.
+
+00:07:06.220 --> 00:07:09.237
+So we can take our data map that we had
+
+00:07:09.237 --> 00:07:13.020
+and remove the key of name, for instance,
+
+00:07:13.020 --> 00:07:16.440
+which only leaves us age and kids.
+
+00:07:16.440 --> 00:07:18.560
+And we can also remove multiple keys,
+
+00:07:18.560 --> 00:07:21.263
+then this second parameter
+would be an lists.
+
+00:07:22.100 --> 00:07:24.763
+So we could, for instance,
+move name and age,
+
+00:07:26.590 --> 00:07:29.323
+which would only leave us with the kids.
+
+00:07:31.080 --> 00:07:33.900
+Okay, of course, you
+can also place things.
+
+00:07:33.900 --> 00:07:36.180
+So we can, for instance, say
+
+00:07:36.180 --> 00:07:40.450
+setKey, and if you'd want to actually
+
+00:07:40.450 --> 00:07:42.583
+fix my age.
+
+00:07:42.583 --> 00:07:43.840
+Of course, we lied a little bit,
+
+00:07:43.840 --> 00:07:45.243
+so it's actually 43.
+
+00:07:46.540 --> 00:07:50.890
+And you see now the age has changing.
+
+00:07:50.890 --> 00:07:55.890
+And we can do the same with setEntry,
+
+00:07:55.990 --> 00:07:58.443
+which is just in areas for this.
+
+00:08:02.867 --> 00:08:03.867
+What else can we do?
+
+00:08:05.013 --> 00:08:08.373
+We can group lists as well.
+
+00:08:09.400 --> 00:08:12.129
+And we connect struct values from a list.
+
+00:08:12.129 --> 00:08:13.630
+So what we can also save,
+
+00:08:13.630 --> 00:08:17.128
+I want to have values of this data map,
+
+00:08:17.128 --> 00:08:21.153
+and, for instance, I only
+want to have age and kids.
+
+00:08:22.108 --> 00:08:23.970
+And the second parameter would be lists,
+
+00:08:23.970 --> 00:08:28.970
+and so we could extract
+these values as a list.
+
+00:08:29.530 --> 00:08:31.980
+So it's more, this will de-fi
+
+00:08:31.980 --> 00:08:34.150
+get the values for age and name.
+
+00:08:34.150 --> 00:08:37.160
+There you see that it's actually
+turned into proper list.
+
+00:08:37.160 --> 00:08:39.020
+This is actually shorthand
+for something that you can
+
+00:08:39.020 --> 00:08:40.343
+write in Cypher itself.
+
+00:08:42.209 --> 00:08:44.040
+Of course, in Cypher,
+we also have the ability
+
+00:08:44.040 --> 00:08:46.740
+to access maps by index.
+
+00:08:46.740 --> 00:08:49.970
+So we could say data of name is Michael,
+
+00:08:49.970 --> 00:08:53.270
+and data of age is kids.
+
+00:08:53.270 --> 00:08:56.837
+And then we can also call keys of our map,
+
+00:08:59.280 --> 00:09:00.850
+which gives us all the keys.
+
+00:09:00.850 --> 00:09:02.690
+And if you combine these two,
+
+00:09:02.690 --> 00:09:06.680
+we can say for each key and keys,
+
+00:09:06.680 --> 00:09:11.363
+we want to have keys of k,
+
+00:09:12.950 --> 00:09:16.000
+which would just give us the,
+
+00:09:16.000 --> 00:09:18.250
+oops, sorry, data...
+
+00:09:19.420 --> 00:09:23.340
+Data (mumbles), so
+which would just give us
+
+00:09:23.340 --> 00:09:24.790
+the values of our map.
+
+00:09:24.790 --> 00:09:28.483
+Yes, you can see the name,
+my age and the kids as well.
+
+00:09:30.491 --> 00:09:34.660
+So the other thing that's quite useful is
+
+00:09:36.300 --> 00:09:38.717
+running apoc.map.fromNodes.
+
+00:09:41.794 --> 00:09:44.174
+So we can also create a map from nodes.
+
+00:09:44.174 --> 00:09:46.307
+So if you call apoc.map.fromNodes;
+
+00:09:48.890 --> 00:09:52.363
+passing unable, so for instance, Movie,
+
+00:09:53.330 --> 00:09:55.853
+and you want to group
+these movies by title,
+
+00:09:57.680 --> 00:10:01.220
+then we get a real map back that
+
+00:10:02.370 --> 00:10:05.530
+actually has as keys our movie titles
+
+00:10:05.530 --> 00:10:09.260
+and as values each of
+the movies, basically,
+
+00:10:09.260 --> 00:10:12.020
+which gives us a really nice cache.
+
+00:10:12.020 --> 00:10:14.790
+So we can do something like that.
+
+00:10:14.790 --> 00:10:17.460
+As cache, and then we get some data
+
+00:10:17.460 --> 00:10:21.040
+from load csv, for instance, as row.
+
+00:10:21.040 --> 00:10:26.040
+And then instead of doing a
+match using the building index,
+
+00:10:26.260 --> 00:10:28.170
+we can just use this in memory,
+
+00:10:28.170 --> 00:10:31.520
+and map as a cache and say with cache
+
+00:10:31.520 --> 00:10:35.290
+of row.title as movie,
+
+00:10:35.290 --> 00:10:37.820
+so we can look at the movie from our cache
+
+00:10:37.820 --> 00:10:39.400
+pretty quickly tool.
+
+00:10:39.400 --> 00:10:42.130
+For instance, updated o-nudge data,
+
+00:10:42.130 --> 00:10:43.130
+do things like that.
+
+00:10:44.970 --> 00:10:48.600
+So, and this grouping
+also works in general
+
+00:10:48.600 --> 00:10:51.390
+with nodes full of shift and maps,
+
+00:10:51.390 --> 00:10:54.700
+so we kind of funksh-a-coo groupBy.
+
+00:10:54.700 --> 00:10:57.320
+So we can also just do
+something like that.
+
+00:10:57.320 --> 00:11:01.213
+Let's fine all movies.
+
+00:11:03.810 --> 00:11:04.910
+Collect it into a map.
+
+00:11:07.760 --> 00:11:10.460
+And then return apoc.map.groupBy,
+
+00:11:13.850 --> 00:11:16.250
+here are our movies, and
+we group them by title,
+
+00:11:16.250 --> 00:11:18.630
+so we get the same thing back
+
+00:11:18.630 --> 00:11:20.313
+as we had just now.
+
+00:11:21.200 --> 00:11:24.360
+But you can also say we collect them by
+
+00:11:24.360 --> 00:11:28.210
+properties of m, then it looks to say,
+
+00:11:28.210 --> 00:11:31.863
+from the outside, but it's
+actually a map of maps.
+
+00:11:32.720 --> 00:11:35.180
+And then imagine we
+would do something like
+
+00:11:36.810 --> 00:11:38.610
+flattening this out.
+
+00:11:38.610 --> 00:11:43.440
+So we could do
+apoc.map.flatten on this map.
+
+00:11:43.440 --> 00:11:46.093
+So we would have title-dot-release,
+
+00:11:47.226 --> 00:11:49.400
+title-dot-title, and so on;
+
+00:11:49.400 --> 00:11:50.500
+and title-dot-tagline
+
+00:11:51.630 --> 00:11:53.080
+as combined (faint speaking).
+
+00:11:57.210 --> 00:12:02.210
+And this is also possible
+to do with multi-maps.
+
+00:12:02.760 --> 00:12:06.430
+So if you've had not title as a key,
+
+00:12:06.430 --> 00:12:10.720
+but, for instance, a release date,
+
+00:12:10.720 --> 00:12:12.530
+then we would have, of
+course, multiple movies
+
+00:12:12.530 --> 00:12:13.363
+per release date.
+
+00:12:13.363 --> 00:12:15.277
+So we could say, okay,
+
+00:12:15.277 --> 00:12:16.627
+(mumbles) this, and we see.
+
+00:12:19.000 --> 00:12:20.633
+gra-pa groupByMulti.
+
+00:12:22.910 --> 00:12:25.390
+Then we see that these are now lists.
+
+00:12:25.390 --> 00:12:28.330
+And, for instance, from
+1986, there are two entries.
+
+00:12:28.330 --> 00:12:31.220
+So we could get the entry for 1986.
+
+00:12:36.270 --> 00:12:38.380
+And that would return us
+
+00:12:38.380 --> 00:12:40.203
+these two movies here.
+
+00:12:42.820 --> 00:12:45.820
+And to close this off,
+
+00:12:45.820 --> 00:12:48.240
+really need to chur-bin itself
+
+00:12:48.240 --> 00:12:50.450
+is on, something called to map...
+
+00:12:52.119 --> 00:12:53.369
+comprehensions.
+
+00:12:56.862 --> 00:12:58.170
+A map projection, sorry.
+
+00:12:58.170 --> 00:13:00.270
+And map projections is
+something that we can
+
+00:13:00.270 --> 00:13:03.497
+take a node on that, and then,
+
+00:13:03.497 --> 00:13:07.240
+we, for instance, we
+take a movie node here,
+
+00:13:07.240 --> 00:13:10.297
+and then we return map, we say,
+
+00:13:10.297 --> 00:13:12.220
+(faint speaking) a
+movie, this could be also
+
+00:13:12.220 --> 00:13:14.690
+any other map like on
+data map that we had.
+
+00:13:14.690 --> 00:13:16.230
+And then we just say .title
+
+00:13:17.870 --> 00:13:20.073
+or .released.
+
+00:13:21.250 --> 00:13:26.250
+And as info, for instance,
+
+00:13:28.170 --> 00:13:31.930
+and then it accesses only these sub-keys.
+
+00:13:31.930 --> 00:13:35.240
+So it looks a little bit
+like graph-g-r inside here.
+
+00:13:35.240 --> 00:13:39.260
+But of course, you can also
+say something like cast,
+
+00:13:39.260 --> 00:13:42.330
+and then have a pattern comprehension.
+
+00:13:42.330 --> 00:13:45.850
+For instance, we say I
+want to have only people
+
+00:13:47.670 --> 00:13:51.420
+that had an relationship to this movie,
+
+00:13:51.420 --> 00:13:53.610
+and I return the name of this person,
+
+00:13:53.610 --> 00:13:58.300
+and then so I see for all my movies
+
+00:13:58.300 --> 00:14:01.853
+as cast only people that had
+something to do with this.
+
+00:14:05.830 --> 00:14:08.770
+So I can basically
+construct complex documents
+
+00:14:08.770 --> 00:14:12.720
+by nesting these map projections
+
+00:14:12.720 --> 00:14:15.900
+with pattern comprehensions,
+which is pretty cool.
+
+00:14:15.900 --> 00:14:17.943
+I'll go into that in a later episode.
+
+00:14:20.000 --> 00:14:22.320
+Besides APOC help, you find also these
+
+00:14:23.341 --> 00:14:26.410
+informations, these web
+functions in the documentation.
+
+00:14:26.410 --> 00:14:28.970
+And if you have any other questions,
+
+00:14:28.970 --> 00:14:32.390
+feel free to either
+
+00:14:32.390 --> 00:14:35.210
+create an issue on your repository,
+
+00:14:35.210 --> 00:14:36.840
+or ask questions on Slack,
+
+00:14:36.840 --> 00:14:40.763
+or watch more APOC videos
+on the YouTube channel.
+
+00:14:41.610 --> 00:14:42.443
+Thank you.
+

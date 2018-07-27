@@ -525,6 +525,30 @@ YIELD result
 RETURN result
 ```
 
+### Parsing WebVTT
+
+WebVTT is the format for Web Video Text Tracks, such as Youtube Transcripts of videos : https://fr.wikipedia.org/wiki/WebVTT
+
+```
+CALL ga.nlp.parser.webvtt("url-to-transcript.vtt") YIELD startTime, endTime, text
+```
+
+### Listing files from directory(ies)
+
+```
+CALL ga.nlp.utils.listFiles(<path-to-directory>, <extensionFilter>)
+
+// eg:
+
+CALL ga.nlp.utils.listFiles("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
+```
+
+The above procedure list files of the current directory only, if you need to walk the children directories as well, use `walkdir` :
+
+```
+CALL ga.nlp.utils.walkdir("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
+```
+
 
 ## License
 

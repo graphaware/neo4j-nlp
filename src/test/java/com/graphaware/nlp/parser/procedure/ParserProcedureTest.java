@@ -113,4 +113,17 @@ public class ParserProcedureTest extends NLPIntegrationTest {
             assertTrue((Long) result.next().get("c") > 0);
         }));
     }
+
+    @Test
+    public void testParsingVTT() {
+        clearDb();
+        String f = getClass().getClassLoader().getResource("transcript.vtt").getPath();
+        executeInTransaction("CALL ga.nlp.parser.webvtt({p0})", buildSeqParameters(f), (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                Map<String, Object> record = result.next();
+                assertTrue(record.get("startTime").toString().contains(":"));
+            }
+        }));
+    }
 }
