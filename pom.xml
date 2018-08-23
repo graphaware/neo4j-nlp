@@ -22,7 +22,7 @@
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.4.6.52.12</version>
+  <version>3.4.6.52.13-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
