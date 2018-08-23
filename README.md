@@ -505,6 +505,14 @@ passing a list of regexes defining the parts to exclude :
 CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"])
 ```
 
+#### Use a different user Agent than TIKA
+
+TIKA can be recognized as crawler and be denied access to some sites containing pdf's. You can override this by passing a `UserAgent` option :
+
+```
+CALL ga.nlp.parser.pdf($url, [], {UserAgent: 'Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.2) Gecko/20040803'})
+```
+
 ### Extras
 
 #### Storing only certain Tag/Tokens

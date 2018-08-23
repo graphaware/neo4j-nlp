@@ -4,6 +4,7 @@ import com.graphaware.nlp.NLPIntegrationTest;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -115,6 +116,31 @@ public class ParserProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testParsingProtectedPdf() {
+        String userAgent = "Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.2) Gecko/20040803";
+        String url = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5854482/pdf/nihms949230.pdf";
+        clearDb();
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("url", url);
+        parameters.put("ua", userAgent);
+        executeInTransaction("CALL ga.nlp.parser.pdf($url, [], {UserAgent: $ua}) YIELD number, paragraphs RETURN number, paragraphs", parameters, (result -> {
+            assertTrue(result.hasNext());
+        }));
+    }
+
+    @Test
+    public void testCustomUASettingIsUsedForProtectedPdf() throws Exception {
+        String userAgent = "Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.2) Gecko/20040803";
+        executeInTransaction("CALL ga.nlp.config.set('SETTING_DEFAULT_UA', $ua)", Collections.singletonMap("ua", userAgent), emptyConsumer());
+        String url = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5854482/pdf/nihms949230.pdf";
+        clearDb();
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("url", url);
+        executeInTransaction("CALL ga.nlp.parser.pdf($url) YIELD number, paragraphs RETURN number, paragraphs", parameters, (result -> {
+            assertTrue(result.hasNext());
+        }));
+    }
+
     public void testParsingVTT() {
         clearDb();
         String f = getClass().getClassLoader().getResource("transcript.vtt").getPath();
