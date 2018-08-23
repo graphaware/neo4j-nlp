@@ -29,7 +29,7 @@ public class UtilsProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.utils.walkdir")
     public Stream<FilePathResult> walkdir(@Name("directory") String directory, @Name(value = "extension", defaultValue = "*") String extensionFilter) {
         try {
-            return Files.list(Paths.get(directory))
+            return Files.walk(Paths.get(directory))
                     .filter(s -> filter(s, extensionFilter))
                     .map(FilePathResult::new)
                     .collect(Collectors.toList())
