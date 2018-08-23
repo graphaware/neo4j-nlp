@@ -505,6 +505,14 @@ passing a list of regexes defining the parts to exclude :
 CALL ga.nlp.parser.pdf("myfile.pdf", ["^[0-9]$","^Licensed to"])
 ```
 
+#### Use a different user Agent than TIKA
+
+TIKA can be recognized as crawler and be denied access to some sites containing pdf's. You can override this by passing a `UserAgent` option :
+
+```
+CALL ga.nlp.parser.pdf($url, [], {UserAgent: 'Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.2) Gecko/20040803'})
+```
+
 ### Extras
 
 #### Storing only certain Tag/Tokens
@@ -523,6 +531,30 @@ processingSteps:{tokenize:true, ner:true}})
 CALL ga.nlp.annotate({text:"Hello, my name is John and I worked at IBM.", id:"test-123", pipeline:"whitelist", checkLanguage:false})
 YIELD result
 RETURN result
+```
+
+### Parsing WebVTT
+
+WebVTT is the format for Web Video Text Tracks, such as Youtube Transcripts of videos : https://fr.wikipedia.org/wiki/WebVTT
+
+```
+CALL ga.nlp.parser.webvtt("url-to-transcript.vtt") YIELD startTime, endTime, text
+```
+
+### Listing files from directory(ies)
+
+```
+CALL ga.nlp.utils.listFiles(<path-to-directory>, <extensionFilter>)
+
+// eg:
+
+CALL ga.nlp.utils.listFiles("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
+```
+
+The above procedure list files of the current directory only, if you need to walk the children directories as well, use `walkdir` :
+
+```
+CALL ga.nlp.utils.walkdir("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
 ```
 
 
