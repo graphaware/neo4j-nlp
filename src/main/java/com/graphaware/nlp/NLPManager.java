@@ -163,6 +163,8 @@ public final class NLPManager {
 
     public Node processAnnotationPersist(String id, String text, AnnotatedText annotatedText, PipelineSpecification pipelineSpecification) {
         String txId = String.valueOf(System.currentTimeMillis());
+        TextAnnotationEvent preStorageEvent = new TextAnnotationEvent(annotatedText, txId, pipelineSpecification);
+        eventDispatcher.notify(NLPEvents.PRE_ANNOTATION_STORAGE, preStorageEvent);
         Node annotatedNode = persistAnnotatedText(annotatedText, id, txId);
         TextAnnotationEvent event = new TextAnnotationEvent(annotatedNode, annotatedText, id, txId, pipelineSpecification);
         annotatedText.setText(text);

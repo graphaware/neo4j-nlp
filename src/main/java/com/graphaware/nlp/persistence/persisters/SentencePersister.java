@@ -22,6 +22,7 @@ import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.util.SentenceUtils;
+import com.graphaware.nlp.util.TagUtils;
 import org.neo4j.graphdb.*;
 
 import java.util.HashMap;
@@ -140,6 +141,11 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         node.setProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH), occurrence.getElement().getPosAsArray());
         node.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), occurrence.getElement().getNeAsArray());
         node.setProperty(configuration().getPropertyKeyFor(Properties.TAG_ORIGINAL_VALUE), occurrence.getValue());
+        if (occurrence.hasNamedEntity()) {
+            String ne = occurrence.getElement().getNeAsList().get(0);
+            String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX_NEW) + TagUtils.getNamedEntityValue(ne);
+            node.addLabel(Label.label(labelName));
+        }
         return node;
     }
 
