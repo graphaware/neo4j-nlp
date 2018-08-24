@@ -123,4 +123,8 @@ public class Tag {
     public Collection<TagParentRelation> getParents() {
         return parents;
     }
+
+    public boolean hasNamedEntity() {
+        return getNeAsList().size() != 0 && !getNeAsList().contains("O");
+    }
 }

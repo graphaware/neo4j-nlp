@@ -12,7 +12,6 @@ import com.graphaware.nlp.persistence.constants.Relationships;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.TestNLPGraph;
-import com.graphaware.test.integration.EmbeddedDatabaseIntegrationTest;
 import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
@@ -172,6 +171,27 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             while (it.hasNext()) {
                 Node node = it.next();
                 assertTrue(node.hasLabel(Label.label("NER_Test")));
+            }
+            tx.success();
+        }
+    }
+
+    @Test
+    public void testNamedEntityLabelIsAddedOnTagOccurrences() {
+        try (Transaction tx = getDatabase().beginTx()) {
+            Node annotatedText = manager.annotateTextAndPersist(
+                    "hello my name is John.",
+                    "123",
+                    StubTextProcessor.class.getName(),
+                    TextProcessor.DEFAULT_PIPELINE,
+                    false,
+                    true);
+
+            Iterator<Node> it = getDatabase().findNodes(Label.label("TagOccurrence"));
+            assertTrue(it.hasNext());
+            while (it.hasNext()) {
+                Node node = it.next();
+                assertTrue(node.hasLabel(Label.label("NE_Test")));
             }
             tx.success();
         }

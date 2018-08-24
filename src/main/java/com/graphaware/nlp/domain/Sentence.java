@@ -197,27 +197,4 @@ public class Sentence implements Comparable<Sentence> {
     public String hash() {
         return HashFunctions.MD5(sentence);
     }
-
-//    public static Sentence load(Node sentenceNode) {
-//        if (!sentenceNode.hasProperty(TEXT)) {
-//            throw new RuntimeException("Sentences need to contain text inside to can extract sentiment");
-//        }
-//        String text = (String) sentenceNode.getProperty(TEXT);
-//        String id = (String) sentenceNode.getProperty(PROPERTY_ID);
-//        Integer sentenceNumber = (Integer) sentenceNode.getProperty(SENTENCE_NUMBER);
-//        return new Sentence(text, true, id, sentenceNumber);
-//    }
-//
-//
-//    private void writeObject(ObjectOutputStream s) throws IOException {
-//        s.defaultWriteObject();
-//        s.writeObject(tags);
-//    }
-//
-//    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
-//        s.defaultReadObject();
-//        this.tags = (Map<String, Tag>)s.readObject();
-//    }
-
-
 }

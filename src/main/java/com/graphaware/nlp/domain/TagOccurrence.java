@@ -32,4 +32,8 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
     public String getValue() {
         return value;
     }
+
+    public boolean hasNamedEntity() {
+        return getElement().hasNamedEntity();
+    }
 }

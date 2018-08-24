@@ -20,5 +20,7 @@ import com.graphaware.nlp.event.Events;
 public enum NLPEvents implements Events {
     TRANSACTION_BEFORE_COMMIT,
     PRE_TEXT_ANNOTATION,
-    POST_TEXT_ANNOTATION
+    POST_TEXT_ANNOTATION,
+    PRE_ANNOTATION_STORAGE,
+    POST_ANNOTATION_STORAGE
 }

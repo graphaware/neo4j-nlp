@@ -21,15 +21,21 @@ import org.neo4j.graphdb.Node;
 
 public class TextAnnotationEvent implements Event {
 
-    private final Node annotatedNode;
+    private Node annotatedNode;
 
     private final AnnotatedText annotatedText;
 
-    private final String id;
+    private String id;
 
     private final String txId;
 
     private final PipelineSpecification pipelineSpecification;
+
+    public TextAnnotationEvent(AnnotatedText annotatedText, String txId, PipelineSpecification pipelineSpecification) {
+        this.annotatedText = annotatedText;
+        this.txId = txId;
+        this.pipelineSpecification = pipelineSpecification;
+    }
 
     public TextAnnotationEvent(Node annotatedNode, AnnotatedText annotatedText, String id, String txId, PipelineSpecification pipelineSpecification) {
         this.annotatedNode = annotatedNode;
