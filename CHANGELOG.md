@@ -1,4 +1,8 @@
-3.4.6.52.12-SNAPSHOT
+3.4.6.52.13-SNAPSHOT
+
+- TagOccurrence nodes now receive the NE_$$$ label
+
+3.4.6.52.12
 
 - Added the ability to whitelist only certain words in a pipeline
 - Fixed an issue with the PDF Parser not returning the first page
