@@ -21,6 +21,7 @@ import com.graphaware.nlp.dsl.request.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
+import org.neo4j.graphdb.Label;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
@@ -30,6 +31,16 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
     private static final Log LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
     public SingleResult process(TextRankRequest request) {
+        TextRankResult result = compute(request);
+        TextRankPersister persister = new TextRankPersister(Label.label(request.getKeywordLabel()));
+        persister.peristKeywords(result.getResult(), request.getNode());
+
+        return result.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS)
+                ? SingleResult.success()
+                : SingleResult.fail();
+    }
+
+    public TextRankResult compute(TextRankRequest request) {
         TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
         if (request.getStopWords() != null 
                 && !request.getStopWords().isEmpty()) {
@@ -46,12 +57,13 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
                 .setKeywordLabel(request.getKeywordLabel());
         
         TextRank textRank = textrankBuilder.build();
-        boolean res = textRank.evaluate(request.getNode(), 
+        TextRankResult result = textRank.evaluate(request.getNode(),
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + res);
-        return res ? SingleResult.success() : SingleResult.fail();
+        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + result.getStatus());
+
+        return result;
     }
 
     public SingleResult postprocess(TextRankPostprocessRequest request) {

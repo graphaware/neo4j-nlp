@@ -20,12 +20,10 @@ import com.graphaware.nlp.ml.pagerank.PageRank;
 import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
-import com.graphaware.nlp.domain.AnnotatedText;
 import com.graphaware.nlp.domain.Keyword;
 import com.graphaware.nlp.domain.TfIdfObject;
 import com.graphaware.nlp.persistence.constants.Labels;
 import com.graphaware.nlp.persistence.constants.Relationships;
-import com.graphaware.nlp.persistence.persisters.KeywordPersister;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
@@ -33,8 +31,6 @@ import com.graphaware.common.log.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.graphaware.nlp.persistence.constants.Relationships.DESCRIBES;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class TextRank {
@@ -481,7 +477,7 @@ public class TextRank {
         return result;
     }
 
-    public boolean evaluate(Node annotatedText, int iter, double damp, double threshold) {
+    public TextRankResult evaluate(Node annotatedText, int iter, double damp, double threshold) {
         Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedText, cooccurrencesFromDependencies);
         PageRank pageRank = new PageRank(database);
         //if (useTfIdfWeights) {
@@ -496,7 +492,7 @@ public class TextRank {
 
         if (pageRanks == null) {
             LOG.error("Page ranks not retrieved, aborting evaluate() method ...");
-            return false;
+            return TextRankResult.FAILED("Page ranks not retrieved");
         }
 
         // get tf*idf: useful for cleanFinalKeywords()
@@ -562,7 +558,7 @@ public class TextRank {
             tx.success();
         } catch (Exception e) {
             LOG.error("Error while running TextRank evaluation: ", e);
-            return false;
+            return TextRankResult.FAILED(e.getMessage());
         }
 
         Map<String, Keyword> results = new HashMap<>();
@@ -660,10 +656,10 @@ public class TextRank {
         if (cleanKeywords) {
             results = cleanFinalKeywords(results, n_oneThird);
         }
-        peristKeyword(results, annotatedText);
+
         //removalProcess(annotatedText);
 
-        return true;
+        return TextRankResult.SUCCESS(results);
     }
 
     private Map<String, Keyword> checkNextKeyword(KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, KeywordExtractedItem> keywords) {
@@ -722,29 +718,6 @@ public class TextRank {
                 results.put(resLower, keyword);
             }
         }
-    }
-
-    private void peristKeyword(Map<String, Keyword> results, Node annotatedText) {
-        List<String> printKeywords = new ArrayList<>();
-        KeywordPersister persister = NLPManager.getInstance().getPersister(Keyword.class);
-        persister.setLabel(keywordLabel);
-        results.entrySet().stream()
-                .forEach(en -> {
-                    // check keyword consistency
-                    if (en.getKey().split("_").length > 2) {
-                        LOG.warn("Tag " + en.getKey() + " has more than 1 underscore symbols, newly created " + keywordLabel.name() + " node might be wrong.");
-                    }
-                    Node newNode = persister.persist(en.getValue(), en.getKey(), String.valueOf(System.currentTimeMillis()));
-                    if (newNode != null) {
-                        //LOG.info("New node has labels: " + iterableToList(newNode.getLabels()).stream().map(l -> l.name()).collect(Collectors.joining(", ")));
-                        Relationship rel = mergeRelationship(annotatedText, newNode);
-                        rel.setProperty("count_exactMatch", en.getValue().getExactMatchCount());
-                        rel.setProperty("count", en.getValue().getTotalCount());
-                        rel.setProperty("relevance", en.getValue().getRelevance());
-                    }
-                    printKeywords.add(en.getKey().split("_")[0]);
-                });
-        LOG.info("--- TextRank results: \n  " + printKeywords.stream().collect(Collectors.joining("\n  ")));
     }
 
     private Set<Long> getRelTagsIntoDepth(KeywordExtractedItem kwOccurrence, List<KeywordExtractedItem> kwOccurrences) {
@@ -925,21 +898,6 @@ public class TextRank {
             newList.add(obj);
         }
         return newList;
-    }
-    
-    private Relationship mergeRelationship(Node annotatedText, Node newNode) {
-        Relationship rel = null;
-        Iterable<Relationship> itr = newNode.getRelationships(Direction.OUTGOING, DESCRIBES);
-        for (Relationship r : itr) {
-            if (r.getEndNode().equals(annotatedText)) {
-                rel = r;
-                break;
-            }
-        }
-        if (rel == null) {
-            rel = newNode.createRelationshipTo(annotatedText, DESCRIBES);
-        }
-        return rel;
     }
 
     private Map<Integer, Set<Long>> createThisMapping(Map<Long, CoOccurrenceItem> coOccorrence) {
