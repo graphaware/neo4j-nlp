@@ -20,6 +20,7 @@ import com.graphaware.nlp.dsl.request.TextRankPostprocessRequest;
 import com.graphaware.nlp.dsl.request.TextRankRequest;
 import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.ml.textrank.TextRankProcessor;
+import com.graphaware.nlp.ml.textrank.TextRankResult;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
@@ -35,14 +36,32 @@ public class TextRankProcedure extends AbstractDSL {
     private static final Log LOG = LoggerFactory.getLogger(TextRankProcedure.class);
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
-    @Description("TextRank procedure")
-    public Stream<SingleResult> computeTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+    @Description("Keywords Extraction using TextRank algorithm (includes storage of result)")
+    public Stream<SingleResult> processTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
         try {
             TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
             return Stream.of(processor.process(request));
         } catch (Exception e) {
             LOG.error("ERROR in TextRank", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Procedure(name = "ga.nlp.ml.textRank.compute", mode = Mode.WRITE)
+    @Description("Keywords Extraction using TextRank algorithm ( without storage )")
+    public Stream<KeywordResult> computeTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+        try {
+            TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
+            TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
+            TextRankResult result = processor.compute(request);
+
+            return result.getResult().values().stream()
+                    .map(keyword -> {
+                        return new KeywordResult(keyword.getKeyword(), keyword.getRelevance());
+                    });
+        } catch (Exception e) {
+            LOG.error("Error during TextRank computation", e);
             throw new RuntimeException(e);
         }
     }
@@ -70,6 +89,17 @@ public class TextRankProcedure extends AbstractDSL {
         } catch (Exception e) {
             LOG.error("ERROR in TextRankSummarizer", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public class KeywordResult {
+        public String value;
+
+        public double relevance;
+
+        public KeywordResult(String value, double relevance) {
+            this.value = value;
+            this.relevance = relevance;
         }
     }
 }

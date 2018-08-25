@@ -39,6 +39,21 @@ public class TextRankProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testTextRankComputeOnly() throws Exception {
+        clearDb();
+        createGraph();
+        executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank.compute({annotatedText: n}) YIELD value, relevance RETURN value, relevance", (result -> {
+            assertTrue("ga.nlp.ml.textRank() procedure failed.", result.hasNext());
+            while (result.hasNext()) {
+                Map<String, Object> record = result.next();
+                assertNotNull(record.get("value"));
+                assertNotNull(record.get("relevance"));
+                assertTrue(record.get("relevance") instanceof Double);
+            }
+        }));
+    }
+
+    @Test
     public void testTextRankWithCustomSettings() throws Exception {
         clearDb();
         createGraph();
