@@ -18,6 +18,7 @@ package com.graphaware.nlp.domain;
 import com.graphaware.nlp.util.HashFunctions;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Sentence implements Comparable<Sentence> {
     
@@ -196,5 +197,35 @@ public class Sentence implements Comparable<Sentence> {
 
     public String hash() {
         return HashFunctions.MD5(sentence);
+    }
+
+    public TagOccurrence getTagOccurrenceByValueAndNE(String value, String ne) {
+        AtomicReference<TagOccurrence> ref = new AtomicReference<>();
+        tagOccurrences.values().forEach(tos -> {
+            tos.forEach(to -> {
+                if (to.getValue().equals(value)) {
+                    if (to.hasNamedEntity() && to.getElement().getNeAsList().get(0).equals(ne)) {
+                        ref.set(to);
+                    }
+                }
+            });
+        });
+
+        return ref.get();
+    }
+
+    public TagOccurrence getTagOccurrenceByValueWithNE(String value) {
+        AtomicReference<TagOccurrence> ref = new AtomicReference<>();
+        tagOccurrences.values().forEach(tos -> {
+            tos.forEach(to -> {
+                if (to.getValue().equals(value)) {
+                    if (to.hasNamedEntity()) {
+                        ref.set(to);
+                    }
+                }
+            });
+        });
+
+        return ref.get();
     }
 }

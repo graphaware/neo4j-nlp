@@ -19,6 +19,8 @@ import java.util.List;
 
 public class TagOccurrence extends PartOfTextOccurrence<Tag> {
     private final String value;
+
+    private OptimizedCoreference coreference;
     
     public TagOccurrence(Tag element, int begin, int end, String value) {
         this(element, begin, end, value, null);
@@ -35,5 +37,21 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
 
     public boolean hasNamedEntity() {
         return getElement().hasNamedEntity();
+    }
+
+    public String getNamedEntity() {
+        return getElement().getNeAsList().get(0);
+    }
+
+    public boolean hasReference() {
+        return coreference != null;
+    }
+
+    public OptimizedCoreference getCoreference() {
+        return coreference;
+    }
+
+    public void setCoreference(OptimizedCoreference coreference) {
+        this.coreference = coreference;
     }
 }
