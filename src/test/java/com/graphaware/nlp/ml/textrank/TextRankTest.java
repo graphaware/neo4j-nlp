@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.ImportUtils;
+import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -66,8 +67,12 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
-            assertTrue("TextRank failed, returned false.", res);
+            TextRankResult res = textrank.evaluate(annText, 30, 0.85, 0.0001);
+
+            // Store TextRank result
+            TextRankPersister persister = new TextRankPersister(Label.label("Keyword"));
+            persister.peristKeywords(res.getResult(), annText);
+            assertTrue("TextRank failed, returned false.", res.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS));
             tx.success();
         }
 
@@ -119,8 +124,8 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            boolean res = textrank.evaluate(annText, 30, 0.85, 0.0001);
-            assertTrue("TextRank failed, returned false.", res);
+            TextRankResult res = textrank.evaluate(annText, 30, 0.85, 0.0001);
+            assertTrue("TextRank failed, returned false.", res.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS));
             tx.success();
         }
 
