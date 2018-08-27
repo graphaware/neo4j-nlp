@@ -36,8 +36,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
 
     @Override
     public Node persist(Sentence sentence, String id, String txId) {
-        String sentenceId = String.format("%s_%s", id, sentence.getSentenceNumber());
-        Node sentenceNode = getIfExist(configuration().getLabelFor(Labels.Sentence), configuration().getPropertyKeyFor(Properties.PROPERTY_ID), sentenceId);
+        Node sentenceNode = get(sentence, id);
         Node newSentenceNode;
         if (sentenceNode == null) {
             newSentenceNode = getOrCreate(sentence, id, txId);
@@ -50,6 +49,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         storeUniversalDependenciesForSentence(sentence, newSentenceNode);
         storePhrases(sentence, newSentenceNode, txId);
         storeCoreferences(sentence);
+        storeCorefOptimized(sentence, id);
         assignSentimentLabel(sentence, newSentenceNode);
         sentenceNode = newSentenceNode;
 
@@ -190,6 +190,29 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         }
     }
 
+    private void storeCorefOptimized(Sentence sentence, String id) {
+        sentence.getTagOccurrences().values().forEach(tagOccurrences -> {
+            tagOccurrences.forEach(tagOccurrence -> {
+                if (tagOccurrence.hasReference()) {
+                    Node sentenceNode = get(sentence, id);
+                    Node occurrenceFrom = getTagOccurrenceInSentence(sentenceNode, tagOccurrence);
+                    Node occurrenceTo = getTagOccurrenceInSentence(get(tagOccurrence.getCoreference().getSentence(), id), tagOccurrence.getCoreference().getTagOccurrence());
+                    if (occurrenceFrom != null && occurrenceTo != null) {
+                        boolean shouldCreate = true;
+                        for (Relationship relationship : occurrenceFrom.getRelationships(RelationshipType.withName("COREF"), Direction.OUTGOING)) {
+                            if (relationship.getEndNode().getId() == occurrenceTo.getId()) {
+                                shouldCreate = false;
+                            }
+                        }
+                        if (shouldCreate) {
+                            occurrenceFrom.createRelationshipTo(occurrenceTo, RelationshipType.withName("COREF"));
+                        }
+                    }
+                }
+            });
+        });
+    }
+
     private void assignSentimentLabel(Sentence sentence, Node sentenceNode) {
         int sentiment = sentence.getSentiment();
         Label sentimentLabel = SentenceUtils.getDefaultLabelForSentimentLevel(sentiment);
@@ -281,5 +304,12 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     @Override
     public Node persist(Sentence object) {
         throw new UnsupportedOperationException("This cannot implemented for this persister"); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private Node get(Sentence sentence, String id) {
+        String sentenceId = String.format("%s_%s", id, sentence.getSentenceNumber());
+        Node sentenceNode = getIfExist(configuration().getLabelFor(Labels.Sentence), configuration().getPropertyKeyFor(Properties.PROPERTY_ID), sentenceId);
+
+        return sentenceNode;
     }
 }
