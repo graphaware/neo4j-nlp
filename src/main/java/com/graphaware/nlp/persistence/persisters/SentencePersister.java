@@ -145,6 +145,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
             String ne = occurrence.getElement().getNeAsList().get(0);
             String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX_NEW) + TagUtils.getNamedEntityValue(ne);
             node.addLabel(Label.label(labelName));
+            node.setProperty(Properties.CONFIDENCE, occurrence.getConfidence());
         }
         return node;
     }

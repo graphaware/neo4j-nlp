@@ -21,6 +21,8 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
     private final String value;
 
     private OptimizedCoreference coreference;
+
+    private double confidence;
     
     public TagOccurrence(Tag element, int begin, int end, String value) {
         this(element, begin, end, value, null);
@@ -53,5 +55,13 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
 
     public void setCoreference(OptimizedCoreference coreference) {
         this.coreference = coreference;
+    }
+
+    public double getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
     }
 }
