@@ -141,6 +141,15 @@ public class TestNLPGraph {
         }));
     }
 
+    public void assertTagOccurrenceWithValueAndNeExist(String value, String ne) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("value", value);
+        map.put("ne", ne);
+        executeInTransaction("MATCH (n:TagOccurrence) WHERE n.value = $value AND $ne IN labels(n) RETURN n", map, (result) -> {
+            assertTrue(result.hasNext());
+        });
+    }
+
     public void assertPhraseOccurrenceNodesCount(long count) {
         assertNodesCount("PhraseOccurrence", count);
     }
