@@ -16,21 +16,34 @@
 package com.graphaware.nlp.domain;
 
 import com.graphaware.nlp.util.TypeConverter;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Tag {
 
 
     private int multiplicity = 1;
-    private final String lemma;
-    private List<String> posL;
-    private List<String> neL;
-    private final Collection<TagParentRelation> parents;
-    private final String language;
+    private String lemma;
+    private List<String> pos;
+    private List<String> ne;
+    private Collection<TagParentRelation> parents;
+    private String language;
+    private String originalValue;
     
     private Map<String, Object> properties = new HashMap<>();
+
+    public Tag() {}
+
+    public Tag(String lemma, String language, String originalValue) {
+        this.lemma = lemma;
+        this.language = language;
+        this.originalValue = originalValue;
+    }
 
     public Tag(String lemma, String language) {
         this.lemma = lemma.trim();
@@ -39,7 +52,7 @@ public class Tag {
     }
 
     public String getLemma() {
-        if ((neL != null && neL.contains("O")) || neL == null) {
+        if ((ne != null && ne.contains("O")) || ne == null) {
             return lemma.toLowerCase();
         } else {
             return lemma;
@@ -49,11 +62,11 @@ public class Tag {
     }
 
     public void setPos(List<String> pos) {
-        this.posL = pos;
+        this.pos = pos;
     }
 
     public void setNe(List<String> ne) {
-        this.neL = ne;
+        this.ne = ne;
     }
 
     public int getMultiplicity() {
@@ -68,24 +81,26 @@ public class Tag {
         this.multiplicity = multiplicity;
     }
 
-    public List<String> getPosAsList() {
-        List<String> values =  posL != null ? posL : new ArrayList<>();
+    public List<String> getPos() {
+        List<String> values =  pos != null ? pos : new ArrayList<>();
 
         return values.stream().filter(pos -> { return pos != null; }).collect(Collectors.toList());
     }
 
-    public List<String> getNeAsList() {
-        List<String> values =  neL != null ? neL : new ArrayList<>();
+    public List<String> getNe() {
+        List<String> values =  ne != null ? ne : new ArrayList<>();
 
         return values.stream().filter(ne -> { return ne != null; }).collect(Collectors.toList());
     }
-    
+
+    @JsonIgnore
     public String[]  getPosAsArray() {
-        return TypeConverter.convertStringListToArray(getPosAsList());
+        return TypeConverter.convertStringListToArray(getPos());
     }
-    
+
+    @JsonIgnore
     public String[] getNeAsArray() {
-        return TypeConverter.convertStringListToArray(getNeAsList());
+        return TypeConverter.convertStringListToArray(getNe());
     }
 
     public String getId() {
@@ -125,6 +140,14 @@ public class Tag {
     }
 
     public boolean hasNamedEntity() {
-        return getNeAsList().size() != 0 && !getNeAsList().contains("O");
+        return getNe().size() != 0 && !getNe().contains("O");
+    }
+
+    public String getOriginalValue() {
+        return originalValue;
+    }
+
+    public void setOriginalValue(String originalValue) {
+        this.originalValue = originalValue;
     }
 }

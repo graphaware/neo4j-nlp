@@ -88,7 +88,7 @@ public class ConceptNet5Importer {
                             value = removeApices(value);
                             value = removeParenthesis(value);
                             Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor);
-                            List<String> posList = annotateTag.getPosAsList();
+                            List<String> posList = annotateTag.getPos();
                             if (admittedPOS == null
                                     || admittedPOS.isEmpty()
                                     || posList == null

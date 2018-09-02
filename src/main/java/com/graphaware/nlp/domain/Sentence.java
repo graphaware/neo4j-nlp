@@ -15,24 +15,30 @@
  */
 package com.graphaware.nlp.domain;
 
+import com.fasterxml.jackson.annotation.*;
 import com.graphaware.nlp.util.HashFunctions;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Sentence implements Comparable<Sentence> {
     
     public static final int NO_SENTIMENT = -1;
+    private Map<String, Tag> tags = new HashMap<>();
 
-    private final Map<String, Tag> tags = new HashMap<>();
-    private final Map<Integer, List<TagOccurrence>> tagOccurrences = new HashMap<>();
+    private Map<Integer, List<TagOccurrence>> tagOccurrences = new HashMap<>();
     private Map<Integer, Map<Integer, PartOfTextOccurrence<Phrase>>> phraseOccurrences = new HashMap<>();
-    private final List<TypedDependency> typedDependencies = new ArrayList<>();
+    private List<TypedDependency> typedDependencies = new ArrayList<>();
+    private Collection<Tag> tagValues;
 
-    private final String sentence;
+    private String sentence;
     private int sentiment = NO_SENTIMENT;
     private String id;
     private int sentenceNumber;
+
+    public Sentence() {
+    }
 
     public Sentence(String sentence, int sentenceNumber) {
         this(sentence);
@@ -43,8 +49,8 @@ public class Sentence implements Comparable<Sentence> {
         this.sentence = sentence;
     }
 
-    public Collection<Tag> getTags() {
-        return tags.values();
+    public Map<String, Tag> getTags() {
+        return tags;
     }
 
     public Tag addTag(Tag tag) {
@@ -203,8 +209,8 @@ public class Sentence implements Comparable<Sentence> {
         AtomicReference<TagOccurrence> ref = new AtomicReference<>();
         tagOccurrences.values().forEach(tos -> {
             tos.forEach(to -> {
-                if (to.getValue().equals(value)) {
-                    if (to.hasNamedEntity() && to.getElement().getNeAsList().get(0).equals(ne)) {
+                if (to.getElement().getOriginalValue().equals(value)) {
+                    if (to.getElement().hasNamedEntity() && to.getElement().getNe().get(0).equals(ne)) {
                         ref.set(to);
                     }
                 }

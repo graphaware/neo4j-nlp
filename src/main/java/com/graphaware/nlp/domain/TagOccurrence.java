@@ -15,10 +15,16 @@
  */
 package com.graphaware.nlp.domain;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TagOccurrence extends PartOfTextOccurrence<Tag> {
-    private final String value;
+
+    private String value;
 
     private OptimizedCoreference coreference;
 
@@ -28,7 +34,13 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
         this(element, begin, end, value, null);
     }
 
-    public TagOccurrence(Tag element, int begin, int end, String value, List<String> partIds) {
+    @JsonCreator
+    public TagOccurrence(
+            @JsonProperty("element") Tag element,
+            @JsonProperty("begin") int begin,
+            @JsonProperty("end") int end,
+            @JsonProperty("value") String value,
+            @JsonProperty("partIds") List<String> partIds) {
         super(element, begin, end, partIds);
         this.value = value;
     }
@@ -42,7 +54,7 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
     }
 
     public String getNamedEntity() {
-        return getElement().getNeAsList().get(0);
+        return getElement().getNe().get(0);
     }
 
     public boolean hasReference() {

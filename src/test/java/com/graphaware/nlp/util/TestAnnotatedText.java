@@ -43,7 +43,7 @@ public class TestAnnotatedText {
     public void assertTagWithLemma(String value) {
         boolean found = false;
         for (Sentence sentence : annotatedText.getSentences()) {
-            for (Tag tag : sentence.getTags()) {
+            for (Tag tag : sentence.getTags().values()) {
                 if (tag.getLemma().equals(value)) {
                     found = true;
                     break;
@@ -67,7 +67,7 @@ public class TestAnnotatedText {
         boolean found = false;
         mainloop:
         for (Sentence sentence : annotatedText.getSentences()) {
-            for (Tag t : sentence.getTags()) {
+            for (Tag t : sentence.getTags().values()) {
                 if (checkTagEquality(t, tag)) {
                     found = true;
                     break mainloop;
@@ -109,15 +109,15 @@ public class TestAnnotatedText {
             return false;
         }
 
-        final Set<String> s1 = new HashSet<>(a.getNeAsList());
-        final Set<String> s2 = new HashSet<>(b.getNeAsList());
+        final Set<String> s1 = new HashSet<>(a.getNe());
+        final Set<String> s2 = new HashSet<>(b.getNe());
 
         if (!s1.containsAll(s2)) {
             return false;
         }
 
-        final Set<String> p1 = new HashSet<>(a.getPosAsList());
-        final Set<String> p2 = new HashSet<>(b.getPosAsList());
+        final Set<String> p1 = new HashSet<>(a.getPos());
+        final Set<String> p2 = new HashSet<>(b.getPos());
 
         if (!p1.containsAll(p2)) {
             return false;
