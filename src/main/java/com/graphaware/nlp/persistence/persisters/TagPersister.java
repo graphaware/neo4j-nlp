@@ -16,7 +16,6 @@
 package com.graphaware.nlp.persistence.persisters;
 
 import com.graphaware.nlp.NLPManager;
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.domain.VectorContainer;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
@@ -94,24 +93,24 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
     private boolean shouldBeUpdated(Tag tag, Node tagNode) {
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH))) {
             String[] pos = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
-            if (tag.getPosAsList().size() != pos.length) {
+            if (tag.getPos().size() != pos.length) {
                 return true;
             }
             List<String> original = Arrays.asList(pos);
 
-            if (tag.getPosAsList().stream().anyMatch((s) -> (!original.contains(s)))) {
+            if (tag.getPos().stream().anyMatch((s) -> (!original.contains(s)))) {
                 return true;
             }
         }
 
         if (tagNode.hasProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY))) {
             String[] ne = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY));
-            if (tag.getNeAsList().size() != ne.length) {
+            if (tag.getNe().size() != ne.length) {
                 return true;
             }
             List<String> original = Arrays.asList(ne);
 
-            for (String s : tag.getNeAsList()) {
+            for (String s : tag.getNe()) {
                 if (!original.contains(s)) {
                     return true;
                 }
@@ -141,7 +140,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             allNEs.addAll(Arrays.asList(nes));
         }
 
-        tag.getNeAsList()
+        tag.getNe()
                 .stream()
                 .filter(n -> !allNEs.contains(n))
                 .forEach(allNEs::add);
@@ -159,7 +158,7 @@ public class TagPersister extends AbstractPersister implements Persister<Tag> {
             String[] posV = (String[]) tagNode.getProperty(configuration().getPropertyKeyFor(Properties.PART_OF_SPEECH));
             allPos.addAll(Arrays.asList(posV));
         }
-        tag.getPosAsList()
+        tag.getPos()
                 .stream()
                 .filter(t -> !allPos.contains(t))
                 .forEach(allPos::add);

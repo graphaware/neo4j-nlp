@@ -47,7 +47,7 @@ public class AnnotatedText {
     public List<String> getTokens() {
         List<String> result = new ArrayList<>();
         sentences.forEach((sentence) -> {
-            sentence.getTags().forEach((tag) -> {
+            sentence.getTags().values().forEach((tag) -> {
                 result.add(tag.getLemma());
             });
         });
@@ -73,7 +73,7 @@ public class AnnotatedText {
     public List<Tag> getTags() {
         List<Tag> result = new ArrayList<>();
         sentences.forEach((sentence) -> {
-            sentence.getTags().forEach((tag) -> {
+            sentence.getTags().values().forEach((tag) -> {
                 result.add(tag);
             });
         });
@@ -131,7 +131,7 @@ public class AnnotatedText {
 
         private boolean evaluate(Tag tag) {
             if (NE != null) {
-                return tag.getNeAsList().contains(NE) && tag.getLemma().equalsIgnoreCase(value);
+                return tag.getNe().contains(NE) && tag.getLemma().equalsIgnoreCase(value);
             } else {
                 return tag.getLemma().equalsIgnoreCase(value);
             }

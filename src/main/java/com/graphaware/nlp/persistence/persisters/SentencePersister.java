@@ -15,7 +15,6 @@
  */
 package com.graphaware.nlp.persistence.persisters;
 
-import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.domain.*;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Labels;
@@ -96,7 +95,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
     }
 
     private void storeSentenceTags(Sentence sentence, Node sentenceNode, String id, String txId) {
-        sentence.getTags().forEach(tag -> {
+        sentence.getTags().values().forEach(tag -> {
             Node tagNode = getPersister(Tag.class).getOrCreate(tag, id, txId);
             relateSentenceToTag(sentenceNode, tagNode, tag.getMultiplicity());
         });
@@ -142,7 +141,7 @@ public class SentencePersister extends AbstractPersister implements Persister<Se
         node.setProperty(configuration().getPropertyKeyFor(Properties.NAMED_ENTITY), occurrence.getElement().getNeAsArray());
         node.setProperty(configuration().getPropertyKeyFor(Properties.TAG_ORIGINAL_VALUE), occurrence.getValue());
         if (occurrence.hasNamedEntity()) {
-            String ne = occurrence.getElement().getNeAsList().get(0);
+            String ne = occurrence.getElement().getNe().get(0);
             String labelName = configuration().getPropertyKeyFor(Properties.NAMED_ENTITY_PREFIX_NEW) + TagUtils.getNamedEntityValue(ne);
             node.addLabel(Label.label(labelName));
             node.setProperty(Properties.CONFIDENCE, occurrence.getConfidence());

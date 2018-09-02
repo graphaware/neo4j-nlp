@@ -15,20 +15,35 @@
  */
 package com.graphaware.nlp.domain;
 
-import com.graphaware.common.util.Pair;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.CLASS,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Tag.class, name = "tag"),
+        @JsonSubTypes.Type(value = Phrase.class, name = "phrase")
+})
 public class PartOfTextOccurrence<T> {
 
-    private final T element;
-    private final Pair<Integer, Integer> span;
+    private T element;
+    @JsonSerialize(using = SpanSerializer.class)
+    private Span span;
     private final List<String> partIds = new ArrayList<>();
+
+    public PartOfTextOccurrence() {
+    }
 
     public PartOfTextOccurrence(T element, int begin, int end) {
         this.element = element;
-        this.span = new Pair<>(begin, end);
+        this.span = new Span(begin, end);
     }
 
     public PartOfTextOccurrence(T element, int begin, int end, List<String> partIds) {
@@ -43,7 +58,8 @@ public class PartOfTextOccurrence<T> {
         return element;
     }
 
-    public Pair<Integer, Integer> getSpan() {
+    @JsonProperty("span")
+    public Span getSpan() {
         return span;
     }
 
