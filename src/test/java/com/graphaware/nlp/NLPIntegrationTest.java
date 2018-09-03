@@ -10,10 +10,12 @@ import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
 import com.graphaware.test.integration.DatabaseIntegrationTest;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,6 +112,16 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         }
 
         return map;
+    }
+
+    protected void createPipeline(String textProcessor, String pipelineName, String ...annotators) {
+        final Map<String, Boolean> steps = new HashMap<>();
+        Arrays.asList(annotators).forEach(a -> {
+            steps.put(a, true);
+        });
+        String query = "CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, processingSteps:$p2})";
+        executeInTransaction(query, buildSeqParameters(pipelineName, textProcessor, steps), emptyConsumer());
+
     }
 
     protected void createPipeline(String textProcessor, String pipelineName) {
