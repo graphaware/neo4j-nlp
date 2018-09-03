@@ -15,6 +15,9 @@
  */
 package com.graphaware.nlp.domain;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 public class TypedDependency {
 
     private final String source;
@@ -25,7 +28,12 @@ public class TypedDependency {
 
     private final String specific;
 
-    public TypedDependency(String source, String target, String name, String specific) {
+    @JsonCreator
+    public TypedDependency(
+            @JsonProperty("source") String source,
+            @JsonProperty("target") String target,
+            @JsonProperty("name") String name,
+            @JsonProperty("specific") String specific) {
         this.source = source;
         this.target = target;
         this.name = name;

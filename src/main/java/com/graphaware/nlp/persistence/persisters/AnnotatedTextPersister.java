@@ -85,7 +85,7 @@ public class AnnotatedTextPersister extends AbstractPersister implements Persist
     public Node getOrCreate(AnnotatedText annotatedText, String id, String txId) {
         Node node = database.createNode(configuration().getLabelFor(Labels.AnnotatedText));
         node.setProperty(configuration().getPropertyKeyFor(Properties.PROPERTY_ID), id);
-        node.setProperty(configuration().getPropertyKeyFor(Properties.NUM_TERMS), annotatedText.getTokens().size());
+        node.setProperty(configuration().getPropertyKeyFor(Properties.NUM_TERMS), annotatedText.getNumTerms());
 
         return node;
     }
