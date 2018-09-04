@@ -15,40 +15,47 @@
  */
 package com.graphaware.nlp.domain;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Keyword {
-    private final String keyword;
-    private final String keywordNoLangInfo;
-    private final String[] keywordsArray;
-    private final int wordsCount;
+    private String keyword;
+    private String keywordNoLangInfo;
+    private String[] listOfWords;
+    private int wordsCount;
     private String keywordOriginal;
     private int exactMatch;
     private int total;
     private double relevance;
     private int nTopRated;
-    private TfIdfObject tfidf;
+    private TfIdfObject tfIdf;
+
+    public Keyword() {
+    }
 
     public Keyword(String word) {
         this.keyword = word;
         this.keywordNoLangInfo = word.split("_")[0];
         this.keywordOriginal = word;
-        this.keywordsArray = keywordNoLangInfo.split(" ");
-        this.wordsCount = keywordsArray.length;
+        this.listOfWords = keywordNoLangInfo.split(" ");
+        this.wordsCount = listOfWords.length;
         this.exactMatch = 1;
         this.total = 1;
         this.nTopRated = 0;
-        this.tfidf = new TfIdfObject(0., 0.);
+        this.tfIdf = new TfIdfObject(0., 0.);
     }
-    
+
     public Keyword(String word, int occurrences) {
         this.keyword = word;
         this.keywordNoLangInfo = word.split("_")[0];
         this.keywordOriginal = word;
-        this.keywordsArray = keywordNoLangInfo.split(" ");
-        this.wordsCount = keywordsArray.length;
+        this.listOfWords = keywordNoLangInfo.split(" ");
+        this.wordsCount = listOfWords.length;
         this.exactMatch = occurrences;
         this.total = occurrences;
         this.nTopRated = 0;
-        this.tfidf = new TfIdfObject(0., 0.);
+        this.tfIdf = new TfIdfObject(0., 0.);
     }
     
     public String getKeyword() {
@@ -57,6 +64,10 @@ public class Keyword {
 
     public String getRawKeyword() {
         return this.keywordNoLangInfo;
+    }
+
+    public String getKeywordNoLangInfo() {
+        return keywordNoLangInfo;
     }
 
     public String getOriginalRawKeyword() {
@@ -72,7 +83,7 @@ public class Keyword {
     }
 
     public String[] getListOfWords() {
-        return this.keywordsArray;
+        return this.listOfWords;
     }
 
     public int getWordsCount() {
@@ -127,28 +138,34 @@ public class Keyword {
         this.relevance = relevance;
     }
 
+    @JsonIgnore
     public double getMeanRelevance() {
         return this.relevance/this.wordsCount;
     }
 
-    public double getTfIdf() {
-        return this.tfidf.getTfIdf();
+    public TfIdfObject getTfIdf() {
+        return tfIdf;
+    }
+
+    public void setTfIdf(TfIdfObject tfIdf) {
+        this.tfIdf = tfIdf;
     }
 
     public double getTf() {
-        return this.tfidf.getTf();
+        return this.tfIdf.getTf();
     }
 
     public void setTf(double val) {
-        this.tfidf.setTf(val);
+        this.tfIdf.setTf(val);
     }
 
+    @JsonIgnore
     public double getIdf() {
-        return this.tfidf.getIdf();
+        return this.tfIdf.getIdf();
     }
 
     public void setIdf(double val) {
-        this.tfidf.setIdf(val);
+        this.tfIdf.setIdf(val);
     }
 
     public int getNTopRated() {

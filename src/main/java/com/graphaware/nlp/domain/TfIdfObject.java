@@ -15,12 +15,17 @@
  */
 package com.graphaware.nlp.domain;
 
+import org.codehaus.jackson.annotate.JsonCreator;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 public class TfIdfObject {
 
     private double tf;
     private double idf;
 
-    public TfIdfObject(double tf, double idf) {
+    @JsonCreator
+    public TfIdfObject(@JsonProperty("tf") double tf, @JsonProperty("idf") double idf) {
         this.tf  = tf;
         this.idf = idf;
     }
@@ -41,6 +46,7 @@ public class TfIdfObject {
         return this.idf;
     }
 
+    @JsonIgnore
     public double getTfIdf() {
         return this.tf * this.idf;
     }
