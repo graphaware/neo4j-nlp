@@ -15,7 +15,8 @@
  */
 package com.graphaware.nlp.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
@@ -33,6 +34,9 @@ public class AnnotatedText {
     private String text;
 
     private List<Sentence> sentences = new ArrayList<>();
+
+    public AnnotatedText() {
+    }
 
     public List<Sentence> getSentences() {
         return sentences;
@@ -60,10 +64,12 @@ public class AnnotatedText {
         this.text = text;
     }
 
+    @JsonIgnore
     public int getNumTerms() {
         return getTokens().size();
     }
 
+    @JsonIgnore
     public List<Tag> getTags() {
         List<Tag> result = new ArrayList<>();
         sentences.forEach((sentence) -> {
@@ -101,6 +107,7 @@ public class AnnotatedText {
         return result;
     }
 
+    @JsonIgnore
     public List<Sentence> getSentencesSorted() {
         sentences.sort((Sentence o1, Sentence o2) -> o1.compareTo(o2));
 
