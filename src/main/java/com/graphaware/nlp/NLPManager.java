@@ -204,6 +204,7 @@ public final class NLPManager {
 
     public void removePipeline(String pipeline, String processor) {
         configuration.removePipeline(pipeline, processor);
+        textProcessorsManager.getTextProcessor(processor).removePipeline(pipeline);
     }
 
     public Boolean filter(FilterRequest filterRequest) {
