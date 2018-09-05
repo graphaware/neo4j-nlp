@@ -36,6 +36,7 @@ public class LemmaValidationUnitTest {
         assertTrue(match("Ausführung"));
         assertTrue(match("Maßstab"));
         assertTrue(match("Apollo 1"));
+        assertTrue(match("10.3.5"));
 
     }
 
