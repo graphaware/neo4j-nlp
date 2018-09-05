@@ -390,6 +390,12 @@ public final class NLPManager {
         return p;
     }
 
+    public boolean hasDefaultModelWorkdir() {
+        String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
+
+        return !p.equals(SettingsConstants.DEFAULT_MODEL_WORKDIR);
+    }
+
     private void loadExtensions() {
         Map<String, NLPExtension> extensionMap = ServiceLoader.loadInstances(NLPModuleExtension.class);
 

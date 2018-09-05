@@ -74,5 +74,6 @@ public class ConfigurationProcedureTest extends NLPIntegrationTest {
         String path = getClass().getClassLoader().getResource("").getPath();
         executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(path), emptyConsumer());
         assertEquals(path, getNLPManager().getDefaultModelWorkdir());
+        assertTrue(getNLPManager().hasDefaultModelWorkdir());
     }
 }
