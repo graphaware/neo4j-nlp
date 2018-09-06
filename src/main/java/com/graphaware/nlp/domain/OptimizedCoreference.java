@@ -17,9 +17,12 @@ package com.graphaware.nlp.domain;
 
 public class OptimizedCoreference {
 
-    private final Sentence sentence;
+    private Sentence sentence;
 
-    private final TagOccurrence tagOccurrence;
+    private TagOccurrence tagOccurrence;
+
+    public OptimizedCoreference() {
+    }
 
     public OptimizedCoreference(Sentence sentence, TagOccurrence tagOccurrence) {
         this.sentence = sentence;
