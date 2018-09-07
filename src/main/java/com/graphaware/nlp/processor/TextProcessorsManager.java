@@ -112,8 +112,6 @@ public class TextProcessorsManager {
         TextProcessor processor = textProcessors.get(processorName);
         processor.createPipeline(pipelineSpecification);
 
-        LOG.info("Created pipeline " + pipelineSpecification.getName() + " for processor " + processorName);
-
         return new PipelineCreationResult(0, "");
     }
 

@@ -270,6 +270,7 @@ public final class NLPManager {
             throw new RuntimeException("Pipeline with name " + request.getName() + " already exist");
         }
         configuration.storeCustomPipeline(request);
+        textProcessorsManager.createPipeline(request);
     }
 
     public void addWord2VecModel(Word2VecModelSpecification request) {

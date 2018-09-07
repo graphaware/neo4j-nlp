@@ -514,7 +514,7 @@ public class TextRank {
         LOG.info("Keyword candidates are top " + n_oneThird + " tags from this list:");
         pageRanks.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .forEach(en -> System.out.println("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
+                .forEach(en -> LOG.debug("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
         
         Map<String, Object> params = new HashMap<>();
         params.put("id", annotatedText.getId());
