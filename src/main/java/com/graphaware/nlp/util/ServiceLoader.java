@@ -89,7 +89,7 @@ public class ServiceLoader {
 
         loadedClass.entrySet().forEach(entry -> {
             try {
-                LOG.info("Loading text processor: " + entry.getKey() + " with class: " + entry.getValue().getName());
+                LOG.info("Loading extension : " + entry.getValue().getName());
                 Class<T> cls = entry.getValue();
                 Constructor<T> constructor = cls.getConstructor();
                 T newInstance = constructor.newInstance();
