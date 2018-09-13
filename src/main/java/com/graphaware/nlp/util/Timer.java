@@ -32,6 +32,7 @@ public class Timer {
         long sinceBeginning = now - startTime;
         long sinceLastLap = now - lastLap;
         LOG.debug("Timer:: " + timerName + " (" + tag + ") - Since beginning : " + sinceBeginning + " - Since last lap : " + sinceLastLap);
+        System.out.println("Timer:: " + timerName + " (" + tag + ") - Since beginning : " + sinceBeginning + " - Since last lap : " + sinceLastLap);
         lastLap = now;
     }
 

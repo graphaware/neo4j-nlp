@@ -62,7 +62,7 @@ public class TextRankPersister {
                     }
                     printKeywords.add(en.getKey().split("_")[0]);
                 });
-        LOG.info("--- TextRank results: \n  " + printKeywords.stream().collect(Collectors.joining("\n  ")));
+        LOG.debug("--- TextRank results: \n  " + printKeywords.stream().collect(Collectors.joining("\n  ")));
     }
 
     private Relationship mergeRelationship(Node annotatedText, Node newNode) {
