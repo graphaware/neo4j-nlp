@@ -200,7 +200,7 @@
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version></version>
+      <version>4.0.0</version>
       <!--<scope>provided</scope>-->
     </dependency>
 
