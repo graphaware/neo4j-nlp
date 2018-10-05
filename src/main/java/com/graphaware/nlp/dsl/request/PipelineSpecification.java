@@ -31,6 +31,8 @@ public class PipelineSpecification {
 
     public String name;
 
+    public String language;
+
     public String textProcessor;
 
     public Map<String, Object> processingSteps = new HashMap<>();
@@ -58,8 +60,14 @@ public class PipelineSpecification {
         this.excludedPOS = excludedPOS;
     }
 
+    public PipelineSpecification(String name, String language, String textProcessor, Map<String, Object> processingSteps, String stopWords, long threadNumber, List<String> excludedNER, List<String> excludedPOS) {
+        this(name, textProcessor, processingSteps, stopWords, threadNumber, excludedNER, excludedPOS);
+        this.language = language;
+    }
+
     public static PipelineSpecification fromMap(Map<String, Object> map) {
-        PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(), map.containsKey("textProcessor") ? map.get("textProcessor").toString() : null);
+        PipelineSpecification pipelineSpecification = new PipelineSpecification(map.get("name").toString(),
+                map.containsKey("textProcessor") ? map.get("textProcessor").toString() : null);
         pipelineSpecification.setThreadNumber(map.containsKey("threadNumber") ? ((Number) map.get("threadNumber")).longValue() : DEFAULT_THREAD_NUMBER);
         if (map.containsKey("processingSteps")) {
             pipelineSpecification.setProcessingSteps((Map) map.get("processingSteps"));
@@ -67,13 +75,21 @@ public class PipelineSpecification {
         if (map.containsKey(EXCLUDED_NER)) {
             pipelineSpecification.setExcludedNER((List<String>) map.get(EXCLUDED_NER));
         }
-
+        if (map.containsKey(LANGUAGE_KEY)) {
+            pipelineSpecification.setLanguage((String) map.get(LANGUAGE_KEY));
+        }
         return pipelineSpecification;
     }
 
     public PipelineSpecification(String name, String textProcessor) {
         this.name = name;
         this.textProcessor = textProcessor;
+    }
+
+    public PipelineSpecification(String name, String language, String textProcessor) {
+        this.name = name;
+        this.textProcessor = textProcessor;
+        this.language = language;
     }
 
     public String getName() {
@@ -157,6 +173,14 @@ public class PipelineSpecification {
 
     public void setExcludedPOS(List<String> excludedPOS) {
         this.excludedPOS = excludedPOS;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     private boolean objectToBoolean(Object obj) {
