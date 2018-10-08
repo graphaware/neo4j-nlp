@@ -35,6 +35,7 @@ import java.util.TreeSet;
 
 import static com.graphaware.nlp.domain.Constants.LANGUAGE_EN;
 import static com.graphaware.nlp.domain.Constants.LANGUAGE_NA;
+import static com.graphaware.nlp.domain.Constants.LANGUAGE_DE;
 
 /*
 * https://github.com/optimaize/language-detector
@@ -50,6 +51,7 @@ public class LanguageManager {
 
     private LanguageManager() {
         supportedLanguages.add(LANGUAGE_EN);
+        supportedLanguages.add(LANGUAGE_DE);
     }
 
     public void initialize() {

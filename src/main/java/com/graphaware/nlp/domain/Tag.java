@@ -43,6 +43,7 @@ public class Tag {
         this.lemma = lemma;
         this.language = language;
         this.originalValue = originalValue;
+        this.parents = new CopyOnWriteArraySet<>();
     }
 
     public Tag(String lemma, String language) {

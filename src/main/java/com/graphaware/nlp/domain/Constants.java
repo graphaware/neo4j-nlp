@@ -38,6 +38,7 @@ public final class Constants {
     //    
     public static final String LANGUAGE_NA = "n/a";
     public static final String LANGUAGE_EN = "en";
+    public static final String LANGUAGE_DE = "de";
     
     public static final String VECTOR_PROPERTY = "vector";
 

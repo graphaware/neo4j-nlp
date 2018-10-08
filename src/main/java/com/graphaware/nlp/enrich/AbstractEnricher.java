@@ -122,4 +122,8 @@ public class AbstractEnricher {
 
         return pipelineSpecification;
     }
+
+    protected PipelineSpecification getPipeline(String pipelineName) {
+        return manager.getPipelineSpecification(pipelineName);
+    }
 }

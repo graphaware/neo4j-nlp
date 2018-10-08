@@ -63,7 +63,7 @@ public class ConceptNet5Importer {
         this.depthSearch = builder.depthSearch;
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
+    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
         if (null == admittedRelations || admittedRelations.isEmpty()) {
             throw new RuntimeException("Admitted Relationships is empty");
         }
@@ -87,7 +87,7 @@ public class ConceptNet5Importer {
                             String value = concept.getEnd();
                             value = removeApices(value);
                             value = removeParenthesis(value);
-                            Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor);
+                            Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor, pipelineSpecification);
                             List<String> posList = annotateTag.getPos();
                             if (admittedPOS == null
                                     || admittedPOS.isEmpty()
@@ -95,13 +95,13 @@ public class ConceptNet5Importer {
                                     || posList.isEmpty()
                                     || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
                                 if (depth > 1) {
-                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, admittedRelations, admittedPOS, limit, minWeight);
+                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, pipelineSpecification, admittedRelations, admittedPOS, limit, minWeight);
                                 }
                                 source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                                 res.add(annotateTag);
                             }
                         } else {
-                            Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor);
+                            Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor, pipelineSpecification);
                             annotateTag.addParent(concept.getRel(), source, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                             res.add(annotateTag);
                         }
@@ -132,10 +132,11 @@ public class ConceptNet5Importer {
 //        return value;
 //    }
 
-    private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
+    private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification) {
         Tag annotateTag = null;
         if (LanguageManager.getInstance().isLanguageSupported(language)) {
-            annotateTag = nlpProcessor.annotateTag(parentConcept, language, getDefaultPipeline());
+            annotateTag = nlpProcessor.annotateTag(parentConcept, language,
+                    pipelineSpecification != null ? pipelineSpecification : getDefaultPipeline());
         }
         if (annotateTag == null) {
             annotateTag = new Tag(parentConcept, language);

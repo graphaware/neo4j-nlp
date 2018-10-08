@@ -96,6 +96,11 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
+    public List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification) {
+        return null;
+    }
+
+    @Override
     public boolean checkLemmaIsValid(String value) {
         return true;
     }

@@ -46,6 +46,8 @@ public interface TextProcessor {
 
     List<Tag> annotateTags(String text, String lang);
 
+    List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification);
+
     boolean checkLemmaIsValid(String value);
 
     AnnotatedText sentiment(AnnotatedText annotatedText);

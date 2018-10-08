@@ -39,6 +39,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     private int depth = DEFAULT_DEPTH;
     private String language = DEFAULT_LANGUAGE;
     private String processor;
+    private String pipeline;
     private boolean splitTag = DEFAULT_SPLIT_TAG;
     private boolean filterByLanguage = DEFAULT_FILTER_BY_LANGUAGE;
     private List<String> admittedRelationships = Arrays.asList(DEFAULT_ADMITTED_RELATIONSHIP);
@@ -65,6 +66,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
                 ADMITTED_RELATIONSHIPS_KEY,
                 LIMIT_KEY,
                 TEXT_PROCESSOR_KEY,
+                PIPELINE_KEY,
                 LANGUAGE_KEY,
                 ENRICHER_KEY,
                 MIN_WEIGHT
@@ -167,6 +169,14 @@ public class ConceptRequest extends AbstractProcedureRequest {
         this.minWeight = minWeight;
     }
 
+    public String getPipeline() {
+        return pipeline;
+    }
+
+    public void setPipeline(String pipeline) {
+        this.pipeline = pipeline;
+    }
+
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
 
         ConceptRequest request = new ConceptRequest();
@@ -205,6 +215,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
         }
 
         request.setProcessor((String) conceptRequest.get(TEXT_PROCESSOR_KEY));
+        request.setPipeline((String) conceptRequest.get(PIPELINE_KEY));
         return request;
     }
 }

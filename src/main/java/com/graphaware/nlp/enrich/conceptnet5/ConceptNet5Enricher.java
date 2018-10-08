@@ -19,6 +19,7 @@ import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.common.util.Pair;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.enrich.AbstractEnricher;
 import com.graphaware.nlp.enrich.Enricher;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
@@ -76,12 +77,16 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
         List<String> admittedRelationships = request.getAdmittedRelationships();
         List<String> admittedPos = request.getAdmittedPos();
 
+        PipelineSpecification pipelineSpecification = getPipeline(request.getPipeline());
         TextProcessor processor = getProcessor(request.getProcessor());
         List<Tag> tags = new ArrayList<>();
         while (tagsIterator.hasNext()) {
             Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());
             if (splitTags) {
-                List<Tag> annotateTags = processor.annotateTags(tag.getLemma(), lang);
+                List<Tag> annotateTags =
+                        pipelineSpecification != null ?
+                                processor.annotateTags(tag.getLemma(), lang, pipelineSpecification) :
+                                processor.annotateTags(tag.getLemma(), lang);
                 if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
                     tags.add(tag);
                 } else {
@@ -96,7 +101,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
             }
         }
         tags.stream().forEach((tag) -> {
-            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
+            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
             conceptTags.add(tag);
         });
 
