@@ -86,7 +86,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
         return null;
     }
 
-    private void checkMigrations(DynamicConfiguration dynamicConfiguration) {
+    protected void checkMigrations(DynamicConfiguration dynamicConfiguration) {
         MigrationHandler migrationHandler = new MigrationHandler(database, dynamicConfiguration);
         migrationHandler.migrate();
     }
