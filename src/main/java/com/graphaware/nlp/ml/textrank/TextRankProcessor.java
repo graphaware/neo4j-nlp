@@ -54,7 +54,10 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
                 //.setCooccurrenceWindow(request.getCooccurrenceWindow())
                 .setTopXTags(request.getTopXTags())
                 .setCleanKeywords(request.isCleanKeywords())
-                .setKeywordLabel(request.getKeywordLabel());
+                .setKeywordLabel(request.getKeywordLabel())
+                .setAdmittedPOSs(request.getAdmittedPOSs())
+                .setForbiddenPOSs(request.getForbiddenPOSs())
+                .setForbiddenNEs(request.getForbiddenNEs());
         
         TextRank textRank = textrankBuilder.build();
         TextRankResult result = textRank.evaluate(request.getNode(),

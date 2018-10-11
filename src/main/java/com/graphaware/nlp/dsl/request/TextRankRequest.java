@@ -19,6 +19,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 
 public class TextRankRequest {
@@ -40,6 +41,9 @@ public class TextRankRequest {
     private final static String PARAMETER_TAGS_TOPX = "topXTags";
     private final static String PARAMETER_KEYWORD_LABEL = "keywordLabel";
     private final static String PARAMETER_CLEAN_KEYWORDS = "cleanKeywords";
+    private final static String PARAMETER_ADMITTED_POSs = "admittedPOSs";
+    private final static String PARAMETER_FORBIDDEN_POSs = "forbiddenPOSs";
+    private final static String PARAMETER_FORBIDDEN_NEs = "forbiddenNEs";
 
     private Node node;
     private int iterations;
@@ -54,7 +58,10 @@ public class TextRankRequest {
     private int cooccurrenceWindow;
     private double topxTags;
     private String keywordLabel;
-    private String stopWords;    
+    private String stopWords;
+    private List<String> admittedPOSs;
+    private List<String> forbiddenPOSs;
+    private List<String> forbiddenNEs;
 
     private static final int DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
@@ -92,6 +99,17 @@ public class TextRankRequest {
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
             result.setStopWords((String) textRankRequest.get(PARAMETER_STOPWORDS));
         }
+
+        if (textRankRequest.containsKey(PARAMETER_ADMITTED_POSs)) {
+            result.setAdmittedPOSs((List) textRankRequest.get(PARAMETER_ADMITTED_POSs));
+        }
+        if (textRankRequest.containsKey(PARAMETER_FORBIDDEN_POSs)) {
+            result.setForbiddenPOSs((List) textRankRequest.get(PARAMETER_FORBIDDEN_POSs));
+        }
+        if (textRankRequest.containsKey(PARAMETER_FORBIDDEN_NEs)) {
+            result.setForbiddenNEs((List) textRankRequest.get(PARAMETER_FORBIDDEN_NEs));
+        }
+
         return result;
     }
 
@@ -205,5 +223,29 @@ public class TextRankRequest {
 
     public void setCleanKeywords(boolean cleanKeywords) {
         this.cleanKeywords = cleanKeywords;
-    }    
+    }
+
+    public void setAdmittedPOSs(List<String> in) {
+        this.admittedPOSs = in;
+    }
+
+    public List<String> getAdmittedPOSs() {
+        return this.admittedPOSs;
+    }
+
+    public void setForbiddenPOSs(List<String> in) {
+        this.forbiddenPOSs = in;
+    }
+
+    public List<String> getForbiddenPOSs() {
+        return this.forbiddenPOSs;
+    }
+
+    public void setForbiddenNEs(List<String> in) {
+        this.forbiddenNEs = in;
+    }
+
+    public List<String> getForbiddenNEs() {
+        return this.forbiddenNEs;
+    }
 }
