@@ -249,9 +249,18 @@ YIELD result
 RETURN result
 ```
 
-The `enricher` parameter can take `microsoft` or `conceptnet5` as value, is optional and has a default value for ConceptNet5.
-
-Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
+The available parameters (default values are in brackets):
+* `tag`: tag to be enriched
+* `enricher` (`"conceptnet5"`): choose `microsoft` or `conceptnet5`
+* `depth` (`2`): how deep to go in concept hierarchy
+* `admittedRelationships`: choose desired concept relationships types, please refer to the [ConceptNet Documentation](http://conceptnet.io/) for details
+* `pipeline`: choose pipeline name to be used for cleansing of concepts before storing them to your DB; your system default pipeline is used otherwise
+* `filterByLanguage` (`true`): allow only concepts of languages specified in `outputLanguages`; if no languages are specified, the same language as `tag` is required
+* `outputLanguages` (`[]`): return only concepts with specified languages
+* `relDirection` (`"out"`): desired direction of relationships in concept hierarchy (`"in"`, `"out"`, `"both"`)
+* `minWeight` (`0.0`): minimal admitted concept relationship weight
+* `limit` (`10`): maximal number of concepts per `tag`
+* `splitTag` (`false`): if `true`, `tag` is first tokenised and then individual tokens enriched
 
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
@@ -276,13 +285,16 @@ Available optional parameters (default values are in brackets):
 * `dependenciesGraph` (false): use universal dependencies for creating tag co-occurrence graph (default is false, which means that a natural word flow is used for building co-occurrences)
 * `cleanKeywords` (true): run cleaning procedure
 * `topXTags` (1/3): set a fraction of highest-rated tags that will be used as keywords / key phrases
-* `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
-* `stopwords`: customize stopwords list (if the list starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
 * `respectSentences` (false): respect or not sentence boundaries for co-occurrence graph building
 * `respectDirections` (false): respect or not directions in co-occurrence graph (how the words follow each other)
 * `iterations` (30): number of PageRank iterations
 * `damp` (0.85): PageRank damping factor
 * `threshold` (0.0001): PageRank convergence threshold
+* `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
+* `stopwords`: customize stopwords list (if the list starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
+* `admittedPOSs`: specify which POS labels are considered as keyword candidates; needed when using different language than English
+* `forbiddenPOSs`: specify list of POS labels to be ignored when constructing co-occurrence graph; needed when using different language than English
+* `forbiddenNEs`: specify list of NEs to be ignored
 
 For a detailed `TextRank` algorithm description, please refer to our blog post about
 [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html).

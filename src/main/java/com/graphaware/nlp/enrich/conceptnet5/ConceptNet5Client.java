@@ -83,6 +83,19 @@ public class ConceptNet5Client {
         return value;
     }
 
+    public ConceptNet5EdgeResult queryBy(String direction, String concept, String rel, String lang, int limit) {
+        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&" + direction + "=/c/" + lang + "/" + concept + "&limit=" + limit;
+        ConceptNet5EdgeResult value;
+        try {
+            value = cache.get(url, () -> cachedUrl(url));
+        } catch (ExecutionException ex) {
+            String error = "Error while getting query for concept " + concept + " (positioned at the " + direction + "), lang " + lang + " and relationship " + rel;
+            LOG.error(error, ex);
+            throw new RuntimeException(error, ex);
+        }
+        return value;
+    }
+
     public String getConceptNet5EndPoint() {
         return conceptNet5EndPoint;
     }

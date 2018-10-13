@@ -40,7 +40,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setAnnotatedNode(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(1);
                 request.setProcessor(StubTextProcessor.class.getName());
                 enricher.importConcept(request);
@@ -70,7 +70,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setAnnotatedNode(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(1);
                 request.setProcessor(StubTextProcessor.class.getName());
                 enricher.importConcept(request);

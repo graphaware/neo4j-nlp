@@ -49,7 +49,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setAnnotatedNode(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(1);
                 request.setProcessor(StubTextProcessor.class.getName());
                 request.setAdmittedRelationships(Collections.singletonList("RelatedTo"));
@@ -65,7 +65,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
         debugTagsRelations();
 
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
-        tester.assertTagWithValueExist("cat");
+        tester.assertTagWithValueExist("cats");
         tester.assertTagHasRelatedTag("cats", "cat");
         tester.assertTagHasRelatedTag("kill", "death");
     }
@@ -84,7 +84,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("Tag")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setTag(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(2);
                 request.setProcessor(StubTextProcessor.class.getName());
                 request.setAdmittedRelationships(Arrays.asList("IsA","PartOf"));

@@ -63,7 +63,7 @@ public class ConceptNet5Importer {
         this.depthSearch = builder.depthSearch;
     }
 
-    public List<Tag> importHierarchy(Tag source, String lang, boolean filterLang, int depth, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
+    public List<Tag> importHierarchy(String relDirection, Tag source, boolean filterLang, List<String> outLang, int depth, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
         if (null == admittedRelations || admittedRelations.isEmpty()) {
             throw new RuntimeException("Admitted Relationships is empty");
         }
@@ -75,19 +75,24 @@ public class ConceptNet5Importer {
         try {
             admittedRelations.forEach(rel -> {
                 ConceptNet5EdgeResult values;
-                values = client.queryByStart(finalWord, rel, lang, limit);
+                values = client.queryBy(relDirection, finalWord, rel, source.getLanguage(), limit);
                 values.getEdges().stream().forEach((concept) -> {
+                    String concept_val = concept.getEnd();
+                    String concept_lang = concept.getEndLanguage();
+                    if (relDirection.equalsIgnoreCase("end")) {
+                        concept_val = concept.getStart();
+                        concept_lang = concept.getStartLanguage();
+                    }
                     if (checkAdmittedRelations(concept, admittedRelations)
                             && concept.getWeight() > minWeight
-                            && (concept.getStart().equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
-                            && (!filterLang || (filterLang && concept.getEndLanguage().equalsIgnoreCase(lang) && concept.getStartLanguage().equalsIgnoreCase(lang)))) {
+                            //&& (concept_val.equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
+                            && (!filterLang || (filterLang && ((outLang!=null && !outLang.isEmpty() && outLang.contains(concept_lang)) || concept_lang.equalsIgnoreCase(source.getLanguage()))))) {
 
-                        if (concept.getStart().equalsIgnoreCase(source.getLemma()) &&
+                        if (//concept.getStart().equalsIgnoreCase(source.getLemma()) &&
                                 !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
-                            String value = concept.getEnd();
-                            value = removeApices(value);
-                            value = removeParenthesis(value);
-                            Tag annotateTag = tryToAnnotate(value, concept.getEndLanguage(), nlpProcessor, pipelineSpecification);
+                            concept_val = removeApices(concept_val);
+                            concept_val = removeParenthesis(concept_val);
+                            Tag annotateTag = tryToAnnotate(concept_val, concept_lang, nlpProcessor, pipelineSpecification);
                             List<String> posList = annotateTag.getPos();
                             if (admittedPOS == null
                                     || admittedPOS.isEmpty()
@@ -95,22 +100,22 @@ public class ConceptNet5Importer {
                                     || posList.isEmpty()
                                     || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
                                 if (depth > 1) {
-                                    importHierarchy(annotateTag, lang, filterLang, depth - 1, nlpProcessor, pipelineSpecification, admittedRelations, admittedPOS, limit, minWeight);
+                                    importHierarchy(relDirection, annotateTag, filterLang, outLang, depth - 1, nlpProcessor, pipelineSpecification, admittedRelations, admittedPOS, limit, minWeight);
                                 }
                                 source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                                 res.add(annotateTag);
                             }
-                        } else {
+                        } /*else {
                             Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor, pipelineSpecification);
                             annotateTag.addParent(concept.getRel(), source, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
                             res.add(annotateTag);
-                        }
+                        }*/
                     }
                 });
             });
 
         } catch (Exception ex) {
-            LOG.error("Error while improting hierarchy for " + word + " (" + lang + "). Ignored!", ex);
+            LOG.error("Error while improting hierarchy for " + word + " (" + source.getLanguage() + "). Ignored!", ex);
         }
         return res;
     }
