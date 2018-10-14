@@ -1,4 +1,12 @@
-3.4.6.52.13-SNAPSHOT
+3.4.9.52.15
+
+- enable EE modules to hook up migrations step
+
+3.4.8.52.14
+
+- added support for language in concept enricher
+
+3.4.7.52.13
 
 - TagOccurrence nodes now receive the NE_$$$ label
 - TextRank persistence is now decouple from computation

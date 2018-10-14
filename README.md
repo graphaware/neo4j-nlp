@@ -36,7 +36,7 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 ## Installation
 
-#### Latest version number : **3.3.2.52.7** - Compatible with Neo4j 3.3.2+
+#### Latest version number : **3.4.9.52.14** - Compatible with Neo4j 3.4.*
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
