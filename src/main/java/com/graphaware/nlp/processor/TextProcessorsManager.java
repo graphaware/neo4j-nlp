@@ -17,6 +17,8 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
+import com.graphaware.nlp.exception.InvalidPipelineException;
+import com.graphaware.nlp.exception.InvalidTextProcessorException;
 import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
@@ -64,7 +66,7 @@ public class TextProcessorsManager {
 
     public TextProcessor getTextProcessor(String name) {
         if (!textProcessors.containsKey(name)) {
-            throw new RuntimeException("Processor with name '" + name + "' does not exist");
+            throw new InvalidTextProcessorException("Processor with name '" + name + "' does not exist");
         }
         return textProcessors.get(name);
     }
@@ -74,7 +76,7 @@ public class TextProcessorsManager {
         if (processor != null && processor.length() > 0) {
             newTP = getTextProcessor(processor);
             if (newTP == null) {
-                throw new RuntimeException("Text processor " + processor + " doesn't exist");
+                throw new InvalidTextProcessorException("Text processor " + processor + " doesn't exist");
             }
         } else {
             newTP = getDefaultProcessor();
@@ -85,7 +87,7 @@ public class TextProcessorsManager {
                         + " doesn't exist for processor " + newTP.getClass().getName());
             }
         } else {
-            throw new RuntimeException("Pipeline not specified");
+            throw new InvalidPipelineException("Pipeline not specified");
         }
         LOG.info("Using text processor: " + newTP.getClass().getName());
 

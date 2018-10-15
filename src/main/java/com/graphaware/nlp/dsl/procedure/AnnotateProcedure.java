@@ -39,8 +39,7 @@ public class AnnotateProcedure extends AbstractDSL {
             Node result = getNLPManager().annotateTextAndPersist(request);
             return Stream.of(new NodeResult(result));
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+            throw e;
         }
     }
     
