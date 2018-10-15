@@ -8,9 +8,7 @@ import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.GraphAwareRuntime;
 import com.graphaware.runtime.GraphAwareRuntimeFactory;
-import com.graphaware.test.integration.DatabaseIntegrationTest;
 import com.graphaware.test.integration.GraphAwareIntegrationTest;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -22,6 +20,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.graphaware.runtime.RuntimeRegistry.getStartedRuntime;
+import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 
 public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
@@ -60,19 +59,47 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         return getStartedRuntime(getDatabase()).getModule(NLPModule.class).getNlpManager();
     }
 
+    protected void executeInTransaction(String query, Consumer<Result> resultConsumer, Class expectedException) {
+        executeInTransaction(query, Collections.emptyMap(), resultConsumer, expectedException);
+    }
+
     protected void executeInTransaction(String query, Consumer<Result> resultConsumer) {
-        executeInTransaction(query, Collections.emptyMap(), resultConsumer);
+        executeInTransaction(query, Collections.emptyMap(), resultConsumer, null);
+    }
+
+    protected void executeInTransaction(String query, Map<String, Object> parameters, Consumer<Result> resultConsumer) {
+        executeInTransaction(query, parameters, resultConsumer, null);
     }
 
 
-    protected void executeInTransaction(String query, Map<String, Object> parameters, Consumer<Result> resultConsumer) {
+    protected void executeInTransaction(String query, Map<String, Object> parameters, Consumer<Result> resultConsumer, Class expectedExceptionClass) {
         try (Transaction tx = getDatabase().beginTx()) {
             Map<String, Object> p = (parameters == null) ? Collections.emptyMap() : parameters;
             resultConsumer.accept(getDatabase().execute(query, p));
             tx.success();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            if (null == expectedExceptionClass) {
+                throw e;
+            }
+
+            validateExpectedException(e, expectedExceptionClass);
         }
+    }
+
+    private void validateExpectedException(Exception e, Class clazz) {
+        assertTrue(checkInnerException(e, clazz));
+    }
+
+    private boolean checkInnerException(Throwable e, Class clazz) {
+        if (e.getClass().equals(clazz)) {
+            return true;
+        }
+
+        if (e.getCause() != null) {
+            return checkInnerException(e.getCause(), clazz);
+        }
+
+        return false;
     }
 
     protected Word2VecProcessor getWord2VecProcessor() {
