@@ -1,3 +1,7 @@
+3.4.9.52.16-SNAPSHOT
+
+- Passing an empty text throws now an exception before hitting the TextProcessor
+
 3.4.9.52.15
 
 - enable EE modules to hook up migrations step
