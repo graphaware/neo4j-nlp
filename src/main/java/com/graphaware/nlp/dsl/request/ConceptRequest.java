@@ -28,16 +28,17 @@ import static com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Importer.DEFAULT_
 public class ConceptRequest extends AbstractProcedureRequest {
 
     private final static int DEFAULT_DEPTH = 2;
-    private final static String DEFAULT_LANGUAGE = "en";
     private final static boolean DEFAULT_SPLIT_TAG = false;
     private final static boolean DEFAULT_FILTER_BY_LANGUAGE = true;
+    public final static List<String> DEFAULT_LANGUAGE = Arrays.asList();
     public final static List<String> DEFAULT_ADMITTED_POS = Arrays.asList();
     private static final int DEFAULT_RESULTS_LIMIT = 100;
     private static final String DEFAULT_ENRICHER = ConceptNet5Enricher.ENRICHER_NAME;
     private static final Double DEFAULT_MIN_WEIGHT = 0.0d;
+    private static final String DEFAULT_DIRECTION = "out";
 
     private int depth = DEFAULT_DEPTH;
-    private String language = DEFAULT_LANGUAGE;
+    private List<String> outputLanguages = DEFAULT_LANGUAGE;
     private String processor;
     private String pipeline;
     private boolean splitTag = DEFAULT_SPLIT_TAG;
@@ -47,6 +48,7 @@ public class ConceptRequest extends AbstractProcedureRequest {
     private int resultsLimit = DEFAULT_RESULTS_LIMIT;
     private String enricherName = DEFAULT_ENRICHER;
     private Double minWeight = DEFAULT_MIN_WEIGHT;
+    private String relDirection = DEFAULT_DIRECTION;
     
     private Node annotatedNode;
     private Node tag;
@@ -67,9 +69,10 @@ public class ConceptRequest extends AbstractProcedureRequest {
                 LIMIT_KEY,
                 TEXT_PROCESSOR_KEY,
                 PIPELINE_KEY,
-                LANGUAGE_KEY,
+                OUTPUT_LANGUAGES_KEY,
                 ENRICHER_KEY,
-                MIN_WEIGHT
+                MIN_WEIGHT,
+                DIRECTION_KEY
         );
     }
 
@@ -81,12 +84,12 @@ public class ConceptRequest extends AbstractProcedureRequest {
         return depth;
     }
 
-    public String getLanguage() {
-        return language;
+    public List<String> getOutputLanguages() {
+        return outputLanguages;
     }
 
-    public void setLanguage(String language) {
-        this.language = language;
+    public void setOutputLanguages(List<String> languages) {
+        this.outputLanguages = languages;
     }
 
     public boolean isSplitTag() {
@@ -177,6 +180,10 @@ public class ConceptRequest extends AbstractProcedureRequest {
         this.pipeline = pipeline;
     }
 
+    public void setRelDirection(String direction) { this.relDirection = direction; }
+
+    public String getRelDirection() { return this.relDirection; }
+
     public static ConceptRequest fromMap(Map<String, Object> conceptRequest) {
 
         ConceptRequest request = new ConceptRequest();
@@ -194,8 +201,8 @@ public class ConceptRequest extends AbstractProcedureRequest {
         if (conceptRequest.containsKey(DEPTH_KEY)) {
             request.setDepth(((Long) conceptRequest.get(DEPTH_KEY)).intValue());
         }
-        if (conceptRequest.containsKey(LANGUAGE_KEY)) {
-            request.setLanguage((String) conceptRequest.get(LANGUAGE_KEY));
+        if (conceptRequest.containsKey(OUTPUT_LANGUAGES_KEY)) {
+            request.setOutputLanguages((List<String>) conceptRequest.get(OUTPUT_LANGUAGES_KEY));
         }
         if (conceptRequest.containsKey(SPLIT_TAGS_KEY)) {
             request.setSplitTag((Boolean) conceptRequest.get(SPLIT_TAGS_KEY));
@@ -209,9 +216,11 @@ public class ConceptRequest extends AbstractProcedureRequest {
         if (conceptRequest.containsKey(ENRICHER_KEY)) {
             request.setEnricherName(conceptRequest.get(ENRICHER_KEY).toString());
         }
-
         if (conceptRequest.containsKey(MIN_WEIGHT)) {
             request.setMinWeight((Double) conceptRequest.get(MIN_WEIGHT));
+        }
+        if (conceptRequest.containsKey(DIRECTION_KEY)) {
+            request.setRelDirection((String) conceptRequest.get(DIRECTION_KEY));
         }
 
         request.setProcessor((String) conceptRequest.get(TEXT_PROCESSOR_KEY));

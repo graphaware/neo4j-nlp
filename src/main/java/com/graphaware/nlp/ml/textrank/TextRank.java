@@ -971,7 +971,7 @@ public class TextRank {
         private static final String[] STOP_WORDS = {"new", "old", "large", "big", "vast", "small", "many", "few", "good", "better", "best", "bad", "worse", "worst"};
         private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"}; // for final keyword selection
         private static final String[] FORBIDDEN_NE = {"NER_Number", "NER_Ordinal", "NER_Percent", "NER_Date", "NER_Duration"}; //"NER_Date", "NER_Duration" // for construction of graph of co-occurrences
-        private static final String[] FORBIDDEN_POS = {"CC", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RP", "RB", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"}; // for construction of graph of co-occurrences
+        private static final String[] FORBIDDEN_POS = {"CC", "CD", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RP", "RB", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"}; // for construction of graph of co-occurrences
         private static final String[] STOP_WORDS_MEDIUM = {"now", "later", "least", "well", "always", "new", "old", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "larger", "smaller", "big", "lower", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "might", "may", "shall", "can", "could", "would", "will", "such", "like", "other", "another", "far", "away"};
         private static final String[] STOP_WORDS_LARGE = {"now", "recently", "late", "later", "lately", "recent", "finally", "often", "always", "new", "old", "novel", "least", "last", "well", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "large", "larger", "small", "smaller", "big", "vast", "little", "lower", "long", "short", "wide", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "make", "might", "may", "shall", "can", "could", "would", "will", "entire", "entirely", "overall", "useful", "usefully", "easy", "easier", "certain", "such", "like", "difficult", "necessary", "unnecessary", "full", "fully", "empty", "successful", "successfully", "unsuccessful", "unsuccessfully", "especially", "usual", "usually", "other", "another", "far", "away"};
 
@@ -1066,12 +1066,23 @@ public class TextRank {
         }
 
         public Builder setAdmittedPOSs(List<String> admittedPOSs) {
-            this.admittedPOSs = admittedPOSs;
+            if (admittedPOSs!=null && !admittedPOSs.isEmpty())
+                this.admittedPOSs = admittedPOSs;
+            System.out.println(this.admittedPOSs.stream().collect(Collectors.joining(", ")));
+            return this;
+        }
+
+        public Builder setForbiddenPOSs(List<String> forbiddenPOSs) {
+            if (forbiddenPOSs!=null && !forbiddenPOSs.isEmpty())
+                this.forbiddenPOSs = forbiddenPOSs;
+            System.out.println(this.forbiddenPOSs.stream().collect(Collectors.joining(", ")));
             return this;
         }
 
         public Builder setForbiddenNEs(List<String> forbiddenNEs) {
-            this.forbiddenNEs = forbiddenNEs;
+            if (forbiddenNEs!=null && !forbiddenNEs.isEmpty())
+                this.forbiddenNEs = forbiddenNEs;
+            System.out.println(this.forbiddenNEs.stream().collect(Collectors.joining(", ")));
             return this;
         }
 

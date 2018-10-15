@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ConceptNet5Client {
     private static final Log LOG = LoggerFactory.getLogger(ConceptNet5Client.class);
+    private static final String FORBIDDEN_LANGUAGE = "n/a";
 
     private final String conceptNet5EndPoint;
     private final ClientConfig cfg;
@@ -77,6 +78,23 @@ public class ConceptNet5Client {
             value = cache.get(url, () -> cachedUrl(url));
         } catch (ExecutionException ex) {
             String error = "Error while getting query for concept " + concept + " lang " + lang + " and relationship " + rel;
+            LOG.error(error, ex);
+            throw new RuntimeException(error, ex);
+        }
+        return value;
+    }
+
+    public ConceptNet5EdgeResult queryBy(String direction, String concept, String rel, String lang, int limit) {
+        if (lang.equalsIgnoreCase(FORBIDDEN_LANGUAGE)) {
+            throw new RuntimeException("Unsupported language " + lang + ", maybe you forgot to set a default language in " +
+                    "your configuration or specify it in the enrich request ?");
+        }
+        String url = conceptNet5EndPoint + "/query?rel=/r/" + rel + "&" + direction + "=/c/" + lang + "/" + concept + "&limit=" + limit;
+        ConceptNet5EdgeResult value;
+        try {
+            value = cache.get(url, () -> cachedUrl(url));
+        } catch (ExecutionException ex) {
+            String error = "Error while getting query for concept " + concept + " (positioned at the " + direction + "), lang " + lang + " and relationship " + rel;
             LOG.error(error, ex);
             throw new RuntimeException(error, ex);
         }
