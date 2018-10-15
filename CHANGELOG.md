@@ -1,6 +1,7 @@
 3.4.9.52.16-SNAPSHOT
 
 - Passing an empty text throws now an exception before hitting the TextProcessor
+- ConceptNet procedure now accepts languages, directions and POS filtering
 
 3.4.9.52.15
 
