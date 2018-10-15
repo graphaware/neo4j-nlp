@@ -36,26 +36,30 @@ Two NLP processor implementations are available, respectively [OpenNLP](https://
 
 ## Installation
 
-#### Latest version number : **3.4.9.52.14** - Compatible with Neo4j 3.4.*
+#### Latest version number : **3.4.9.52.15** - Compatible with Neo4j 3.4.*
+
+*From version 3.4.9.52.15 you need to download the language models, see below*
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
 * `neo4j-framework` (the JAR for this is labeled "graphaware-server-enterprise-all")
 * `neo4j-nlp`
-* `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
+* `neo4j-nlp-stanfordnlp`
+* The language model to be downloaded from `https://stanfordnlp.github.io/CoreNLP/#download`
 
 and copy them in the `plugins` directory of Neo4j.
 
 *Take care that the version numbers of the framework you are using match with the version of Neo4J
-you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.3.0, all
-of the JARs you download should contain 3.3 in their version number.
+you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.4.0 and above, all
+of the JARs you download should contain 3.4 in their version number.
 
 `plugins/` directory example :
 
 ```
--rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-3.3.1.51.2-SNAPSHOT.jar
--rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.3.1.51.2.jar
--rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-3.3.1.51.2-SNAPSHOT.jar
+-rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.4.9.52.14.jar
+-rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.4.9.52.jar
+-rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.4.9.52.14.jar
+-rw-r--r--@ 1 ikwattro  staff   991M Oct 11 11:45 stanford-english-corenlp-2018-10-05-models.jar
 ```
 
 Append the following configuration in the `neo4j.conf` file in the `config/` directory:
@@ -84,6 +88,12 @@ Or use the dedicated procedure :
 
 ```
 CALL ga.nlp.createSchema()
+```
+
+Define which language you will use in this database :
+
+```
+CALL ga.nlp.config.setDefaultLanguage('en')
 ```
 
 ### Quick Documentation in Neo4j Browser

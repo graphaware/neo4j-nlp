@@ -76,4 +76,19 @@ public class ConfigurationProcedureTest extends NLPIntegrationTest {
         assertEquals(path, getNLPManager().getDefaultModelWorkdir());
         assertTrue(getNLPManager().hasDefaultModelWorkdir());
     }
+
+    @Test
+    public void testSettingDefaultLanguage() {
+        executeInTransaction("CALL ga.nlp.config.setDefaultLanguage('en')", emptyConsumer());
+        assertEquals("en", getNLPManager().getConfiguration().getSettingValueFor("fallbackLanguage").toString());
+    }
+
+    @Test
+    public void testDefaultLanguageShouldMapFullLanguageNameToAbbreviation() {
+        executeInTransaction("CALL ga.nlp.config.setDefaultLanguage('English')", emptyConsumer());
+        assertEquals("en", getNLPManager().getConfiguration().getSettingValueFor("fallbackLanguage").toString());
+
+        executeInTransaction("CALL ga.nlp.config.setDefaultLanguage('german')", emptyConsumer());
+        assertEquals("de", getNLPManager().getConfiguration().getSettingValueFor("fallbackLanguage").toString());
+    }
 }

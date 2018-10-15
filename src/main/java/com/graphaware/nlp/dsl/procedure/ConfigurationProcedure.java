@@ -24,10 +24,24 @@ import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public class ConfigurationProcedure extends AbstractDSL {
+
+    private static Map<String, String> languagesMap;
+
+    static {
+        Map<String, String> map = new HashMap<>();
+        map.put("english", "en");
+        map.put("german", "de");
+        map.put("french", "fr");
+        map.put("arabic", "ar");
+        map.put("spanish", "es");
+        map.put("chinese", "zh");
+        languagesMap = map;
+    }
 
     @Procedure(name = "ga.nlp.config.show", mode = Mode.READ)
     @Description("Show the NLP Module Configuration settings")
@@ -75,6 +89,17 @@ public class ConfigurationProcedure extends AbstractDSL {
     @Description("Defines the default working directory for custom processor models")
     public Stream<SingleResult> setDefaultWorkdir(@Name("path") String path) {
         getNLPManager().getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_MODEL_WORKDIR, path);
+
+        return Stream.of(SingleResult.success());
+    }
+
+    @Procedure(name = "ga.nlp.config.setDefaultLanguage", mode = Mode.WRITE)
+    @Description("Defines the default language for Text Analysis pipelines")
+    public Stream<SingleResult> setDefaultLanguage(@Name("language") String s) {
+        String lang = languagesMap.containsKey(s.toLowerCase())
+                ? languagesMap.get(s.toLowerCase())
+                : s.toLowerCase();
+        getNLPManager().getConfiguration().updateInternalSetting(SettingsConstants.FALLBACK_LANGUAGE, lang);
 
         return Stream.of(SingleResult.success());
     }
