@@ -77,22 +77,22 @@ public class ConceptNet5Importer {
                 ConceptNet5EdgeResult values;
                 values = client.queryBy(relDirection, finalWord, rel, source.getLanguage(), limit);
                 values.getEdges().stream().forEach((concept) -> {
-                    String concept_val = concept.getEnd();
-                    String concept_lang = concept.getEndLanguage();
+                    String conceptValue = concept.getEnd();
+                    String conceptLanguage = concept.getEndLanguage();
                     if (relDirection.equalsIgnoreCase("end")) {
-                        concept_val = concept.getStart();
-                        concept_lang = concept.getStartLanguage();
+                        conceptValue = concept.getStart();
+                        conceptLanguage = concept.getStartLanguage();
                     }
                     if (checkAdmittedRelations(concept, admittedRelations)
                             && concept.getWeight() > minWeight
-                            //&& (concept_val.equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
-                            && (!filterLang || (filterLang && ((outLang!=null && !outLang.isEmpty() && outLang.contains(concept_lang)) || concept_lang.equalsIgnoreCase(source.getLanguage()))))) {
+                            //&& (conceptValue.equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
+                            && (!filterLang || (filterLang && ((outLang!=null && !outLang.isEmpty() && outLang.contains(conceptLanguage)) || conceptLanguage.equalsIgnoreCase(source.getLanguage()))))) {
 
                         if (//concept.getStart().equalsIgnoreCase(source.getLemma()) &&
                                 !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
-                            concept_val = removeApices(concept_val);
-                            concept_val = removeParenthesis(concept_val);
-                            Tag annotateTag = tryToAnnotate(concept_val, concept_lang, nlpProcessor, pipelineSpecification);
+                            conceptValue = removeApices(conceptValue);
+                            conceptValue = removeParenthesis(conceptValue);
+                            Tag annotateTag = tryToAnnotate(conceptValue, conceptLanguage, nlpProcessor, pipelineSpecification);
                             List<String> posList = annotateTag.getPos();
                             if (admittedPOS == null
                                     || admittedPOS.isEmpty()

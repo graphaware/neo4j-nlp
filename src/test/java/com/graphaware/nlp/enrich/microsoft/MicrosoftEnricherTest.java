@@ -18,7 +18,6 @@ import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.*;
 
-@Ignore
 public class MicrosoftEnricherTest extends EnricherAbstractTest {
 
     @Before
@@ -30,7 +29,6 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
 
     @Test
     public void testCanGetConceptsFromMicrosoft() {
-        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
         clearDb();

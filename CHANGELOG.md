@@ -1,12 +1,13 @@
 3.4.9.52.15
 
-- enable EE modules to hook up migrations step
+- [BC] Changes to the Concept request signature, check README.md for new signature
+- [BC] Users should now download the language model from Stanford and add it to the plugins directory
 
 3.4.8.52.14
 
-- added support for language in concept enricher
+- Enable EE modules to hook migrations
 
-3.4.7.52.13
+3.4.6.52.13
 
 - TagOccurrence nodes now receive the NE_$$$ label
 - TextRank persistence is now decouple from computation

@@ -14,6 +14,8 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | | Community Edition | Enterprise Edition |
 | --- | :---: | :---: |
 | Text information Extraction | ✔ | ✔ |
+| Multi-languages in the same database | | ✔ |
+| Custom NamedEntityRecognition model builder | | ✔ |
 | ConceptNet5 Enricher | ✔ | ✔ |
 | Microsoft Concept Enricher | ✔ | ✔ |
 | Keyword Extraction | ✔ | ✔ |
@@ -27,11 +29,9 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | User Interface | | ✔ |
 | ML Prediction capabilities | | ✔ |
 | Entity Merging | | ✔ |
-| Questions2Statement generator | | ✔ |
-| Conversational Features | | ✔ |
 
-Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
-[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
+Two NLP processor implementations are available, respectively [Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp) and
+[OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) (OpenNLP receives less frequent updates, StanfordNLP is recommended).
 
 
 ## Installation
@@ -153,7 +153,7 @@ The available optional parameters (default values are in brackets):
 To set a pipeline as a default pipeline:
 
 ```
-ga.nlp.processor.pipeline.default({name})
+CALL ga.nlp.processor.pipeline.default(<your-pipeline-name>)
 ```
 
 To delete a pipeline, use this command:
@@ -165,7 +165,7 @@ CALL ga.nlp.processor.removePipeline(<pipeline-name>, <text-processor>)
 To see details of all existing pipelines:
 
 ```
-CALL ga.nlp.processor.getPipelines
+CALL ga.nlp.processor.getPipelines()
 ```
 
 
