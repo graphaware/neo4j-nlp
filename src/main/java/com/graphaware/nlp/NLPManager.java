@@ -30,6 +30,8 @@ import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import com.graphaware.nlp.enrich.microsoft.MicrosoftConceptEnricher;
 import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
+import com.graphaware.nlp.exception.InvalidTextException;
+import com.graphaware.nlp.exception.TextAnalysisException;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
@@ -146,11 +148,23 @@ public final class NLPManager {
         if (null == pipelineSpecification) {
             throw new RuntimeException("No pipeline " + pipelineSpecification.name + " found.");
         }
+
+        if (text.trim().equalsIgnoreCase("")) {
+            throw new InvalidTextException();
+        }
+
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
         long startTime = -System.currentTimeMillis();
-        AnnotatedText at = processor.annotateText(text, lang, pipelineSpecification);
+        AnnotatedText annotatedText;
+
+        try {
+             annotatedText = processor.annotateText(text, lang, pipelineSpecification);
+        } catch (Exception e) {
+            throw new TextAnalysisException(e.getMessage());
+        }
+
         LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
-        return at;
+        return annotatedText;
     }
 
     public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {

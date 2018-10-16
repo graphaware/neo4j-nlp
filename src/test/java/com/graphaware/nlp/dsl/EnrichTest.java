@@ -45,6 +45,7 @@ public class EnrichTest extends NLPIntegrationTest {
             Map<String, Object> params = new HashMap<>();
             params.put("value", TEXT_1);
             params.put("id", id);
+            executeInTransaction("CALL ga.nlp.config.set('SETTING_fallbackLanguage','en')", emptyConsumer());
             Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
                     + "CALL ga.nlp.annotate({text:n.text, id: {id}, checkLanguage:false}) YIELD result\n"
                     + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"

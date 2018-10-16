@@ -15,6 +15,7 @@ public final class RequestConstants {
     public static final String ADMITTED_PART_OF_SPEECH_KEY = "admittedPos";
     public static final String CHECK_LANGUAGE_KEY = "checkLanguage";
     public static final String LANGUAGE_KEY = "language";
+    public static final String OUTPUT_LANGUAGES_KEY = "outputLanguages";
     public static final String SPLIT_TAGS_KEY = "splitTag";
     public static final String FILTER_BY_LANGUAGE_KEY = "filterByLanguage";
     public static final String LIMIT_KEY = "limit";
@@ -25,6 +26,7 @@ public final class RequestConstants {
     public static final String FILTER_KEY = "filter";
     public static final String ENRICHER_KEY = "enricher";
     public static final String RELATIONSHIP_TYPE_KEY = "relationshipType";
+    public static final String DIRECTION_KEY = "relDirection";
     public static final String K_SIZE_KEY = "kSize";
     public static final String ANNOTATORS = "annotators";
     public static final String EXCLUDED_NER = "excludedNER";

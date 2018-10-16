@@ -18,7 +18,6 @@ import org.neo4j.graphdb.Transaction;
 
 import static org.junit.Assert.*;
 
-@Ignore
 public class MicrosoftEnricherTest extends EnricherAbstractTest {
 
     @Before
@@ -30,7 +29,6 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
 
     @Test
     public void testCanGetConceptsFromMicrosoft() {
-        DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
         clearDb();
@@ -40,7 +38,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setAnnotatedNode(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(1);
                 request.setProcessor(StubTextProcessor.class.getName());
                 enricher.importConcept(request);
@@ -70,7 +68,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
                 ConceptRequest request = new ConceptRequest();
                 request.setAnnotatedNode(node);
-                request.setLanguage("en");
+                //request.setLanguage("en");
                 request.setDepth(1);
                 request.setProcessor(StubTextProcessor.class.getName());
                 enricher.importConcept(request);

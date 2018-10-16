@@ -19,14 +19,14 @@ public class ConceptRequestUnitTest {
         map.put("tag", new NodeProxy());
         map.put("admittedRelationships", Arrays.asList("IsA","PartOf"));
         map.put("admittedPos", Arrays.asList("NNS","NN"));
-        map.put("language", "en");
         map.put("splitTag", true);
+        map.put("relDirection", "out");
 
         ConceptRequest request = ConceptRequest.fromMap(map);
         assertEquals(2, request.getAdmittedRelationships().size());
         assertTrue(request.getAdmittedRelationships().contains("IsA"));
         assertEquals(2, request.getAdmittedPos().size());
-        assertEquals("en", request.getLanguage());
+        assertEquals("out", request.getRelDirection());
     }
 
     @Test(expected = RuntimeException.class)

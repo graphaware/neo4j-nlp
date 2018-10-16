@@ -14,6 +14,8 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | | Community Edition | Enterprise Edition |
 | --- | :---: | :---: |
 | Text information Extraction | ✔ | ✔ |
+| Multi-languages in the same database | | ✔ |
+| Custom NamedEntityRecognition model builder | | ✔ |
 | ConceptNet5 Enricher | ✔ | ✔ |
 | Microsoft Concept Enricher | ✔ | ✔ |
 | Keyword Extraction | ✔ | ✔ |
@@ -27,35 +29,37 @@ It comes in 2 versions, Community (open-sourced) and Enterprise with the followi
 | User Interface | | ✔ |
 | ML Prediction capabilities | | ✔ |
 | Entity Merging | | ✔ |
-| Questions2Statement generator | | ✔ |
-| Conversational Features | | ✔ |
 
-Two NLP processor implementations are available, respectively [OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) and
-[Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp).
+Two NLP processor implementations are available, respectively [Stanford NLP](https://github.com/graphaware/neo4j-nlp-stanfordnlp) and
+[OpenNLP](https://github.com/graphaware/neo4j-nlp-opennlp) (OpenNLP receives less frequent updates, StanfordNLP is recommended).
 
 
 ## Installation
 
-#### Latest version number : **3.3.2.52.7** - Compatible with Neo4j 3.3.2+
+#### Latest version number : **3.4.9.52.15** - Compatible with Neo4j 3.4.*
+
+*From version 3.4.9.52.15 you need to download the language models, see below*
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
 * `neo4j-framework` (the JAR for this is labeled "graphaware-server-enterprise-all")
 * `neo4j-nlp`
-* `neo4j-nlp-stanfordnlp` or `neo4j-nlp-opennlp` or both
+* `neo4j-nlp-stanfordnlp`
+* The language model to be downloaded from `https://stanfordnlp.github.io/CoreNLP/#download`
 
 and copy them in the `plugins` directory of Neo4j.
 
 *Take care that the version numbers of the framework you are using match with the version of Neo4J
-you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.3.0, all
-of the JARs you download should contain 3.3 in their version number.
+you are using*.  This is a common setup problem.  For example, if you are using Neo4j 3.4.0 and above, all
+of the JARs you download should contain 3.4 in their version number.
 
 `plugins/` directory example :
 
 ```
--rw-r--r--  1 abc  staff   6108799 May 16 11:27 graphaware-nlp-3.3.1.51.2-SNAPSHOT.jar
--rw-r--r--@ 1 abc  staff  13391931 May  5 09:34 graphaware-server-enterprise-all-3.3.1.51.2.jar
--rw-r--r--  1 abc  staff  46678477 May 16 14:59 nlp-opennlp-3.3.1.51.2-SNAPSHOT.jar
+-rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.4.9.52.14.jar
+-rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.4.9.52.jar
+-rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.4.9.52.14.jar
+-rw-r--r--@ 1 ikwattro  staff   991M Oct 11 11:45 stanford-english-corenlp-2018-10-05-models.jar
 ```
 
 Append the following configuration in the `neo4j.conf` file in the `config/` directory:
@@ -84,6 +88,12 @@ Or use the dedicated procedure :
 
 ```
 CALL ga.nlp.createSchema()
+```
+
+Define which language you will use in this database :
+
+```
+CALL ga.nlp.config.setDefaultLanguage('en')
 ```
 
 ### Quick Documentation in Neo4j Browser
@@ -143,7 +153,7 @@ The available optional parameters (default values are in brackets):
 To set a pipeline as a default pipeline:
 
 ```
-ga.nlp.processor.pipeline.default({name})
+CALL ga.nlp.processor.pipeline.default(<your-pipeline-name>)
 ```
 
 To delete a pipeline, use this command:
@@ -155,7 +165,7 @@ CALL ga.nlp.processor.removePipeline(<pipeline-name>, <text-processor>)
 To see details of all existing pipelines:
 
 ```
-CALL ga.nlp.processor.getPipelines
+CALL ga.nlp.processor.getPipelines()
 ```
 
 
@@ -239,9 +249,18 @@ YIELD result
 RETURN result
 ```
 
-The `enricher` parameter can take `microsoft` or `conceptnet5` as value, is optional and has a default value for ConceptNet5.
-
-Please refer to the [ConceptNet Documentation](http://conceptnet.io/) for more informations about the `admittedRelationships` parameter.
+The available parameters (default values are in brackets):
+* `tag`: tag to be enriched
+* `enricher` (`"conceptnet5"`): choose `microsoft` or `conceptnet5`
+* `depth` (`2`): how deep to go in concept hierarchy
+* `admittedRelationships`: choose desired concept relationships types, please refer to the [ConceptNet Documentation](http://conceptnet.io/) for details
+* `pipeline`: choose pipeline name to be used for cleansing of concepts before storing them to your DB; your system default pipeline is used otherwise
+* `filterByLanguage` (`true`): allow only concepts of languages specified in `outputLanguages`; if no languages are specified, the same language as `tag` is required
+* `outputLanguages` (`[]`): return only concepts with specified languages
+* `relDirection` (`"out"`): desired direction of relationships in concept hierarchy (`"in"`, `"out"`, `"both"`)
+* `minWeight` (`0.0`): minimal admitted concept relationship weight
+* `limit` (`10`): maximal number of concepts per `tag`
+* `splitTag` (`false`): if `true`, `tag` is first tokenised and then individual tokens enriched
 
 Tags have now a `IS_RELATED_TO` relationships to other enriched concepts.
 
@@ -266,13 +285,16 @@ Available optional parameters (default values are in brackets):
 * `dependenciesGraph` (false): use universal dependencies for creating tag co-occurrence graph (default is false, which means that a natural word flow is used for building co-occurrences)
 * `cleanKeywords` (true): run cleaning procedure
 * `topXTags` (1/3): set a fraction of highest-rated tags that will be used as keywords / key phrases
-* `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
-* `stopwords`: customize stopwords list (if the list starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
 * `respectSentences` (false): respect or not sentence boundaries for co-occurrence graph building
 * `respectDirections` (false): respect or not directions in co-occurrence graph (how the words follow each other)
 * `iterations` (30): number of PageRank iterations
 * `damp` (0.85): PageRank damping factor
 * `threshold` (0.0001): PageRank convergence threshold
+* `removeStopwords` (true): use a stopwords list for co-occurrence graph building and final cleaning of keywords
+* `stopwords`: customize stopwords list (if the list starts with `+`, the following words are appended to the default stopwords list, otherwise the default list is overwritten)
+* `admittedPOSs`: specify which POS labels are considered as keyword candidates; needed when using different language than English
+* `forbiddenPOSs`: specify list of POS labels to be ignored when constructing co-occurrence graph; needed when using different language than English
+* `forbiddenNEs`: specify list of NEs to be ignored
 
 For a detailed `TextRank` algorithm description, please refer to our blog post about
 [Unsupervised Keyword Extraction](https://graphaware.com/neo4j/2017/10/03/efficient-unsupervised-topic-extraction-nlp-neo4j.html).

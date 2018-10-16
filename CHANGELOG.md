@@ -1,4 +1,18 @@
-3.4.6.52.13-SNAPSHOT
+3.4.9.52.16-SNAPSHOT
+
+- Passing an empty text throws now an exception before hitting the TextProcessor
+- ConceptNet procedure now accepts languages, directions and POS filtering
+
+3.4.9.52.15
+
+- [BC] Changes to the Concept request signature, check README.md for new signature
+- [BC] Users should now download the language model from Stanford and add it to the plugins directory
+
+3.4.8.52.14
+
+- Enable EE modules to hook migrations
+
+3.4.6.52.13
 
 - TagOccurrence nodes now receive the NE_$$$ label
 - TextRank persistence is now decouple from computation

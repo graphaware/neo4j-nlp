@@ -71,11 +71,17 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
         Iterator<Node> tagsIterator = pair.first();
         Node tagToBeAnnotated = pair.second();
         int depth = request.getDepth();
-        String lang = request.getLanguage();
         Boolean splitTags = request.isSplitTag();
         Boolean filterByLang = request.isFilterByLanguage();
         List<String> admittedRelationships = request.getAdmittedRelationships();
         List<String> admittedPos = request.getAdmittedPos();
+        List<String> outputLanguages = request.getOutputLanguages();
+        if (outputLanguages!=null) outputLanguages.replaceAll(String::toLowerCase);
+
+        String relDirection = request.getRelDirection();
+        if (!relDirection.equalsIgnoreCase("in") && !relDirection.equalsIgnoreCase("out") &&
+                !relDirection.equalsIgnoreCase("both"))
+            throw new RuntimeException("Relationship direction " + relDirection + " not supported. Please use one of these: in, out, both.");
 
         PipelineSpecification pipelineSpecification = getPipeline(request.getPipeline());
         TextProcessor processor = getProcessor(request.getProcessor());
@@ -85,8 +91,8 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
             if (splitTags) {
                 List<Tag> annotateTags =
                         pipelineSpecification != null ?
-                                processor.annotateTags(tag.getLemma(), lang, pipelineSpecification) :
-                                processor.annotateTags(tag.getLemma(), lang);
+                                processor.annotateTags(tag.getLemma(), tag.getLanguage(), pipelineSpecification) :
+                                processor.annotateTags(tag.getLemma(), tag.getLanguage());
                 if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
                     tags.add(tag);
                 } else {
@@ -94,16 +100,25 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
                         tags.add(newTag);
                         tag.addParent(RELATIONSHIP_IS_RELATED_TO_SUB_TAG, newTag, 0.0f);
                     });
-                    conceptTags.add(tag);
+                    //conceptTags.add(tag);
                 }
             } else {
                 tags.add(tag);
             }
         }
-        tags.stream().forEach((tag) -> {
-            conceptTags.addAll(getImporter().importHierarchy(tag, lang, filterByLang, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
-            conceptTags.add(tag);
-        });
+
+        if (relDirection.equalsIgnoreCase("out") || relDirection.equalsIgnoreCase("both")) {
+            tags.stream().forEach((tag) -> {
+                conceptTags.addAll(getImporter().importHierarchy("start", tag, filterByLang, outputLanguages, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
+                conceptTags.add(tag);
+            });
+        }
+        if (relDirection.equalsIgnoreCase("in") || relDirection.equalsIgnoreCase("both")) {
+            tags.stream().forEach((tag) -> {
+                conceptTags.addAll(getImporter().importHierarchy("end", tag, filterByLang, outputLanguages, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
+                conceptTags.add(tag);
+            });
+        }
 
         conceptTags.stream().forEach((newTag) -> {
             if (newTag != null) {

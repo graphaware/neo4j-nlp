@@ -1,4 +1,4 @@
-package com.graphaware.nlp.integration.dsl.function;
+package com.graphaware.nlp.dsl.function;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.processor.TextProcessor;
