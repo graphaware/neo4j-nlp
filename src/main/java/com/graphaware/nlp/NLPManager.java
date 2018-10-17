@@ -160,7 +160,7 @@ public final class NLPManager {
         try {
              annotatedText = processor.annotateText(text, lang, pipelineSpecification);
         } catch (Exception e) {
-            throw new TextAnalysisException(e.getMessage());
+            throw new TextAnalysisException(e.getMessage(), e);
         }
 
         LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
@@ -409,6 +409,10 @@ public final class NLPManager {
         String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
 
         return !p.equals(SettingsConstants.DEFAULT_MODEL_WORKDIR);
+    }
+
+    public void addModel(String modelId, String modelPath) {
+        configuration.saveModelPath(modelId, modelPath);
     }
 
     private void loadExtensions() {

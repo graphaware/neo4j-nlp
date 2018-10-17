@@ -93,6 +93,14 @@ public class ConfigurationProcedure extends AbstractDSL {
         return Stream.of(SingleResult.success());
     }
 
+    @Procedure(name = "ga.nlp.config.model.add", mode = Mode.WRITE)
+    @Description("Register an existing model available for use in the system")
+    public Stream<SingleResult> addModel(@Name("modelId") String id, @Name("modelPath") String path) {
+        getNLPManager().addModel(id, path);
+
+        return Stream.of(SingleResult.success());
+    }
+
     @Procedure(name = "ga.nlp.config.setDefaultLanguage", mode = Mode.WRITE)
     @Description("Defines the default language for Text Analysis pipelines")
     public Stream<SingleResult> setDefaultLanguage(@Name("language") String s) {
