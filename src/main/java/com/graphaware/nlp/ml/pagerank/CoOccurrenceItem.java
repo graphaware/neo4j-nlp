@@ -24,6 +24,7 @@ public class CoOccurrenceItem {
     private final long destination;
     private double count;
     private final List<Pair<Integer, Integer>> occurrence;
+    private final List<Pair<Integer, Integer>> occurrenceEnd;
     
     public CoOccurrenceItem(long source, long destination) {
         this(source, 0, destination, 0);
@@ -35,6 +36,7 @@ public class CoOccurrenceItem {
         this.count = 1;
         this.occurrence = new ArrayList<>();
         this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartingPosition));
+        this.occurrenceEnd = new ArrayList<>();
     }
     
     public long getSource() {
@@ -61,11 +63,19 @@ public class CoOccurrenceItem {
         this.count = val;
     }
     
-    public void addPositions(int sourceStartPosition, int destinationStartingPosition) {
-        this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartingPosition));
+    public void addPositions(int sourceStartPosition, int destinationStartPosition) {
+        this.occurrence.add(new Pair<>(sourceStartPosition, destinationStartPosition));
     }
 
-    public List<Pair<Integer, Integer>> getStartingPositions() {
+    public List<Pair<Integer, Integer>> getStartPositions() {
         return occurrence;
-    }    
+    }
+
+    public void addEndPositions(int sourceEndPosition, int destinationEndPosition) {
+        this.occurrenceEnd.add(new Pair<>(sourceEndPosition, destinationEndPosition));
+    }
+
+    public List<Pair<Integer, Integer>> getEndPositions() {
+        return occurrenceEnd;
+    }
 }

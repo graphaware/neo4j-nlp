@@ -25,6 +25,8 @@ import org.neo4j.graphdb.Label;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.util.stream.Collectors;
+
 @NLPModuleExtension(name = "TextRankProcessor")
 public class TextRankProcessor extends AbstractExtension implements NLPExtension {
 
@@ -33,7 +35,10 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
     public SingleResult process(TextRankRequest request) {
         TextRankResult result = compute(request);
         TextRankPersister persister = new TextRankPersister(Label.label(request.getKeywordLabel()));
-        persister.peristKeywords(result.getResult(), request.getNode());
+        if (request.getNode() != null)
+            persister.peristKeywords(result.getResult(), request.getNode());
+        else if (request.getMotherNode() != null)
+            persister.peristKeywords(result.getResult(), request.getMotherNode());
 
         return result.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS)
                 ? SingleResult.success()
@@ -60,11 +65,11 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
                 .setForbiddenNEs(request.getForbiddenNEs());
         
         TextRank textRank = textrankBuilder.build();
-        TextRankResult result = textRank.evaluate(request.getNode(),
+        TextRankResult result = textRank.evaluate(request.getNodes(),
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + result.getStatus());
+        LOG.info("AnnotatedText with ID(s) " + request.getNodes().stream().map(el -> String.valueOf(el.getId())).collect(Collectors.joining(", ")) + " processed. Result: " + result.getStatus());
 
         return result;
     }

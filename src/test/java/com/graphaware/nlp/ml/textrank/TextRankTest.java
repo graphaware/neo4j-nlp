@@ -67,7 +67,7 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            TextRankResult res = textrank.evaluate(annText, 30, 0.85, 0.0001);
+            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}), 30, 0.85, 0.0001);
 
             // Store TextRank result
             TextRankPersister persister = new TextRankPersister(Label.label("Keyword"));
@@ -124,7 +124,7 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            TextRankResult res = textrank.evaluate(annText, 30, 0.85, 0.0001);
+            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}), 30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS));
             tx.success();
         }

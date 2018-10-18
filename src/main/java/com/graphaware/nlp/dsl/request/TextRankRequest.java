@@ -19,6 +19,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ public class TextRankRequest {
 
     //private final static String PARAMETER_NAME_QUERY = "query";
     private final static String PARAMETER_ANNOTATED_TEXT = "annotatedText";
+    private final static String PARAMETER_MOTHER_NODE = "motherNode";
     private final static String PARAMETER_ITERATIONS = "iterations";
     private final static String PARAMETER_DAMPING_FACTOR = "damp";
     private final static String PARAMETER_DAMPING_THRESHOLD = "threshold";
@@ -46,6 +48,8 @@ public class TextRankRequest {
     private final static String PARAMETER_FORBIDDEN_NEs = "forbiddenNEs";
 
     private Node node;
+    private List<Node> nodes;
+    private Node motherNode;
     private int iterations;
     private double damp;
     private double threshold;
@@ -78,10 +82,19 @@ public class TextRankRequest {
 
     public static TextRankRequest fromMap(Map<String, Object> textRankRequest) {
         if (!textRankRequest.containsKey(PARAMETER_ANNOTATED_TEXT)) {
-            throw new RuntimeException("Missing parameter annotatedText");
+            throw new RuntimeException("Missing parameter " + PARAMETER_ANNOTATED_TEXT);
         }
+        if (textRankRequest.get(PARAMETER_ANNOTATED_TEXT) instanceof List && !textRankRequest.containsKey(PARAMETER_MOTHER_NODE))
+            throw new RuntimeException("Missing parameter " + PARAMETER_MOTHER_NODE);
+
         TextRankRequest result = new TextRankRequest();
-        result.setNode((Node) textRankRequest.get(PARAMETER_ANNOTATED_TEXT));
+
+        if (textRankRequest.get(PARAMETER_ANNOTATED_TEXT) instanceof List)
+            result.setNodes((List<Node>) textRankRequest.get(PARAMETER_ANNOTATED_TEXT));
+        else
+            result.setNode((Node) textRankRequest.get(PARAMETER_ANNOTATED_TEXT));
+        if (textRankRequest.containsKey(PARAMETER_MOTHER_NODE))
+            result.setMotherNode((Node) textRankRequest.get(PARAMETER_MOTHER_NODE));
         result.setIterations(((Number)textRankRequest.getOrDefault(PARAMETER_ITERATIONS, DEFAULT_ITERATIONS)).intValue());
         result.setDamp(((Number) textRankRequest.getOrDefault(PARAMETER_DAMPING_FACTOR, DEFAULT_DUMPING_FACTOR)).doubleValue());
         result.setThreshold(((Number) textRankRequest.getOrDefault(PARAMETER_DAMPING_THRESHOLD, DEFAULT_THRESHOLD)).doubleValue());
@@ -119,6 +132,24 @@ public class TextRankRequest {
 
     public void setNode(Node node) {
         this.node = node;
+        this.nodes = new ArrayList<Node>();
+        this.nodes.add(node);
+    }
+
+    public List<Node> getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(List<Node> nodes) {
+        this.nodes = nodes;
+    }
+
+    public Node getMotherNode() {
+        return motherNode;
+    }
+
+    public void setMotherNode(Node node) {
+        this.motherNode = node;
     }
 
     public int getIterations() {
