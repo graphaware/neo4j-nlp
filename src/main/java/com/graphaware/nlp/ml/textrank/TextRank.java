@@ -49,8 +49,8 @@ public class TextRank {
             + "WITH collect(t) as tags, collect(to) as tagsPosition\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
-            + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
+            + "tagsPosition[i].startPosition as sourceStartPosition, tagsPosition[i].endPosition as sourceEndPosition, "
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i+1].endPosition as destinationEndPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_BY_SENTENCE
             = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
@@ -63,8 +63,8 @@ public class TextRank {
             + "ORDER BY s.sentenceNumber\n"
             + "UNWIND range(0, size(tags) - 2, 1) as i\n"
             + "RETURN s, id(tags[i]) as tag1, id(tags[i+1]) as tag2, tags[i].id as tag1_id, tags[i+1].id as tag2_id, "
-            + "tagsPosition[i].startPosition as sourceStartPosition, "
-            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
+            + "tagsPosition[i].startPosition as sourceStartPosition, tagsPosition[i].endPosition as sourceEndPosition, "
+            + "tagsPosition[i+1].startPosition as destinationStartPosition, tagsPosition[i+1].endPosition as destinationEndPosition, tagsPosition[i].pos as pos1, tagsPosition[i+1].pos as pos2";
 
     private static final String COOCCURRENCE_QUERY_FROM_DEPENDENCIES
             = "MATCH (a:AnnotatedText)-[:CONTAINS_SENTENCE]->(s:Sentence)-[:SENTENCE_TAG_OCCURRENCE]->(to:TagOccurrence)\n"
@@ -79,7 +79,9 @@ public class TextRank {
             //+ "MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
             + "OPTIONAL MATCH (to2)-[:TAG_OCCURRENCE_TAG]->(t2:Tag)\n"
             + "WHERE size(t2.value) > 2 AND NOT(toLower(t2.value) IN {stopwords}) AND NOT ANY(pos IN to2.pos WHERE pos IN {forbiddenPOSs}) AND NOT ANY(l IN labels(t2) WHERE l IN {forbiddenNEs})\n"
-            + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, to.startPosition as sourceStartPosition, to2.startPosition as destinationStartPosition, to.pos as pos1, to2.pos as pos2, collect(type(r))\n"
+            + "RETURN id(t) as tag1, id(t2) as tag2, t.id as tag1_id, t2.id as tag2_id, "
+            + "to.startPosition as sourceStartPosition, to.endPosition as sourceEndPosition, to2.startPosition as destinationStartPosition, to2.endPosition as destinationEndPosition, "
+            + "to.pos as pos1, to2.pos as pos2, collect(type(r))\n"
             + "ORDER BY sourceStartPosition, destinationStartPosition";
 
     private static final String GET_TAG_QUERY = "MATCH (node:Tag)<-[:TAG_OCCURRENCE_TAG]-(to:TagOccurrence)<-[:SENTENCE_TAG_OCCURRENCE]-(:Sentence)<-[:CONTAINS_SENTENCE]-(a:AnnotatedText)\n"
@@ -230,7 +232,7 @@ public class TextRank {
         return results;
     }
 
-    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(Node annotatedText, boolean fromDependencies) {
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(List<Node> annotatedTexts, boolean fromDependencies) {
         String query;
         if (fromDependencies)
             query = COOCCURRENCE_QUERY_FROM_DEPENDENCIES;
@@ -247,7 +249,6 @@ public class TextRank {
         //    .map(en -> en.getKey()).collect(Collectors.toList());//.keySet();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("id", annotatedText.getId());
         params.put("stopwords", stopWords);
         params.put("forbiddenPOSs", forbiddenPOSs);
         params.put("forbiddenNEs", forbiddenNEs);
@@ -260,42 +261,15 @@ public class TextRank {
             params.put("forbiddenNEs", new ArrayList<>());
         }
 
-        Result res = null;
-        try (Transaction tx = database.beginTx();) {
-            res = database.execute(query, params);
-            tx.success();
-        } catch (Exception e) {
-            LOG.error("Error while creating co-occurrences: ", e);
-        }
-
+        System.out.println("\n Number of annotated texts: " + annotatedTexts.size());
         List<CoOccurrenceItem> prelim = new ArrayList<>();
-        while (res != null && res.hasNext()) {
-            Map<String, Object> next = res.next();
-            Long tag1 = toLong(next.get("tag1"));
-            Long tag2 = toLong(next.get("tag2"));
-            String tagVal1 = (String) next.get("tag1_id");
-            String tagVal2 = (String) next.get("tag2_id");
-            Long tag1Start = toLong(next.get("sourceStartPosition"));
-            Long tag2Start = toLong(next.get("destinationStartPosition"));
-            List<String> pos1 = next.get("pos1") != null ? Arrays.asList((String[]) next.get("pos1")) : new ArrayList<>();
-            List<String> pos2 = next.get("pos2") != null ? Arrays.asList((String[]) next.get("pos2")) : new ArrayList<>();
-
-            // check whether POS of both tags are admitted
-            boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
-            boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
-            //System.out.println("  " + tagVal1 + " -> " + tagVal2);
-
-            // fill tag co-occurrences (adjacency matrix)
-            if (bPOS1 && bPOS2 && tagVal1 != null && tagVal2 != null) {
-                //System.out.println("    passed");
-                prelim.add(new CoOccurrenceItem(tag1, tag1Start.intValue(), tag2, tag2Start.intValue()));
-            }
-
-            // for logging purposses and for `expandNamedEntities()`
-            if (tag1!=null)
-                idToValue.put(tag1, tagVal1);
-            if (tag2!=null)
-                idToValue.put(tag2, tagVal2);
+        for (Node node: annotatedTexts) {
+            params.put("id", node.getId());
+            processOneAnnotatedText(query, params, prelim);
+        }
+        if (prelim.isEmpty()) {
+            LOG.warn("Nothing to do: no co-occurrence passing cleansing criteria found.");
+            return null;
         }
 
         Map<Long, List<Pair<Long, Long>>> neExp;
@@ -315,8 +289,8 @@ public class TextRank {
         for (CoOccurrenceItem it: prelim) {
             Long tag1 = it.getSource();
             Long tag2 = it.getDestination();
-            int tag1Start = it.getStartingPositions().get(0).first().intValue();
-            int tag2Start = it.getStartingPositions().get(0).second().intValue();
+            int tag1Start = it.getStartPositions().get(0).first().intValue();
+            int tag2Start = it.getStartPositions().get(0).second().intValue();
 
             if (expandNEs && !fromDependencies) {
                 if (neExp.containsKey(tag1)) {
@@ -355,6 +329,55 @@ public class TextRank {
         }
 
         return results;
+    }
+
+    private void processOneAnnotatedText(String query, Map<String, Object> params, List<CoOccurrenceItem> prelim) {
+        int offset_start = 0;
+        if (!prelim.isEmpty()) {
+            // find the last word position from previous annotated text and add some number so we can merge previous text with the coming one
+            offset_start = prelim.get(prelim.size() - 1).getEndPositions().get(0).second().intValue() + 2;
+            System.out.println("\n Processing another AnnotatedText. Offset: " + offset_start);
+        }
+
+        Result res = null;
+        try (Transaction tx = database.beginTx();) {
+            res = database.execute(query, params);
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while creating co-occurrences: ", e);
+        }
+
+        while (res != null && res.hasNext()) {
+            Map<String, Object> next = res.next();
+            Long tag1 = toLong(next.get("tag1"));
+            Long tag2 = toLong(next.get("tag2"));
+            String tagVal1 = (String) next.get("tag1_id");
+            String tagVal2 = (String) next.get("tag2_id");
+            Long tag1Start = offset_start + toLong(next.get("sourceStartPosition"));
+            Long tag2Start = offset_start + toLong(next.get("destinationStartPosition"));
+            Long tag1End = offset_start + toLong(next.get("sourceEndPosition"));
+            Long tag2End = offset_start + toLong(next.get("destinationEndPosition"));
+            List<String> pos1 = next.get("pos1") != null ? Arrays.asList((String[]) next.get("pos1")) : new ArrayList<>();
+            List<String> pos2 = next.get("pos2") != null ? Arrays.asList((String[]) next.get("pos2")) : new ArrayList<>();
+
+            // check whether POS of both tags are admitted
+            boolean bPOS1 = pos1.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos1.size() == 0;
+            boolean bPOS2 = pos2.stream().filter(pos -> admittedPOSs.contains(pos)).count() != 0  ||  pos2.size() == 0;
+            //System.out.println("  " + tagVal1 + " -> " + tagVal2);
+
+            // fill tag co-occurrences (adjacency matrix)
+            if (bPOS1 && bPOS2 && tagVal1 != null && tagVal2 != null) {
+                CoOccurrenceItem co = new CoOccurrenceItem(tag1, tag1Start.intValue(), tag2, tag2Start.intValue());
+                co.addEndPositions(tag1End.intValue(), tag2End.intValue());
+                prelim.add(co);
+            }
+
+            // for logging purposes and for `expandNamedEntities()`
+            if (tag1!=null)
+                idToValue.put(tag1, tagVal1);
+            if (tag2!=null)
+                idToValue.put(tag2, tagVal2);
+        }
     }
 
     private static Long toLong(Object value) {
@@ -403,7 +426,7 @@ public class TextRank {
         if (mapTag1.containsKey(cooccurrence.getDestination())) {
             CoOccurrenceItem ccEntry = mapTag1.get(cooccurrence.getDestination());
             ccEntry.incCount();
-            ccEntry.addPositions(cooccurrence.getStartingPositions().first(), cooccurrence.getStartingPositions().second());
+            ccEntry.addPositions(cooccurrence.getStartPositions().first(), cooccurrence.getStartPositions().second());
         } else {
             mapTag1.put(destination, cooccurrence);
         }
@@ -477,8 +500,9 @@ public class TextRank {
         return result;
     }
 
-    public TextRankResult evaluate(Node annotatedText, int iter, double damp, double threshold) {
-        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedText, cooccurrencesFromDependencies);
+    public TextRankResult evaluate(List<Node> annotatedTexts, int iter, double damp, double threshold) {
+        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedTexts, cooccurrencesFromDependencies);
+        if (coOccurrence == null) return TextRankResult.SUCCESS(new HashMap<>());
         PageRank pageRank = new PageRank(database);
         //if (useTfIdfWeights) {
         //    pageRank.setNodeWeights(initializeNodeWeights_TfIdf(annotatedText, coOccurrence));
@@ -487,7 +511,7 @@ public class TextRank {
 
         if (cooccurrencesFromDependencies) {
             coOccurrence.clear();
-            coOccurrence = createCooccurrences(annotatedText, false); // co-occurrences from natural word flow; needed for merging keywords into key phrases
+            coOccurrence = createCooccurrences(annotatedTexts, false); // co-occurrences from natural word flow; needed for merging keywords into key phrases
         }
 
         if (pageRanks == null) {
@@ -517,48 +541,16 @@ public class TextRank {
                 .forEach(en -> LOG.debug("   " + idToValue.get(en.getKey()) + ": " + en.getValue()));
         
         Map<String, Object> params = new HashMap<>();
-        params.put("id", annotatedText.getId());
         params.put("posList", admittedPOSs);
         params.put("stopwords", removeStopWords ? stopWords : new ArrayList<>());
 
+        // Detail tag analysis - get start & end positions and related tags (dependencies)
         List<KeywordExtractedItem> keywordsOccurrences = new ArrayList<>();
         Map<Long, KeywordExtractedItem> keywordMap = new HashMap<>();
         List<Long> wrongNEs = new ArrayList<>();
-        try (Transaction tx = database.beginTx()) {
-            Result res = database.execute(GET_TAG_QUERY, params);
-            while (res != null && res.hasNext()) {
-                Map<String, Object> next = res.next();
-                long tagId = (long) next.get("tagId");
-
-                // remove stop-NEs
-                if (iterableToList((Iterable<String>) next.get("labels")).stream().anyMatch(el -> forbiddenNEs.contains(el))) {
-                    wrongNEs.add(tagId);
-                    continue;
-                }
-
-                KeywordExtractedItem item = new KeywordExtractedItem(tagId);
-                item.setStartPosition(((Number) next.get("sP")).intValue());
-                item.setValue(((String) next.get("tag")));
-                item.setEndPosition(((Number) next.get("eP")).intValue());
-                item.setRelatedTags(iterableToList((Iterable<Long>) next.get("rel_tags")));
-                item.setRelTagStartingPoints(iterableToList((Iterable<Number>) next.get("rel_tos")));
-                item.setRelTagEndingPoints(iterableToList((Iterable<Number>) next.get("rel_toe")));
-                item.setRelevance(pageRanks.containsKey(tagId) ? pageRanks.get(tagId) : 0);
-                keywordsOccurrences.add(item);
-                if (!keywordMap.containsKey(tagId)) {
-                    keywordMap.put(tagId, item);
-                } else {
-                    keywordMap.get(tagId).update(item);
-                }
-                //System.out.println(" Adding for " + item.getValue() + ": " + item.getRelatedTags());
-            }
-            if (res != null) {
-                res.close();
-            }
-            tx.success();
-        } catch (Exception e) {
-            LOG.error("Error while running TextRank evaluation: ", e);
-            return TextRankResult.FAILED(e.getMessage());
+        for (Node node: annotatedTexts) {
+            params.put("id", node.getId());
+            detailedTagAnalysis(GET_TAG_QUERY, params, pageRanks, keywordsOccurrences, keywordMap, wrongNEs);
         }
 
         Map<String, Keyword> results = new HashMap<>();
@@ -660,6 +652,47 @@ public class TextRank {
         //removalProcess(annotatedText);
 
         return TextRankResult.SUCCESS(results);
+    }
+
+    private void detailedTagAnalysis(String GET_TAG_QUERY, Map<String, Object> params, Map<Long, Double> pageRanks, List<KeywordExtractedItem> keywordsOccurrences, Map<Long, KeywordExtractedItem> keywordMap, List<Long> wrongNEs) {
+        // find the last word position from previous annotated text and add some number so we can merge previous text with the coming one
+        final int offset_start = keywordsOccurrences.isEmpty() ? 0 : keywordsOccurrences.get(keywordsOccurrences.size() - 1).getEndPosition() + 2;
+
+        try (Transaction tx = database.beginTx()) {
+            Result res = database.execute(GET_TAG_QUERY, params);
+            while (res != null && res.hasNext()) {
+                Map<String, Object> next = res.next();
+                long tagId = (long) next.get("tagId");
+
+                // remove stop-NEs
+                if (iterableToList((Iterable<String>) next.get("labels")).stream().anyMatch(el -> forbiddenNEs.contains(el))) {
+                    wrongNEs.add(tagId);
+                    continue;
+                }
+
+                KeywordExtractedItem item = new KeywordExtractedItem(tagId);
+                item.setValue(((String) next.get("tag")));
+                item.setStartPosition(((Number) next.get("sP")).intValue() + offset_start);
+                item.setEndPosition(((Number) next.get("eP")).intValue() + offset_start);
+                item.setRelatedTags(iterableToList((Iterable<Long>) next.get("rel_tags")));
+                item.setRelTagStartingPoints(iterableToList((Iterable<Number>) next.get("rel_tos")).stream().map(el -> Long.valueOf(el.intValue() + offset_start)).collect(Collectors.toList()));
+                item.setRelTagEndingPoints(iterableToList((Iterable<Number>) next.get("rel_toe")).stream().map(el -> Long.valueOf(el.intValue() + offset_start)).collect(Collectors.toList()));
+                item.setRelevance(pageRanks.containsKey(tagId) ? pageRanks.get(tagId) : 0);
+                keywordsOccurrences.add(item);
+                if (!keywordMap.containsKey(tagId)) {
+                    keywordMap.put(tagId, item);
+                } else {
+                    keywordMap.get(tagId).update(item);
+                }
+                //System.out.println(" Adding for " + item.getValue() + ": " + item.getRelatedTags());
+            }
+            if (res != null) {
+                res.close();
+            }
+            tx.success();
+        } catch (Exception e) {
+            LOG.error("Error while running TextRank evaluation: ", e);
+        }
     }
 
     private Map<String, Keyword> checkNextKeyword(KeywordExtractedItem keywordOccurrence, Map<Long, Map<Long, CoOccurrenceItem>> coOccurrences, Map<Long, KeywordExtractedItem> keywords) {
@@ -903,7 +936,7 @@ public class TextRank {
     private Map<Integer, Set<Long>> createThisMapping(Map<Long, CoOccurrenceItem> coOccorrence) {
         Map<Integer, Set<Long>> result = new HashMap<>();
         coOccorrence.entrySet().stream().forEach((entry) -> {
-                entry.getValue().getStartingPositions()
+                entry.getValue().getStartPositions()
                         .forEach((pairStartingPoint) -> {
                             if (pairStartingPoint.first() < pairStartingPoint.second()) {
                                 if (!result.containsKey(pairStartingPoint.first())) {
@@ -1068,21 +1101,18 @@ public class TextRank {
         public Builder setAdmittedPOSs(List<String> admittedPOSs) {
             if (admittedPOSs!=null && !admittedPOSs.isEmpty())
                 this.admittedPOSs = admittedPOSs;
-            System.out.println(this.admittedPOSs.stream().collect(Collectors.joining(", ")));
             return this;
         }
 
         public Builder setForbiddenPOSs(List<String> forbiddenPOSs) {
             if (forbiddenPOSs!=null && !forbiddenPOSs.isEmpty())
                 this.forbiddenPOSs = forbiddenPOSs;
-            System.out.println(this.forbiddenPOSs.stream().collect(Collectors.joining(", ")));
             return this;
         }
 
         public Builder setForbiddenNEs(List<String> forbiddenNEs) {
             if (forbiddenNEs!=null && !forbiddenNEs.isEmpty())
                 this.forbiddenNEs = forbiddenNEs;
-            System.out.println(this.forbiddenNEs.stream().collect(Collectors.joining(", ")));
             return this;
         }
 
