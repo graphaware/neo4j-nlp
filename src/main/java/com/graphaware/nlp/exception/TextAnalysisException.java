@@ -19,6 +19,11 @@ public class TextAnalysisException extends NLPException {
 
     private String message;
 
+    public TextAnalysisException(String message, Throwable cause) {
+        this.message = message;
+        initCause(cause);
+    }
+
     public TextAnalysisException(String message) {
         this.message = message;
     }
