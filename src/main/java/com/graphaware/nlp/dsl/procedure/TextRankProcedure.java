@@ -37,11 +37,11 @@ public class TextRankProcedure extends AbstractDSL {
 
     @Procedure(name = "ga.nlp.ml.textRank", mode = Mode.WRITE)
     @Description("Keywords Extraction using TextRank algorithm (includes storage of result)")
-    public Stream<SingleResult> processTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
+    public Stream<SingleResult> computeAndStoreTextRank(@Name("textRankRequest") Map<String, Object> textRankRequest) {
         try {
             TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
             TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
-            return Stream.of(processor.process(request));
+            return Stream.of(processor.computeAndStore(request));
         } catch (Exception e) {
             LOG.error("ERROR in TextRank", e);
             throw new RuntimeException(e);

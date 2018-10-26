@@ -22,6 +22,7 @@ import com.graphaware.nlp.dsl.result.SingleResult;
 import com.graphaware.nlp.extension.AbstractExtension;
 import com.graphaware.nlp.extension.NLPExtension;
 import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
@@ -32,13 +33,11 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
 
     private static final Log LOG = LoggerFactory.getLogger(TextRankProcessor.class);
 
-    public SingleResult process(TextRankRequest request) {
+    public SingleResult computeAndStore(TextRankRequest request) {
         TextRankResult result = compute(request);
         TextRankPersister persister = new TextRankPersister(Label.label(request.getKeywordLabel()));
-        if (request.getNode() != null)
-            persister.peristKeywords(result.getResult(), request.getNode());
-        else if (request.getMotherNode() != null)
-            persister.peristKeywords(result.getResult(), request.getMotherNode());
+        Node attachedNode = request.getNode() != null ? request.getNode() : request.getMotherNode();
+        persister.peristKeywords(result.getResult(), attachedNode);
 
         return result.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS)
                 ? SingleResult.success()
@@ -78,7 +77,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         LOG.info("Starting TextRank post-processing ...");
         TextRank.Builder textrankBuilder = new TextRank.Builder(getDatabase(), getNLPManager().getConfiguration());
         textrankBuilder.setKeywordLabel(request.getKeywordLabel());
-        if (!textrankBuilder.build().postprocess(request.getMethod(), request.getAnnotatedText()))
+        if (!textrankBuilder.build().postProcess(request.getMethod(), request.getAnnotatedText()))
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();

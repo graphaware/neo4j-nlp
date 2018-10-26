@@ -15,6 +15,7 @@
  */
 package com.graphaware.nlp.ml.textrank;
 
+import static com.graphaware.nlp.util.TypeConverter.*;
 import com.graphaware.nlp.ml.pagerank.CoOccurrenceItem;
 import com.graphaware.nlp.ml.pagerank.PageRank;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
@@ -146,9 +147,6 @@ public class TextRankSummarizer {
         AtomicReference<String> saveQuery = new AtomicReference<>("MATCH (a:AnnotatedText) WHERE id(a) = {id}\n");
         pageRanks.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                //.limit(x)
-                //.map((item) -> item.getKey())
-                //.collect(Collectors.toList());
                 .forEach(en -> {
                     System.out.println("  " + en.getKey() + ": " + en.getValue());
                     saveQuery.set(saveQuery.get() + "WITH a\n"
@@ -171,22 +169,6 @@ public class TextRankSummarizer {
         return true;
     }
 
-    private static Long toLong(Object value) {
-        Long returnValue;
-        if (value == null) {
-            return null;
-        }else if (value instanceof Integer) {
-            returnValue = ((Integer) value).longValue();
-        } else if (value instanceof Long) {
-            returnValue = ((Long) value);
-        } else if (value instanceof String) {
-            returnValue = Long.parseLong((String) value);
-        } else {
-            throw new RuntimeException("Value: " + value + " cannot be cast to Long");
-        }
-        return returnValue;
-    }
-
     private <T> Set<T> iterableToSet(Iterable<T> it) {
         Set<T> newList = new HashSet<>();
         for (T obj : it) {
@@ -198,8 +180,6 @@ public class TextRankSummarizer {
 
     public static class Builder {
 
-        //private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "JJ", "JJR", "JJS"};
-        //private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "VB", "VBG", "VBD", "VBN", "VBP", "VBZ"};
         private static final String[] ADMITTED_POS = {"NN", "NNS", "NNP", "NNPS", "VB", "VBG", "VBD", "VBN", "VBP", "VBZ", "JJ", "JJR", "JJS"};
         private static final String[] FORBIDDEN_POS = {"CC", "DT", "EX", "IN", "LS", "MD", "PDT", "PRP", "PRP$", "RBR", "RBS", "TO", "UH", "WDT", "WP", "WP$", "WRB"};
         private static final String[] STOP_WORDS_MEDIUM = {"now", "later", "least", "well", "always", "new", "old", "good", "better", "best", "great", "bad", "worse", "worst", "much", "more", "less", "several", "larger", "smaller", "big", "lower", "widely", "highly", "many", "few", "with", "without", "via", "therefore", "furthermore", "whose", "whether", "though", "although", "to", "not", "of", "prior", "instead", "upon", "every", "together", "across", "toward", "towards", "since", "around", "along", "onto", "into", "already", "whilst", "while", "than", "then", "anyway", "whole", "thus", "throughout", "through", "during", "above", "below", "use", "due", "do", "be", "have", "got", "might", "may", "shall", "can", "could", "would", "will", "such", "like", "other", "another", "far", "away"};
@@ -230,7 +210,6 @@ public class TextRankSummarizer {
             } else {
                 this.stopWords = Arrays.asList(stopwords.split(",")).stream().map(str -> str.trim().toLowerCase()).collect(Collectors.toSet());
             }
-            //this.removeStopWords = true;
             return this;
         }
 

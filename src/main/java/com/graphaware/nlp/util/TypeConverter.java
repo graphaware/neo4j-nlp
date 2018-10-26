@@ -16,6 +16,7 @@
 package com.graphaware.nlp.util;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
@@ -122,5 +123,29 @@ public class TypeConverter {
                 return 0;
             }
         }
+    }
+
+    public static Long toLong(Object value) {
+        Long returnValue;
+        if (value == null) {
+            return null;
+        } else if (value instanceof Integer) {
+            returnValue = ((Integer) value).longValue();
+        } else if (value instanceof Long) {
+            returnValue = ((Long) value);
+        } else if (value instanceof String) {
+            returnValue = Long.parseLong((String) value);
+        } else {
+            throw new RuntimeException("Value: " + value + " cannot be cast to Long");
+        }
+        return returnValue;
+    }
+
+    public static <T> List<T> iterableToList(Iterable<T> it) {
+        List<T> newList = new ArrayList<>();
+        for (T obj : it) {
+            newList.add(obj);
+        }
+        return newList;
     }
 }
