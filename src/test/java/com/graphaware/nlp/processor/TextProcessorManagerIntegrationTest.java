@@ -3,6 +3,7 @@ package com.graphaware.nlp.processor;
 import com.graphaware.nlp.NLPIntegrationTest;
 import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.configuration.SettingsConstants;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,15 +18,14 @@ public class TextProcessorManagerIntegrationTest extends NLPIntegrationTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
     }
 
     @Test
     public void testDefaultPipelineIsUsedWhenSetInConfiguration() throws Exception {
         resetSingleton();
         try (Transaction tx = getDatabase().beginTx()) {
-            getNLPManager().setDefaultPipeline(TextProcessor.DEFAULT_PIPELINE);
-            getNLPManager().annotateTextAndPersist("some text", "id1", null, null, false, false);
+            getNLPManager().annotateTextAndPersist("some text", "id1", pipelineSpecification);
             assertTrue(true);
             tx.success();
         }

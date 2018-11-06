@@ -168,8 +168,7 @@ public final class NLPManager {
     public Boolean filter(FilterRequest filterRequest) {
         String text = filterRequest.getText();
         String filter = filterRequest.getFilter();
-        String pipeline = textProcessorsManager.getPipeline(filterRequest.getPipeline());
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        PipelineSpecification pipelineSpecification = textProcessorsManager.getPipelineSpecification(filterRequest.getPipeline());
         TextProcessor currentTP = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
         AnnotatedText annotatedText = currentTP.annotateText(text, pipelineSpecification);
         return annotatedText.filter(filter);
@@ -337,9 +336,5 @@ public final class NLPManager {
 
     public void setTextProcessorsManager(TextProcessorsManager textProcessorsManager) {
         this.textProcessorsManager = textProcessorsManager;
-    }
-
-    public PipelineSpecification getDefaultPipeline(String language) {
-        throw new NotSupportedException("Not implemented yet");
     }
 }

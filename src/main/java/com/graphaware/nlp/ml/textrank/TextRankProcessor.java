@@ -65,6 +65,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         
         TextRank textRank = textrankBuilder.build();
         TextRankResult result = textRank.evaluate(request.getNodes(),
+                request.getLanguage(),
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());

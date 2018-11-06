@@ -1,9 +1,11 @@
 package com.graphaware.nlp;
 
 import com.graphaware.common.kv.GraphKeyValueStore;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
+import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.workflow.WorkflowManager;
 import com.graphaware.runtime.GraphAwareRuntime;
@@ -24,6 +26,10 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 
 public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
+
+    protected static PipelineSpecification pipelineSpecification = new PipelineSpecification(
+            TextProcessor.DEFAULT_PIPELINE,
+            StubTextProcessor.class.getName());
 
     protected GraphKeyValueStore keyValueStore;
 
@@ -146,13 +152,13 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         Arrays.asList(annotators).forEach(a -> {
             steps.put(a, true);
         });
-        String query = "CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, processingSteps:$p2})";
+        String query = "CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, language: 'en', processingSteps:$p2})";
         executeInTransaction(query, buildSeqParameters(pipelineName, textProcessor, steps), emptyConsumer());
 
     }
 
     protected void createPipeline(String textProcessor, String pipelineName) {
-        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, processingSteps:{tokenizer:true, ner:true, phrase:true}})", buildSeqParameters(pipelineName, textProcessor), emptyConsumer());
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name:{p0}, textProcessor:{p1}, language: 'en', processingSteps:{tokenizer:true, ner:true, phrase:true}})", buildSeqParameters(pipelineName, textProcessor), emptyConsumer());
     }
 
     protected void createStubPipelineAndSetDefault(String name) {

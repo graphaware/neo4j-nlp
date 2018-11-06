@@ -23,14 +23,14 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
         executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
     }
 
     @Test
     public void testCanGetConceptsFromMicrosoft() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
+        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 
@@ -60,7 +60,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
     public void testEnricherNameIsSetAsRelationshipProperty() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager());
+        MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
         clearDb();
         executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 

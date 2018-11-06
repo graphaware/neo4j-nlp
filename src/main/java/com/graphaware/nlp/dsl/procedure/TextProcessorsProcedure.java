@@ -25,6 +25,7 @@ import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
+import scala.language;
 
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
         Set<TextProcessorItem> result = getNLPManager().getProcessors();
         return result.stream();
     }
-    
+
     @Procedure(name = "ga.nlp.processor.addPipeline", mode = Mode.WRITE)
     @Description("Add custom pipeline to a Text Processor")
     public Stream<SingleResult> addPipeline(@Name("addPipelineRequest") Map<String, Object> addPipelineRequest) {
@@ -61,7 +62,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Procedure("ga.nlp.processor.getPipelines")
     @Description("Returns the pipeline informations")
     public Stream<PipelineSpecification> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
@@ -70,14 +71,16 @@ public class TextProcessorsProcedure extends AbstractDSL {
 
     @Procedure(value = "ga.nlp.processor.pipeline.default", mode = Mode.WRITE)
     @Description("Specify the pipeline to be used by default")
-    public Stream<SingleResult> setDefaultPipeline(@Name("name") String name) {
-        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(name);
-        if (null == pipelineSpecification) {
-            throw new RuntimeException("Pipeline " + name + " does not exist");
-        }
-        getConfiguration().updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, name);
-
+    public Stream<SingleResult> setDefaultPipeline(@Name("name") String name, @Name(value = "language", defaultValue = "en") String language) {
+        getNLPManager().getTextProcessorsManager().setDefaultPipeline(name, language);
         return Stream.of(SingleResult.success());
+    }
+
+    @Procedure(value = "ga.nlp.processor.pipeline.default.get", mode = Mode.WRITE)
+    @Description("Specify the pipeline to be used by default")
+    public Stream<SingleResult> getDefaultPipeline(@Name(value = "language", defaultValue = "en") String language) {
+        PipelineSpecification defaultPipeline = getNLPManager().getTextProcessorsManager().getDefaultPipeline(language);
+        return Stream.of(new SingleResult(defaultPipeline));
     }
 
     @Procedure(name = "ga.nlp.processor.train", mode = Mode.WRITE)

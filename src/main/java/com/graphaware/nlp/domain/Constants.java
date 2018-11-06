@@ -35,10 +35,13 @@ public final class Constants {
     public static final String PROCESS_STATUS_FAILED = "FAILED";
     //
     public static final String PARAMETER_DEPTH = "depth";
+    public static final String PARAMETER_LANGUAGE = "language";
     //    
     public static final String LANGUAGE_NA = "n/a";
     public static final String LANGUAGE_EN = "en";
     public static final String LANGUAGE_DE = "de";
+
+    public static final String DEFAULT_LANGUAGE = LANGUAGE_EN;
     
     public static final String VECTOR_PROPERTY = "vector";
 

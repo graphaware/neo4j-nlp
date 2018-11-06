@@ -19,6 +19,7 @@ import com.graphaware.nlp.annotation.NLPTextProcessor;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
 import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Constants;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.exception.InvalidPipelineException;
@@ -39,6 +40,8 @@ public class TextProcessorsManager {
     private final Map<String, TextProcessor> textProcessors = new HashMap<>();
     private final DynamicConfiguration configuration;
 
+    private final Map<String, PipelineSpecification> defaultPipelineByLanguage = new HashMap<>();
+
     private String supportedLanguage;
 
     public TextProcessorsManager(DynamicConfiguration configuration) {
@@ -50,13 +53,6 @@ public class TextProcessorsManager {
     private void loadTextProcessors() {
         Map<String, TextProcessor> loadedInstances = ServiceLoader.loadInstances(NLPTextProcessor.class);
         textProcessors.putAll(loadedInstances);
-
-        loadedInstances.keySet().forEach(k -> {
-            TextProcessor ins = loadedInstances.get(k);
-            if (ins.override() != null && textProcessors.containsKey(ins.override())) {
-                textProcessors.remove(ins.override());
-            }
-        });
     }
 
     private void initiateTextProcessors() {
@@ -78,10 +74,9 @@ public class TextProcessorsManager {
     }
 
     public PipelineSpecification getPipelineSpecification(String pipelineName) {
-        String pipeline = getPipeline(pipelineName);
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipelineName);
         if (null == pipelineSpecification) {
-            throw new RuntimeException("No pipeline " + pipeline);
+            throw new RuntimeException("No pipeline " + pipelineName);
         }
         return pipelineSpecification;
     }
@@ -109,25 +104,7 @@ public class TextProcessorsManager {
         }
     }
 
-    public String getPipeline(String pipelineName) {
-
-        if (pipelineName != null) {
-            return pipelineName;
-        }
-        //FIXME remove
-        if (configuration.hasSettingValue(SettingsConstants.DEFAULT_PIPELINE)) {
-            LOG.info("Taking default pipeline from configuration : " + configuration.getSettingValueFor(SettingsConstants.DEFAULT_PIPELINE).toString());
-            return configuration.getSettingValueFor(SettingsConstants.DEFAULT_PIPELINE).toString();
-        }
-
-        throw new RuntimeException("A pipeline should be given or set as default");
-    }
-
     public List<PipelineSpecification> getPipelineSpecifications(String name) {
-        if (null == name || "".equals(name)) {
-            return getPipelineSpecifications();
-        }
-
         PipelineSpecification pipelineSpecification = configuration.loadPipeline(name);
         if (null != pipelineSpecification) {
             return Arrays.asList(pipelineSpecification);
@@ -143,15 +120,6 @@ public class TextProcessorsManager {
     public boolean hasPipeline(String name) {
         List<PipelineSpecification> pipelines = getPipelineSpecifications(name);
         return pipelines.size() > 0;
-    }
-
-    public void setDefaultPipeline(String pipeline) {
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
-        if (null == pipelineSpecification) {
-            throw new RuntimeException("No pipeline " + pipeline + " exist");
-        }
-
-        configuration.updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, pipeline);
     }
 
     public TextProcessor getTextProcessor(String name) {
@@ -188,7 +156,6 @@ public class TextProcessorsManager {
         return textProcessors;
     }
 
-    @Deprecated
     public TextProcessor getDefaultProcessor() {
         return textProcessors.get(getDefaultProcessorName());
     }
@@ -198,21 +165,21 @@ public class TextProcessorsManager {
     }
 
     public Tag annotateTag(String text, String language) {
-        //Search for the default by language and use it
-        //textProcessors.get("").annotateTag(, );
-        //return null if not found
-        return null;
+        PipelineSpecification spec = getDefaultPipeline(language);
+        TextProcessor processor = getTextProcessor(spec.getTextProcessor());
+        return processor.annotateTag(text, spec);
     }
 
     public List<Tag> annotateTags(String text, String language) {
-        //Search for the default by language and use it
-        //textProcessors.get("").annotateTags(, );
-        return null;
+        PipelineSpecification spec = getDefaultPipeline(language);
+        TextProcessor processor = getTextProcessor(spec.getTextProcessor());
+        return processor.annotateTags(text, spec);
     }
 
     public AnnotatedText annotate(String text, String pipelineName) {
         return annotate(text, getPipelineSpecification(pipelineName));
     }
+
     public AnnotatedText annotate(String text, PipelineSpecification pipelineSpecification) {
         if (null == pipelineSpecification) {
             throw new RuntimeException("No pipeline " + pipelineSpecification.name + " found.");
@@ -237,26 +204,15 @@ public class TextProcessorsManager {
     }
 
     private PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
-        addSupportedLanguage(pipelineSpecification.getLanguage());
+        addSupportedLanguage(pipelineSpecification);
         String processorName = pipelineSpecification.getTextProcessor();
         if (processorName == null || !textProcessors.containsKey(processorName)) {
             throw new RuntimeException("Processor " + processorName + " does not exist");
         }
         TextProcessor processor = textProcessors.get(processorName);
         processor.createPipeline(pipelineSpecification);
-
         return new PipelineCreationResult(0, "");
     }
-
-    /*public void removePipeline(String processor, String pipeline) {
-        if (!textProcessors.containsKey(processor)) {
-            throw new RuntimeException("No text processor with name " + processor + " available");
-        }
-
-        // @todo extract to its own method
-        TextProcessor textProcessor = textProcessors.get(processor);
-        textProcessor.removePipeline(pipeline);
-    }*/
 
     // @todo is it really needed ?
     public static class PipelineCreationResult {
@@ -294,7 +250,12 @@ public class TextProcessorsManager {
         return null;
     }
 
-    public void addSupportedLanguage(String language) {
+    protected void addSupportedLanguage(PipelineSpecification pipelineSpecification) {
+        String language = pipelineSpecification.getLanguage();
+        if (language == null) {
+            pipelineSpecification.setLanguage(Constants.DEFAULT_LANGUAGE);
+            language = Constants.DEFAULT_LANGUAGE;
+        }
         if (supportedLanguage == null ||
                 supportedLanguage.isEmpty()) {
             supportedLanguage = language;
@@ -302,6 +263,66 @@ public class TextProcessorsManager {
                 !supportedLanguage.equalsIgnoreCase(language)) {
             throw new RuntimeException("Multiple languages not supported in this version");
         }
+        checkAndSetDefaultPipeline(pipelineSpecification, language);
+    }
+
+    protected void checkAndSetDefaultPipeline(PipelineSpecification pipelineSpecification, String language) {
+        String pipelineName = (String) configuration.getSettingValueFor(getDefaultPipelineKey(language));
+        if (pipelineName == null) {
+            setDefaultPipelineAux(language, pipelineSpecification);
+        } else {
+            PipelineSpecification defaultPipelineSpecification = configuration.loadPipeline(pipelineName);
+            if (pipelineSpecification != null &&
+                    !defaultPipelineByLanguage.containsKey(language)) {
+                defaultPipelineByLanguage.put(language, defaultPipelineSpecification);
+            } else {
+                //Since a default is set but not exist let me set a default for the language anyway
+                defaultPipelineByLanguage.put(language, pipelineSpecification);
+            }
+        }
+    }
+
+    public void setDefaultPipeline(String pipelineName, String language) {
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipelineName);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipelineName + " exist");
+        }
+        setDefaultPipelineAux(language, pipelineSpecification);
+    }
+
+    public PipelineSpecification getDefaultPipeline(String language) {
+        if (defaultPipelineByLanguage.containsKey(language)) {
+            return defaultPipelineByLanguage.get(language);
+        }
+        PipelineSpecification pipelineSpecification = getPipelineSpecificationFromConfig(language);
+        if (pipelineSpecification == null) {
+            return null;
+        }
+        defaultPipelineByLanguage.put(language, pipelineSpecification);
+        return pipelineSpecification;
+    }
+
+    private PipelineSpecification getPipelineSpecificationFromConfig(String language) {
+        String pipelineName = (String) configuration.getSettingValueFor(getDefaultPipelineKey(language));
+        if (pipelineName == null) {
+            LOG.warn("Something goes wrong (this shouldn't happen) default pipeline not available");
+            return null;
+        }
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipelineName);
+        if (pipelineSpecification == null) {
+            LOG.warn("Default pipeline specification for " + pipelineName + " not available");
+            return null;
+        }
+        return pipelineSpecification;
+    }
+
+    private void setDefaultPipelineAux(String language, PipelineSpecification pipelineSpecification) {
+        configuration.updateInternalSetting(getDefaultPipelineKey(language), pipelineSpecification.getName());
+        defaultPipelineByLanguage.put(language, pipelineSpecification);
+    }
+
+    private String getDefaultPipelineKey(String language) {
+        return SettingsConstants.DEFAULT_PIPELINE + "_" + language;
     }
 
     public void removeSupportedLanguage(String language) {

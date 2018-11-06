@@ -1,6 +1,7 @@
 package com.graphaware.nlp.extension;
 
 import com.graphaware.nlp.NLPIntegrationTest;
+import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.stub.StubExtension;
 import com.graphaware.nlp.stub.StubTextProcessor;
@@ -17,7 +18,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
         executeInTransaction("CALL ga.nlp.processor.pipeline.default({p0})", buildSeqParameters("tokenizer"), emptyConsumer());
     }
 
@@ -33,10 +34,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
             getNLPManager().annotateTextAndPersist(
                     "Hello world",
                     "id-123",
-                    "com.graphaware.nlp.stub.StubTextProcessor",
-                    "tokenizer",
-                    false,
-                    false
+                    pipelineSpecification
             );
             tx.success();
         }
@@ -50,10 +48,7 @@ public class NLPExtensionIntegrationTest extends NLPIntegrationTest {
             getNLPManager().annotateTextAndPersist(
                     "Hello world",
                     "id-123",
-                    "com.graphaware.nlp.stub.StubTextProcessor",
-                    "tokenizer",
-                    false,
-                    false
+                    pipelineSpecification
             );
             tx.success();
         }

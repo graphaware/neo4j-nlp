@@ -30,7 +30,7 @@ public interface TextProcessor {
 
     String getAlias();
 
-    String override();
+    //String override();
 
     List<String> getPipelines();
 

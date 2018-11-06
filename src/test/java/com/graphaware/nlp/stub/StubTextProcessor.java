@@ -29,11 +29,6 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public String override() {
-        return null;
-    }
-
-    @Override
     public List<String> getPipelines() {
         return new ArrayList<>(pipelines.keySet());
     }

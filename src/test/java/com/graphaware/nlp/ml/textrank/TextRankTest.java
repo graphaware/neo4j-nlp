@@ -21,8 +21,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.stub.StubTextProcessor;
 import com.graphaware.nlp.util.ImportUtils;
+import org.junit.Before;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Node;
@@ -32,6 +35,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TextRankTest extends NLPIntegrationTest {
+
+    private static NLPManager manager;
 
     private static final List<String> expectedKeywords = Arrays.asList("flight failure", "speed brake", "space shuttle", "ground operation", "actuator", "installation", "flight", "gear", "shuttle", "brake", "speed", "failure", "unusual", "design");
     private static final String TEXT1 = "On 8 May 2013, "
@@ -46,6 +51,14 @@ public class TextRankTest extends NLPIntegrationTest {
             + "was too close to call. It was not, and despite his being in Pakistan, "
             + "the outcome of the election was exactly as we predicted.";
 
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        manager = NLPManager.getInstance();
+        manager.init(getDatabase(), new DynamicConfiguration(getDatabase()));
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
+    }
     /**
      * Test of TextRank procedure, class TextRank.
      */
@@ -67,7 +80,7 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}), 30, 0.85, 0.0001);
+            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}), "en" ,30, 0.85, 0.0001);
 
             // Store TextRank result
             TextRankPersister persister = new TextRankPersister(Label.label("Keyword"));
@@ -124,7 +137,7 @@ public class TextRankTest extends NLPIntegrationTest {
                     .build();
             assertNotNull("AnnotatedText not found.", annText);
             assertNotNull("TextRank.Builder failed: textrank is null", textrank);
-            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}), 30, 0.85, 0.0001);
+            TextRankResult res = textrank.evaluate(Arrays.asList(new Node[] {annText}),  "en",30, 0.85, 0.0001);
             assertTrue("TextRank failed, returned false.", res.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS));
             tx.success();
         }
@@ -154,7 +167,7 @@ public class TextRankTest extends NLPIntegrationTest {
     public void testTextRankWithPreviousAnnotationDefaulted() {
         createStubPipelineAndSetDefault("default");
         executeInTransaction("CREATE (n:Document) SET n.text = 'John and I went to IBM today, it was great fun and we learned a lot about computers' WITH n " +
-                "CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
+                "CALL ga.nlp.annotate({text: n.text, id: id(n), pipeline: 'default'}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", emptyConsumer());
         executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText:n}) YIELD result RETURN count(*)", emptyConsumer());
     }
 
@@ -162,7 +175,7 @@ public class TextRankTest extends NLPIntegrationTest {
     public void testTextRankWithPreviousAnnotationNonDefault() {
         createPipeline(StubTextProcessor.class.getName(), "default");
         executeInTransaction("CREATE (n:Document) SET n.text = {p0} WITH n " +
-                "CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false, pipeline:'default'}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", buildSeqParameters(TEXT1), emptyConsumer());
+                "CALL ga.nlp.annotate({text: n.text, id: id(n), pipeline:'default'}) YIELD result MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)", buildSeqParameters(TEXT1), emptyConsumer());
         executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.ml.textRank({annotatedText:n}) YIELD result RETURN count(*)", emptyConsumer());
     }
 
