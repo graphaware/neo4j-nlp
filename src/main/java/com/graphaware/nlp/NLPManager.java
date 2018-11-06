@@ -30,25 +30,23 @@ import com.graphaware.nlp.enrich.conceptnet5.ConceptNet5Enricher;
 import com.graphaware.nlp.enrich.microsoft.MicrosoftConceptEnricher;
 import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
-import com.graphaware.nlp.exception.InvalidTextException;
-import com.graphaware.nlp.exception.TextAnalysisException;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
-import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
-import com.graphaware.nlp.util.ProcessorUtils;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.nlp.vector.VectorComputation;
 import com.graphaware.nlp.vector.VectorHandler;
+import org.apache.http.MethodNotSupportedException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.logging.Log;
 
+import javax.ws.rs.NotSupportedException;
 import java.util.*;
 
 public final class NLPManager {
@@ -58,8 +56,6 @@ public final class NLPManager {
     private static final String NEO4j_HOME = "unsupported.dbms.directories.neo4j_home";
 
     private static NLPManager instance = null;
-
-    private NLPConfiguration nlpConfiguration;
 
     private TextProcessorsManager textProcessorsManager;
 
@@ -79,8 +75,9 @@ public final class NLPManager {
 
     private boolean initialized = false;
 
+    private LanguageManager languageManager;
+
     protected NLPManager() {
-        super();
     }
 
     public static NLPManager getInstance() {
@@ -95,23 +92,23 @@ public final class NLPManager {
         return NLPManager.instance;
     }
 
-    public void init(GraphDatabaseService database, NLPConfiguration nlpConfiguration, DynamicConfiguration configuration) {
+    public void init(GraphDatabaseService database, DynamicConfiguration configuration) {
         if (initialized) {
             return;
         }
-        this.nlpConfiguration = nlpConfiguration;
-        this.textProcessorsManager = new TextProcessorsManager();
         this.configuration = configuration;
+        this.textProcessorsManager = new TextProcessorsManager(configuration);
+        this.languageManager = new LanguageManager();
         this.database = database;
         this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
-        loadVectorComputationProcesses();
         loadExtensions();
-        registerEventListeners();
-        initialized = true;
-        registerPipelinesFromConfig();
+        this.textProcessorsManager.registerPipelinesFromConfig();
+        loadVectorComputationProcesses();
         registerWord2VecModelFromConfig();
+
+        initialized = true;
     }
 
     public TextProcessorsManager getTextProcessorsManager() {
@@ -127,51 +124,19 @@ public final class NLPManager {
     }
 
     public Node annotateTextAndPersist(AnnotationRequest annotationRequest) {
-        return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(), annotationRequest.getTextProcessor(),
-                annotationRequest.getPipeline(), annotationRequest.isForce(), annotationRequest.shouldCheckLanguage());
+        return annotateTextAndPersist(annotationRequest.getText(), annotationRequest.getId(),
+                annotationRequest.getPipeline());
     }
 
-    public Node annotateTextAndPersist(String text, String id, String textProcessor, String pipelineName, boolean force, boolean checkForLanguage) {
-        String lang = checkTextLanguage(text, checkForLanguage);
-        PipelineSpecification pipelineSpecification = getPipelineSpecification(pipelineName);
-        AnnotatedText at = annotate(text, lang, pipelineSpecification);
+    public Node annotateTextAndPersist(String text, String id, String pipelineName) {
+        PipelineSpecification pipelineSpecification = textProcessorsManager.getPipelineSpecification(pipelineName);
+        AnnotatedText at = textProcessorsManager.annotate(text, pipelineSpecification);
         return processAnnotationPersist(id, text, at, pipelineSpecification);
     }
 
-    public PipelineSpecification getPipelineSpecification(String pipelineName) {
-        String pipeline = getPipeline(pipelineName);
-        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
-        return pipelineSpecification;
-    }
-
-    public AnnotatedText annotate(String text, String lang, PipelineSpecification pipelineSpecification) {
-        if (null == pipelineSpecification) {
-            throw new RuntimeException("No pipeline " + pipelineSpecification.name + " found.");
-        }
-
-        if (text.trim().equalsIgnoreCase("")) {
-            throw new InvalidTextException();
-        }
-
+    public Node annotateTextAndPersist(String text, String id, PipelineSpecification pipelineSpecification) {
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
-        long startTime = -System.currentTimeMillis();
-        AnnotatedText annotatedText;
-
-        try {
-             annotatedText = processor.annotateText(text, lang, pipelineSpecification);
-        } catch (Exception e) {
-            throw new TextAnalysisException(e.getMessage(), e);
-        }
-
-        LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
-        return annotatedText;
-    }
-
-    public Node annotateTextAndPersist(String text, String id, boolean checkForLanguage, PipelineSpecification pipelineSpecification) {
-        String lang = checkTextLanguage(text, checkForLanguage);
-        TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
-        AnnotatedText annotatedText = processor.annotateText(text, lang, pipelineSpecification);
-
+        AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification);
         return processAnnotationPersist(id, text, annotatedText, pipelineSpecification);
     }
 
@@ -199,37 +164,14 @@ public final class NLPManager {
         return eventDispatcher;
     }
 
-    public List<PipelineSpecification> getPipelineSpecifications() {
-        return configuration.loadCustomPipelines();
-    }
-
-    public List<PipelineSpecification> getPipelineSpecifications(String name) {
-        if (null == name || "".equals(name)) {
-            return getPipelineSpecifications();
-        }
-
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(name);
-        if (null != pipelineSpecification) {
-            return Arrays.asList(pipelineSpecification);
-        }
-
-        return new ArrayList<>();
-    }
-
-    public void removePipeline(String pipeline, String processor) {
-        configuration.removePipeline(pipeline, processor);
-        textProcessorsManager.getTextProcessor(processor).removePipeline(pipeline);
-    }
 
     public Boolean filter(FilterRequest filterRequest) {
         String text = filterRequest.getText();
-        checkTextLanguage(text, false);
-        String lang = LanguageManager.getInstance().detectLanguage(text);
         String filter = filterRequest.getFilter();
-        String pipeline = getPipeline(filterRequest.getPipeline());
+        String pipeline = textProcessorsManager.getPipeline(filterRequest.getPipeline());
         PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
         TextProcessor currentTP = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
-        AnnotatedText annotatedText = currentTP.annotateText(text, lang, pipelineSpecification);
+        AnnotatedText annotatedText = currentTP.annotateText(text, pipelineSpecification);
         return annotatedText.filter(filter);
     }
 
@@ -247,23 +189,6 @@ public final class NLPManager {
         );
     }
 
-    public String checkTextLanguage(String text, boolean failIfUnsupported) {
-        LanguageManager languageManager = LanguageManager.getInstance();
-        String detectedLanguage = languageManager.detectLanguage(text);
-
-        if (!languageManager.isTextLanguageSupported(text) && configuration.hasSettingValue(SettingsConstants.FALLBACK_LANGUAGE)) {
-            return configuration.getSettingValueFor(SettingsConstants.FALLBACK_LANGUAGE).toString();
-        }
-
-        if (!languageManager.isTextLanguageSupported(text) && failIfUnsupported) {
-            String msg = String.format("Unsupported language : %s", detectedLanguage);
-            LOG.error(msg);
-            throw new RuntimeException(msg);
-        }
-
-        return detectedLanguage;
-    }
-
     public Set<TextProcessorItem> getProcessors() {
         Set<String> textProcessors = textProcessorsManager.getTextProcessorNames();
         Set<TextProcessorItem> result = new HashSet<>();
@@ -272,19 +197,6 @@ public final class NLPManager {
             result.add(processor);
         });
         return result;
-    }
-
-    public void addPipeline(PipelineSpecification request) {
-        // Check that the textProcessor exist !
-        if (null == request.getTextProcessor() || textProcessorsManager.getTextProcessor(request.getTextProcessor()) == null) {
-            throw new RuntimeException(String.format("Invalid text processor %s", request.getTextProcessor()));
-        }
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(request.getName());
-        if (null != pipelineSpecification) {
-            throw new RuntimeException("Pipeline with name " + request.getName() + " already exist");
-        }
-        configuration.storeCustomPipeline(request);
-        textProcessorsManager.createPipeline(request);
     }
 
     public void addWord2VecModel(Word2VecModelSpecification request) {
@@ -338,25 +250,6 @@ public final class NLPManager {
         }
 
         return null;
-    }
-
-    public String getPipeline(String pipelineName) {
-        return ProcessorUtils.getPipeline(pipelineName, configuration);
-    }
-
-    public boolean hasPipeline(String name) {
-        List<PipelineSpecification> pipelines = getPipelineSpecifications(name);
-
-        return pipelines.size() > 0;
-    }
-
-    public void setDefaultPipeline(String pipeline) {
-        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
-        if (null == pipelineSpecification) {
-            throw new RuntimeException("No pipeline " + pipeline + " exist");
-        }
-
-        configuration.updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, pipeline);
     }
 
     public Node computeVectorAndPersist(ComputeVectorRequest request) {
@@ -425,24 +318,6 @@ public final class NLPManager {
         });
     }
 
-    private void registerEventListeners() {
-        extensions.values().forEach(e -> {
-            e.registerEventListeners(eventDispatcher);
-        });
-    }
-
-    private void registerPipelinesFromConfig() {
-        configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
-            // Check that the text processor exist, it can happen that the configuration
-            // hold a reference to a processor that is not more registered, in order to avoid
-            // this method to fail completely for valid pipelines, we just do not register
-            // possible legacy pipelines
-            if (textProcessorsManager.getTextProcessorNames().contains(pipelineSpecification.getTextProcessor())) {
-                textProcessorsManager.createPipeline(pipelineSpecification);
-            }
-        });
-    }
-
     private void loadVectorComputationProcesses() {
         Map<String, VectorComputation> extensionMap = ServiceLoader.loadInstances(NLPVectorComputationProcess.class);
         extensionMap.keySet().forEach(k -> {
@@ -454,5 +329,17 @@ public final class NLPManager {
 
     public VectorComputation getVectorComputationProcesses(String type) {
         return vectorComputationProcesses.get(type);
+    }
+
+    public LanguageManager getLanguageManager() {
+        return languageManager;
+    }
+
+    public void setTextProcessorsManager(TextProcessorsManager textProcessorsManager) {
+        this.textProcessorsManager = textProcessorsManager;
+    }
+
+    public PipelineSpecification getDefaultPipeline(String language) {
+        throw new NotSupportedException("Not implemented yet");
     }
 }

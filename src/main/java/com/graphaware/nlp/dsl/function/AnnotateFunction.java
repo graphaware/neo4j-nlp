@@ -33,10 +33,10 @@ public class AnnotateFunction extends AbstractDSL {
     @Description("Perform the annotation on the given text, returns the produced annotation domain")
     public Map<String, Object> getAnnotation(@Name("text") String text, @Name("pipelineSpecification") Map<String, Object> specificationInput) {
         PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(specificationInput);
-        String pipeline = getNLPManager().getPipeline(pipelineSpecification.getName());
+        String pipeline = getNLPManager().getTextProcessorsManager().getPipeline(pipelineSpecification.getName());
         PipelineSpecification spec = getConfiguration().loadPipeline(pipeline);
         TextProcessor processor = getNLPManager().getTextProcessorsManager().getTextProcessor(spec.getTextProcessor());
-        AnnotatedText annotatedText = processor.annotateText(text, "en", pipelineSpecification);
+        AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification);
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);

@@ -38,6 +38,7 @@ public class SimilarityProcessor extends AbstractExtension implements NLPExtensi
 
     @Override
     public void postLoaded() {
+        super.postLoaded();
         featureBusinessLogic = new FeatureBasedProcessLogic(getDatabase());
         featureBusinessLogic.start();
         vectorBusinessLogic = new VectorProcessLogic(getDatabase());

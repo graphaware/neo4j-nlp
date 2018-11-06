@@ -16,16 +16,20 @@
 package com.graphaware.nlp.processor;
 
 import com.graphaware.nlp.annotation.NLPTextProcessor;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
+import com.graphaware.nlp.configuration.SettingsConstants;
+import com.graphaware.nlp.domain.AnnotatedText;
+import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
 import com.graphaware.nlp.exception.InvalidPipelineException;
+import com.graphaware.nlp.exception.InvalidTextException;
 import com.graphaware.nlp.exception.InvalidTextProcessorException;
+import com.graphaware.nlp.exception.TextAnalysisException;
 import com.graphaware.nlp.util.ServiceLoader;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class TextProcessorsManager {
 
@@ -33,8 +37,12 @@ public class TextProcessorsManager {
     private static final String DEFAULT_TEXT_PROCESSOR = "com.graphaware.nlp.processor.stanford.StanfordTextProcessor";
 
     private final Map<String, TextProcessor> textProcessors = new HashMap<>();
+    private final DynamicConfiguration configuration;
 
-    public TextProcessorsManager() {
+    private String supportedLanguage;
+
+    public TextProcessorsManager(DynamicConfiguration configuration) {
+        this.configuration = configuration;
         loadTextProcessors();
         initiateTextProcessors();
     }
@@ -49,19 +57,101 @@ public class TextProcessorsManager {
                 textProcessors.remove(ins.override());
             }
         });
-//
-//        loadedInstances.keySet().forEach(k -> {
-//            TextProcessor textProcessor = loadedInstances.get(k);
-//            if (textProcessor.getAlias() != null && textProcessors.containsKey(k)) {
-//                textProcessors.put(textProcessor.getAlias(), textProcessor);
-//            }
-//        });
     }
 
     private void initiateTextProcessors() {
         textProcessors.values().forEach(textProcessor -> {
             textProcessor.init();
         });
+    }
+
+    public void registerPipelinesFromConfig() {
+        configuration.loadCustomPipelines().forEach(pipelineSpecification -> {
+            // Check that the text processor exist, it can happen that the configuration
+            // hold a reference to a processor that is not more registered, in order to avoid
+            // this method to fail completely for valid pipelines, we just do not register
+            // possible legacy pipelines
+            if (getTextProcessorNames().contains(pipelineSpecification.getTextProcessor())) {
+                createPipeline(pipelineSpecification);
+            }
+        });
+    }
+
+    public PipelineSpecification getPipelineSpecification(String pipelineName) {
+        String pipeline = getPipeline(pipelineName);
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipeline);
+        }
+        return pipelineSpecification;
+    }
+
+    public void addPipeline(PipelineSpecification pipelineSpecification) {
+        // Check that the textProcessor exist !
+        if (null == pipelineSpecification.getTextProcessor()
+                || getTextProcessor(pipelineSpecification.getTextProcessor()) == null) {
+            throw new RuntimeException(String.format("Invalid text processor %s", pipelineSpecification.getTextProcessor()));
+        }
+        if (null != configuration.loadPipeline(pipelineSpecification.getName())) {
+            throw new RuntimeException("Pipeline with name " + pipelineSpecification.getName() + " already exist");
+        }
+        createPipeline(pipelineSpecification);
+        configuration.storeCustomPipeline(pipelineSpecification);
+    }
+
+    public void removePipeline(String pipeline, String processor) {
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        String language = pipelineSpecification.getLanguage();
+        configuration.removePipeline(pipeline, processor);
+        getTextProcessor(processor).removePipeline(pipeline);
+        if (getPipelineSpecifications().stream().filter(item -> item.getLanguage() == language).count() == 0) {
+            removeSupportedLanguage(language);
+        }
+    }
+
+    public String getPipeline(String pipelineName) {
+
+        if (pipelineName != null) {
+            return pipelineName;
+        }
+        //FIXME remove
+        if (configuration.hasSettingValue(SettingsConstants.DEFAULT_PIPELINE)) {
+            LOG.info("Taking default pipeline from configuration : " + configuration.getSettingValueFor(SettingsConstants.DEFAULT_PIPELINE).toString());
+            return configuration.getSettingValueFor(SettingsConstants.DEFAULT_PIPELINE).toString();
+        }
+
+        throw new RuntimeException("A pipeline should be given or set as default");
+    }
+
+    public List<PipelineSpecification> getPipelineSpecifications(String name) {
+        if (null == name || "".equals(name)) {
+            return getPipelineSpecifications();
+        }
+
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(name);
+        if (null != pipelineSpecification) {
+            return Arrays.asList(pipelineSpecification);
+        }
+
+        return new ArrayList<>();
+    }
+
+    public List<PipelineSpecification> getPipelineSpecifications() {
+        return configuration.loadCustomPipelines();
+    }
+
+    public boolean hasPipeline(String name) {
+        List<PipelineSpecification> pipelines = getPipelineSpecifications(name);
+        return pipelines.size() > 0;
+    }
+
+    public void setDefaultPipeline(String pipeline) {
+        PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipeline);
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipeline + " exist");
+        }
+
+        configuration.updateInternalSetting(SettingsConstants.DEFAULT_PIPELINE, pipeline);
     }
 
     public TextProcessor getTextProcessor(String name) {
@@ -98,6 +188,7 @@ public class TextProcessorsManager {
         return textProcessors;
     }
 
+    @Deprecated
     public TextProcessor getDefaultProcessor() {
         return textProcessors.get(getDefaultProcessorName());
     }
@@ -106,7 +197,47 @@ public class TextProcessorsManager {
         return textProcessors.keySet();
     }
 
-    public PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
+    public Tag annotateTag(String text, String language) {
+        //Search for the default by language and use it
+        //textProcessors.get("").annotateTag(, );
+        //return null if not found
+        return null;
+    }
+
+    public List<Tag> annotateTags(String text, String language) {
+        //Search for the default by language and use it
+        //textProcessors.get("").annotateTags(, );
+        return null;
+    }
+
+    public AnnotatedText annotate(String text, String pipelineName) {
+        return annotate(text, getPipelineSpecification(pipelineName));
+    }
+    public AnnotatedText annotate(String text, PipelineSpecification pipelineSpecification) {
+        if (null == pipelineSpecification) {
+            throw new RuntimeException("No pipeline " + pipelineSpecification.name + " found.");
+        }
+
+        if (text.trim().equalsIgnoreCase("")) {
+            throw new InvalidTextException();
+        }
+
+        TextProcessor processor = getTextProcessor(pipelineSpecification.getTextProcessor());
+        long startTime = -System.currentTimeMillis();
+        AnnotatedText annotatedText;
+
+        try {
+            annotatedText = processor.annotateText(text, pipelineSpecification);
+        } catch (Exception e) {
+            throw new TextAnalysisException(e.getMessage(), e);
+        }
+
+        LOG.info("Time to annotate " + (System.currentTimeMillis() + startTime));
+        return annotatedText;
+    }
+
+    private PipelineCreationResult createPipeline(PipelineSpecification pipelineSpecification) {
+        addSupportedLanguage(pipelineSpecification.getLanguage());
         String processorName = pipelineSpecification.getTextProcessor();
         if (processorName == null || !textProcessors.containsKey(processorName)) {
             throw new RuntimeException("Processor " + processorName + " does not exist");
@@ -117,7 +248,7 @@ public class TextProcessorsManager {
         return new PipelineCreationResult(0, "");
     }
 
-    public void removePipeline(String processor, String pipeline) {
+    /*public void removePipeline(String processor, String pipeline) {
         if (!textProcessors.containsKey(processor)) {
             throw new RuntimeException("No text processor with name " + processor + " available");
         }
@@ -125,7 +256,7 @@ public class TextProcessorsManager {
         // @todo extract to its own method
         TextProcessor textProcessor = textProcessors.get(processor);
         textProcessor.removePipeline(pipeline);
-    }
+    }*/
 
     // @todo is it really needed ?
     public static class PipelineCreationResult {
@@ -161,5 +292,19 @@ public class TextProcessorsManager {
         }
 
         return null;
+    }
+
+    public void addSupportedLanguage(String language) {
+        if (supportedLanguage == null ||
+                supportedLanguage.isEmpty()) {
+            supportedLanguage = language;
+        } else if (supportedLanguage != null &&
+                !supportedLanguage.equalsIgnoreCase(language)) {
+            throw new RuntimeException("Multiple languages not supported in this version");
+        }
+    }
+
+    public void removeSupportedLanguage(String language) {
+        supportedLanguage = null;
     }
 }

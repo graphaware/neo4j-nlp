@@ -27,6 +27,7 @@ import com.optimaize.langdetect.text.TextObject;
 import com.optimaize.langdetect.text.TextObjectFactory;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
+import scala.language;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,7 +39,7 @@ import static com.graphaware.nlp.domain.Constants.LANGUAGE_NA;
 import static com.graphaware.nlp.domain.Constants.LANGUAGE_DE;
 
 /*
-* https://github.com/optimaize/language-detector
+ * https://github.com/optimaize/language-detector
  */
 public class LanguageManager {
 
@@ -46,15 +47,12 @@ public class LanguageManager {
     private boolean initialized = false;
     private LanguageDetector languageDetector;
     private TextObjectFactory textObjectFactory;
-    
-    private final Set<String> supportedLanguages = new TreeSet<>();
 
-    private LanguageManager() {
-        supportedLanguages.add(LANGUAGE_EN);
-        supportedLanguages.add(LANGUAGE_DE);
+    public LanguageManager() {
+        initialize();
     }
 
-    public void initialize() {
+    private void initialize() {
         if (initialized) {
             return;
         }
@@ -74,15 +72,6 @@ public class LanguageManager {
         }
     }
 
-    public static LanguageManager getInstance() {
-        return LanguageDetectionHolder.INSTANCE;
-    }
-
-    private static class LanguageDetectionHolder {
-
-        private static final LanguageManager INSTANCE = new LanguageManager();
-    }
-
     public String detectLanguage(String text) {
         if (!initialized) {
             initialize();
@@ -97,17 +86,4 @@ public class LanguageManager {
 
         return LANGUAGE_NA;
     }
-    
-    public boolean isTextLanguageSupported(String text) {
-        return supportedLanguages.contains(detectLanguage(text));
-    }
-    
-    public boolean isLanguageSupported(String language) {
-        return supportedLanguages.contains(language);
-    }
-    
-    public void addSupportedLanguage(String language) {
-        supportedLanguages.add(language);        
-    }
-
 }

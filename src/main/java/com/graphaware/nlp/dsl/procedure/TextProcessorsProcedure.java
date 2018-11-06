@@ -43,8 +43,8 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Description("Add custom pipeline to a Text Processor")
     public Stream<SingleResult> addPipeline(@Name("addPipelineRequest") Map<String, Object> addPipelineRequest) {
         try {
-            PipelineSpecification request = mapper.convertValue(addPipelineRequest, PipelineSpecification.class);
-            getNLPManager().addPipeline(request);
+            PipelineSpecification pipelineSpecification = mapper.convertValue(addPipelineRequest, PipelineSpecification.class);
+            getNLPManager().getTextProcessorsManager().addPipeline(pipelineSpecification);
             return Stream.of(SingleResult.success());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -55,7 +55,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Description("Remove the given pipeline from the given text processor")
     public Stream<SingleResult> removePipeline(@Name("pipeline") String pipeline, @Name("textProcessor") String textProcessor) {
         try {
-            getNLPManager().removePipeline(pipeline, textProcessor);
+            getNLPManager().getTextProcessorsManager().removePipeline(pipeline, textProcessor);
             return Stream.of(SingleResult.success());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -65,7 +65,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Procedure("ga.nlp.processor.getPipelines")
     @Description("Returns the pipeline informations")
     public Stream<PipelineSpecification> getPipelines(@Name(value = "pipelineName", defaultValue = "") String pipelineName) {
-        return getNLPManager().getPipelineSpecifications(pipelineName).stream();
+        return getNLPManager().getTextProcessorsManager().getPipelineSpecifications(pipelineName).stream();
     }
 
     @Procedure(value = "ga.nlp.processor.pipeline.default", mode = Mode.WRITE)

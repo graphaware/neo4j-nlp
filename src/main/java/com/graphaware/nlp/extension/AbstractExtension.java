@@ -58,6 +58,7 @@ public abstract class AbstractExtension implements NLPExtension {
 
     @Override
     public void postLoaded() {
-        
+        this.registerEventListeners(getNLPManager().getEventDispatcher());
+        //in the subclasses it would be possible overwrite something in the NLPManager
     }
 }
