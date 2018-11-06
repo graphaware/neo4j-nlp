@@ -537,6 +537,12 @@ CALL ga.nlp.parser.pdf($url, [], {UserAgent: 'Mozilla/5.0 (Windows; U; Win98; en
 
 ### Extras
 
+#### Parsing raw content from a file
+
+```
+RETURN ga.nlp.parse.raw(<path-to-file>) AS content
+```
+
 #### Storing only certain Tag/Tokens
 
 In certain situations, it would be useful to store only certain values instead of the full graph, note though that it might reduce the ability to extract insights ( textRank ) for eg :
