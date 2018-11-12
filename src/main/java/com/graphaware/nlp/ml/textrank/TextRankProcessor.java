@@ -83,18 +83,4 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
     }
-
-    public SingleResult summarize(TextRankRequest request) {
-        TextRankSummarizer.Builder summarizerBuilder = new TextRankSummarizer.Builder(getDatabase(), getNLPManager().getConfiguration());
-        //summarizerBuilder.setKeywordLabel(request.getKeywordLabel());
-
-        TextRankSummarizer trSummarizer = summarizerBuilder.build();
-        boolean res = trSummarizer.evaluate(request.getNode(),
-                request.getIterations(),
-                request.getDamp(),
-                request.getThreshold());
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + res);
-
-        return res ? SingleResult.success() : SingleResult.fail();
-    }
 }

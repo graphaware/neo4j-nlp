@@ -17,6 +17,7 @@ package com.graphaware.nlp;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.nlp.annotation.NLPModuleExtension;
+import com.graphaware.nlp.annotation.NLPSummarizer;
 import com.graphaware.nlp.annotation.NLPVectorComputationProcess;
 import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.configuration.SettingsConstants;
@@ -32,12 +33,14 @@ import com.graphaware.nlp.event.EventDispatcher;
 import com.graphaware.nlp.event.TextAnnotationEvent;
 import com.graphaware.nlp.extension.NLPExtension;
 import com.graphaware.nlp.language.LanguageManager;
+import com.graphaware.nlp.ml.textrank.TextRankSummarizer;
 import com.graphaware.nlp.ml.word2vec.Word2VecProcessor;
 import com.graphaware.nlp.persistence.PersistenceRegistry;
 import com.graphaware.nlp.persistence.constants.Properties;
 import com.graphaware.nlp.persistence.persisters.Persister;
 import com.graphaware.nlp.processor.TextProcessor;
 import com.graphaware.nlp.processor.TextProcessorsManager;
+import com.graphaware.nlp.summatization.Summarizer;
 import com.graphaware.nlp.util.ServiceLoader;
 import com.graphaware.nlp.vector.VectorComputation;
 import com.graphaware.nlp.vector.VectorHandler;
@@ -68,6 +71,8 @@ public final class NLPManager {
     private EnrichmentRegistry enrichmentRegistry;
 
     private Map<String, VectorComputation> vectorComputationProcesses = new HashMap<>();
+
+    private Map<String, Summarizer> summarizers = new HashMap<>();
 
     private final Map<Class, NLPExtension> extensions = new HashMap<>();
 
@@ -106,6 +111,7 @@ public final class NLPManager {
         loadExtensions();
         this.textProcessorsManager.registerPipelinesFromConfig();
         loadVectorComputationProcesses();
+        loadSummarizers();
         registerWord2VecModelFromConfig();
 
         initialized = true;
@@ -270,6 +276,23 @@ public final class NLPManager {
         }
     }
 
+    public boolean summarize(SummaryRequest request) {
+        try {
+            Summarizer summarizer = summarizers.get(request.getType());
+            if (summarizer == null) {
+                throw new RuntimeException("Cannot find the Summarizer instance with type: " + request.getType());
+            }
+            boolean res = summarizer.evaluate(request.getParameters());
+            if (summarizer == null) {
+                throw new RuntimeException("Cannot find the VectorComputation instance with type: " + request.getType());
+            }
+            return res;
+        } catch (Exception ex) {
+            LOG.error("Error in summarization", ex);
+            throw ex;
+        }
+    }
+
     public void computeVectorTrainAndPersist(ComputeVectorTrainRequest request) {
         VectorComputation vectorComputation = vectorComputationProcesses.get(request.getType());
         if (vectorComputation == null) {
@@ -322,7 +345,16 @@ public final class NLPManager {
         extensionMap.keySet().forEach(k -> {
             VectorComputation extension = extensionMap.get(k);
             extension.setDatabase(database);
-            vectorComputationProcesses.put(extension.getType(), extensionMap.get(k));
+            vectorComputationProcesses.put(extension.getType(), extension);
+        });
+    }
+
+    private void loadSummarizers() {
+        Map<String, Summarizer> extensionMap = ServiceLoader.loadInstances(NLPSummarizer.class);
+        extensionMap.keySet().forEach(k -> {
+            Summarizer extension = extensionMap.get(k);
+            extension.setDatabase(database);
+            summarizers.put(extension.getType(), extension);
         });
     }
 

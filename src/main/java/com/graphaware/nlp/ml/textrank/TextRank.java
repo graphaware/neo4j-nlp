@@ -772,7 +772,7 @@ public class TextRank {
         private boolean cleanKeywords = DEFAULT_CLEAN_KEYWORDS;
         private double topxTags = DEFAULT_TAGS_TOPX;
         private Label keywordLabel;
-        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS));
+        //private Set<String> stopWords = new HashSet<>(Arrays.asList(PARAMETER_STOP_WORDS));
         private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_MEDIUM));
         //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_LARGE));
         private List<String> admittedPOSs = Arrays.asList(ADMITTED_POS);

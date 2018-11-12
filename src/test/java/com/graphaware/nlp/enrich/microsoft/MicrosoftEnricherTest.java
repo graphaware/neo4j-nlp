@@ -32,7 +32,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', pipeline: 'tokenizer'})", emptyConsumer());
 
         try (Transaction tx = getDatabase().beginTx()) {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
@@ -62,7 +62,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         MicrosoftConceptEnricher enricher = new MicrosoftConceptEnricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', pipeline: 'tokenizer'})", emptyConsumer());
 
         try (Transaction tx = getDatabase().beginTx()) {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
