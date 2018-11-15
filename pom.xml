@@ -224,6 +224,10 @@
           <artifactId>opennlp-tools</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.jsoup</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.ow2.asm</groupId>
           <artifactId>*</artifactId>
         </exclusion>
