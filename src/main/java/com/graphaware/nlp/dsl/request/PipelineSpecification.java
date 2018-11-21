@@ -82,7 +82,7 @@ public class PipelineSpecification {
     public PipelineSpecification(String name, String textProcessor) {
         this.name = name;
         this.textProcessor = textProcessor;
-        this.language = language != null ? language : Constants.DEFAULT_LANGUAGE;
+        this.language = Constants.DEFAULT_LANGUAGE;
     }
 
     public PipelineSpecification(String name, String language, String textProcessor) {

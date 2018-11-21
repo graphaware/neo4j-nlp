@@ -102,13 +102,16 @@ public final class NLPManager {
             return;
         }
         this.configuration = configuration;
-        this.textProcessorsManager = new TextProcessorsManager(configuration);
+
         this.languageManager = new LanguageManager();
         this.database = database;
         this.persistenceRegistry = new PersistenceRegistry(database);
         this.enrichmentRegistry = buildAndRegisterEnrichers();
         this.eventDispatcher = new EventDispatcher();
         loadExtensions();
+        if (textProcessorsManager == null) {
+            this.textProcessorsManager = new TextProcessorsManager(configuration);
+        }
         this.textProcessorsManager.registerPipelinesFromConfig();
         loadVectorComputationProcesses();
         loadSummarizers();
