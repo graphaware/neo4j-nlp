@@ -31,6 +31,7 @@ import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TextProcessorsManager {
 
@@ -101,6 +102,13 @@ public class TextProcessorsManager {
         getTextProcessor(processor).removePipeline(pipeline);
         if (getPipelineSpecifications().stream().filter(item -> item.getLanguage() == language).count() == 0) {
             removeSupportedLanguage(language);
+        } else {
+            PipelineSpecification defaultForLanguage = defaultPipelineByLanguage.get(language);
+            if (defaultForLanguage != null &&
+                    defaultForLanguage.getName().equalsIgnoreCase(pipeline)) {
+                PipelineSpecification newDefault = getPipelineSpecifications().stream().filter(item -> item.getLanguage() == language).collect(Collectors.toList()).get(0);
+                defaultPipelineByLanguage.put(language, newDefault);
+            }
         }
     }
 
@@ -325,7 +333,8 @@ public class TextProcessorsManager {
         return SettingsConstants.DEFAULT_PIPELINE + "_" + language;
     }
 
-    public void removeSupportedLanguage(String language) {
+    private void removeSupportedLanguage(String language) {
         supportedLanguage = null;
+        defaultPipelineByLanguage.remove(language);
     }
 }
