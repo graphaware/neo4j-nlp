@@ -316,7 +316,7 @@ public final class NLPManager {
 
     public String getDefaultModelWorkdir() {
         String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
-        if (p.equals(SettingsConstants.DEFAULT_MODEL_WORKDIR)) {
+        if (p == null) {
             throw new RuntimeException("No default model wordking directory set in configuration");
         }
 
@@ -326,7 +326,7 @@ public final class NLPManager {
     public boolean hasDefaultModelWorkdir() {
         String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
 
-        return !p.equals(SettingsConstants.DEFAULT_MODEL_WORKDIR);
+        return p != null;
     }
 
     public void addModel(String modelId, String modelPath) {

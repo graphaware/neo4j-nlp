@@ -84,7 +84,7 @@ public class TextRankTest extends NLPIntegrationTest {
 
             // Store TextRank result
             TextRankPersister persister = new TextRankPersister(Label.label("Keyword"));
-            persister.peristKeywords(res.getResult(), annText);
+            persister.persistKeywords(res.getResult(), annText);
             assertTrue("TextRank failed, returned false.", res.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS));
             tx.success();
         }

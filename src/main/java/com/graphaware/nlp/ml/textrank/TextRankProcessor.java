@@ -37,7 +37,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         TextRankResult result = compute(request);
         TextRankPersister persister = new TextRankPersister(Label.label(request.getKeywordLabel()));
         Node attachedNode = request.getNode() != null ? request.getNode() : request.getMotherNode();
-        persister.peristKeywords(result.getResult(), attachedNode);
+        persister.persistKeywords(result.getResult(), attachedNode);
 
         return result.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS)
                 ? SingleResult.success()
