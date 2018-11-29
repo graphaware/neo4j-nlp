@@ -18,11 +18,11 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.4.9.52</version>
+    <version>3.5.0.53</version>
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.4.9.52.16-SNAPSHOT</version>
+  <version>3.5.0.53.16-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
@@ -41,7 +41,6 @@
     <connection>scm:git:git@github.com:graphaware/neo4j-nlp.git</connection>
     <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp.git</developerConnection>
     <url>git@github.com:graphaware/neo4j-nlp.git</url>
-    <tag>nlp-3.4.9.52.14</tag>
   </scm>
 
   <developers>
@@ -105,6 +104,10 @@
         <exclusion>
           <groupId>org.ow2.asm</groupId>
           <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -342,6 +345,7 @@
                   <maxJdkVersion>1.8</maxJdkVersion>
                   <excludes>
                     <exclude>org.mindrot:jbcrypt</exclude>
+                    <exclude>com.graphaware.neo4j:*</exclude>
                   </excludes>
                 </enforceBytecodeVersion>
               </rules>
