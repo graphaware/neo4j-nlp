@@ -152,7 +152,7 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     }
 
     public String getConceptNetUrl() {
-        String urlFromConfigOrDefault = getConfiguration().getSettingValueFor(CONFIG_KEY_URL).toString();
+        String urlFromConfigOrDefault = (String)getConfiguration().getSettingValueFor(CONFIG_KEY_URL);
 
         return urlFromConfigOrDefault == null
                 ? DEFAULT_CONCEPTNET_URL
