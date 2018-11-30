@@ -100,13 +100,13 @@ public class TextProcessorsManager {
         String language = pipelineSpecification.getLanguage();
         configuration.removePipeline(pipeline, processor);
         getTextProcessor(processor).removePipeline(pipeline);
-        if (getPipelineSpecifications().stream().filter(item -> item.getLanguage() == language).count() == 0) {
+        if (getPipelineSpecifications().stream().noneMatch(item -> item.getLanguage().equals(language))) {
             removeSupportedLanguage(language);
         } else {
             PipelineSpecification defaultForLanguage = defaultPipelineByLanguage.get(language);
             if (defaultForLanguage != null &&
                     defaultForLanguage.getName().equalsIgnoreCase(pipeline)) {
-                PipelineSpecification newDefault = getPipelineSpecifications().stream().filter(item -> item.getLanguage() == language).collect(Collectors.toList()).get(0);
+                PipelineSpecification newDefault = getPipelineSpecifications().stream().filter(item -> item.getLanguage().equals(language)).collect(Collectors.toList()).get(0);
                 defaultPipelineByLanguage.put(language, newDefault);
             }
         }

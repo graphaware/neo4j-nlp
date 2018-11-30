@@ -38,7 +38,7 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
     @Test
     public void testTextAnnotationViaProcedure() {
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})", emptyConsumer());
 
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
         tester.assertAnnotatedTextNodesCount(1);
@@ -49,7 +49,7 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
     public void testTextAnnotationOnMultipleNodes() {
         clearDb();
         executeInTransaction("UNWIND {texts} AS text CREATE (n:Tweet) SET n.text = text", Collections.singletonMap("texts", SHORT_TEXTS), emptyConsumer());
-        executeInTransaction("MATCH (n:Tweet) CALL ga.nlp.annotate({text: n.text, id: id(n), checkLanguage: false}) YIELD result WITH result AS at, n MERGE (n)-[r:ANNOTATED_TEXT]->(at) RETURN n",(result -> {
+        executeInTransaction("MATCH (n:Tweet) CALL ga.nlp.annotate({pipeline:'tokenizer', text: n.text, id: id(n), checkLanguage: false}) YIELD result WITH result AS at, n MERGE (n)-[r:ANNOTATED_TEXT]->(at) RETURN n",(result -> {
             assertTrue(result.hasNext());
             assertEquals(10, result.stream().count());
         }));
@@ -62,8 +62,8 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
     @Test
     public void testExceptionIsThrownWhenLanguageCannotBeDetected() {
         try {
-            //executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc'})", emptyConsumer());
-            executeInTransaction("CALL ga.nlp.annotate({text: 'The European Union accumulated a higher portion of GDP as a form of foreign aid than any other economic union.', id: 'test-proc'})", emptyConsumer());
+            //executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'hello my name is Frank', id: 'test-proc'})", emptyConsumer());
+            executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'The European Union accumulated a higher portion of GDP as a form of foreign aid than any other economic union.', id: 'test-proc'})", emptyConsumer());
             assertTrue(true);
         } catch (Exception e) {
             assertTrue(false);
@@ -72,14 +72,14 @@ public class AnnotateTextProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testAnnotateWithProcessorAlias() {
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
     }
 
     @Test
     public void testFilter() {
-        executeInTransaction("CALL ga.nlp.filter({text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})",
+        executeInTransaction("CALL ga.nlp.filter({pipeline:'tokenizer', text: 'This is the operations manual for Neo4j version 3.2, authored by the Neo4j Team.', filter: 'Neo4j'})",
                 (result -> {
                     assertTrue(result.hasNext());
                     assertTrue((Boolean)result.next().get("result"));

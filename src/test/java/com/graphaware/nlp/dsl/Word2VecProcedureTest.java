@@ -31,7 +31,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testAttachVectorsToTagNodes() {
-        executeInTransaction("CALL ga.nlp.annotate({text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         TestNLPGraph tester = new TestNLPGraph(getDatabase());
         tester.assertTagWithValueExist("agriculturist");
         executeInTransaction("CALL ga.nlp.ml.word2vec.attach({query:\"MATCH (t:Tag) return t\", modelName:'numberbatch'}) YIELD result \n" +
@@ -70,7 +70,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
             assertTrue(result.hasNext());
         }));
         assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("numberbatch1706"));
-        executeInTransaction("CALL ga.nlp.annotate({text: 'I met one astronaut.', id: '123-fff', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'I met one astronaut.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         executeInTransaction("CALL ga.nlp.ml.word2vec.attach({query:\"MATCH (t:Tag) return t\", modelName:'numberbatch1706'}) YIELD result \n" +
                 "return result;", (result -> {
             assertTrue(result.hasNext());
@@ -85,7 +85,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testGettingVectorForTagWithUserFunction() {
-        executeInTransaction("CALL ga.nlp.annotate({text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'I met one agriculturist.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         executeInTransaction("MATCH (n:Tag) WHERE n.value = 'agriculturist' RETURN ga.nlp.ml.word2vec.vector(n, 'numberbatch') AS vector", (result -> {
             assertTrue(result.hasNext());
             List<Float> vector = (List<Float>) ((Map<String, Object>) result.next()).get("vector");
@@ -121,7 +121,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
             assertTrue(result.hasNext());
         }));
         assertTrue(getWord2VecProcessor().getWord2VecModel().getModels().containsKey("fasttext"));
-        executeInTransaction("CALL ga.nlp.annotate({text: 'The Empire State Building is the highest building in New York City.', id: '123-fff', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'The Empire State Building is the highest building in New York City.', id: '123-fff', checkLanguage: false})", emptyConsumer());
         executeInTransaction("CALL ga.nlp.ml.word2vec.attach({query:\"MATCH (t:Tag) return t\", modelName:'fasttext'}) YIELD result \n" +
                 "return result;", (result -> {
             assertTrue(result.hasNext());
