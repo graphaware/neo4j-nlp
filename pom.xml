@@ -137,11 +137,6 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.esotericsoftware.kryo</groupId>
       <artifactId>kryo</artifactId>
       <version>2.24.0</version>
@@ -261,6 +256,12 @@
     <!--Test dependencies-->
 
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
       <version>1.19.1</version>
@@ -295,7 +296,7 @@
         </exclusion>
         <exclusion>
           <groupId>com.neo4j</groupId>
-          <artifactId>*</artifactId>
+          <artifactId>neo4j-com</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -326,6 +327,26 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <finalName>graphaware-${project.artifactId}-${project.version}</finalName>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+          <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
