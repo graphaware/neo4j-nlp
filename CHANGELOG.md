@@ -1,4 +1,7 @@
-3.4.9.52.16-SNAPSHOT
+3.5.1.53.16
+- upgrade to latest framework
+
+3.4.9.52.16
 
 - Passing an empty text throws now an exception before hitting the TextProcessor
 - ConceptNet procedure now accepts languages, directions and POS filtering

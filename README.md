@@ -36,7 +36,7 @@ Two NLP processor implementations are available, respectively [Stanford NLP](htt
 
 ## Installation
 
-#### Latest version number : **3.4.9.52.15** - Compatible with Neo4j 3.4.*
+#### Latest version number : **3.5.1.53.15** - Compatible with Neo4j 3.5.*
 
 *From version 3.4.9.52.15 you need to download the language models, see below*
 
