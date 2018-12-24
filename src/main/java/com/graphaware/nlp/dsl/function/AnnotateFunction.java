@@ -32,14 +32,15 @@ public class AnnotateFunction extends AbstractDSL {
     @UserFunction("ga.nlp.processor.annotate")
     @Description("Perform the annotation on the given text, returns the produced annotation domain")
     public Map<String, Object> getAnnotation(@Name("text") String text, @Name("pipelineSpecification") Map<String, Object> specificationInput) {
-        PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(specificationInput);
-        PipelineSpecification spec = getNLPManager().getTextProcessorsManager().getPipelineSpecification(pipelineSpecification.getName());
+        if (!specificationInput.containsKey("name")) {
+            throw new RuntimeException("You mast specify the name of the pipeline");
+        }
+        PipelineSpecification spec = getNLPManager().getTextProcessorsManager().getPipelineSpecification((String)specificationInput.get("name"));
         TextProcessor processor = getNLPManager().getTextProcessorsManager().getTextProcessor(spec.getTextProcessor());
-        AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification);
+        AnnotatedText annotatedText = processor.annotateText(text, spec);
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationConfig.Feature.FAIL_ON_EMPTY_BEANS, false);
-        return mapper.convertValue(annotatedText, Map.class);
+        Map map = mapper.convertValue(annotatedText, Map.class);
+        return map;
     }
-
-
 }

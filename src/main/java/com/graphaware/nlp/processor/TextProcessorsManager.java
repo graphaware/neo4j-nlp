@@ -69,7 +69,13 @@ public class TextProcessorsManager {
             // this method to fail completely for valid pipelines, we just do not register
             // possible legacy pipelines
             if (getTextProcessorNames().contains(pipelineSpecification.getTextProcessor())) {
-                createPipeline(pipelineSpecification);
+                try {
+                    createPipeline(pipelineSpecification);
+                } catch (Exception ex) {
+                    LOG.error("Excetpion while loading pipeline during startup. " +
+                            "The pipeline is not added but the start continue.", ex);
+                }
+
             }
         });
     }
@@ -174,6 +180,10 @@ public class TextProcessorsManager {
 
     public Tag annotateTag(String text, String language) {
         PipelineSpecification spec = getDefaultPipeline(language);
+        if (spec == null) {
+            LOG.warn("No default annotator for language: " + language);
+            return null;
+        }
         TextProcessor processor = getTextProcessor(spec.getTextProcessor());
         return processor.annotateTag(text, spec);
     }
@@ -302,7 +312,7 @@ public class TextProcessorsManager {
         if (defaultPipelineByLanguage.containsKey(language)) {
             return defaultPipelineByLanguage.get(language);
         }
-        PipelineSpecification pipelineSpecification = getPipelineSpecificationFromConfig(language);
+        PipelineSpecification pipelineSpecification = getDefaultPipelineSpecificationFromConfig(language);
         if (pipelineSpecification == null) {
             return null;
         }
@@ -310,10 +320,10 @@ public class TextProcessorsManager {
         return pipelineSpecification;
     }
 
-    private PipelineSpecification getPipelineSpecificationFromConfig(String language) {
+    private PipelineSpecification getDefaultPipelineSpecificationFromConfig(String language) {
         String pipelineName = (String) configuration.getSettingValueFor(getDefaultPipelineKey(language));
         if (pipelineName == null) {
-            LOG.warn("Something goes wrong (this shouldn't happen) default pipeline not available");
+            LOG.warn("Something goes wrong (this shouldn't happen) default pipeline not available, key: " + getDefaultPipelineKey(language));
             return null;
         }
         PipelineSpecification pipelineSpecification = configuration.loadPipeline(pipelineName);
