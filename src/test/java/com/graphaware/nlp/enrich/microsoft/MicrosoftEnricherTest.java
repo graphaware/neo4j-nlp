@@ -57,6 +57,7 @@ public class MicrosoftEnricherTest extends EnricherAbstractTest {
     }
 
     @Test
+    @Ignore
     public void testEnricherNameIsSetAsRelationshipProperty() {
         DynamicConfiguration configuration = new DynamicConfiguration(getDatabase());
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());

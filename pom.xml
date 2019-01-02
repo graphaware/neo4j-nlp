@@ -323,13 +323,21 @@
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>tests</artifactId>
+      <scope>test</scope>
       <exclusions>
+        <exclusion>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.neo4j.app</groupId>
+          <artifactId>neo4j-server-enterprise</artifactId>
+        </exclusion>
         <exclusion>
           <groupId>com.neo4j</groupId>
           <artifactId>neo4j-com</artifactId>
         </exclusion>
       </exclusions>
-      <scope>test</scope>
     </dependency>
 
     <!-- Check how to move this to framework -->
