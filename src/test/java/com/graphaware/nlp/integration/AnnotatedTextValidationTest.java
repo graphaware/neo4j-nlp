@@ -37,16 +37,13 @@ public class AnnotatedTextValidationTest extends NLPIntegrationTest {
             });
         });
 
-        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
 
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = getNLPManager().annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
             assertEquals("123", annotatedText.getProperty("id").toString());
             tx.success();
         }

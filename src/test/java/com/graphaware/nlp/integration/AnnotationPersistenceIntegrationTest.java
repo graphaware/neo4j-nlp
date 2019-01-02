@@ -38,8 +38,8 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         super.setUp();
         clearDatabase();
         manager = NLPManager.getInstance();
-        manager.init(getDatabase(), NLPConfiguration.defaultConfiguration(), new DynamicConfiguration(getDatabase()));
-        createPipeline(StubTextProcessor.class.getName(), TextProcessor.DEFAULT_PIPELINE);
+        manager.init(getDatabase(), new DynamicConfiguration(getDatabase()));
+        createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
     }
 
     private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
@@ -54,10 +54,8 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification
+                    );
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Labels.AnnotatedText));
             assertTrue(annotatedText.hasRelationship(Relationships.CONTAINS_SENTENCE));
@@ -76,10 +74,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
             assertEquals("123", annotatedText.getProperty("id").toString());
             assertTrue(annotatedText.hasLabel(Label.label("TextAnnotation")));
             tx.success();
@@ -92,10 +87,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "Barack Obama is born in Hawaii. He is our president.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
             tx.success();
         }
 
@@ -105,35 +97,18 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
     }
 
     @Test
-    public void testLanguageIsDefaultedToNAWhenCheckLanguageIsFalseAndLanguageCouldNotBeDetected() {
+    public void testLanguageIsDefaultedToENWhenCheckLanguageIsFalseAndLanguageCouldNotBeDetected() {
         try (Transaction tx = getDatabase().beginTx()) {
             Node annotatedText = manager.annotateTextAndPersist(
                     "Barack Obama is born in Hawaii.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    false);
+                    pipelineSpecification);
             tx.success();
         }
 
         TestNLPGraph test = new TestNLPGraph(getDatabase());
-        test.assertTagWithIdExist("Barack_n/a");
-        test.assertTagWithIdExist("born_n/a");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testExceptionIsThrownWhenCheckLanguageIsTrueAndLanguageCouldNotBeDetected() {
-        try (Transaction tx = getDatabase().beginTx()) {
-            Node annotatedText = manager.annotateTextAndPersist(
-                    "Barack Obama is born in Hawaii.",
-                    "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
-            tx.success();
-        }
+        test.assertTagWithIdExist("Barack_en");
+        test.assertTagWithIdExist("born_en");
     }
 
     @Test
@@ -143,10 +118,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "Barack Obama is born in Hawaii.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    false);
+                    pipelineSpecification);
             tx.success();
         }
         TestNLPGraph test = new TestNLPGraph(getDatabase());
@@ -161,10 +133,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
 
             Iterator<Node> it = getDatabase().findNodes(Label.label("Tag"));
             assertTrue(it.hasNext());
@@ -182,10 +151,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             Node annotatedText = manager.annotateTextAndPersist(
                     "hello my name is John.",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
 
             Iterator<Node> it = getDatabase().findNodes(Label.label("TagOccurrence"));
             assertTrue(it.hasNext());
@@ -199,14 +165,16 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
 
     @Test
     public void testMultipleSentencesPersistence() {
+        PipelineSpecification myPipelineSpecification = new PipelineSpecification(
+                TextProcessor.DEFAULT_PIPELINE + "_phrase",
+                StubTextProcessor.class.getName());
+        createPipeline(myPipelineSpecification.getTextProcessor(), myPipelineSpecification.getName(), "tokenizer", "phrase");
+
         try (Transaction tx = getDatabase().beginTx()) {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    myPipelineSpecification.getName());
             tx.success();
         }
 
@@ -229,10 +197,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    TextProcessor.DEFAULT_PIPELINE,
-                    false,
-                    true);
+                    pipelineSpecification);
             tx.success();
         }
 
@@ -254,10 +219,7 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123",
-                    StubTextProcessor.class.getName(),
-                    "tokenizer",
-                    false,
-                    true);
+                    pipelineSpecification);
             tx.success();
         }
 
@@ -282,12 +244,11 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
         spec.put("processingSteps", Collections.singletonMap("tokenize", true));
         spec.put("excludedNER", Collections.singletonList("test"));
         PipelineSpecification pipelineSpecification = PipelineSpecification.fromMap(spec);
-        getNLPManager().addPipeline(pipelineSpecification);
+        getNLPManager().getTextProcessorsManager().addPipeline(pipelineSpecification);
         try (Transaction tx = getDatabase().beginTx()) {
             manager.annotateTextAndPersist(
                     "hello my name is John. I am working for IBM. I live in Italy",
                     "123-fff",
-                    true,
                     pipelineSpecification
             );
             tx.success();

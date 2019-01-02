@@ -47,7 +47,7 @@ public class EnrichTest extends NLPIntegrationTest {
             params.put("id", id);
             executeInTransaction("CALL ga.nlp.config.set('SETTING_fallbackLanguage','en')", emptyConsumer());
             Result news = getDatabase().execute("MERGE (n:News {text: {value}}) WITH n\n"
-                    + "CALL ga.nlp.annotate({text:n.text, id: {id}, checkLanguage:false}) YIELD result\n"
+                    + "CALL ga.nlp.annotate({pipeline:'tokenizer', text:n.text, id: {id}, checkLanguage:false}) YIELD result\n"
                     + "MERGE (n)-[:HAS_ANNOTATED_TEXT]->(result)\n"
                     + "return result", params);
             ResourceIterator<Object> rowIterator = news.columnAs("result");

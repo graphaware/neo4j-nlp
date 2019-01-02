@@ -30,7 +30,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     @Test
     public void testConceptNetUrlIsConfigurable() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager());
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
         assertEquals("http://api.conceptnet.io", enricher.getConceptNetUrl());
 
         getNLPManager().getConfiguration().updateInternalSetting("CONCEPT_NET_5_URL", "http://localhost:8001");
@@ -40,11 +40,11 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     @Test
     public void testTagsCanBeEnrichedWithConceptNet5() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager());
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
 
         clearDb();
         executeInTransaction("CALL ga.nlp.config.set('SETTING_fallbackLanguage','en')", emptyConsumer());
-        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({text: 'kill cats', id: 'test-proc', pipeline: 'tokenizer'})", emptyConsumer());
 
         try (Transaction tx = getDatabase().beginTx()) {
             getDatabase().findNodes(Label.label("AnnotatedText")).stream().forEach(node -> {
@@ -75,10 +75,10 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     @Test
     public void testRequestWithRelationshipsConstraintDoNotGetThem() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager());
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
 
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as the eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as the eclipse time approached.', id: 'test-proc', pipeline: 'tokenizer'})", (result -> {
             //
         }));
 
@@ -108,10 +108,10 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     @Test
     public void testConceptEnrichmentWithRelConstraintViaProcedure() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager());
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
 
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', pipeline: 'tokenizer'})", (result -> {
             //
         }));
         executeInTransaction("MATCH (n:Tag) CALL ga.nlp.enrich.concept({tag: n, depth: 2, language: 'en', admittedRelationships:['IsA','PartOf']}) YIELD result return result" , (result -> {
@@ -128,10 +128,10 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     @Test
     public void testConceptWorksAfterImmediateRemoval() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
-        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager());
+        ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
 
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', checkLanguage: false})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({text: 'tension mounted as eclipse time approached.', id: 'test-proc', pipeline: 'tokenizer'})", (result -> {
             //
         }));
         executeInTransaction("MATCH (n:Tag) CALL ga.nlp.enrich.concept({tag: n, depth: 2, language: 'en', admittedRelationships:['IsA','PartOf']}) YIELD result return result" , (result -> {

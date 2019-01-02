@@ -17,14 +17,12 @@ package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.domain.Tag;
-import com.graphaware.nlp.dsl.request.PipelineSpecification;
-import com.graphaware.nlp.language.LanguageManager;
-import com.graphaware.nlp.processor.TextProcessor;
+import com.graphaware.nlp.enrich.AbstractImporter;
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -33,15 +31,13 @@ import static com.graphaware.nlp.util.TextUtils.removeApices;
 import static com.graphaware.nlp.util.TextUtils.removeParenthesis;
 
 
-public class ConceptNet5Importer {
+public class ConceptNet5Importer extends AbstractImporter {
 
     private static final Log LOG = LoggerFactory.getLogger(ConceptNet5Importer.class);
 
     public static final String[] DEFAULT_ADMITTED_RELATIONSHIP = {"RelatedTo", "IsA", "PartOf", "AtLocation", "Synonym", "MemberOf", "HasA", "CausesDesire"};
-    public static final String DEFAULT_LANGUAGE = "en";
 
     private final ConceptNet5Client client;
-    private int depthSearch = 2;
 
     private final Cache<String, Tag> cache = CacheBuilder
             .newBuilder()
@@ -55,70 +51,86 @@ public class ConceptNet5Importer {
 
     public ConceptNet5Importer(ConceptNet5Client client, int depth, String... admittedRelations) {
         this.client = client;
-        this.depthSearch = depth;
     }
 
     private ConceptNet5Importer(Builder builder) {
         this.client = builder.client;
-        this.depthSearch = builder.depthSearch;
     }
 
-    public List<Tag> importHierarchy(String relDirection, Tag source, boolean filterLang, List<String> outLang, int depth, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight) {
+    public List<Tag> importHierarchy(Tag source,
+                                     ConceptNet5Enricher.RelDirection relDirection,
+                                     boolean filterLang,
+                                     List<String> outLang,
+                                     int depth,
+                                     List<String> admittedRelations,
+                                     List<String> admittedPOS,
+                                     int limit,
+                                     double minWeight) {
         if (null == admittedRelations || admittedRelations.isEmpty()) {
             throw new RuntimeException("Admitted Relationships is empty");
         }
         List<Tag> res = new CopyOnWriteArrayList<>();
-        String word = source.getLemma().toLowerCase().replace(" ", "_");
-        word = removeParenthesis(word);
-        word = removeApices(word);
-        final String finalWord = word;
+        final String startingWord = getCleanedLemma(source);
         try {
             admittedRelations.forEach(rel -> {
-                ConceptNet5EdgeResult values;
-                values = client.queryBy(relDirection, finalWord, rel, source.getLanguage(), limit);
+                ConceptNet5EdgeResult values = client.queryBy(relDirection.getValue(), startingWord, rel, source.getLanguage(), limit);
                 values.getEdges().stream().forEach((concept) -> {
-                    String conceptValue = concept.getEnd();
-                    String conceptLanguage = concept.getEndLanguage();
-                    if (relDirection.equalsIgnoreCase("end")) {
-                        conceptValue = concept.getStart();
-                        conceptLanguage = concept.getStartLanguage();
-                    }
-                    if (checkAdmittedRelations(concept, admittedRelations)
-                            && concept.getWeight() > minWeight
-                            //&& (conceptValue.equalsIgnoreCase(source.getLemma()) || concept.getEnd().equalsIgnoreCase(source.getLemma()))
-                            && (!filterLang || (filterLang && ((outLang!=null && !outLang.isEmpty() && outLang.contains(conceptLanguage)) || conceptLanguage.equalsIgnoreCase(source.getLanguage()))))) {
-
-                        if (//concept.getStart().equalsIgnoreCase(source.getLemma()) &&
-                                !concept.getStart().equalsIgnoreCase(concept.getEnd())) {
-                            conceptValue = removeApices(conceptValue);
-                            conceptValue = removeParenthesis(conceptValue);
-                            Tag annotateTag = tryToAnnotate(conceptValue, conceptLanguage, nlpProcessor, pipelineSpecification);
-                            List<String> posList = annotateTag.getPos();
-                            if (admittedPOS == null
-                                    || admittedPOS.isEmpty()
-                                    || posList == null
-                                    || posList.isEmpty()
-                                    || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
-                                if (depth > 1) {
-                                    importHierarchy(relDirection, annotateTag, filterLang, outLang, depth - 1, nlpProcessor, pipelineSpecification, admittedRelations, admittedPOS, limit, minWeight);
-                                }
-                                source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
-                                res.add(annotateTag);
-                            }
-                        } /*else {
-                            Tag annotateTag = tryToAnnotate(concept.getStart(), concept.getStartLanguage(), nlpProcessor, pipelineSpecification);
-                            annotateTag.addParent(concept.getRel(), source, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
-                            res.add(annotateTag);
-                        }*/
-                    }
+                    List<Tag> result = processConcept(source,
+                            relDirection,
+                            filterLang,
+                            outLang,
+                            depth,
+                            admittedRelations,
+                            admittedPOS,
+                            limit,
+                            minWeight,
+                            concept);
+                    res.addAll(result);
                 });
             });
-
         } catch (Exception ex) {
-            LOG.error("Error while improting hierarchy for " + word + " (" + source.getLanguage() + "). Ignored!", ex);
+            LOG.warn("Error while importing hierarchy for " + startingWord + " (" + source.getLanguage() + "). Ignored!", ex);
         }
         return res;
     }
+
+    private List<Tag> processConcept(Tag source, ConceptNet5Enricher.RelDirection relDirection, boolean filterLang, List<String> outLang, int depth, List<String> admittedRelations, List<String> admittedPOS, int limit, double minWeight, ConceptNet5Concept concept) {
+        List<Tag> res = new ArrayList<>();
+
+        String conceptValue;
+        String conceptLanguage;
+        if (relDirection == ConceptNet5Enricher.RelDirection.OUT) {
+            conceptValue = concept.getEnd();
+            conceptLanguage = concept.getEndLanguage();
+        } else {
+            conceptValue = concept.getStart();
+            conceptLanguage = concept.getStartLanguage();
+        }
+        if (checkAdmittedRelations(concept, admittedRelations)
+                && concept.getWeight() > minWeight
+                && checkLanguages(filterLang, source.getLanguage(), conceptLanguage, outLang)) {
+
+            if (!concept.getStart().equalsIgnoreCase(concept.getEnd())) {
+                conceptValue = removeApices(conceptValue);
+                conceptValue = removeParenthesis(conceptValue);
+                Tag annotateTag = tryToAnnotate(conceptValue, conceptLanguage);
+                List<String> posList = annotateTag.getPos();
+                if (admittedPOS == null
+                        || admittedPOS.isEmpty()
+                        || posList == null
+                        || posList.isEmpty()
+                        || posList.stream().filter((pos) -> (admittedPOS.contains(pos))).count() > 0) {
+                    if (depth > 1) {
+                        importHierarchy(annotateTag, relDirection, filterLang, outLang, depth - 1, admittedRelations, admittedPOS, limit, minWeight);
+                    }
+                    source.addParent(concept.getRel(), annotateTag, concept.getWeight(), ConceptNet5Enricher.ENRICHER_NAME);
+                    res.add(annotateTag);
+                }
+            }
+        }
+        return res;
+    }
+
 
 //    private synchronized Tag tryToAnnotate(final String parentConcept, final String language) {
 //        Tag value;
@@ -137,18 +149,6 @@ public class ConceptNet5Importer {
 //        return value;
 //    }
 
-    private Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor, PipelineSpecification pipelineSpecification) {
-        Tag annotateTag = null;
-        if (LanguageManager.getInstance().isLanguageSupported(language)) {
-            annotateTag = nlpProcessor.annotateTag(parentConcept, language,
-                    pipelineSpecification != null ? pipelineSpecification : getDefaultPipeline());
-        }
-        if (annotateTag == null) {
-            annotateTag = new Tag(parentConcept, language);
-        }
-        return annotateTag;
-    }
-
     private boolean checkAdmittedRelations(ConceptNet5Concept concept, List<String> admittedRelations) {
         if (admittedRelations == null) {
             return true;
@@ -156,10 +156,13 @@ public class ConceptNet5Importer {
         return admittedRelations.stream().anyMatch((rel) -> (concept.getRel().contains(rel)));
     }
 
+    public ConceptNet5Client getClient() {
+        return client;
+    }
+
     public static class Builder {
 
         private final ConceptNet5Client client;
-        private int depthSearch = 2;
 
         public Builder(String cnet5Host) {
             this(new ConceptNet5Client(cnet5Host));
@@ -169,28 +172,10 @@ public class ConceptNet5Importer {
             this.client = client;
         }
 
-        public Builder setDepthSearch(int depthSearch) {
-            this.depthSearch = depthSearch;
-            return this;
-        }
-
         public ConceptNet5Importer build() {
             return new ConceptNet5Importer(this);
         }
     }
 
-    public ConceptNet5Client getClient() {
-        return client;
-    }
 
-    private PipelineSpecification getDefaultPipeline() {
-        NLPManager manager = NLPManager.getInstance();
-        String pipeline = manager.getPipeline(null);
-        PipelineSpecification pipelineSpecification = manager.getConfiguration().loadPipeline(pipeline);
-        if (pipelineSpecification == null) {
-            throw new RuntimeException("No default pipeline");
-        }
-
-        return pipelineSpecification;
-    }
 }

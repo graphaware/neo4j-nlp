@@ -86,7 +86,7 @@ public class DynamicConfiguration {
 
     public Object getSettingValueFor(String key) {
         if (!userProvidedConfiguration.containsKey(SETTING_KEY_PREFIX + key)) {
-            return key;
+            return null;
         }
 
         return userProvidedConfiguration.get(SETTING_KEY_PREFIX + key);

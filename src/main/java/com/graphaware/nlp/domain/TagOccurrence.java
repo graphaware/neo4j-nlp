@@ -76,4 +76,8 @@ public class TagOccurrence extends PartOfTextOccurrence<Tag> {
     public void setConfidence(double confidence) {
         this.confidence = confidence;
     }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 }

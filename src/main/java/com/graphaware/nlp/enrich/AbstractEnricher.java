@@ -36,24 +36,23 @@ public class AbstractEnricher {
 
     private final PersistenceRegistry persistenceRegistry;
 
-    private final NLPManager manager;
-
     public AbstractEnricher(GraphDatabaseService database, PersistenceRegistry persistenceRegistry) {
         this.database = database;
         this.persistenceRegistry = persistenceRegistry;
-        this.manager = NLPManager.getInstance();
     }
 
-    protected Tag tryToAnnotate(String parentConcept, String language, TextProcessor nlpProcessor) {
+    /*protected Tag tryToAnnotate(String parentConcept, String language) {
         Tag annotateTag = null;
-        if (LanguageManager.getInstance().isLanguageSupported(language)) {
-            annotateTag = nlpProcessor.annotateTag(parentConcept, language, getDefaultPipeline());
+        PipelineSpecification defaultPipeline = NLPManager.getInstance().getDefaultPipeline(language);
+        NLPManager.getInstance(),get
+        if (defaultPipeline != null) {
+            annotateTag = NLPManager.getInstance().annotateTag(parentConcept, defaultPipeline);
         }
         if (annotateTag == null) {
             annotateTag = new Tag(parentConcept, language);
         }
         return annotateTag;
-    }
+    }*/
 
     protected Pair<Iterator<Node>, Node> getTagsIteratorFromRequest(ConceptRequest request) {
         Node annotatedNode = request.getAnnotatedNode();
@@ -94,36 +93,18 @@ public class AbstractEnricher {
     }
 
     public DynamicConfiguration getConfiguration() {
-        return manager.getConfiguration();
+        return NLPManager.getInstance().getConfiguration();
     }
 
     protected Persister getPersister(Class clazz) {
         return persistenceRegistry.getPersister(clazz);
     }
 
-    protected TextProcessor getProcessor(String processor) {
+    /*protected TextProcessor getProcessor(String processor) {
         if (null != processor) {
-            return manager.getTextProcessorsManager().getTextProcessor(processor);
+            return NLPManager.getInstance().getTextProcessorsManager().getTextProcessor(processor);
         }
-
-        String pipeline = manager.getPipeline(null);
-        PipelineSpecification pipelineSpecification = getConfiguration().loadPipeline(pipeline);
-
-        return manager.getTextProcessorsManager().getTextProcessor(pipelineSpecification.getTextProcessor());
-    }
-
-    protected PipelineSpecification getDefaultPipeline() {
-        NLPManager manager = NLPManager.getInstance();
-        String pipeline = manager.getPipeline(null);
-        PipelineSpecification pipelineSpecification = manager.getConfiguration().loadPipeline(pipeline);
-        if (pipelineSpecification == null) {
-            throw new RuntimeException("No default pipeline");
-        }
-
-        return pipelineSpecification;
-    }
-
-    protected PipelineSpecification getPipeline(String pipelineName) {
-        return manager.getPipelineSpecification(pipelineName);
-    }
+        PipelineSpecification pipelineSpecification = NLPManager.getInstance().getPipelineSpecification(null);
+        return NLPManager.getInstance().getTextProcessorsManager().getTextProcessor(pipelineSpecification.getTextProcessor());
+    }*/
 }

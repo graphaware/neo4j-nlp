@@ -42,7 +42,7 @@ public class TextRankPersister {
         this.keywordLabel = keywordLabel;
     }
 
-    public void peristKeywords(Map<String, Keyword> results, Node annotatedText) {
+    public void persistKeywords(Map<String, Keyword> results, Node annotatedText) {
         List<String> printKeywords = new ArrayList<>();
         KeywordPersister persister = NLPManager.getInstance().getPersister(Keyword.class);
         persister.setLabel(keywordLabel);

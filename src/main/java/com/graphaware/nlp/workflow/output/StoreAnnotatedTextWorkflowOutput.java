@@ -46,7 +46,7 @@ public class StoreAnnotatedTextWorkflowOutput extends WorkflowOutput<StoreAnnota
             Node newAnnotatedNode = persistAnnotatedText(entry.getAnnotateText(), (String) entry.getId(), "");
             String query = getConfiguration().getQuery();
             if (query != null
-                    || !query.isEmpty()) {
+                    && !query.isEmpty()) {
                 Map<String, Object> parameters = new HashMap<>();
                 parameters.put("annotatedTextId", newAnnotatedNode.getId());
                 parameters.put("entryId", entry.getId());

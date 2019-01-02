@@ -29,8 +29,7 @@ public class LanguageProcedure extends AbstractDSL {
     @Procedure(name = "ga.nlp.detectLanguage")
     @Description("Returns the language detected for the given text, 'n/a' when no language could be detected")
     public Stream<SingleResult> detectLanguage(@Name("text") String text) {
-        String language = LanguageManager.getInstance().detectLanguage(text);
-
+        String language = getNLPManager().getLanguageManager().detectLanguage(text);
         return Stream.of(new SingleResult(language));
     }
 
