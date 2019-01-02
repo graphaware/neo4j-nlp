@@ -323,6 +323,12 @@
     <dependency>
       <groupId>com.graphaware.neo4j</groupId>
       <artifactId>tests</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.neo4j.app</groupId>
+          <artifactId>neo4j-server-enterprise</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
 
