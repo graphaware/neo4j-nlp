@@ -151,4 +151,8 @@ public class Tag {
     public void setOriginalValue(String originalValue) {
         this.originalValue = originalValue;
     }
+
+    public void setLemma(String lemma) {
+        this.lemma = lemma;
+    }
 }
