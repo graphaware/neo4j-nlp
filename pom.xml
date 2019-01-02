@@ -18,11 +18,11 @@
   <parent>
     <groupId>com.graphaware.neo4j</groupId>
     <artifactId>module-parent</artifactId>
-    <version>3.4.9.52</version>
+    <version>3.5.1.53</version>
   </parent>
 
   <artifactId>nlp</artifactId>
-  <version>3.4.9.52.16-SNAPSHOT</version>
+  <version>3.5.1.53.17-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Natural Language Processing with Neo4j</name>
@@ -41,7 +41,6 @@
     <connection>scm:git:git@github.com:graphaware/neo4j-nlp.git</connection>
     <developerConnection>scm:git:git@github.com:graphaware/neo4j-nlp.git</developerConnection>
     <url>git@github.com:graphaware/neo4j-nlp.git</url>
-    <tag>nlp-3.4.9.52.14</tag>
   </scm>
 
   <developers>
@@ -88,7 +87,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <resttest.version>${project.parent.version}.18</resttest.version>
+    <resttest.version>${project.parent.version}.19</resttest.version>
     <jackson.version>2.7.8</jackson.version>
     <tika.version>1.19.1</tika.version>
   </properties>
@@ -105,6 +104,10 @@
         <exclusion>
           <groupId>org.ow2.asm</groupId>
           <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -258,6 +261,10 @@
         </exclusion>
         <exclusion>
           <groupId>org.ow2.asm</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jsoup</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>

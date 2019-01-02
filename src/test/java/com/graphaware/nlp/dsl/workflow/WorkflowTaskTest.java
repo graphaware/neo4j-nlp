@@ -13,11 +13,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.graphaware.nlp.workflow.task.TaskStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class WorkflowTaskTest extends NLPIntegrationTest {
 
     private static final List<String> SHORT_TEXTS

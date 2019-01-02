@@ -4,9 +4,12 @@ import com.graphaware.nlp.NLPIntegrationTest;
 import java.util.Map;
 import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
 
+@Ignore
 public class WorkflowOutputTest extends NLPIntegrationTest {
 
     @Test

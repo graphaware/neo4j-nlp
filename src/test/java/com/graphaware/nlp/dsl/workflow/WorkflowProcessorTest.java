@@ -9,9 +9,11 @@ import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
 
+@Ignore
 public class WorkflowProcessorTest extends NLPIntegrationTest {
 
     @Before
