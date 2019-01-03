@@ -74,7 +74,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     }
 
     @Test
-    @Ignore
+
     public void testRequestWithRelationshipsConstraintDoNotGetThem() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));
@@ -108,7 +108,7 @@ public class ConceptNet5EnricherIntegrationTest extends EnricherAbstractTest {
     }
 
     @Test
-    @Ignore
+
     public void testConceptEnrichmentWithRelConstraintViaProcedure() {
         PersistenceRegistry registry = new PersistenceRegistry(getDatabase());
         ConceptNet5Enricher enricher = new ConceptNet5Enricher(getDatabase(), registry, new TextProcessorsManager(new DynamicConfiguration(getDatabase())));

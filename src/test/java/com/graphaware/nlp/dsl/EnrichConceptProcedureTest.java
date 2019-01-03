@@ -34,7 +34,7 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
-    @Ignore
+
     public void testConceptProcedureWithNonDefaultEnricher() {
         executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
