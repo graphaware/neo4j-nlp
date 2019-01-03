@@ -34,18 +34,11 @@ public class AnnotationPersistenceIntegrationTest extends NLPIntegrationTest {
     @Before
     @Override
     public void setUp() throws Exception {
-        resetSingleton();
         super.setUp();
         clearDatabase();
         manager = NLPManager.getInstance();
         manager.init(getDatabase(), new DynamicConfiguration(getDatabase()));
         createPipeline(pipelineSpecification.getTextProcessor(), pipelineSpecification.getName());
-    }
-
-    private void resetSingleton() throws SecurityException, NoSuchFieldException, IllegalArgumentException, IllegalAccessException {
-       Field instance = NLPManager.class.getDeclaredField("instance");
-       instance.setAccessible(true);
-       instance.set(null, null);
     }
 
     @Test
