@@ -53,7 +53,7 @@ public class Word2VecProcedureTest extends NLPIntegrationTest {
             while (result.hasNext()) {
                 Map<String, Object> record = result.next();
                 assertEquals("numberbatch", record.get("name"));
-                assertEquals(86, (long) record.get("indexCount"));
+                assertEquals(100, (long) record.get("indexCount"));
             }
         }));
     }

@@ -43,12 +43,20 @@ public class Word2VecIndexLookup {
     private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
     private final String storePath;
+    private int vectorDimension;
 
     private final Map<String, float[]> inMemoryNN = new ConcurrentHashMap<>();
     private final Map<String, List<Pair>> nnCache = new HashMap<>();
 
     public Word2VecIndexLookup(String storePath) {
         this.storePath = storePath;
+        try {
+            StoredField binaryVector = (StoredField) getIndexSearcher().doc(0).getField(Word2VecIndexCreator.VECTOR_FIELD);
+            this.vectorDimension = TypeConverter.toFloatArray(binaryVector.binaryValue().bytes).length;
+        } catch (IOException e) {
+            LOG.error("Couldn't retrieve vector dimension. ", e);
+            this.vectorDimension = -1;
+        }
     }
 
     public long countIndex() throws IOException {
@@ -63,10 +71,12 @@ public class Word2VecIndexLookup {
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
-            Query query = queryParser.parse(searchString.replace(" ", "_"));
+            Query query = queryParser.parse(searchString.replace(" ", "_")
+                    .replace("*", "\\*").replace("?", "\\?"));
             TopDocs searchResult = getIndexSearcher().search(query, 1);
-            LOG.info("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
+            LOG.debug("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
             if (searchResult.totalHits != 1) {
+                LOG.debug("Found too many hits for search string " + searchString + ".");
                 return null;
             }
             ScoreDoc hit = searchResult.scoreDocs[0];
@@ -189,4 +199,6 @@ public class Word2VecIndexLookup {
 
         return nn;
     }
+
+    public int getVectorDimension() { return this.vectorDimension; }
 }

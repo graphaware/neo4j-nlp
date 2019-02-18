@@ -126,6 +126,8 @@ public class Word2VecProcessor extends AbstractExtension implements NLPExtension
         return word2VecModel;
     }
 
+    public int getWord2VecDimension(String modelId) { return word2VecModel.getModel(modelId).getVectorDimension(); }
+
     private TextProcessor getProcessor(String processor) throws RuntimeException {
         if (processor.length() > 0) {
             TextProcessor textProcessorInstance
