@@ -97,10 +97,10 @@ public class Word2VecIndexCreator {
                         wordToUse = wordToUse.replace("/c/" + language + "/", "").trim();
                     }
                     // `[\p{L}]+` removes numbers and multi-word compounds (which contain "_" instead of a space)
-                    if (!wordToUse.matches("[\\p{L}]+") && !wordToUse.matches("[\\p{N}]+")
+                    /*if (!wordToUse.matches("[\\p{L}]+") && !wordToUse.matches("[\\p{N}]+")
                             && !PUNCTUATIONS.contains(wordToUse) && !wordToUse.contains("_")) {
                         continue;
-                    }
+                    }*/
                     doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
                     float[] vector = new float[split.length - 1];
                     for (int i = 0; i < split.length - 1; i++) {

@@ -42,6 +42,9 @@ public class Word2VecIndexLookup {
 
     private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
+    private static final List<String> LUCENE_SPECIAL_CHARACTERS =
+            Arrays.asList("?", "!", "*", ":", "/", "\\", "~", "\"", "^", "-", "+", "(", ")", "[", "]", "{", "}");
+
     private final String storePath;
     private int vectorDimension;
 
@@ -71,12 +74,11 @@ public class Word2VecIndexLookup {
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
-            Query query = queryParser.parse(searchString.replace(" ", "_")
-                    .replace("*", "\\*").replace("?", "\\?"));
+            Query query = queryParser.parse(preprocessSearchString(searchString));
             TopDocs searchResult = getIndexSearcher().search(query, 1);
             LOG.debug("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
             if (searchResult.totalHits != 1) {
-                LOG.debug("Found too many hits for search string " + searchString + ".");
+                LOG.debug("Found too many (or too few) hits for search string " + searchString + ".");
                 return null;
             }
             ScoreDoc hit = searchResult.scoreDocs[0];
@@ -84,7 +86,7 @@ public class Word2VecIndexLookup {
             StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
             return TypeConverter.toFloatArray(binaryVector.binaryValue().bytes);
         } catch (ParseException | IOException ex) {
-            LOG.error("Error while getting word2vec for " + searchString, ex.getMessage());
+            LOG.error("Error while getting word2vec for \"" + searchString + "\". " + ex.getMessage());
         }
         return null;
     }
@@ -198,6 +200,14 @@ public class Word2VecIndexLookup {
         }
 
         return nn;
+    }
+
+    private String preprocessSearchString(String searchString) {
+        String finalString = searchString.replace(" ", "_"); // allows to search for multi-word keywords
+        for (String sym: LUCENE_SPECIAL_CHARACTERS) {
+            finalString = finalString.replace(sym, "\\" + sym);
+        }
+        return finalString;
     }
 
     public int getVectorDimension() { return this.vectorDimension; }
