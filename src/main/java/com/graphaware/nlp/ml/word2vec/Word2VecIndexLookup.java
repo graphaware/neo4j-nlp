@@ -43,7 +43,7 @@ public class Word2VecIndexLookup {
     private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
     private static final List<String> LUCENE_SPECIAL_CHARACTERS =
-            Arrays.asList("?", "!", "*", ":", "/", "\\", "~", "\"", "^", "-", "+", "(", ")", "[", "]", "{", "}");
+            Arrays.asList("?", "*", "~", "\"", "^", "-", "+", "(", ")", "[", "]", "{", "}");
 
     private final String storePath;
     private int vectorDimension;
@@ -74,9 +74,14 @@ public class Word2VecIndexLookup {
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
-            Query query = queryParser.parse(preprocessSearchString(searchString));
+            Query query = queryParser.parse(preprocessSearchString(searchString.replace(" ", "_")));
             TopDocs searchResult = getIndexSearcher().search(query, 1);
             LOG.debug("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
+            if (searchResult.totalHits == 0) {
+                // example: FastText embeddings contain "NewYork" and not "New_York"
+                query = queryParser.parse(preprocessSearchString(searchString.replace(" ", "")));
+                searchResult = getIndexSearcher().search(query, 1);
+            }
             if (searchResult.totalHits != 1) {
                 LOG.debug("Found too many (or too few) hits for search string " + searchString + ".");
                 return null;
@@ -203,12 +208,15 @@ public class Word2VecIndexLookup {
     }
 
     private String preprocessSearchString(String searchString) {
-        String finalString = searchString.replace(" ", "_"); // allows to search for multi-word keywords
+        String finalString = searchString;//.replace(" ", "_"); // allows to search for multi-word keywords
         for (String sym: LUCENE_SPECIAL_CHARACTERS) {
             finalString = finalString.replace(sym, "\\" + sym);
         }
+        finalString = finalString.replace("/", "\\/").replace("\\", "\\\\")
+                .replace(":", "\\:").replace("!", "\\!");
         return finalString;
     }
 
     public int getVectorDimension() { return this.vectorDimension; }
+
 }
