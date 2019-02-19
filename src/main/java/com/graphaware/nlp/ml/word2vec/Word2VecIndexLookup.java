@@ -84,7 +84,7 @@ public class Word2VecIndexLookup {
             StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
             return TypeConverter.toFloatArray(binaryVector.binaryValue().bytes);
         } catch (ParseException | IOException ex) {
-            LOG.error("Error while getting word2vec for " + searchString, ex);
+            LOG.error("Error while getting word2vec for " + searchString, ex.getMessage());
         }
         return null;
     }
