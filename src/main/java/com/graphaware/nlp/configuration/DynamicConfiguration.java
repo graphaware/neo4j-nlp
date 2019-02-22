@@ -271,6 +271,21 @@ public class DynamicConfiguration {
         return value;
     }
 
+    public Map<String, String> getAllModelPaths() {
+        Map<String, String> result = new HashMap<>();
+        try (Transaction tx = database.beginTx()) {
+            Map<String, Object> config = getAllConfigValuesFromStore();
+            config.keySet().forEach(k -> {
+                if (k.startsWith(MODEL_KEY_PREFIX)) {
+                    result.put(k.replace(MODEL_KEY_PREFIX, ""), config.get(k).toString());
+                }
+            });
+            tx.success();
+        }
+
+        return result;
+    }
+
     private void loadUserConfiguration() {
         userProvidedConfiguration = getAllConfigValuesFromStore();
     }

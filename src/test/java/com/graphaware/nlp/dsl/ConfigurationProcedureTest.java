@@ -78,6 +78,19 @@ public class ConfigurationProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
+    public void testListModelsWithProcedure() {
+        String path = getClass().getClassLoader().getResource("").getPath();
+        executeInTransaction("CALL ga.nlp.config.model.add('hello', $p0)", buildSeqParameters(path), emptyConsumer());
+
+        executeInTransaction("CALL ga.nlp.config.model.list", (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                assertTrue(result.next().get("value").toString().equals(path));
+            }
+        }));
+    }
+
+    @Test
     public void testSettingDefaultLanguage() {
         executeInTransaction("CALL ga.nlp.config.setDefaultLanguage('en')", emptyConsumer());
         assertEquals("en", getNLPManager().getConfiguration().getSettingValueFor("fallbackLanguage").toString());
