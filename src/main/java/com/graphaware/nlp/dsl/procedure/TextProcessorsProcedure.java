@@ -27,9 +27,12 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 import scala.language;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static com.graphaware.nlp.dsl.request.PipelineSpecification.DATE_FORMAT;
 
 public class TextProcessorsProcedure extends AbstractDSL {
 
@@ -44,6 +47,7 @@ public class TextProcessorsProcedure extends AbstractDSL {
     @Description("Add custom pipeline to a Text Processor")
     public Stream<SingleResult> addPipeline(@Name("addPipelineRequest") Map<String, Object> addPipelineRequest) {
         try {
+            addPipelineRequest.put("createdAt", DATE_FORMAT.format(new Date()));
             PipelineSpecification pipelineSpecification = mapper.convertValue(addPipelineRequest, PipelineSpecification.class);
             getNLPManager().getTextProcessorsManager().addPipeline(pipelineSpecification);
             return Stream.of(SingleResult.success());
@@ -69,6 +73,30 @@ public class TextProcessorsProcedure extends AbstractDSL {
         return pipelineName == null || pipelineName.isEmpty() ?
                 getNLPManager().getTextProcessorsManager().getPipelineSpecifications().stream()
                 : getNLPManager().getTextProcessorsManager().getPipelineSpecifications(pipelineName).stream();
+    }
+
+    @Procedure(value = "ga.nlp.refreshPipeline", mode = Mode.WRITE)
+    @Description("Refresh pipeline for the given name")
+    public Stream<PipelineSpecification> refreshPipeline(@Name(value = "pipeline") String pipeline) {
+        try {
+            PipelineSpecification pipelineSpecification = getNLPManager().getConfiguration().loadPipeline(pipeline);
+            getNLPManager().getTextProcessorsManager().removePipeline(pipelineSpecification.getName(), pipelineSpecification.getTextProcessor());
+            PipelineSpecification newPipeline = new PipelineSpecification(
+                    pipelineSpecification.getName(),
+                    pipelineSpecification.getLanguage(),
+                    pipelineSpecification.getTextProcessor(),
+                    pipelineSpecification.getProcessingStepsAsStrings(),
+                    pipelineSpecification.getStopWords(),
+                    pipelineSpecification.getThreadNumber(),
+                    pipelineSpecification.getExcludedNER(),
+                    pipelineSpecification.getExcludedPOS()
+            );
+            getNLPManager().getTextProcessorsManager().addPipeline(newPipeline);
+
+            return Stream.of(newPipeline);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Procedure(value = "ga.nlp.processor.pipeline.default", mode = Mode.WRITE)

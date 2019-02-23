@@ -1,3 +1,8 @@
+3.5.1
+
+- Added procedure for listing models
+- Added procedure for refreshing a pipeline
+
 3.4.9.52.16-SNAPSHOT
 
 - Passing an empty text throws now an exception before hitting the TextProcessor

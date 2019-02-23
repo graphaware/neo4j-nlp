@@ -103,7 +103,7 @@ public class ConfigurationProcedure extends AbstractDSL {
         return Stream.of(SingleResult.success());
     }
 
-    @Procedure(name = "ga.nlp.config.model.list")
+    @Procedure(name = "ga.nlp.config.model.list", mode = Mode.WRITE)
     @Description("Returns all the model paths stored in the database")
     public Stream<KeyValueResult> listModels() {
         List<KeyValueResult> results = new ArrayList<>();

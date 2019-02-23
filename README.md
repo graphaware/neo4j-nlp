@@ -585,6 +585,16 @@ The above procedure list files of the current directory only, if you need to wal
 CALL ga.nlp.utils.walkdir("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
 ```
 
+## Additional Procedures
+
+### ga.nlp.config.model.list()
+
+List stored models and their paths
+
+### ga.nlp.refreshPipeline(<name>)
+
+Remove and re-create a pipeline with the same configuration ( useful when using static ner files that have been changed for eg )
+
 
 ## License
 

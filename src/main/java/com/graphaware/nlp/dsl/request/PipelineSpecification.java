@@ -18,10 +18,9 @@ package com.graphaware.nlp.dsl.request;
 import com.graphaware.nlp.domain.Constants;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
@@ -29,6 +28,7 @@ import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 public class PipelineSpecification {
 
     private static final long DEFAULT_THREAD_NUMBER = 4;
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 
     public String name;
 
@@ -48,6 +48,8 @@ public class PipelineSpecification {
 
     public List<String> excludedPOS = new ArrayList<>();
 
+    public String createdAt;
+
     public PipelineSpecification() {
     }
 
@@ -60,7 +62,7 @@ public class PipelineSpecification {
         this.excludedNER = excludedNER;
         this.excludedPOS = excludedPOS;
         this.language = language != null ? language : Constants.DEFAULT_LANGUAGE;
-
+        this.createdAt = DATE_FORMAT.format(new Date());
     }
 
     public static PipelineSpecification fromMap(Map<String, Object> map) {
@@ -180,6 +182,10 @@ public class PipelineSpecification {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 
     private boolean objectToBoolean(Object obj) {
