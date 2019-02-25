@@ -139,12 +139,14 @@ public final class NLPManager {
 
     public Node annotateTextAndPersist(String text, String id, String pipelineName) {
         PipelineSpecification pipelineSpecification = textProcessorsManager.getPipelineSpecification(pipelineName);
+        LOG.info("Annotating with ID " + id);
         AnnotatedText at = textProcessorsManager.annotate(text, pipelineSpecification);
         return processAnnotationPersist(id, text, at, pipelineSpecification);
     }
 
     public Node annotateTextAndPersist(String text, String id, PipelineSpecification pipelineSpecification) {
         TextProcessor processor = textProcessorsManager.getTextProcessor(pipelineSpecification.getTextProcessor());
+        LOG.info("Annotating with ID " + id);
         AnnotatedText annotatedText = processor.annotateText(text, pipelineSpecification);
         return processAnnotationPersist(id, text, annotatedText, pipelineSpecification);
     }
