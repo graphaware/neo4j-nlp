@@ -16,7 +16,7 @@ test:
     - nlp
   script:
     - mvn dependency:go-offline -q
-    - mvn install -s .m2/settings.xml -DskipTests=true -Dmaven.repo.local=.m2/repository
+    - mvn install -o -DskipTests=true -Dmaven.repo.local=.m2/repository
   artifacts:
     paths:
     - target
