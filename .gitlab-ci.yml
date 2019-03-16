@@ -35,6 +35,8 @@ build:
     - ./jfrog rt bce gitlabci-maven-artifactory $CI_JOB_ID
       # Pass the build information to Artifactory
     - ./jfrog rt bp gitlabci-maven-artifactory $CI_JOB_ID
+  dependencies:
+    - test
 
 staging:
   image: python:2.7
