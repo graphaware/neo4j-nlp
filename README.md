@@ -38,7 +38,7 @@ Two NLP processor implementations are available, respectively [Stanford NLP](htt
 
 #### Latest version number : **3.5.1.53.7** - Compatible with Neo4j 3.5.*
 
-*From version 3.4.9.52.15 you need to download the language models, see below*
+*From version 3.5.1.53.15 you need to download the language models, see below*
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
@@ -56,9 +56,9 @@ of the JARs you download should contain 3.4 in their version number.
 `plugins/` directory example :
 
 ```
--rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.4.9.52.14.jar
--rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.4.9.52.jar
--rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.4.9.52.14.jar
+-rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.5.1.53.14.jar
+-rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.5.1.53.jar
+-rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.5.1.53.14.jar
 -rw-r--r--@ 1 ikwattro  staff   991M Oct 11 11:45 stanford-english-corenlp-2018-10-05-models.jar
 ```
 
