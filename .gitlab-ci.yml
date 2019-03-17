@@ -29,7 +29,7 @@ build:
   stage: build
   script:
     - curl -fL https://getcli.jfrog.io | sh
-    - ./jfrog rt config ga-artifactory --url=$ARTIFACTORY_URL --user=$ARTIFACTORY_USER --password='$ARTIFACTORY_PASSWORD'
+    - ./jfrog rt config ga-artifactory --url=$ARTIFACTORY_URL --user=$ARTIFACTORY_USER --password=$ARTIFACTORY_PASSWORD
     - export M2_HOME=/usr/share/maven
     - ./jfrog rt mvn "clean install -q -DskipTests=true -Dmaven.repo.local=.m2/repository" configuration.yml --build-name=gitlabci-maven-artifactory --build-number=$CI_JOB_ID
       # Collect the environment variables
