@@ -47,6 +47,8 @@ import com.graphaware.nlp.vector.VectorHandler;
 import org.apache.http.MethodNotSupportedException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.kernel.configuration.Config;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.logging.Log;
 
 import javax.ws.rs.NotSupportedException;
@@ -55,8 +57,8 @@ import java.util.*;
 public final class NLPManager {
 
     private static final Log LOG = LoggerFactory.getLogger(NLPManager.class);
-
     private static final String NEO4j_HOME = "unsupported.dbms.directories.neo4j_home";
+    private static final String IMPORT_DIR_CONF_KEY = "dbms.directories.import";
 
     private static NLPManager instance = null;
 
@@ -317,12 +319,12 @@ public final class NLPManager {
     }
 
     public String getDefaultModelWorkdir() {
-        String p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR).toString();
+        Object p = configuration.getSettingValueFor(SettingsConstants.DEFAULT_MODEL_WORKDIR);
         if (p == null) {
-            throw new RuntimeException("No default model wordking directory set in configuration");
+            return getRawConfig().get(IMPORT_DIR_CONF_KEY);
         }
 
-        return p;
+        return p.toString();
     }
 
     public boolean hasDefaultModelWorkdir() {
@@ -373,5 +375,9 @@ public final class NLPManager {
 
     public void setTextProcessorsManager(TextProcessorsManager textProcessorsManager) {
         this.textProcessorsManager = textProcessorsManager;
+    }
+
+    public Map<String, String> getRawConfig() {
+        return ((GraphDatabaseAPI) database).getDependencyResolver().resolveDependency(Config.class).getRaw();
     }
 }

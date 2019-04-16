@@ -44,6 +44,11 @@ public abstract class NLPIntegrationTest extends GraphAwareIntegrationTest {
         keyValueStore = new GraphKeyValueStore(getDatabase());
     }
 
+    @Override
+    protected Map<String, String> additionalServerConfiguration() {
+        return Collections.singletonMap("dbms.directories.import", "import");
+    }
+
     protected void registerRuntime() {
         GraphAwareRuntime runtime = GraphAwareRuntimeFactory.createRuntime(getDatabase());
         runtime.registerModule(new NLPModule("NLP", NLPConfiguration.defaultConfiguration(), getDatabase()));
