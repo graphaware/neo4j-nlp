@@ -1,0 +1,58 @@
+cache:
+  paths:
+    - .m2/repository/
+
+stages:
+  - test
+  - build
+  - staging
+
+test:
+  variables:
+    MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+    MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  image: maven:3.6.0-jdk-8
+  tags:
+    - nlp
+  script:
+    - mvn dependency:go-offline -q
+    - mvn install -q -DskipTests=true -Dmaven.repo.local=.m2/repository
+  artifacts:
+    paths:
+    - target
+    - .m2/repository
+
+build:
+  image: maven:3.6.0-jdk-8
+  tags:
+    - nlp
+  stage: build
+  script:
+    - curl -fL https://getcli.jfrog.io | sh
+    - ./jfrog rt config ga-artifactory --url=$ARTIFACTORY_URL --user=$ARTIFACTORY_USER --password=$ARTIFACTORY_PASSWORD
+    - export M2_HOME=/usr/share/maven
+    - ./jfrog rt mvn "clean install -q -DskipTests=true -Dmaven.repo.local=.m2/repository" configuration.yml --build-name=gitlabci-maven-artifactory --build-number=$CI_JOB_ID
+      # Collect the environment variables
+    - ./jfrog rt bce gitlabci-maven-artifactory $CI_JOB_ID
+      # Pass the build information to Artifactory
+    - ./jfrog rt bp gitlabci-maven-artifactory $CI_JOB_ID
+  dependencies:
+    - test
+
+staging:
+  image: python:2.7
+  stage: staging
+  tags:
+    - nlp
+  type: deploy
+  script:
+    - apt-get update -qy
+    - pip install awscli
+    - aws configure set aws_access_key_id $HUME_S3_ACCESS_KEY
+    - aws configure set aws_secret_access_key $HUME_S3_SECRET_KEY
+    - aws s3 cp target/graphaware-nlp-3.5.1.53.17-SNAPSHOT.jar s3://graphaware-hume/plugins/graphaware-nlp-3.5.1.53.17-SNAPSHOT.jar
+
+  dependencies:
+    - test
+  only:
+    - develop

@@ -43,6 +43,8 @@ import java.util.List;
 public class Word2VecIndexCreator {
     private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
+    private static final List<String> PUNCTUATIONS = Arrays.asList(",", ".", "?", "!", ":", ";", "-");
+
     public static final String VECTOR_FIELD = "values";
     public static final String WORD_FIELD = "word";
     public static final String NEAREST_NEIGHBORS_FIELD = "nn";
@@ -87,16 +89,18 @@ public class Word2VecIndexCreator {
                 if (split != null && split.length > 2) {
                     Document doc = new Document();
                     String word = split[0];
-                    String wordToUse = split[0];
+                    String wordToUse = split[0].trim();
                     if (word.startsWith("/c/") && !word.startsWith("/c/" + language + "/")) {
                         continue;
                     }
                     if (word.startsWith("/c/" + language)) {
                         wordToUse = wordToUse.replace("/c/" + language + "/", "").trim();
                     }
-                    if (!wordToUse.matches("[\\p{L}]+")) {
+                    // `[\p{L}]+` removes numbers and multi-word compounds (which contain "_" instead of a space)
+                    /*if (!wordToUse.matches("[\\p{L}]+") && !wordToUse.matches("[\\p{N}]+")
+                            && !PUNCTUATIONS.contains(wordToUse) && !wordToUse.contains("_")) {
                         continue;
-                    }
+                    }*/
                     doc.add(new StringField(WORD_FIELD, wordToUse, Field.Store.YES));
                     float[] vector = new float[split.length - 1];
                     for (int i = 0; i < split.length - 1; i++) {

@@ -17,6 +17,7 @@ package com.graphaware.nlp.enrich.conceptnet5;
 
 import com.graphaware.common.log.LoggerFactory;
 import com.graphaware.common.util.Pair;
+import com.graphaware.nlp.NLPManager;
 import com.graphaware.nlp.domain.Tag;
 import com.graphaware.nlp.dsl.request.ConceptRequest;
 import com.graphaware.nlp.dsl.request.PipelineSpecification;
@@ -76,24 +77,18 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
         List<String> admittedRelationships = request.getAdmittedRelationships();
         List<String> admittedPos = request.getAdmittedPos();
         List<String> outputLanguages = request.getOutputLanguages();
-        if (outputLanguages!=null) outputLanguages.replaceAll(String::toLowerCase);
 
-        String relDirection = request.getRelDirection();
-        if (!relDirection.equalsIgnoreCase("in") && !relDirection.equalsIgnoreCase("out") &&
-                !relDirection.equalsIgnoreCase("both"))
-            throw new RuntimeException("Relationship direction " + relDirection + " not supported. Please use one of these: in, out, both.");
-
-        PipelineSpecification pipelineSpecification = getPipeline(request.getPipeline());
-        TextProcessor processor = getProcessor(request.getProcessor());
+        if (outputLanguages != null) {
+            outputLanguages.replaceAll(String::toLowerCase);
+        }
+        RelDirection relDirection = RelDirection.getRelDirection(request.getRelDirection());
         List<Tag> tags = new ArrayList<>();
         while (tagsIterator.hasNext()) {
             Tag tag = (Tag) getPersister(Tag.class).fromNode(tagsIterator.next());
             if (splitTags) {
-                List<Tag> annotateTags =
-                        pipelineSpecification != null ?
-                                processor.annotateTags(tag.getLemma(), tag.getLanguage(), pipelineSpecification) :
-                                processor.annotateTags(tag.getLemma(), tag.getLanguage());
-                if (annotateTags.size() == 1 && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
+                List<Tag> annotateTags = NLPManager.getInstance().getTextProcessorsManager().annotateTags(tag.getLemma(), tag.getLanguage());
+                if (annotateTags.size() == 1
+                        && annotateTags.get(0).getLemma().equalsIgnoreCase(tag.getLemma())) {
                     tags.add(tag);
                 } else {
                     annotateTags.forEach((newTag) -> {
@@ -107,18 +102,28 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
             }
         }
 
-        if (relDirection.equalsIgnoreCase("out") || relDirection.equalsIgnoreCase("both")) {
-            tags.stream().forEach((tag) -> {
-                conceptTags.addAll(getImporter().importHierarchy("start", tag, filterByLang, outputLanguages, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
-                conceptTags.add(tag);
+        tags.stream().forEach((tag) -> {
+
+            List<RelDirection> relDirections;
+            if (relDirection == RelDirection.BOTH) {
+                relDirections = Arrays.asList(RelDirection.IN, RelDirection.OUT);
+            } else {
+                relDirections = Arrays.asList(relDirection);
+            }
+            relDirections.stream().forEach(direction -> {
+                conceptTags.addAll(getImporter().importHierarchy(
+                        tag,
+                        direction,
+                        filterByLang,
+                        outputLanguages,
+                        depth,
+                        admittedRelationships,
+                        admittedPos,
+                        request.getResultsLimit(),
+                        request.getMinWeight()));
             });
-        }
-        if (relDirection.equalsIgnoreCase("in") || relDirection.equalsIgnoreCase("both")) {
-            tags.stream().forEach((tag) -> {
-                conceptTags.addAll(getImporter().importHierarchy("end", tag, filterByLang, outputLanguages, depth, processor, pipelineSpecification, admittedRelationships, admittedPos, request.getResultsLimit(), request.getMinWeight()));
-                conceptTags.add(tag);
-            });
-        }
+            conceptTags.add(tag);
+        });
 
         conceptTags.stream().forEach((newTag) -> {
             if (newTag != null) {
@@ -147,9 +152,9 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
     }
 
     public String getConceptNetUrl() {
-        String urlFromConfigOrDefault = getConfiguration().getSettingValueFor(CONFIG_KEY_URL).toString();
+        String urlFromConfigOrDefault = (String)getConfiguration().getSettingValueFor(CONFIG_KEY_URL);
 
-        return urlFromConfigOrDefault.equals(CONFIG_KEY_URL)
+        return urlFromConfigOrDefault == null
                 ? DEFAULT_CONCEPTNET_URL
                 : urlFromConfigOrDefault;
     }
@@ -160,6 +165,40 @@ public class ConceptNet5Enricher extends AbstractEnricher implements Enricher {
 
     private boolean importerShouldBeReloaded() {
         return !conceptnet5Importer.getClient().getConceptNet5EndPoint().equals(getConceptNetUrl());
+    }
+
+    public enum RelDirection {
+        IN("end"),
+        OUT("start"),
+        BOTH("both");
+
+        private String value;
+
+        RelDirection(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public static RelDirection getRelDirection(String direction) {
+            if (direction == null || direction.isEmpty()) {
+                throw new RuntimeException("Direction is empty or null");
+            }
+            switch (direction.toLowerCase()) {
+                case "in":
+                    return IN;
+                case "out":
+                    return OUT;
+                case "both":
+                    return BOTH;
+                default:
+                    throw new RuntimeException("Relationship direction "
+                            + direction
+                            + " not supported. Please use one of these: in, out, both.");
+            }
+        }
     }
 
 }

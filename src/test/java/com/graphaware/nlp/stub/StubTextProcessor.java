@@ -29,11 +29,6 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public String override() {
-        return null;
-    }
-
-    @Override
     public List<String> getPipelines() {
         return new ArrayList<>(pipelines.keySet());
     }
@@ -50,7 +45,7 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public AnnotatedText annotateText(String text, PipelineSpecification pipelineSpecification) {
         this.lastPipelineUsed = pipelineSpecification.getName();
         AnnotatedText annotatedText = new AnnotatedText();
         String[] sentencesSplit = text.split("\\.");
@@ -60,7 +55,7 @@ public class StubTextProcessor extends AbstractTextProcessor {
             int pos = 0;
             final Sentence sentence = new Sentence(stext, sentenceNumber);
             for (String token : parts) {
-                Tag tag = new Tag(token, lang);
+                Tag tag = new Tag(token, pipelineSpecification.getLanguage());
                 if (!pipelineSpecification.getExcludedNER().contains("test")) {
                     tag.setNe(Collections.singletonList("test"));
                 }
@@ -81,12 +76,12 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public Tag annotateSentence(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public Tag annotateSentence(String text, PipelineSpecification pipelineSpecification) {
         return null;
     }
 
     @Override
-    public Tag annotateTag(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public Tag annotateTag(String text, PipelineSpecification pipelineSpecification) {
         return null;
     }
 
@@ -96,7 +91,7 @@ public class StubTextProcessor extends AbstractTextProcessor {
     }
 
     @Override
-    public List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification) {
+    public List<Tag> annotateTags(String text, PipelineSpecification pipelineSpecification) {
         return null;
     }
 

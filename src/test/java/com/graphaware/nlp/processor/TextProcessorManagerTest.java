@@ -2,6 +2,7 @@ package com.graphaware.nlp.processor;
 
 import com.graphaware.common.kv.GraphKeyValueStore;
 import com.graphaware.nlp.NLPManager;
+import com.graphaware.nlp.configuration.DynamicConfiguration;
 import com.graphaware.nlp.module.NLPConfiguration;
 import com.graphaware.nlp.module.NLPModule;
 import com.graphaware.nlp.stub.StubTextProcessor;
@@ -18,19 +19,19 @@ public class TextProcessorManagerTest {
 
     @Test
     public void testDefaultTextProcessorIsReturned() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+        TextProcessorsManager textProcessorsManager = new TextProcessorsManager(null);
         assertTrue(textProcessorsManager.getDefaultProcessor() instanceof StubTextProcessor);
     }
 
     @Test(expected = RuntimeException.class)
     public void testExceptionIsThrownWhenRetrievingProcessorThatDoNotExist() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+        TextProcessorsManager textProcessorsManager = new TextProcessorsManager(null);
         textProcessorsManager.getTextProcessor("not exist");
     }
 
     @Test
     public void testProcessorsAreRegisteredWithAliases() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+        TextProcessorsManager textProcessorsManager = new TextProcessorsManager(null);
         assertTrue(textProcessorsManager.getTextProcessor("com.graphaware.nlp.stub.StubTextProcessor") instanceof StubTextProcessor);
     }
 
@@ -42,13 +43,13 @@ public class TextProcessorManagerTest {
 
     @Test(expected = RuntimeException.class)
     public void testRetrieveProcessorWithUnknownPipelineThrowException() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+        TextProcessorsManager textProcessorsManager = new TextProcessorsManager(null);
         textProcessorsManager.retrieveTextProcessor("com.graphaware.nlp.stub.StubTextProcessor", "unk");
     }
 
     @Test(expected = RuntimeException.class)
     public void testRetrieveProcessorThrowExceptionWhenNullPipelineGiven() {
-        TextProcessorsManager textProcessorsManager = new TextProcessorsManager();
+        TextProcessorsManager textProcessorsManager = new TextProcessorsManager(null);
         textProcessorsManager.retrieveTextProcessor(null, null);
     }
 

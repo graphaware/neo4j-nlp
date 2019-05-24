@@ -1,0 +1,6 @@
+version: 1
+type: maven
+deployer:
+  snapshotRepo: libs-snapshot
+  releaseRepo: libs-release
+  serverID: ga-artifactory

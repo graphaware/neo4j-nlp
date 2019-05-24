@@ -4,6 +4,8 @@ import com.graphaware.nlp.NLPIntegrationTest;
 import org.junit.Test;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
+import org.neo4j.kernel.configuration.Config;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -75,6 +77,25 @@ public class ConfigurationProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.config.model.workdir({p0})", buildSeqParameters(path), emptyConsumer());
         assertEquals(path, getNLPManager().getDefaultModelWorkdir());
         assertTrue(getNLPManager().hasDefaultModelWorkdir());
+    }
+
+    @Test
+    public void testGettingModelsDirReturnsNeo4jImportDirByDefault() {
+        Config config = ((GraphDatabaseAPI) getDatabase()).getDependencyResolver().resolveDependency(Config.class);
+        assertEquals("import", getNLPManager().getDefaultModelWorkdir());
+    }
+
+    @Test
+    public void testListModelsWithProcedure() {
+        String path = getClass().getClassLoader().getResource("").getPath();
+        executeInTransaction("CALL ga.nlp.config.model.add('hello', $p0)", buildSeqParameters(path), emptyConsumer());
+
+        executeInTransaction("CALL ga.nlp.config.model.list", (result -> {
+            assertTrue(result.hasNext());
+            while (result.hasNext()) {
+                assertTrue(result.next().get("value").toString().equals(path));
+            }
+        }));
     }
 
     @Test

@@ -30,7 +30,7 @@ public interface TextProcessor {
 
     String getAlias();
 
-    String override();
+    //String override();
 
     List<String> getPipelines();
 
@@ -38,15 +38,16 @@ public interface TextProcessor {
 
     boolean checkPipeline(String name);
 
-    AnnotatedText annotateText(String text, String lang, PipelineSpecification pipelineSpecification);
+    AnnotatedText annotateText(String text, PipelineSpecification pipelineSpecification);
 
-    Tag annotateSentence(String text, String lang, PipelineSpecification pipelineSpecification);
+    Tag annotateSentence(String text, PipelineSpecification pipelineSpecification);
 
-    Tag annotateTag(String text, String lang, PipelineSpecification pipelineSpecification);
+    Tag annotateTag(String text, PipelineSpecification pipelineSpecification);
 
+    @Deprecated
     List<Tag> annotateTags(String text, String lang);
 
-    List<Tag> annotateTags(String text, String lang, PipelineSpecification pipelineSpecification);
+    List<Tag> annotateTags(String text, PipelineSpecification pipelineSpecification);
 
     boolean checkLemmaIsValid(String value);
 

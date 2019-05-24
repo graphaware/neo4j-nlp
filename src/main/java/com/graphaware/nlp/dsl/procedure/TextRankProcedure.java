@@ -79,18 +79,6 @@ public class TextRankProcedure extends AbstractDSL {
         }
     }
 
-    @Procedure(name = "ga.nlp.ml.textRank.summarize", mode = Mode.WRITE)
-    @Description("TextRank procedure")
-    public Stream<SingleResult> summarizeText(@Name("textRankRequest") Map<String, Object> textRankRequest) {
-        try {
-            TextRankRequest request = TextRankRequest.fromMap(textRankRequest);
-            TextRankProcessor processor = (TextRankProcessor) getNLPManager().getExtension(TextRankProcessor.class);
-            return Stream.of(processor.summarize(request));
-        } catch (Exception e) {
-            LOG.error("ERROR in TextRankSummarizer", e);
-            throw new RuntimeException(e);
-        }
-    }
 
     public class KeywordResult {
         public String value;

@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.graphaware.nlp.domain.Constants.*;
+
 public class TextRankRequest {
 
     private static final Log LOG = LoggerFactory.getLogger(TextRankRequest.class);
@@ -66,6 +68,7 @@ public class TextRankRequest {
     private List<String> admittedPOSs;
     private List<String> forbiddenPOSs;
     private List<String> forbiddenNEs;
+    private String language;
 
     private static final int DEFAULT_ITERATIONS = 30;
     private static final double DEFAULT_DUMPING_FACTOR = 0.85;
@@ -108,6 +111,7 @@ public class TextRankRequest {
         //result.setCooccurrenceWindow(((Number) textRankRequest.getOrDefault(PARAMETER_COOCCURRENCE_WINDOW, DEFAULT_COOCCURRENCE_WINDOW)).intValue());
         result.setTopXTags(((Number) textRankRequest.getOrDefault(PARAMETER_TAGS_TOPX, DEFAULT_TAGS_TOPX)).doubleValue());
         result.setKeywordLabel((String) textRankRequest.getOrDefault(PARAMETER_KEYWORD_LABEL, DEFAULT_KEYWORD_LABEL));
+        result.setLanguage((String) textRankRequest.getOrDefault(PARAMETER_LANGUAGE, DEFAULT_LANGUAGE));
 
         if (textRankRequest.containsKey(PARAMETER_STOPWORDS)) {
             result.setStopWords((String) textRankRequest.get(PARAMETER_STOPWORDS));
@@ -278,5 +282,13 @@ public class TextRankRequest {
 
     public List<String> getForbiddenNEs() {
         return this.forbiddenNEs;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 }

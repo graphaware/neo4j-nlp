@@ -138,22 +138,27 @@ public class TextRank {
         this.forbiddenNEs = forbiddenNEs;
         this.forbiddenPOSs = forbiddenPOSs;
 
-        initializePipelineWithoutNEs();
     }
 
-    private void initializePipelineWithoutNEs() {
-        if (!NLPManager.getInstance().hasPipeline(PIPELINE_WITHOUT_NER)) {
+    private String getPipelineWithoutNEs(String language) {
+        String name = getPipelineWithoutNerKey(language);
+        if (!NLPManager.getInstance().getTextProcessorsManager().hasPipeline(name)) {
             Map<String, Object> params = new HashMap<>();
             params.put("tokenize", true);
             params.put("ner", false);
             String processor = NLPManager.getInstance().getTextProcessorsManager().getDefaultProcessor().getClass().getName();
-            PipelineSpecification ps = new PipelineSpecification(PIPELINE_WITHOUT_NER, processor);
+            PipelineSpecification ps = new PipelineSpecification(getPipelineWithoutNerKey(language), processor);
             ps.setProcessingSteps(params);
-            NLPManager.getInstance().addPipeline(ps);
+            NLPManager.getInstance().getTextProcessorsManager().addPipeline(ps);
         }
+        return name;
     }
 
-    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(List<Node> annotatedTexts, boolean fromDependencies) {
+    private String getPipelineWithoutNerKey(String language) {
+        return PIPELINE_WITHOUT_NER + "_" + language;
+    }
+
+    public Map<Long, Map<Long, CoOccurrenceItem>> createCooccurrences(List<Node> annotatedTexts, String language, boolean fromDependencies) {
         String query;
         if (fromDependencies)
             query = COOCCURRENCE_QUERY_FROM_DEPENDENCIES;
@@ -190,7 +195,7 @@ public class TextRank {
         Map<Long, List<Pair<Long, Long>>> neExp;
         if (expandNEs && !fromDependencies) {
             // process named entities: split them into individual tokens by calling ga.nlp.annotate(), assign them IDs and create co-occurrences
-            neExp = expandNamedEntities();
+            neExp = expandNamedEntities(language);
             neExpanded = neExp.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().map(p -> p.second()).collect(Collectors.toList())));
         } else
@@ -314,9 +319,9 @@ public class TextRank {
         }
     }
 
-    private Map<Long, List<Pair<Long, Long>>> expandNamedEntities() {
+    private Map<Long, List<Pair<Long, Long>>> expandNamedEntities(String language) {
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("name", PIPELINE_WITHOUT_NER);
+        parameters.put("name", getPipelineWithoutNEs(language));
 
         Map<String, Object> p = new HashMap<>();
         p.put("params", parameters);
@@ -370,15 +375,17 @@ public class TextRank {
         return result;
     }
 
-    public TextRankResult evaluate(List<Node> annotatedTexts, int iter, double damp, double threshold) {
-        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedTexts, cooccurrencesFromDependencies);
-        if (coOccurrence == null) return TextRankResult.SUCCESS(new HashMap<>());
+    public TextRankResult evaluate(List<Node> annotatedTexts, String language, int iter, double damp, double threshold) {
+        Map<Long, Map<Long, CoOccurrenceItem>> coOccurrence = createCooccurrences(annotatedTexts, language, cooccurrencesFromDependencies);
+        if (coOccurrence == null) {
+            return TextRankResult.SUCCESS(new HashMap<>());
+        }
         PageRank pageRank = new PageRank(database);
         Map<Long, Double> pageRanks = pageRank.run(coOccurrence, iter, damp, threshold);
 
         if (cooccurrencesFromDependencies) {
             coOccurrence.clear();
-            coOccurrence = createCooccurrences(annotatedTexts, false); // co-occurrences from natural word flow; needed for merging keywords into key phrases
+            coOccurrence = createCooccurrences(annotatedTexts, language, false); // co-occurrences from natural word flow; needed for merging keywords into key phrases
         }
 
         if (pageRanks == null) {
@@ -765,7 +772,7 @@ public class TextRank {
         private boolean cleanKeywords = DEFAULT_CLEAN_KEYWORDS;
         private double topxTags = DEFAULT_TAGS_TOPX;
         private Label keywordLabel;
-        //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS));
+        //private Set<String> stopWords = new HashSet<>(Arrays.asList(PARAMETER_STOP_WORDS));
         private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_MEDIUM));
         //private Set<String> stopWords = new HashSet<>(Arrays.asList(STOP_WORDS_LARGE));
         private List<String> admittedPOSs = Arrays.asList(ADMITTED_POS);

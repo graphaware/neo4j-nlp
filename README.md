@@ -36,9 +36,7 @@ Two NLP processor implementations are available, respectively [Stanford NLP](htt
 
 ## Installation
 
-#### Latest version number : **3.5.1.53.15** - Compatible with Neo4j 3.5.*
-
-*From version 3.4.9.52.15 you need to download the language models, see below*
+*From version 3.5.1.53.15 you need to download the language models, see below*
 
 From the [GraphAware plugins directory](https://products.graphaware.com), download the following `jar` files :
 
@@ -56,9 +54,9 @@ of the JARs you download should contain 3.4 in their version number.
 `plugins/` directory example :
 
 ```
--rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.4.9.52.14.jar
--rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.4.9.52.jar
--rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.4.9.52.14.jar
+-rw-r--r--  1 ikwattro  staff    58M Oct 11 11:15 graphaware-nlp-3.5.1.53.14.jar
+-rw-r--r--@ 1 ikwattro  staff    13M Aug 22 15:22 graphaware-server-community-all-3.5.1.53.jar
+-rw-r--r--  1 ikwattro  staff    16M Oct 11 11:28 nlp-stanfordnlp-3.5.1.53.14.jar
 -rw-r--r--@ 1 ikwattro  staff   991M Oct 11 11:45 stanford-english-corenlp-2018-10-05-models.jar
 ```
 
@@ -537,6 +535,12 @@ CALL ga.nlp.parser.pdf($url, [], {UserAgent: 'Mozilla/5.0 (Windows; U; Win98; en
 
 ### Extras
 
+#### Parsing raw content from a file
+
+```
+RETURN ga.nlp.parse.raw(<path-to-file>) AS content
+```
+
 #### Storing only certain Tag/Tokens
 
 In certain situations, it would be useful to store only certain values instead of the full graph, note though that it might reduce the ability to extract insights ( textRank ) for eg :
@@ -579,10 +583,20 @@ The above procedure list files of the current directory only, if you need to wal
 CALL ga.nlp.utils.walkdir("/Users/ikwattro/dev/papers", ".pdf") YIELD filePath RETURN filePath
 ```
 
+## Additional Procedures
+
+### ga.nlp.config.model.list()
+
+List stored models and their paths
+
+### ga.nlp.refreshPipeline(<name>)
+
+Remove and re-create a pipeline with the same configuration ( useful when using static ner files that have been changed for eg )
+
 
 ## License
 
-Copyright (c) 2013-2018 GraphAware
+Copyright (c) 2013-2019 GraphAware
 
 GraphAware is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

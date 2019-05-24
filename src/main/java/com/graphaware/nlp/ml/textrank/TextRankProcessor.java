@@ -37,7 +37,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         TextRankResult result = compute(request);
         TextRankPersister persister = new TextRankPersister(Label.label(request.getKeywordLabel()));
         Node attachedNode = request.getNode() != null ? request.getNode() : request.getMotherNode();
-        persister.peristKeywords(result.getResult(), attachedNode);
+        persister.persistKeywords(result.getResult(), attachedNode);
 
         return result.getStatus().equals(TextRankResult.TextRankStatus.SUCCESS)
                 ? SingleResult.success()
@@ -65,6 +65,7 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
         
         TextRank textRank = textrankBuilder.build();
         TextRankResult result = textRank.evaluate(request.getNodes(),
+                request.getLanguage(),
                 request.getIterations(), 
                 request.getDamp(), 
                 request.getThreshold());
@@ -81,19 +82,5 @@ public class TextRankProcessor extends AbstractExtension implements NLPExtension
             return SingleResult.fail();
         LOG.info("TextRank post-processing completed.");
         return SingleResult.success();
-    }
-
-    public SingleResult summarize(TextRankRequest request) {
-        TextRankSummarizer.Builder summarizerBuilder = new TextRankSummarizer.Builder(getDatabase(), getNLPManager().getConfiguration());
-        //summarizerBuilder.setKeywordLabel(request.getKeywordLabel());
-
-        TextRankSummarizer trSummarizer = summarizerBuilder.build();
-        boolean res = trSummarizer.evaluate(request.getNode(),
-                request.getIterations(),
-                request.getDamp(),
-                request.getThreshold());
-        LOG.info("AnnotatedText with ID " + request.getNode().getId() + " processed. Result: " + res);
-
-        return res ? SingleResult.success() : SingleResult.fail();
     }
 }

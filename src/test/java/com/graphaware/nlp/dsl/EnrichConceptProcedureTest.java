@@ -24,7 +24,7 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
 
     @Test
     public void testConceptProcedureWithAnnotatedNode() {
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
 
@@ -34,9 +34,9 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
     }
 
     @Test
-    @Ignore
+
     public void testConceptProcedureWithNonDefaultEnricher() {
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
 
@@ -59,7 +59,7 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
 
     @Test(expected = RuntimeException.class)
     public void testNonRegisteredEnricherThrowsException() {
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam planned to kill the cat', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
 
@@ -71,7 +71,7 @@ public class EnrichConceptProcedureTest extends NLPIntegrationTest {
     @Test
     public void testEnrichmentTakeMinWeightIntoAccount() {
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text:'John and Adam went to college.', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text:'John and Adam went to college.', id: '123', textProcessor:'com.graphaware.nlp.stub.StubTextProcessor'})", (result -> {
             assertTrue(result.hasNext());
         }));
 

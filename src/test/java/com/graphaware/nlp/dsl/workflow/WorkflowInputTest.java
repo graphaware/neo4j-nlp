@@ -2,11 +2,14 @@ package com.graphaware.nlp.dsl.workflow;
 
 import com.graphaware.nlp.NLPIntegrationTest;
 import java.util.Map;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.neo4j.graphdb.Result;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class WorkflowInputTest extends NLPIntegrationTest {
 
     @Test

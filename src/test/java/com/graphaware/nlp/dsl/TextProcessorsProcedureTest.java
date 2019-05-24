@@ -6,11 +6,15 @@ import com.graphaware.nlp.stub.StubTextProcessor;
 import org.junit.Test;
 import org.neo4j.graphdb.Transaction;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
 public class TextProcessorsProcedureTest extends NLPIntegrationTest {
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 
     @Test
     public void testGetPipelineInformationsProcedure() {
@@ -50,6 +54,19 @@ public class TextProcessorsProcedureTest extends NLPIntegrationTest {
         executeInTransaction("CALL ga.nlp.processor.removePipeline('custom-1', '"+StubTextProcessor.class.getName()+"')", emptyConsumer());
 //        assertFalse(getNLPManager().getTextProcessorsManager().getTextProcessor(StubTextProcessor.class.getName()).getPipelines().contains("custom-1"));
         assertFalse(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_custom-1"));
+    }
+
+    @Test
+    public void refreshPipelineTest() throws Exception {
+        clearDb();
+        executeInTransaction("CALL ga.nlp.processor.addPipeline({name: $p0, textProcessor: $p1, processingSteps: {ner:true}})", buildSeqParameters("hello", StubTextProcessor.class.getName()), emptyConsumer());
+        assertTrue(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_hello"));
+        Date created = DATE_FORMAT.parse(getNLPManager().getConfiguration().loadPipeline("hello").getCreatedAt());
+        Thread.sleep(2000);
+        executeInTransaction("CALL ga.nlp.refreshPipeline('hello')", emptyConsumer());
+        assertTrue(checkConfigurationContainsKey(STORE_KEY + "PIPELINE_hello"));
+
+        assertTrue(DATE_FORMAT.parse(getNLPManager().getConfiguration().loadPipeline("hello").getCreatedAt()).after(created));
     }
 
     @Test

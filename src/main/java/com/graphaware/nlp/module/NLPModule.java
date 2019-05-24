@@ -59,7 +59,7 @@ public class NLPModule extends BaseTxDrivenModule<Void> {
         createConfiguration();
         checkMigrations(dynamicConfiguration);
         nlpManager = NLPManager.getInstance();
-        nlpManager.init(database, nlpMLConfiguration, dynamicConfiguration);
+        nlpManager.init(database, dynamicConfiguration);
         pipelineManager = WorkflowManager.getInstance();
         pipelineManager.init(database, nlpMLConfiguration, dynamicConfiguration);
     }

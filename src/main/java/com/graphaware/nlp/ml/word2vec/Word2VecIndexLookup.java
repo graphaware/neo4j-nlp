@@ -42,13 +42,24 @@ public class Word2VecIndexLookup {
 
     private static final Log LOG = LoggerFactory.getLogger(Word2VecIndexLookup.class);
 
+    private static final List<String> LUCENE_SPECIAL_CHARACTERS =
+            Arrays.asList("?", "*", "~", "\"", "^", "-", "+", "(", ")", "[", "]", "{", "}");
+
     private final String storePath;
+    private int vectorDimension;
 
     private final Map<String, float[]> inMemoryNN = new ConcurrentHashMap<>();
     private final Map<String, List<Pair>> nnCache = new HashMap<>();
 
     public Word2VecIndexLookup(String storePath) {
         this.storePath = storePath;
+        try {
+            StoredField binaryVector = (StoredField) getIndexSearcher().doc(0).getField(Word2VecIndexCreator.VECTOR_FIELD);
+            this.vectorDimension = TypeConverter.toFloatArray(binaryVector.binaryValue().bytes).length;
+        } catch (IOException e) {
+            LOG.error("Couldn't retrieve vector dimension. ", e);
+            this.vectorDimension = -1;
+        }
     }
 
     public long countIndex() throws IOException {
@@ -63,10 +74,16 @@ public class Word2VecIndexLookup {
         try {
             Analyzer analyzer = new KeywordAnalyzer();
             QueryParser queryParser = new QueryParser(Word2VecIndexCreator.WORD_FIELD, analyzer);
-            Query query = queryParser.parse(searchString.replace(" ", "_"));
+            Query query = queryParser.parse(preprocessSearchString(searchString.replace(" ", "_")));
             TopDocs searchResult = getIndexSearcher().search(query, 1);
-            LOG.info("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
+            LOG.debug("Searching for '" + searchString + "'. Number of hits: " + searchResult.totalHits);
+            if (searchResult.totalHits == 0) {
+                // example: FastText embeddings contain "NewYork" and not "New_York"
+                query = queryParser.parse(preprocessSearchString(searchString.replace(" ", "")));
+                searchResult = getIndexSearcher().search(query, 1);
+            }
             if (searchResult.totalHits != 1) {
+                LOG.debug("Found too many (or too few) hits for search string " + searchString + ".");
                 return null;
             }
             ScoreDoc hit = searchResult.scoreDocs[0];
@@ -74,7 +91,7 @@ public class Word2VecIndexLookup {
             StoredField binaryVector = (StoredField) hitDoc.getField(Word2VecIndexCreator.VECTOR_FIELD);
             return TypeConverter.toFloatArray(binaryVector.binaryValue().bytes);
         } catch (ParseException | IOException ex) {
-            LOG.error("Error while getting word2vec for " + searchString, ex);
+            LOG.error("Error while getting word2vec for \"" + searchString + "\". " + ex.getMessage());
         }
         return null;
     }
@@ -189,4 +206,17 @@ public class Word2VecIndexLookup {
 
         return nn;
     }
+
+    private String preprocessSearchString(String searchString) {
+        String finalString = searchString;//.replace(" ", "_"); // allows to search for multi-word keywords
+        for (String sym: LUCENE_SPECIAL_CHARACTERS) {
+            finalString = finalString.replace(sym, "\\" + sym);
+        }
+        finalString = finalString.replace("/", "\\/").replace("\\", "\\\\")
+                .replace(":", "\\:").replace("!", "\\!");
+        return finalString;
+    }
+
+    public int getVectorDimension() { return this.vectorDimension; }
+
 }

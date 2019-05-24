@@ -24,7 +24,9 @@ import org.neo4j.procedure.Mode;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.Procedure;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -99,6 +101,18 @@ public class ConfigurationProcedure extends AbstractDSL {
         getNLPManager().addModel(id, path);
 
         return Stream.of(SingleResult.success());
+    }
+
+    @Procedure(name = "ga.nlp.config.model.list", mode = Mode.WRITE)
+    @Description("Returns all the model paths stored in the database")
+    public Stream<KeyValueResult> listModels() {
+        List<KeyValueResult> results = new ArrayList<>();
+        Map<String, String> models = getConfiguration().getAllModelPaths();
+        models.keySet().forEach(k -> {
+            results.add(new KeyValueResult(k, models.get(k)));
+        });
+
+        return results.stream();
     }
 
     @Procedure(name = "ga.nlp.config.setDefaultLanguage", mode = Mode.WRITE)

@@ -17,7 +17,10 @@ package com.graphaware.nlp.util;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.neo4j.logging.Log;
 import com.graphaware.common.log.LoggerFactory;
 
@@ -143,6 +146,14 @@ public class TypeConverter {
 
     public static <T> List<T> iterableToList(Iterable<T> it) {
         List<T> newList = new ArrayList<>();
+        for (T obj : it) {
+            newList.add(obj);
+        }
+        return newList;
+    }
+
+    public static <T> Set<T> iterableToSet(Iterable<T> it) {
+        Set<T> newList = new HashSet<>();
         for (T obj : it) {
             newList.add(obj);
         }

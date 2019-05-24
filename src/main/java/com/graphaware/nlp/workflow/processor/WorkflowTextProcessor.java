@@ -27,8 +27,6 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
 
     public WorkflowTextProcessor(String name, GraphDatabaseService database) {
         super(name, database);
-        //Preinitialize
-        LanguageManager.getInstance().initialize();
     }
 
     @Override
@@ -38,15 +36,7 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
             return;
         }
         if (isValid()) {
-            long start = -System.currentTimeMillis();
-            String lang = NLPManager.getInstance().checkTextLanguage(entry.getText(), getConfiguration().checkLanguage());
-            System.out.println("Time for getting lang: " + (System.currentTimeMillis() + start));
-            String pipeline = NLPManager.getInstance().getPipeline(getConfiguration().getPipeline());
-            PipelineSpecification pipelineSpecification = NLPManager.getInstance().getConfiguration().loadPipeline(pipeline);
-            if (null == pipelineSpecification) {
-                throw new RuntimeException("No pipeline " + pipeline);
-            }
-            AnnotatedText annotateText = textProcessor.annotateText(entry.getText(), lang, pipelineSpecification);
+            AnnotatedText annotateText = NLPManager.getInstance().getTextProcessorsManager().annotate(entry.getText(), getConfiguration().getPipeline());
             super.checkAndHandle(new WorkflowProcessorOutputEntry(annotateText, entry.getId()));
         } else {
             LOG.warn("The Processor " + this.getName() + " is in an invalid state");
@@ -57,8 +47,7 @@ public class WorkflowTextProcessor extends WorkflowProcessor<WorkflowTextProcess
     @Override
     public void init(Map<String, Object> parameters) {
         setConfiguration(new WorkflowTextProcessorConfiguration(parameters));
-        String pipeline = NLPManager.getInstance().getPipeline(getConfiguration().getPipeline());
-        PipelineSpecification pipelineSpecification = NLPManager.getInstance().getConfiguration().loadPipeline(pipeline);
+        PipelineSpecification pipelineSpecification = NLPManager.getInstance().getTextProcessorsManager().getPipelineSpecification(getConfiguration().getPipeline());
         if (null != pipelineSpecification) {
             textProcessor = NLPManager.getInstance().getTextProcessorsManager().getTextProcessor(pipelineSpecification.getTextProcessor());
             setValid(true);

@@ -1,5 +1,11 @@
-3.5.1.53.16
-- upgrade to latest framework
+3.5.4
+
+- Framework upgrade
+
+3.5.1
+
+- Added procedure for listing models
+- Added procedure for refreshing a pipeline
 
 3.4.9.52.16
 

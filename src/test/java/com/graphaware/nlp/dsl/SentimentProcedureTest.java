@@ -22,7 +22,7 @@ public class SentimentProcedureTest extends NLPIntegrationTest {
     @Test
     public void testSentimentViaProcedure() {
         clearDb();
-        executeInTransaction("CALL ga.nlp.annotate({text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})", emptyConsumer());
+        executeInTransaction("CALL ga.nlp.annotate({pipeline:'tokenizer', text: 'hello my name is Frank', id: 'test-proc', checkLanguage: false})", emptyConsumer());
         executeInTransaction("MATCH (n:AnnotatedText) CALL ga.nlp.sentiment(n) YIELD result RETURN result", (result -> {
             assertTrue(result.hasNext());
         }));

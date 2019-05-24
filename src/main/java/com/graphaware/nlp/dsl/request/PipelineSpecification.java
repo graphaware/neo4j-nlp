@@ -15,12 +15,12 @@
  */
 package com.graphaware.nlp.dsl.request;
 
+import com.graphaware.nlp.domain.Constants;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.graphaware.nlp.dsl.request.RequestConstants.*;
@@ -28,6 +28,7 @@ import static com.graphaware.nlp.dsl.request.RequestConstants.*;
 public class PipelineSpecification {
 
     private static final long DEFAULT_THREAD_NUMBER = 4;
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
 
     public String name;
 
@@ -47,10 +48,12 @@ public class PipelineSpecification {
 
     public List<String> excludedPOS = new ArrayList<>();
 
+    public String createdAt;
+
     public PipelineSpecification() {
     }
 
-    public PipelineSpecification(String name, String textProcessor, Map<String, Object> processingSteps, String stopWords, long threadNumber, List<String> excludedNER, List<String> excludedPOS) {
+    public PipelineSpecification(String name, String language, String textProcessor, Map<String, Object> processingSteps, String stopWords, long threadNumber, List<String> excludedNER, List<String> excludedPOS) {
         this.name = name;
         this.textProcessor = textProcessor;
         this.processingSteps = processingSteps;
@@ -58,11 +61,8 @@ public class PipelineSpecification {
         this.threadNumber = threadNumber;
         this.excludedNER = excludedNER;
         this.excludedPOS = excludedPOS;
-    }
-
-    public PipelineSpecification(String name, String language, String textProcessor, Map<String, Object> processingSteps, String stopWords, long threadNumber, List<String> excludedNER, List<String> excludedPOS) {
-        this(name, textProcessor, processingSteps, stopWords, threadNumber, excludedNER, excludedPOS);
-        this.language = language;
+        this.language = language != null ? language : Constants.DEFAULT_LANGUAGE;
+        this.createdAt = DATE_FORMAT.format(new Date());
     }
 
     public static PipelineSpecification fromMap(Map<String, Object> map) {
@@ -75,7 +75,7 @@ public class PipelineSpecification {
         if (map.containsKey(EXCLUDED_NER)) {
             pipelineSpecification.setExcludedNER((List<String>) map.get(EXCLUDED_NER));
         }
-        if (map.containsKey(LANGUAGE_KEY)) {
+        if (map.containsKey(LANGUAGE_KEY) && (map.get(LANGUAGE_KEY) != null) ) {
             pipelineSpecification.setLanguage((String) map.get(LANGUAGE_KEY));
         }
         return pipelineSpecification;
@@ -84,6 +84,7 @@ public class PipelineSpecification {
     public PipelineSpecification(String name, String textProcessor) {
         this.name = name;
         this.textProcessor = textProcessor;
+        this.language = Constants.DEFAULT_LANGUAGE;
     }
 
     public PipelineSpecification(String name, String language, String textProcessor) {
@@ -181,6 +182,10 @@ public class PipelineSpecification {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 
     private boolean objectToBoolean(Object obj) {
