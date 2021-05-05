@@ -1,9 +1,10 @@
-# GraphAware Natural Language Processing
 
 ## GraphAware Natural Language Processing Has Been Retired
 As of May 2021, this [repository has been retired](https://graphaware.com/framework/2021/05/06/from-graphaware-framework-to-graphaware-hume.html).
 
 ---
+
+# GraphAware Natural Language Processing
 
 This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
