@@ -3,7 +3,8 @@
 ## GraphAware Natural Language Processing Has Been Retired
 As of May 2021, this [repository has been retired](https://graphaware.com/framework/2021/05/06/from-graphaware-framework-to-graphaware-hume.html).
 
-[![Build Status](https://travis-ci.org/graphaware/neo4j-nlp.svg?branch=master)](https://travis-ci.org/graphaware/neo4j-nlp)
+---
+
 This [Neo4j](https://neo4j.com) plugin offers Graph Based Natural Language Processing capabilities.
 
 The main module, this module, provide a common interface for underlying text processors as well as a
